@@ -410,11 +410,11 @@ class CwmpService
         $dom->appendChild($envelope);
 
         // Create SOAP Header (empty but required)
-        $header = $dom->createElement('soap:Header');
+        $header = $dom->createElementNS(self::SOAP_ENV, 'soap:Header');
         $envelope->appendChild($header);
 
         // Create SOAP Body
-        $body = $dom->createElement('soap:Body');
+        $body = $dom->createElementNS(self::SOAP_ENV, 'soap:Body');
         $envelope->appendChild($body);
 
         return $envelope;
