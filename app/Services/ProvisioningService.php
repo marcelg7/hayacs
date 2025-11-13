@@ -46,6 +46,19 @@ class ProvisioningService
      */
     private function provisionNewDevice(Device $device): void
     {
+        // Check if device already has a pending or sent standard config task
+        $existingTask = Task::where('device_id', $device->id)
+            ->where('task_type', 'set_params')
+            ->whereIn('status', ['pending', 'sent'])
+            ->exists();
+
+        if ($existingTask) {
+            Log::info('Skipping auto-provision - task already exists', [
+                'device_id' => $device->id,
+            ]);
+            return;
+        }
+
         // Standard configuration for all new devices
         $standardConfig = $this->getStandardConfiguration($device);
 

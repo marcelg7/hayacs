@@ -154,7 +154,7 @@ class CwmpService
         }
 
         // Parse SetParameterValuesResponse
-        if ($result['method'] === 'SetParameterValues') {
+        if ($result['method'] === 'SetParameterValuesResponse') {
             $statusNode = $xpath->query('//cwmp:SetParameterValuesResponse/Status')->item(0);
             $result['status'] = (int) ($statusNode?->nodeValue ?? 0);
         }
