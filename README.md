@@ -1,59 +1,317 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Hay ACS - TR-069 CWMP Auto Configuration Server
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="public/images/hay-logo.png" alt="Hay Communications" width="120">
 </p>
 
-## About Laravel
+A complete TR-069/CWMP Auto Configuration Server (ACS) implementation built with Laravel 12. Designed for managing and provisioning TR-069 compliant CPE devices (routers, modems, gateways, etc.).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Core TR-069 Functionality
+- ✅ **Full TR-069/CWMP Protocol Support** - SOAP/XML message handling
+- ✅ **Dual Data Model Support** - Works with both TR-098 and TR-181 data models
+- ✅ **HTTP Basic Authentication** - Secure device connections
+- ✅ **Device Auto-Discovery** - Automatic device registration on first Inform
+- ✅ **Task Queue System** - Asynchronous device operations
+- ✅ **Auto-Provisioning** - Rule-based automatic device configuration
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Supported RPC Methods
+- GetParameterValues
+- SetParameterValues
+- Reboot
+- FactoryReset
+- Download (firmware upgrades)
+- Upload (configuration/log retrieval)
 
-## Learning Laravel
+### Web Interface
+- 📊 **Dashboard** - Overview of devices, statistics, and recent activity
+- 🖥️ **Device Management** - View and manage all connected devices
+- 📋 **Task Management** - Monitor and create device tasks
+- 🔐 **User Authentication** - Secure login with forced password change on first use
+- 📱 **Responsive Design** - Works on desktop and mobile
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Developer Tools
+- 🛠️ **Device Simulator** - Test TR-069 connections without physical devices
+- 📡 **REST API** - Programmatic access to all ACS functions
+- 📝 **Comprehensive Logging** - Detailed request/response logging
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Requirements
 
-## Laravel Sponsors
+- PHP 8.3 or higher
+- Composer
+- Database (MySQL, PostgreSQL, or SQLite)
+- Web server (Apache, Nginx, or Laravel Herd)
+- Node.js & NPM (for asset compilation)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Installation
 
-### Premium Partners
+### Local Development
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/YOUR-USERNAME/hay-acs.git
+   cd hay-acs
+   ```
+
+2. **Install dependencies**
+   ```bash
+   composer install
+   npm install
+   npm run build
+   ```
+
+3. **Configure environment**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+
+4. **Update `.env` file**
+   ```env
+   APP_NAME="Hay ACS"
+   APP_ENV=local
+   APP_DEBUG=true
+   APP_URL=http://localhost:8000
+
+   DB_CONNECTION=sqlite
+   # Or use MySQL/PostgreSQL
+   ```
+
+5. **Run migrations and seed database**
+   ```bash
+   php artisan migrate
+   php artisan db:seed --class=AdminUserSeeder
+   ```
+
+6. **Start development server**
+   ```bash
+   php artisan serve
+   ```
+
+7. **Access the application**
+   - Dashboard: http://localhost:8000
+   - Login: `marcel@haymail.ca` / `TempPassword123!` (change on first login)
+   - CWMP Endpoint: http://localhost:8000/cwmp
+
+## Configuration
+
+### Device Connection Settings
+
+Configure your TR-069 CPE devices with:
+
+- **ACS URL**: `http://your-domain.com/cwmp`
+- **ACS Username**: `acs-user`
+- **ACS Password**: `acs-password`
+
+> **Security Note**: Change these credentials in production by updating `app/Http/Middleware/CwmpBasicAuth.php`
+
+### Admin User
+
+Default admin credentials (created by seeder):
+- **Email**: `marcel@haymail.ca`
+- **Password**: `TempPassword123!`
+- **Note**: Password change required on first login
+
+## Usage
+
+### Testing with Device Simulator
+
+Test your ACS without physical devices:
+
+```bash
+# Simulate TR-181 device
+php simulate-device.php --tr181
+
+# Simulate TR-098 device
+php simulate-device.php
+
+# Custom device
+php simulate-device.php --manufacturer="Acme" --oui="123456" --serial="TEST001"
+```
+
+### REST API Examples
+
+```bash
+# Get all devices
+curl -X GET http://localhost:8000/api/devices
+
+# Get device details
+curl -X GET http://localhost:8000/api/devices/{device_id}
+
+# Reboot a device
+curl -X POST http://localhost:8000/api/devices/{device_id}/reboot
+
+# Get device parameters
+curl -X POST http://localhost:8000/api/devices/{device_id}/parameters/get \
+  -H "Content-Type: application/json" \
+  -d '{"parameters": ["Device.DeviceInfo.SoftwareVersion"]}'
+
+# Set device parameters
+curl -X POST http://localhost:8000/api/devices/{device_id}/parameters/set \
+  -H "Content-Type: application/json" \
+  -d '{"parameters": {"InternetGatewayDevice.Time.NTPServer1": "pool.ntp.org"}}'
+```
+
+## Project Structure
+
+```
+hay-acs/
+├── app/
+│   ├── Http/Controllers/
+│   │   ├── Api/              # REST API controllers
+│   │   ├── CwmpController.php # Main TR-069 endpoint
+│   │   └── DashboardController.php
+│   ├── Models/
+│   │   ├── Device.php        # Device model
+│   │   ├── Parameter.php     # Parameter storage
+│   │   ├── Task.php          # Task queue
+│   │   └── CwmpSession.php   # Session tracking
+│   ├── Services/
+│   │   ├── CwmpService.php   # TR-069 SOAP/XML handling
+│   │   └── ProvisioningService.php # Auto-provisioning
+│   └── Middleware/
+│       ├── CwmpBasicAuth.php # Device authentication
+│       └── EnsurePasswordChanged.php
+├── database/
+│   ├── migrations/           # Database schema
+│   └── seeders/              # Database seeders
+├── resources/
+│   └── views/
+│       └── dashboard/        # Dashboard views
+├── routes/
+│   ├── web.php              # Web routes
+│   └── api.php              # API routes
+├── public/
+│   └── images/
+│       └── hay-logo.png
+└── simulate-device.php      # Device simulator
+```
+
+## Database Schema
+
+### Devices
+Stores registered CPE devices with manufacturer, model, versions, and online status.
+
+### Parameters
+Flexible storage for any TR-069 parameter path (supports both TR-098 and TR-181).
+
+### Tasks
+Queue for asynchronous device operations (get/set parameters, reboot, firmware upgrade, etc.).
+
+### CWMP Sessions
+Tracks all device communication sessions for audit and debugging.
+
+## Deployment
+
+See [DEPLOYMENT-GUIDE.md](DEPLOYMENT-GUIDE.md) for detailed production deployment instructions.
+
+### Quick Production Checklist
+
+1. Set environment to production in `.env`
+2. Configure database (MySQL/PostgreSQL recommended)
+3. Set `APP_DEBUG=false`
+4. Run migrations: `php artisan migrate --force`
+5. Seed admin user: `php artisan db:seed --class=AdminUserSeeder`
+6. Cache config: `php artisan config:cache`
+7. Cache routes: `php artisan route:cache`
+8. Set proper permissions on `storage/` and `bootstrap/cache/`
+9. Configure HTTPS (recommended for production)
+10. Update CWMP credentials in `CwmpBasicAuth.php`
+
+## TR-069 Data Model Support
+
+### TR-098 (InternetGatewayDevice)
+```
+InternetGatewayDevice.
+├── DeviceInfo.
+│   ├── Manufacturer
+│   ├── SoftwareVersion
+│   └── HardwareVersion
+├── ManagementServer.
+│   └── ConnectionRequestURL
+└── WANDevice.1.WANConnectionDevice.1.
+```
+
+### TR-181 (Device:2)
+```
+Device.
+├── DeviceInfo.
+│   ├── Manufacturer
+│   ├── SoftwareVersion
+│   └── HardwareVersion
+├── ManagementServer.
+│   └── ConnectionRequestURL
+└── IP.Interface.1.
+```
+
+The ACS automatically detects which data model a device uses based on parameter names.
+
+## Security Considerations
+
+- Change default CWMP credentials (`acs-user`/`acs-password`)
+- Use HTTPS in production
+- Keep `APP_DEBUG=false` in production
+- Protect `.env` file from public access
+- Regularly update dependencies
+- Consider device-specific authentication (future enhancement)
+
+## Troubleshooting
+
+### Device Not Connecting
+
+1. Check device can reach ACS URL
+2. Verify CWMP credentials are correct
+3. Check logs: `storage/logs/laravel.log`
+4. Ensure CSRF is disabled for `/cwmp` endpoint
+5. Test with device simulator first
+
+### Viewing Logs
+
+```bash
+# Recent logs
+tail -100 storage/logs/laravel.log
+
+# CWMP-specific logs
+tail -100 storage/logs/laravel.log | grep CWMP
+
+# Clear logs
+echo "" > storage/logs/laravel.log
+```
+
+## Technology Stack
+
+- **Framework**: Laravel 12
+- **PHP**: 8.3
+- **Authentication**: Laravel Breeze
+- **Database**: SQLite (development), MySQL/PostgreSQL (production)
+- **Frontend**: Tailwind CSS, Alpine.js
+- **Protocol**: SOAP/XML over HTTP(S)
+
+## Documentation
+
+- [TR069-ACS-IMPLEMENTATION.md](TR069-ACS-IMPLEMENTATION.md) - Technical implementation details
+- [DEPLOYMENT-GUIDE.md](DEPLOYMENT-GUIDE.md) - Deployment instructions
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Contributions are welcome! Please:
 
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is proprietary software developed for Hay Communications.
+
+## Support
+
+For issues or questions, please contact:
+- **Email**: marcel@haymail.ca
+- **Company**: Hay Communications
+
+---
+
+Built with ❤️ using Laravel and Claude Code
