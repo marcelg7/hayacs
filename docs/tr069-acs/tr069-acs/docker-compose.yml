@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  tr069-acs:
+    build: .
+    container_name: tr069-acs
+    ports:
+      - "8080:8080"
+    volumes:
+      # Persist database
+      - ./data:/data
+      - ./tr069_acs.db:/app/tr069_acs.db
+    environment:
+      - ACS_HOST=0.0.0.0
+      - ACS_PORT=8080
+      - LOG_LEVEL=INFO
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/stats"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+# Optional: Add PostgreSQL for production
+#  postgres:
+#    image: postgres:15-alpine
+#    container_name: tr069-postgres
+#    environment:
+#      POSTGRES_DB: tr069_acs
+#      POSTGRES_USER: acs_user
+#      POSTGRES_PASSWORD: changeme
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
+#    ports:
+#      - "5432:5432"
+#    restart: unless-stopped
+
+volumes:
+  postgres_data:
