@@ -202,7 +202,7 @@ class CwmpService
 
         // Create SOAP Envelope
         $envelope = $this->createSoapEnvelope($dom);
-        $body = $envelope->getElementsByTagName('Body')->item(0);
+        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
 
         // Create GetParameterValues
         $getParams = $dom->createElement('cwmp:GetParameterValues');
@@ -231,7 +231,7 @@ class CwmpService
 
         // Create SOAP Envelope
         $envelope = $this->createSoapEnvelope($dom);
-        $body = $envelope->getElementsByTagName('Body')->item(0);
+        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
 
         // Create SetParameterValues
         $setParams = $dom->createElement('cwmp:SetParameterValues');
@@ -271,7 +271,7 @@ class CwmpService
 
         // Create SOAP Envelope
         $envelope = $this->createSoapEnvelope($dom);
-        $body = $envelope->getElementsByTagName('Body')->item(0);
+        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
 
         // Create Reboot
         $reboot = $dom->createElement('cwmp:Reboot');
@@ -293,7 +293,7 @@ class CwmpService
 
         // Create SOAP Envelope
         $envelope = $this->createSoapEnvelope($dom);
-        $body = $envelope->getElementsByTagName('Body')->item(0);
+        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
 
         // Create FactoryReset
         $factoryReset = $dom->createElement('cwmp:FactoryReset');
@@ -312,7 +312,7 @@ class CwmpService
 
         // Create SOAP Envelope
         $envelope = $this->createSoapEnvelope($dom);
-        $body = $envelope->getElementsByTagName('Body')->item(0);
+        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
 
         // Create Download
         $download = $dom->createElement('cwmp:Download');
@@ -361,7 +361,7 @@ class CwmpService
 
         // Create SOAP Envelope
         $envelope = $this->createSoapEnvelope($dom);
-        $body = $envelope->getElementsByTagName('Body')->item(0);
+        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
 
         // Create Upload
         $upload = $dom->createElement('cwmp:Upload');
