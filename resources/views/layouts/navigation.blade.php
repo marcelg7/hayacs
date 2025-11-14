@@ -18,6 +18,9 @@
                     <x-nav-link :href="route('devices')" :active="request()->routeIs('devices')">
                         {{ __('Devices') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('device-types.index')" :active="request()->routeIs('device-types.*') || request()->routeIs('firmware.*')">
+                        {{ __('Device Types') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -75,6 +78,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('devices')" :active="request()->routeIs('devices')">
                 {{ __('Devices') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('device-types.index')" :active="request()->routeIs('device-types.*') || request()->routeIs('firmware.*')">
+                {{ __('Device Types') }}
             </x-responsive-nav-link>
         </div>
 

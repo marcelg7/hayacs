@@ -79,6 +79,37 @@ class DeviceController extends Controller
     }
 
     /**
+     * Query device info (refresh basic device parameters)
+     */
+    public function query(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        // Query essential device info parameters
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'get_params',
+            'parameters' => [
+                'names' => [
+                    'DeviceInfo.Manufacturer',
+                    'DeviceInfo.ManufacturerOUI',
+                    'DeviceInfo.ProductClass',
+                    'DeviceInfo.SerialNumber',
+                    'DeviceInfo.HardwareVersion',
+                    'DeviceInfo.SoftwareVersion',
+                    'ManagementServer.ConnectionRequestURL',
+                ],
+            ],
+            'status' => 'pending',
+        ]);
+
+        return response()->json([
+            'message' => 'Query device info task created successfully',
+            'task' => $task,
+        ], 201);
+    }
+
+    /**
      * Reboot a device
      */
     public function reboot(string $id): JsonResponse
@@ -193,16 +224,39 @@ class DeviceController extends Controller
         $device = Device::findOrFail($id);
 
         $validated = $request->validate([
-            'url' => 'required|url',
+            'url' => 'nullable|url',
             'username' => 'nullable|string',
             'password' => 'nullable|string',
         ]);
+
+        $downloadUrl = $validated['url'] ?? null;
+
+        // If no URL provided, try to find active firmware for this device type
+        if (!$downloadUrl) {
+            $deviceType = \App\Models\DeviceType::where('product_class', $device->product_class)->first();
+
+            if ($deviceType) {
+                $activeFirmware = $deviceType->firmware()->where('is_active', true)->first();
+
+                if ($activeFirmware) {
+                    $downloadUrl = $activeFirmware->getFullDownloadUrl();
+                } else {
+                    return response()->json([
+                        'error' => 'No active firmware found for this device type. Please set an active firmware version first.',
+                    ], 400);
+                }
+            } else {
+                return response()->json([
+                    'error' => 'Device type not found. Please create a device type for this product class first.',
+                ], 400);
+            }
+        }
 
         $task = Task::create([
             'device_id' => $device->id,
             'task_type' => 'download',
             'parameters' => [
-                'url' => $validated['url'],
+                'url' => $downloadUrl,
                 'file_type' => '1 Firmware Upgrade Image',
                 'username' => $validated['username'] ?? '',
                 'password' => $validated['password'] ?? '',
@@ -244,6 +298,66 @@ class DeviceController extends Controller
 
         return response()->json([
             'message' => 'Upload task created successfully',
+            'task' => $task,
+        ], 201);
+    }
+
+    /**
+     * Run ping diagnostic test
+     */
+    public function pingTest(Request $request, string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $validated = $request->validate([
+            'host' => 'nullable|string',
+            'count' => 'nullable|integer|min:1|max:10',
+            'timeout' => 'nullable|integer|min:1000|max:10000',
+        ]);
+
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'ping_diagnostics',
+            'parameters' => [
+                'host' => $validated['host'] ?? '8.8.8.8',
+                'count' => $validated['count'] ?? 4,
+                'timeout' => $validated['timeout'] ?? 5000,
+            ],
+            'status' => 'pending',
+        ]);
+
+        return response()->json([
+            'message' => 'Ping test task created successfully',
+            'task' => $task,
+        ], 201);
+    }
+
+    /**
+     * Run traceroute diagnostic test
+     */
+    public function tracerouteTest(Request $request, string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $validated = $request->validate([
+            'host' => 'nullable|string',
+            'max_hops' => 'nullable|integer|min:1|max:30',
+            'timeout' => 'nullable|integer|min:1000|max:10000',
+        ]);
+
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'traceroute_diagnostics',
+            'parameters' => [
+                'host' => $validated['host'] ?? '8.8.8.8',
+                'max_hops' => $validated['max_hops'] ?? 30,
+                'timeout' => $validated['timeout'] ?? 5000,
+            ],
+            'status' => 'pending',
+        ]);
+
+        return response()->json([
+            'message' => 'Traceroute test task created successfully',
             'task' => $task,
         ], 201);
     }

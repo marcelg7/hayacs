@@ -23,11 +23,52 @@
                 </div>
             </div>
         </div>
-        <div class="mt-4 flex md:mt-0 md:ml-4 space-x-2">
+        <div class="mt-4 flex flex-wrap md:mt-0 md:ml-4 gap-2">
+            <!-- Query Device Info -->
+            <form action="/api/devices/{{ $device->id }}/query" method="POST">
+                @csrf
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    Query Device Info
+                </button>
+            </form>
+
+            <!-- Reboot Device -->
             <form action="/api/devices/{{ $device->id }}/reboot" method="POST" onsubmit="return confirm('Are you sure you want to reboot this device?');">
                 @csrf
                 <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
-                    Reboot Device
+                    Reboot
+                </button>
+            </form>
+
+            <!-- Factory Reset -->
+            <form action="/api/devices/{{ $device->id }}/factory-reset" method="POST" onsubmit="return confirm('⚠️ WARNING: This will erase ALL device settings and data!\n\nAre you absolutely sure you want to factory reset this device?');">
+                @csrf
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
+                    Factory Reset
+                </button>
+            </form>
+
+            <!-- Upgrade Firmware -->
+            <form action="/api/devices/{{ $device->id }}/firmware-upgrade" method="POST" onsubmit="return confirm('Are you sure you want to upgrade the firmware on this device?');">
+                @csrf
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                    Upgrade Firmware
+                </button>
+            </form>
+
+            <!-- Ping Test -->
+            <form action="/api/devices/{{ $device->id }}/ping-test" method="POST">
+                @csrf
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700">
+                    Ping Test
+                </button>
+            </form>
+
+            <!-- Trace Route Test -->
+            <form action="/api/devices/{{ $device->id }}/traceroute-test" method="POST">
+                @csrf
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700">
+                    Trace Route
                 </button>
             </form>
         </div>

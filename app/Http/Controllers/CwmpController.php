@@ -382,8 +382,46 @@ class CwmpController extends Controller
                 $task->parameters['username'] ?? '',
                 $task->parameters['password'] ?? ''
             ),
+            'ping_diagnostics' => $this->generatePingDiagnostics($task),
+            'traceroute_diagnostics' => $this->generateTracerouteDiagnostics($task),
             default => $this->cwmpService->createEmptyResponse(),
         };
+    }
+
+    /**
+     * Generate Ping Diagnostics SetParameterValues request
+     */
+    private function generatePingDiagnostics(Task $task): string
+    {
+        $dataModel = $task->device->getDataModel();
+        $prefix = $dataModel === 'Device:2' ? 'Device.IP.Diagnostics.IPPingDiagnostics' : 'InternetGatewayDevice.IPPingDiagnostics';
+
+        $parameters = [
+            "{$prefix}.DiagnosticsState" => 'Requested',
+            "{$prefix}.Host" => $task->parameters['host'] ?? '8.8.8.8',
+            "{$prefix}.NumberOfRepetitions" => (string) ($task->parameters['count'] ?? 4),
+            "{$prefix}.Timeout" => (string) ($task->parameters['timeout'] ?? 5000),
+        ];
+
+        return $this->cwmpService->createSetParameterValues($parameters);
+    }
+
+    /**
+     * Generate Traceroute Diagnostics SetParameterValues request
+     */
+    private function generateTracerouteDiagnostics(Task $task): string
+    {
+        $dataModel = $task->device->getDataModel();
+        $prefix = $dataModel === 'Device:2' ? 'Device.IP.Diagnostics.TraceRouteDiagnostics' : 'InternetGatewayDevice.TraceRouteDiagnostics';
+
+        $parameters = [
+            "{$prefix}.DiagnosticsState" => 'Requested',
+            "{$prefix}.Host" => $task->parameters['host'] ?? '8.8.8.8',
+            "{$prefix}.MaxHopCount" => (string) ($task->parameters['max_hops'] ?? 30),
+            "{$prefix}.Timeout" => (string) ($task->parameters['timeout'] ?? 5000),
+        ];
+
+        return $this->cwmpService->createSetParameterValues($parameters);
     }
 }
 

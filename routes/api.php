@@ -34,7 +34,10 @@ Route::get('/devices/{id}/tasks', [DeviceController::class, 'tasks']);
 Route::post('/devices/{id}/tasks', [DeviceController::class, 'createTask']);
 
 // Device Actions
+Route::post('/devices/{id}/query', [DeviceController::class, 'query']);
 Route::post('/devices/{id}/reboot', [DeviceController::class, 'reboot']);
 Route::post('/devices/{id}/factory-reset', [DeviceController::class, 'factoryReset']);
 Route::post('/devices/{id}/firmware-upgrade', [DeviceController::class, 'firmwareUpgrade']);
 Route::post('/devices/{id}/upload', [DeviceController::class, 'uploadFile']);
+Route::post('/devices/{id}/ping-test', [DeviceController::class, 'pingTest']);
+Route::post('/devices/{id}/traceroute-test', [DeviceController::class, 'tracerouteTest']);
