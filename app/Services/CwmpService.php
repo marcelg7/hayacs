@@ -415,7 +415,7 @@ class CwmpService
 
         if ($includeId) {
             // Add cwmp:ID element (required for CPE to correlate requests/responses)
-            $id = $dom->createElement('cwmp:ID', '1');
+            $id = $dom->createElementNS(self::CWMP, 'cwmp:ID', '1');
             $id->setAttributeNS(self::SOAP_ENV, 'soap:mustUnderstand', '1');
             $header->appendChild($id);
         }
