@@ -79,6 +79,7 @@ class CwmpController extends Controller
                 'SetParameterValues' => $this->handleSetParameterValuesResponse($parsed),
                 'Reboot' => $this->handleRebootResponse($parsed),
                 'FactoryReset' => $this->handleFactoryResetResponse($parsed),
+                'TransferComplete' => $this->handleTransferCompleteResponse($parsed),
                 default => $this->cwmpService->createEmptyResponse(),
             };
 
@@ -415,6 +416,49 @@ class CwmpController extends Controller
         }
 
         // End session after factory reset command
+        return $this->cwmpService->createEmptyResponse();
+    }
+
+    /**
+     * Handle TransferComplete (Download/Upload completion notification)
+     */
+    private function handleTransferCompleteResponse(array $parsed): string
+    {
+        $task = Task::where('status', 'sent')
+            ->whereIn('task_type', ['download', 'upload'])
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        if ($task) {
+            $faultCode = $parsed['fault_code'] ?? 0;
+            $faultString = $parsed['fault_string'] ?? '';
+
+            if ($faultCode === 0) {
+                $task->markAsCompleted([
+                    'fault_code' => $faultCode,
+                    'start_time' => $parsed['start_time'] ?? null,
+                    'complete_time' => $parsed['complete_time'] ?? null,
+                ]);
+
+                Log::info('Transfer completed successfully', [
+                    'device_id' => $task->device_id,
+                    'task_type' => $task->task_type,
+                    'start_time' => $parsed['start_time'] ?? null,
+                    'complete_time' => $parsed['complete_time'] ?? null,
+                ]);
+            } else {
+                $task->markAsFailed("Transfer failed (FaultCode {$faultCode}): {$faultString}");
+
+                Log::warning('Transfer failed', [
+                    'device_id' => $task->device_id,
+                    'task_type' => $task->task_type,
+                    'fault_code' => $faultCode,
+                    'fault_string' => $faultString,
+                ]);
+            }
+        }
+
+        // End session after transfer complete (device will likely reboot for firmware upgrades)
         return $this->cwmpService->createEmptyResponse();
     }
 

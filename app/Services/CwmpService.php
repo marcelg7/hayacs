@@ -162,6 +162,15 @@ class CwmpService
             $result['status'] = (int) ($statusNode?->nodeValue ?? 0);
         }
 
+        // Parse TransferComplete
+        if ($result['method'] === 'TransferComplete') {
+            $result['command_key'] = $xpath->query('//cwmp:TransferComplete/CommandKey')->item(0)?->nodeValue;
+            $result['fault_code'] = (int) ($xpath->query('//cwmp:TransferComplete/FaultStruct/FaultCode')->item(0)?->nodeValue ?? 0);
+            $result['fault_string'] = $xpath->query('//cwmp:TransferComplete/FaultStruct/FaultString')->item(0)?->nodeValue ?? '';
+            $result['start_time'] = $xpath->query('//cwmp:TransferComplete/StartTime')->item(0)?->nodeValue;
+            $result['complete_time'] = $xpath->query('//cwmp:TransferComplete/CompleteTime')->item(0)?->nodeValue;
+        }
+
         return $result;
     }
 
