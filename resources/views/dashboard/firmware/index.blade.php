@@ -42,6 +42,7 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Name</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Download URL</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Uploaded</th>
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -59,6 +60,11 @@
                     <td class="px-6 py-4 text-sm text-gray-900">{{ $fw->file_name }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {{ number_format($fw->file_size / 1048576, 2) }} MB
+                    </td>
+                    <td class="px-6 py-4 text-sm">
+                        <a href="{{ $fw->getFullDownloadUrl() }}" target="_blank" class="text-blue-600 hover:text-blue-900 font-mono text-xs break-all">
+                            {{ $fw->getFullDownloadUrl() }}
+                        </a>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         @if($fw->is_active)
@@ -90,7 +96,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                    <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
                         No firmware versions uploaded yet. <a href="{{ route('firmware.create', $deviceType) }}" class="text-blue-600 hover:text-blue-900">Upload one now</a>
                     </td>
                 </tr>
