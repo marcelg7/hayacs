@@ -85,19 +85,23 @@ class DeviceController extends Controller
     {
         $device = Device::findOrFail($id);
 
+        // Determine data model prefix
+        $dataModel = $device->getDataModel();
+        $prefix = $dataModel === 'Device:2' ? 'Device.' : 'InternetGatewayDevice.';
+
         // Query essential device info parameters
         $task = Task::create([
             'device_id' => $device->id,
             'task_type' => 'get_params',
             'parameters' => [
                 'names' => [
-                    'DeviceInfo.Manufacturer',
-                    'DeviceInfo.ManufacturerOUI',
-                    'DeviceInfo.ProductClass',
-                    'DeviceInfo.SerialNumber',
-                    'DeviceInfo.HardwareVersion',
-                    'DeviceInfo.SoftwareVersion',
-                    'ManagementServer.ConnectionRequestURL',
+                    $prefix . 'DeviceInfo.Manufacturer',
+                    $prefix . 'DeviceInfo.ManufacturerOUI',
+                    $prefix . 'DeviceInfo.ProductClass',
+                    $prefix . 'DeviceInfo.SerialNumber',
+                    $prefix . 'DeviceInfo.HardwareVersion',
+                    $prefix . 'DeviceInfo.SoftwareVersion',
+                    $prefix . 'ManagementServer.ConnectionRequestURL',
                 ],
             ],
             'status' => 'pending',

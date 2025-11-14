@@ -399,8 +399,14 @@ class CwmpController extends Controller
         $parameters = [
             "{$prefix}.DiagnosticsState" => 'Requested',
             "{$prefix}.Host" => $task->parameters['host'] ?? '8.8.8.8',
-            "{$prefix}.NumberOfRepetitions" => (string) ($task->parameters['count'] ?? 4),
-            "{$prefix}.Timeout" => (string) ($task->parameters['timeout'] ?? 5000),
+            "{$prefix}.NumberOfRepetitions" => [
+                'value' => $task->parameters['count'] ?? 4,
+                'type' => 'xsd:unsignedInt',
+            ],
+            "{$prefix}.Timeout" => [
+                'value' => $task->parameters['timeout'] ?? 5000,
+                'type' => 'xsd:unsignedInt',
+            ],
         ];
 
         return $this->cwmpService->createSetParameterValues($parameters);
@@ -417,8 +423,14 @@ class CwmpController extends Controller
         $parameters = [
             "{$prefix}.DiagnosticsState" => 'Requested',
             "{$prefix}.Host" => $task->parameters['host'] ?? '8.8.8.8',
-            "{$prefix}.MaxHopCount" => (string) ($task->parameters['max_hops'] ?? 30),
-            "{$prefix}.Timeout" => (string) ($task->parameters['timeout'] ?? 5000),
+            "{$prefix}.MaxHopCount" => [
+                'value' => $task->parameters['max_hops'] ?? 30,
+                'type' => 'xsd:unsignedInt',
+            ],
+            "{$prefix}.Timeout" => [
+                'value' => $task->parameters['timeout'] ?? 5000,
+                'type' => 'xsd:unsignedInt',
+            ],
         ];
 
         return $this->cwmpService->createSetParameterValues($parameters);

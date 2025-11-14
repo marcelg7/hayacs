@@ -226,6 +226,10 @@ class CwmpService
 
     /**
      * Create SetParameterValues RPC
+     *
+     * @param array $parameters Array of parameters in format:
+     *   Simple: ['ParamName' => 'value']
+     *   Enhanced: ['ParamName' => ['value' => '123', 'type' => 'xsd:unsignedInt']]
      */
     public function createSetParameterValues(array $parameters): string
     {
@@ -252,8 +256,17 @@ class CwmpService
             $nameEl = $dom->createElement('Name', htmlspecialchars($name));
             $paramStruct->appendChild($nameEl);
 
-            $valueEl = $dom->createElement('Value', htmlspecialchars((string) $value));
-            $valueEl->setAttribute('xsi:type', 'xsd:string');
+            // Support both simple string values and enhanced array format
+            if (is_array($value)) {
+                $paramValue = $value['value'] ?? '';
+                $paramType = $value['type'] ?? 'xsd:string';
+            } else {
+                $paramValue = $value;
+                $paramType = 'xsd:string';
+            }
+
+            $valueEl = $dom->createElement('Value', htmlspecialchars((string) $paramValue));
+            $valueEl->setAttribute('xsi:type', $paramType);
             $paramStruct->appendChild($valueEl);
         }
 
