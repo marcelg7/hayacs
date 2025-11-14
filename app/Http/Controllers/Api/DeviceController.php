@@ -114,6 +114,90 @@ class DeviceController extends Controller
     }
 
     /**
+     * Refresh troubleshooting info (WAN, LAN, WiFi, Connected Devices)
+     */
+    public function refreshTroubleshooting(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        // Determine data model
+        $dataModel = $device->getDataModel();
+        $isDevice2 = $dataModel === 'Device:2';
+
+        $parameters = [];
+
+        if ($isDevice2) {
+            // Device:2 data model parameters
+            $parameters = [
+                // WAN Information
+                'Device.IP.Interface.1.Status',
+                'Device.IP.Interface.1.IPv4Address.1.IPAddress',
+                'Device.IP.Interface.1.IPv4Address.1.SubnetMask',
+                'Device.IP.Interface.1.IPv4Address.1.DNSServers',
+                'Device.IP.Interface.1.MACAddress',
+                'Device.IP.Interface.1.Uptime',
+                'Device.Routing.Router.1.IPv4Forwarding.1.GatewayIPAddress',
+
+                // LAN Information
+                'Device.IP.Interface.2.IPv4Address.1.IPAddress',
+                'Device.IP.Interface.2.IPv4Address.1.SubnetMask',
+                'Device.DHCPv4.Server.Pool.1.Enable',
+                'Device.DHCPv4.Server.Pool.1.MinAddress',
+                'Device.DHCPv4.Server.Pool.1.MaxAddress',
+
+                // WiFi - Query all radios and SSIDs (up to 4 radios typically)
+                'Device.WiFi.Radio.',
+                'Device.WiFi.SSID.',
+
+                // Connected Devices
+                'Device.Hosts.Host.',
+            ];
+        } else {
+            // InternetGatewayDevice data model parameters
+            $parameters = [
+                // WAN Information
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ConnectionStatus',
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress',
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.DefaultGateway',
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.DNSServers',
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.MACAddress',
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.Uptime',
+
+                // Also check PPP connection
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ConnectionStatus',
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ExternalIPAddress',
+
+                // LAN Information
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceIPAddress',
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceSubnetMask',
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPServerEnable',
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MinAddress',
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MaxAddress',
+
+                // WiFi - Query all WLAN configurations
+                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.',
+
+                // Connected Devices
+                'InternetGatewayDevice.LANDevice.1.Hosts.Host.',
+            ];
+        }
+
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'get_params',
+            'parameters' => [
+                'names' => $parameters,
+            ],
+            'status' => 'pending',
+        ]);
+
+        return response()->json([
+            'message' => 'Troubleshooting refresh task created successfully',
+            'task' => $task,
+        ], 201);
+    }
+
+    /**
      * Reboot a device
      */
     public function reboot(string $id): JsonResponse
