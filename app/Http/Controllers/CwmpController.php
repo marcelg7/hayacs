@@ -54,6 +54,20 @@ class CwmpController extends Controller
             // Parse incoming message
             $parsed = $this->cwmpService->parseInform($xmlContent);
 
+            // Log the parsed method for debugging
+            Log::info('CWMP Method detected', [
+                'method' => $parsed['method'] ?? 'unknown',
+                'device_id' => $parsed['device_id'] ?? 'unknown',
+            ]);
+
+            // For debugging: Log full XML for non-Inform messages
+            if ($parsed['method'] !== 'Inform') {
+                Log::info('CWMP Response received from device', [
+                    'method' => $parsed['method'],
+                    'xml' => $xmlContent,
+                ]);
+            }
+
             // Handle based on method
             $responseXml = match ($parsed['method']) {
                 'Inform' => $this->handleInform($request, $parsed),
@@ -63,6 +77,12 @@ class CwmpController extends Controller
                 'FactoryResetResponse' => $this->handleFactoryResetResponse($parsed),
                 default => $this->cwmpService->createEmptyResponse(),
             };
+
+            // Log outgoing response for debugging
+            Log::info('CWMP Response sent to device', [
+                'response_size' => strlen($responseXml),
+                'xml' => $responseXml,
+            ]);
 
             // Return SOAP response
             return response($responseXml, 200)
