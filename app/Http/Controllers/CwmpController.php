@@ -167,7 +167,6 @@ class CwmpController extends Controller
                 [
                     'name' => $parsed['manufacturer'] . ' ' . $parsed['product_class'],
                     'manufacturer' => $parsed['manufacturer'],
-                    'oui' => $parsed['oui'],
                     'description' => 'Auto-created from first device check-in',
                 ]
             );
@@ -176,7 +175,6 @@ class CwmpController extends Controller
                 Log::info('Auto-created new DeviceType', [
                     'product_class' => $parsed['product_class'],
                     'manufacturer' => $parsed['manufacturer'],
-                    'oui' => $parsed['oui'],
                 ]);
             }
         }

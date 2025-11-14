@@ -11,7 +11,6 @@ class DeviceType extends Model
         'name',
         'manufacturer',
         'product_class',
-        'oui',
         'description',
     ];
 

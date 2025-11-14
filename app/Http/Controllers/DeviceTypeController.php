@@ -36,7 +36,6 @@ class DeviceTypeController extends Controller
             'name' => 'required|string|max:255',
             'manufacturer' => 'nullable|string|max:255',
             'product_class' => 'nullable|string|max:255',
-            'oui' => 'nullable|string|max:255',
             'description' => 'nullable|string',
         ]);
 
@@ -63,7 +62,6 @@ class DeviceTypeController extends Controller
             'name' => 'required|string|max:255',
             'manufacturer' => 'nullable|string|max:255',
             'product_class' => 'nullable|string|max:255',
-            'oui' => 'nullable|string|max:255',
             'description' => 'nullable|string',
         ]);
 

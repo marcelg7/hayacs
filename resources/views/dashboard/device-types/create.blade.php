@@ -54,18 +54,7 @@
                     @error('product_class')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
-                    <p class="mt-1 text-sm text-gray-500">Used to match devices from TR-069 Inform messages</p>
-                </div>
-
-                <!-- OUI -->
-                <div>
-                    <label for="oui" class="block text-sm font-medium text-gray-700">OUI (Organizationally Unique Identifier)</label>
-                    <input type="text" name="oui" id="oui" value="{{ old('oui') }}"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('oui') border-red-500 @enderror">
-                    @error('oui')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                    <p class="mt-1 text-sm text-gray-500">e.g., "D0768F" - Used for device identification</p>
+                    <p class="mt-1 text-sm text-gray-500">Used to match devices from TR-069 Inform messages. This device type can have multiple OUIs and hardware versions.</p>
                 </div>
 
                 <!-- Description -->
