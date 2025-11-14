@@ -227,90 +227,31 @@ class DeviceController extends Controller
             ];
         } else {
             // InternetGatewayDevice data model parameters
+            // Note: Calix devices use non-standard numbering (WANDevice.3, WANIPConnection.2, etc)
+            // For now, query only parameters that are known to exist across all devices
             $parameters = [
-                // WAN Information
-                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ConnectionStatus',
-                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress',
-                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.DefaultGateway',
-                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.DNSServers',
-                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.MACAddress',
-                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.Uptime',
-
-                // Also check PPP connection
-                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ConnectionStatus',
-                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ExternalIPAddress',
-
-                // LAN Information
+                // LAN Information - these are standard across devices
                 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceIPAddress',
                 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceSubnetMask',
                 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPServerEnable',
                 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MinAddress',
                 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MaxAddress',
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DNSServers',
 
-                // WiFi - Query specific WLAN configurations (1-4)
+                // WiFi - Query first 2 WLAN configurations (most common)
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Enable',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Channel',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Standard',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TransmitPower',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.Enable',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.SSID',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.Channel',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.Standard',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.TransmitPower',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.3.Enable',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.3.SSID',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.3.Channel',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.3.Standard',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.3.TransmitPower',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.4.Enable',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.4.SSID',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.4.Channel',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.4.Standard',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.4.TransmitPower',
+                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Status',
+                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.Enable',
+                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.SSID',
+                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.Channel',
+                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.Standard',
+                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.Status',
 
-                // Connected Devices - Query host count and first 10 hosts
+                // Connected Devices - just get the count for now
                 'InternetGatewayDevice.LANDevice.1.Hosts.HostNumberOfEntries',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.1.HostName',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.1.IPAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.1.MACAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.1.Active',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.2.HostName',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.2.IPAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.2.MACAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.2.Active',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.3.HostName',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.3.IPAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.3.MACAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.3.Active',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.4.HostName',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.4.IPAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.4.MACAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.4.Active',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.5.HostName',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.5.IPAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.5.MACAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.5.Active',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.6.HostName',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.6.IPAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.6.MACAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.6.Active',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.7.HostName',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.7.IPAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.7.MACAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.7.Active',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.8.HostName',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.8.IPAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.8.MACAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.8.Active',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.9.HostName',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.9.IPAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.9.MACAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.9.Active',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.10.HostName',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.10.IPAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.10.MACAddress',
-                'InternetGatewayDevice.LANDevice.1.Hosts.Host.10.Active',
             ];
         }
 
