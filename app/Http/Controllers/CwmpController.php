@@ -48,8 +48,8 @@ class CwmpController extends Controller
             }
 
             // Determine message type and parse accordingly
-            // Quick check: if message contains "Response" it's a response, otherwise it's an Inform
-            $isResponse = str_contains($xmlContent, 'Response>');
+            // Check for Response in element name (handles both <Response> and <Response/>)
+            $isResponse = str_contains($xmlContent, 'Response');
 
             if ($isResponse) {
                 $parsed = $this->cwmpService->parseResponse($xmlContent);
