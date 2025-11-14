@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Device;
+use App\Models\DeviceType;
 use App\Models\CwmpSession;
 use App\Models\Task;
 use App\Services\CwmpService;
@@ -156,6 +157,29 @@ class CwmpController extends Controller
         }
 
         $device->save();
+
+        // Auto-create DeviceType if it doesn't exist for this product_class
+        if ($parsed['product_class'] && $parsed['manufacturer']) {
+            $deviceType = DeviceType::firstOrCreate(
+                [
+                    'product_class' => $parsed['product_class'],
+                ],
+                [
+                    'name' => $parsed['manufacturer'] . ' ' . $parsed['product_class'],
+                    'manufacturer' => $parsed['manufacturer'],
+                    'oui' => $parsed['oui'],
+                    'description' => 'Auto-created from first device check-in',
+                ]
+            );
+
+            if ($deviceType->wasRecentlyCreated) {
+                Log::info('Auto-created new DeviceType', [
+                    'product_class' => $parsed['product_class'],
+                    'manufacturer' => $parsed['manufacturer'],
+                    'oui' => $parsed['oui'],
+                ]);
+            }
+        }
 
         // Create session
         $session = CwmpSession::create([
