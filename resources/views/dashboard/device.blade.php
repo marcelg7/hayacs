@@ -245,6 +245,8 @@
                                     $firstKey = array_key_first($results ?? []);
                                     $prefix = str_starts_with($firstKey, 'Device.IP.') ? 'Device.IP.Diagnostics.IPPingDiagnostics' : 'InternetGatewayDevice.IPPingDiagnostics';
                                 @endphp
+                                <!-- DEBUG: firstKey = {{ $firstKey }} | prefix = {{ $prefix }} -->
+                                <!-- DEBUG: keys = {{ implode(', ', array_keys($results ?? [])) }} -->
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <span class="text-sm font-medium text-gray-500">Success Count:</span>
@@ -277,6 +279,8 @@
                                     $firstKey = array_key_first($results ?? []);
                                     $prefix = str_starts_with($firstKey, 'Device.IP.') ? 'Device.IP.Diagnostics.TraceRouteDiagnostics' : 'InternetGatewayDevice.TraceRouteDiagnostics';
                                 @endphp
+                                <!-- DEBUG: firstKey = {{ $firstKey }} | prefix = {{ $prefix }} -->
+                                <!-- DEBUG: keys = {{ implode(', ', array_keys($results ?? [])) }} -->
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <span class="text-sm font-medium text-gray-500">Response Time:</span>
