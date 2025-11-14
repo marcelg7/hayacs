@@ -44,6 +44,7 @@ class Firmware extends Model
         }
 
         // Generate URL based on Laravel storage
-        return url('/storage/firmware/' . $this->file_path);
+        // file_path already contains 'firmware/' prefix
+        return url('/storage/' . $this->file_path);
     }
 }
