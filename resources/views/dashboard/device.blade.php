@@ -24,6 +24,17 @@
             </div>
         </div>
         <div class="mt-4 flex flex-wrap md:mt-0 md:ml-4 gap-2">
+            <!-- Connect Now -->
+            <form action="/api/devices/{{ $device->id }}/connection-request" method="POST">
+                @csrf
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    Connect Now
+                </button>
+            </form>
+
             <!-- Query Device Info -->
             <form action="/api/devices/{{ $device->id }}/query" method="POST">
                 @csrf

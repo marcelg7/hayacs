@@ -36,6 +36,7 @@ Route::post('/devices/{id}/tasks', [DeviceController::class, 'createTask']);
 // Device Actions
 Route::post('/devices/{id}/query', [DeviceController::class, 'query']);
 Route::post('/devices/{id}/refresh-troubleshooting', [DeviceController::class, 'refreshTroubleshooting']);
+Route::post('/devices/{id}/connection-request', [DeviceController::class, 'connectionRequest']);
 Route::post('/devices/{id}/reboot', [DeviceController::class, 'reboot']);
 Route::post('/devices/{id}/factory-reset', [DeviceController::class, 'factoryReset']);
 Route::post('/devices/{id}/firmware-upgrade', [DeviceController::class, 'firmwareUpgrade']);

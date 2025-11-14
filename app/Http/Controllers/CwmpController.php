@@ -157,6 +157,18 @@ class CwmpController extends Controller
             $device->connection_request_url = $parsed['parameters']['Device.ManagementServer.ConnectionRequestURL']['value'];
         }
 
+        if (isset($parsed['parameters']['InternetGatewayDevice.ManagementServer.ConnectionRequestUsername'])) {
+            $device->connection_request_username = $parsed['parameters']['InternetGatewayDevice.ManagementServer.ConnectionRequestUsername']['value'];
+        } elseif (isset($parsed['parameters']['Device.ManagementServer.ConnectionRequestUsername'])) {
+            $device->connection_request_username = $parsed['parameters']['Device.ManagementServer.ConnectionRequestUsername']['value'];
+        }
+
+        if (isset($parsed['parameters']['InternetGatewayDevice.ManagementServer.ConnectionRequestPassword'])) {
+            $device->connection_request_password = $parsed['parameters']['InternetGatewayDevice.ManagementServer.ConnectionRequestPassword']['value'];
+        } elseif (isset($parsed['parameters']['Device.ManagementServer.ConnectionRequestPassword'])) {
+            $device->connection_request_password = $parsed['parameters']['Device.ManagementServer.ConnectionRequestPassword']['value'];
+        }
+
         $device->save();
 
         // Auto-create DeviceType if it doesn't exist for this product_class

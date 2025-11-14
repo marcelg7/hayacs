@@ -5,11 +5,19 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Device;
 use App\Models\Task;
+use App\Services\ConnectionRequestService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class DeviceController extends Controller
 {
+    protected ConnectionRequestService $connectionRequestService;
+
+    public function __construct(ConnectionRequestService $connectionRequestService)
+    {
+        $this->connectionRequestService = $connectionRequestService;
+    }
+
     /**
      * Display a listing of all devices
      */
@@ -107,6 +115,9 @@ class DeviceController extends Controller
             'status' => 'pending',
         ]);
 
+        // Trigger immediate connection
+        $this->triggerConnectionRequestForTask($device);
+
         return response()->json([
             'message' => 'Query device info task created successfully',
             'task' => $task,
@@ -191,6 +202,9 @@ class DeviceController extends Controller
             'status' => 'pending',
         ]);
 
+        // Trigger immediate connection
+        $this->triggerConnectionRequestForTask($device);
+
         return response()->json([
             'message' => 'Troubleshooting refresh task created successfully',
             'task' => $task,
@@ -210,6 +224,9 @@ class DeviceController extends Controller
             'status' => 'pending',
         ]);
 
+        // Trigger immediate connection
+        $this->triggerConnectionRequestForTask($device);
+
         return response()->json([
             'message' => 'Reboot task created successfully',
             'task' => $task,
@@ -228,6 +245,9 @@ class DeviceController extends Controller
             'task_type' => 'factory_reset',
             'status' => 'pending',
         ]);
+
+        // Trigger immediate connection
+        $this->triggerConnectionRequestForTask($device);
 
         return response()->json([
             'message' => 'Factory reset task created successfully',
@@ -256,6 +276,9 @@ class DeviceController extends Controller
             'status' => 'pending',
         ]);
 
+        // Trigger immediate connection
+        $this->triggerConnectionRequestForTask($device);
+
         return response()->json([
             'message' => 'Get parameters task created successfully',
             'task' => $task,
@@ -281,6 +304,9 @@ class DeviceController extends Controller
             ],
             'status' => 'pending',
         ]);
+
+        // Trigger immediate connection
+        $this->triggerConnectionRequestForTask($device);
 
         return response()->json([
             'message' => 'Set parameters task created successfully',
@@ -352,6 +378,9 @@ class DeviceController extends Controller
             'status' => 'pending',
         ]);
 
+        // Trigger immediate connection
+        $this->triggerConnectionRequestForTask($device);
+
         return response()->json([
             'message' => 'Firmware upgrade task created successfully',
             'task' => $task,
@@ -414,6 +443,9 @@ class DeviceController extends Controller
             'status' => 'pending',
         ]);
 
+        // Trigger immediate connection
+        $this->triggerConnectionRequestForTask($device);
+
         return response()->json([
             'message' => 'Ping test task created successfully',
             'task' => $task,
@@ -444,10 +476,56 @@ class DeviceController extends Controller
             'status' => 'pending',
         ]);
 
+        // Trigger immediate connection
+        $this->triggerConnectionRequestForTask($device);
+
         return response()->json([
             'message' => 'Traceroute test task created successfully',
             'task' => $task,
         ], 201);
+    }
+
+    /**
+     * Send connection request to device (force immediate connection)
+     */
+    public function connectionRequest(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $result = $this->connectionRequestService->sendConnectionRequest($device);
+
+        if ($result['success']) {
+            return response()->json([
+                'message' => $result['message'],
+                'success' => true,
+            ]);
+        }
+
+        return response()->json([
+            'message' => $result['message'],
+            'success' => false,
+        ], 400);
+    }
+
+    /**
+     * Helper: Trigger connection request after creating a task
+     * This makes tasks execute immediately instead of waiting for next periodic inform
+     */
+    private function triggerConnectionRequestForTask(Device $device): void
+    {
+        // Only trigger if device has CR URL configured
+        if ($device->connection_request_url) {
+            // Trigger in background - don't wait for response
+            try {
+                $this->connectionRequestService->sendConnectionRequest($device);
+            } catch (\Exception $e) {
+                // Log but don't fail the task creation
+                \Log::warning('Failed to trigger connection request after task creation', [
+                    'device_id' => $device->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
     }
 
     /**
