@@ -1,0 +1,28 @@
+11-12-2025 16:33:25.716417 potsmgr: ../framework-exa/voipsys.c.41: Big Endian detected
+11-12-2025 16:33:25.718465 potsmgr: ../voip/ipsvc/IpSvcTask.c.59: IP Services Task starting
+11-12-2025 16:33:25.718963 potsmgr: ../voip/pdcp/PdcpTask.c.69: PDCP task starting
+11-12-2025 16:33:25.722856 potsmgr: ../voip/pdcp/PdcpTask.c.165:  ***** PdcpInit:  ENTERED
+
+11-12-2025 16:33:25.737578 potsmgr: ../voip/pdcp/pdcpBrcm/pdcpBrcm.c.3505:  ***** pdcpPlatInit: ch->number=0 ch->port=0  cnxId[0]=2 cnxId[1]=3
+11-12-2025 16:33:25.738946 potsmgr: ../voip/pdcp/pdcpBrcm/pdcpBrcm.c.3520:  ***** pdcpPlatInit: ch->number=1 ch->port=1  cnxId[0]=0 cnxId[1]=1
+11-12-2025 16:33:25.741345 potsmgr: ../voip/pdcp/pdcpBrcm/pdcpBrcm.c.3522:  ***** pdcpPlatInit: calling ngxeptapp_start
+
+11-12-2025 16:33:25.742209 potsmgr: ../voip/pdcp/pdcpBrcm/voipBrcmTask.c.582: ngxeptapp_start:  ******   ngxeptapp_start: Entry
+11-12-2025 16:33:25.744188 potsmgr: ../voip/pdcp/pdcpBrcm/voipBrcmTask.c.593: ngxeptapp_start: **** bosSleep ****
+
+11-12-2025 16:33:25.752398 potsmgr: ../voip/voipua/VoipuaTask.c.122: VOIPUA task starting, ThreadId: 1026 CALIX 844E-1/12.2.12.9.1
+11-12-2025 16:33:25.753021 potsmgr: ../voip/voipua/VoipuaTask.c.127: VOIPUA init complete
+11-12-2025 16:33:25.961940 potsmgr: ../voip/ronta/RontaTask.c.157: StartWaitNewActionTimer: wait for 180 secs
+11-12-2025 16:33:26.745610 potsmgr: ../voip/pdcp/pdcpBrcm/voipBrcmTask.c.601: ngxeptapp_start: ******   bosInit delay completed  **** 
+
+11-12-2025 16:33:29.015494 potsmgr: ../voip/pdcp/pdcpBrcm/voipBrcmTask.c.614: ngxeptapp_start: brcmEndpointVrgInit:   SUCCESS
+11-12-2025 16:33:29.016390 potsmgr: ../voip/pdcp/pdcpBrcm/voipBrcmTask.c.631: ngxeptapp_start: BrcmEndpt task started OK. brcmEndpointTaskId= 9226
+11-12-2025 16:33:29.016795 potsmgr: ../voip/pdcp/pdcpBrcm/pdcpBrcm.c.3526: pdcpPlatInit: ngxeptapp_start returns rc=0
+
+11-12-2025 16:33:29.017491 potsmgr: ../voip/pdcp/pdcpBrcm/pdcpBrcm.c.3451:  ***** pdcpPlatTaskStart: ENTERED
+
+11-12-2025 16:33:29.018009 potsmgr: ../voip/pdcp/pdcpBrcm/voipBrcmTask.c.926: VoipVrgRtpRecvPacket:  ENTRY 
+11-12-2025 16:33:29.022978 potsmgr: ../voip/pdcp/PdcpTask.c.77: PDCP task finished initializing
+11-12-2025 16:36:26.066427 potsmgr: ../voip/pdcp/pdcpBrcm/pdcpBrcm.c.3090: BrcmSetLinePhysicalState: pots Line 0 disabled
+11-12-2025 16:36:26.168415 potsmgr: ../voip/pdcp/pdcpBrcm/pdcpBrcm.c.3090: BrcmSetLinePhysicalState: pots Line 1 disabled
+11-12-2025 16:36:26.168753 potsmgr: ../voip/ronta/RontaTask.c.286: AbortRontaMode: AbortRontaMode

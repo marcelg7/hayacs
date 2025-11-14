@@ -1,0 +1,52 @@
+Wed Nov 12 13:30:52 LCL 2025
+Calix ONT 844E-1
+  GigEth ports:    4
+  POTS ports:      2       Slic:LE9540
+  RF ports:        0
+  Wireless-1:      MFG:BCM, FREQ:2.4GHz, Firmware:V1.2
+  Wireless-2:      MFG:QTN, FREQ:5.0GHz, Firmware:v37.4.0.146(acR4.9)
+  MFG S/N:         422007036112
+  FSAN S/N:        CXNK0083728A
+  SW Release Ver:  12.2.12.9.1
+  Kernel Version:  Linux 3.4.11-rt19 Nov 2 2022 mips GNU/Linux
+
+Running    : 12.2.12.9.1
+11/12/25 01:30:04 PM wlanmgr: QTNEvent:qcsapi_wifi_vlan_config ifname = eth1_0, cmd = 34, vlanid = 500
+11/12/25 01:30:04 PM wlanmgr: QTNEvent:qcsapi_wifi_vlan_config ifname = wifi0, cmd = 534, vlanid = 500
+11/12/25 01:29:56 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_del_radius_auth wifi0,-22
+11/12/25 01:29:55 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_enable -19, wifi6, flag = 0
+11/12/25 01:29:54 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_get_status -19, wifi6
+11/12/25 01:29:54 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_enable -19, wifi5, flag = 0
+11/12/25 01:29:54 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_get_status -19, wifi5
+11/12/25 01:29:54 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_enable -19, wifi4, flag = 0
+11/12/25 01:29:53 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_get_status -19, wifi4
+11/12/25 01:29:53 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_enable -19, wifi3, flag = 0
+11/12/25 01:29:53 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_get_status -19, wifi3
+11/12/25 01:29:53 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_enable -19, wifi1, flag = 0
+11/12/25 01:29:52 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_get_status -19, wifi1
+11/12/25 01:29:52 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_enable -19, wifi2, flag = 0
+11/12/25 01:29:52 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_get_status -19, wifi2
+11/12/25 01:29:51 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_del_radius_auth wifi7,-22
+11/12/25 01:29:48 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_get_status -19, wifi7
+11/12/25 01:29:48 PM wlanmgr: QTNEvent:g_radio.regulatory_domain = none, radio->regulatory_domain = US
+11/12/25 01:29:47 PM wlanmgr: QTNEvent:start_pm_binning_timer
+11/12/25 01:29:45 PM wlanmgr: QTNEvent:status=0, enable s_dfs
+11/12/25 01:29:45 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_apply_security_config wifi0,-1010
+11/12/25 01:29:44 PM wlanmgr: QTNEvent:wlanmgrbh_send_prov
+11/12/25 01:29:44 PM wlanmgr: QTNEvent:QTN_IS_STARTPROD_DONE(15)
+11/12/25 01:29:36 PM wlanmgr: QTNEvent:QTN_STARTPROD_NOT_COMPLETE_YET(8)
+11/12/25 01:29:32 PM wlanmgr: QTNEvent:QTN_STARTPROD_NOT_COMPLETE_YET(4)
+11/12/25 01:29:30 PM wlanmgr: QTNEvent:QTN_STARTPROD_NOT_COMPLETE_YET(2)
+11/12/25 01:29:29 PM wlanmgr: QTNEvent:QTN_STARTPROD_NOT_COMPLETE_YET(1)
+11/12/25 01:29:28 PM wlanmgr: QTNEvent:QTN_STARTPROD
+11/12/25 01:29:27 PM wlanmgr: QTNEvent:QTN_CONFIG_REGION us
+11/12/25 01:29:26 PM wlanmgr: QTNEvent:set region US(3)
+11/12/25 01:29:25 PM wlanmgr: QTNEvent:QTN_WAITING_CFG_REGION region not set yet(2)
+11/12/25 01:29:24 PM wlanmgr: QTNEvent:QTN_WAITING_CFG_REGION region not set yet(1)
+11/12/25 01:29:23 PM wlanmgr: QTNEvent:QTN_INIT qtn_client_create_success
+11/12/25 01:29:23 PM wlanmgr: QTNEvent:QTN_INIT
+11/12/25 01:29:22 PM wlanmgr: QTNEvent:QTN_BH_REG_DEVICE
+11/12/25 01:29:22 PM wlanmgr: QTNEvent:pid of wlanmgr is [1076]
+=================> QT memtest execution log 
+
+CLEI's associated with REV10 - BVMCJ00ARA, BVMCH00ARA, BVMCL00ARA, BVMCK00ARA, BVMCK844E1, BVMCK844E2

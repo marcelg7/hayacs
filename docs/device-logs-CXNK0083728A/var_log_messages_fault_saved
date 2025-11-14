@@ -1,0 +1,577 @@
+Fri Feb 24 06:08:20 LCL 2023
+Calix ONT 844E-1
+  GigEth ports:    4
+  POTS ports:      2       Slic:LE9540
+  RF ports:        0
+  Wireless-1:      MFG:BCM, FREQ:2.4GHz, Firmware:V1.2
+  Wireless-2:      MFG:QTN, FREQ:5.0GHz, Firmware:v37.4.0.146(acR4.9)
+  MFG S/N:         422007036112
+  FSAN S/N:        CXNK0083728A
+  SW Release Ver:  12.2.12.9.1
+  Kernel Version:  Linux 3.4.11-rt19 Nov 2 2022 mips GNU/Linux
+
+Running    : 12.2.12.9.1
+Feb 24 06:06:47 (none) syslog.emerg BCM CPE started: BusyBox v1.17.2  74
+Feb 24 06:06:47 (none) kern.notice kernel: klogd started: BusyBox v1.17.2 (2022-11-02 01:33:58 CST) 105
+Feb 24 06:06:47 (none) kern.info kernel: [14e4:6300] type 00 class 0x0c0310  81
+Feb 24 06:06:47 (none) kern.info kernel: PCI host bridge to bus 0000:01  77
+Feb 24 06:06:47 (none) kern.info kernel: pci_bus 0000:01: root bus resource [mem 0xd0000000-0xdfffffff] 109
+Feb 24 06:06:47 (none) kern.info kernel: pci_bus 0000:01: root bus resource [??? 0x00000000 flags 0x0] 108
+Feb 24 06:06:47 (none) kern.info kernel: pci 0000:01:00.0: PCI bridge to [bus 02-02]  90
+Feb 24 06:06:47 (none) kern.info kernel: PCI host bridge to bus 0000:03  77
+Feb 24 06:06:47 (none) kern.notice kernel: UBI: number of bad PEBs:         0  83
+Feb 24 06:06:47 (none) kern.notice kernel: UBI: number of corrupted PEBs:   0  83
+Feb 24 06:06:47 (none) kern.notice kernel: UBI: max. allowed volumes:       128  85
+Feb 24 06:06:47 (none) kern.notice kernel: UBI: wear-leveling threshold:    4096  86
+Feb 24 06:06:47 (none) kern.notice kernel: UBI: number of internal volumes: 1  83
+Feb 24 06:06:47 (none) kern.notice kernel: UBI: number of user volumes:     1  83
+Feb 24 06:06:47 (none) kern.notice kernel: UBI: available PEBs:             0  83
+Feb 24 06:06:47 (none) kern.notice kernel: UBI: total number of reserved PEBs: 64  87
+Feb 24 06:06:47 (none) kern.notice kernel: UBI: number of PEBs reserved for bad PEB handling: 2 101
+Feb 24 06:06:47 (none) kern.notice kernel: UBI: max/mean erase counter: 319/261  85
+Feb 24 06:06:47 (none) kern.notice kernel: UBI: image sequence number:  1950550910  88
+Feb 24 06:06:47 (none) kern.notice kernel: UBI: background thread "ubi_bgt1d" started, PID 300 100
+Feb 24 06:06:47 (none) kern.notice kernel: UBIFS: recovery needed  71
+Feb 24 06:06:47 (none) kern.notice kernel: UBIFS: recovery completed  74
+Feb 24 06:06:47 (none) kern.notice kernel: UBIFS: mounted UBI device 1, volume 0, name "no_erase_" 104
+Feb 24 06:06:47 (none) kern.notice kernel: UBIFS: file system size:   6221824 bytes (6076 KiB, 5 MiB, 49 LEBs) 116
+Feb 24 06:06:47 (none) kern.notice kernel: UBIFS: journal size:       1015809 bytes (992 KiB, 0 MiB, 6 LEBs) 114
+Feb 24 06:06:47 (none) kern.notice kernel: UBIFS: media format:       w4/r0 (latest is w4/r0)  99
+Feb 24 06:06:47 (none) kern.notice kernel: UBIFS: default compressor: lzo  79
+Feb 24 06:06:47 (none) kern.notice kernel: UBIFS: reserved for root:  293871 bytes (286 KiB)  98
+Feb 24 06:06:47 (none) kern.warn kernel: rdpa: module license 'Proprietary' taints kernel.  96
+Feb 24 06:06:47 (none) kern.warn kernel: Disabling lock debugging due to kernel taint  91
+Feb 24 06:06:47 (none) kern.warn kernel: scratchpad RdpaWanType - GBE   76
+Feb 24 06:06:47 (none) kern.warn kernel: scratchpad WanOEMac - EMAC5   75
+Feb 24 06:06:47 (none) kern.err kernel: ip class mode is   63
+Feb 24 06:06:47 (none) kern.err kernel:   Reserved memory  name [tm]  address[aea00000]  size [20971520] 110
+Feb 24 06:06:47 (none) kern.err kernel:   Reserved memory  name [mc]  address[ae600000]  size [4194304] 109
+Feb 24 06:06:47 (none) kern.warn kernel: enable IH Wan-Wan forwarding...  78
+Feb 24 06:06:47 (none) kern.warn kernel: data_path_go Done!!  66
+Feb 24 06:06:47 (none) kern.warn kernel: Set EMAC4 as RGMII  65
+Feb 24 06:06:47 (none) kern.err kernel:   Reserved memory  name [tm]  address[aea00000]  size [20971520] 110
+Feb 24 06:06:47 (none) kern.err kernel:   Reserved memory  name [mc]  address[ae600000]  size [4194304] 109
+Feb 24 06:06:47 (none) kern.warn kernel: ^[[0;36;44mBroadcom Packet Flow Cache registered with netdev chain^[[0m 118
+Feb 24 06:06:47 (none) kern.warn kernel: ^[[0;36;44mBroadcom Packet Flow Cache learning via BLOG enabled.^[[0m 116
+Feb 24 06:06:47 (none) kern.warn kernel: ^[[0;35m[FHW]  pktDbgLvl[0xc0634f00]=0^[[0m  90
+Feb 24 06:06:47 (none) kern.warn kernel: ^[[0;34m[FHW]  fhw_construct: ^[[0m  82
+Feb 24 06:06:47 (none) kern.warn kernel: ^[[0;36;44mInitialized Fcache HW accelerator layer state^[[0m 108
+Feb 24 06:06:47 (none) kern.warn kernel: flwStatsThread created  69
+Feb 24 06:06:47 (none) kern.warn kernel: ^[[0;36;44mConstructed Broadcom Packet Flow Cache v3.0 Nov  2 2022 00:30:01^[[0m 127
+Feb 24 06:06:47 (none) kern.info kernel: i2c i2c-0: new_device: Instantiated device gpon_i2c at 0x50 106
+Feb 24 06:06:47 (none) kern.info kernel: i2c i2c-0: new_device: Instantiated device gpon_i2c at 0x51 106
+Feb 24 06:06:47 (none) kern.warn kernel: ^[[0;36;44mBroadcom Packet Flow Cache HW acceleration enabled.^[[0m 114
+Feb 24 06:06:47 (none) kern.warn kernel: ^[[0;36;44mBroadcom Packet Flow Cache HW acceleration enabled.^[[0m 114
+Feb 24 06:06:47 (none) kern.warn kernel: Broadcom BCM68389_B0 Ethernet Network Device v0.1 Nov  2 2022 00:31:07 117
+Feb 24 06:06:47 (none) kern.warn kernel: dgasp: kerSysRegisterDyingGaspHandler: bcmsw registered  103
+Feb 24 06:06:47 (none) kern.warn kernel: eth0: <Int sw port: 0> <Logical : 00> PHY_ID <0x01800001 : 0x01> MAC : D0:76:8F:00:42:6D 135
+Feb 24 06:06:47 (none) kern.warn kernel: eth1: <Int sw port: 1> <Logical : 01> PHY_ID <0x01800002 : 0x02> MAC : D0:76:8F:00:42:6E 135
+Feb 24 06:06:47 (none) kern.warn kernel: eth2: <Int sw port: 2> <Logical : 02> PHY_ID <0x01800003 : 0x03> MAC : D0:76:8F:00:42:6F 135
+Feb 24 06:06:47 (none) kern.warn kernel: eth3: <Int sw port: 3> <Logical : 03> PHY_ID <0x01800004 : 0x04> MAC : D0:76:8F:00:42:70 135
+Feb 24 06:06:47 (none) kern.warn kernel: wf0: <Int sw port: 4> <Logical : 04> PHY_ID <0x021800ff : 0x1f> MAC : D0:76:8F:00:42:6B 134
+Feb 24 06:06:47 (none) kern.warn kernel: ^M **** invalid port 5 - has no EMAC related  91
+Feb 24 06:06:47 (none) kern.warn kernel: eth5: <Int sw port: 5> <Logical : 05> PHY_ID <0x86180041 : 0x01> MAC : D0:76:8F:00:42:6A 135
+Feb 24 06:06:47 (none) kern.warn kernel: Error Access Type 0: Neither SPI nor PMDIO access in extsw_wreg <page:0x40, reg:0x5> 131
+Feb 24 06:06:47 (none) kern.warn kernel: All Port Bit Map: 0x003f: eth0,eth1,eth2,eth3,wf0,eth5 101
+Feb 24 06:06:47 (none) kern.warn kernel:    Chip WAN Only Ports 0000, Defined WAN Only Ports 0020, WAN Only Port Result: 0x0020:eth5 138
+Feb 24 06:06:47 (none) kern.warn kernel:    Chip WAN Preffered Ports 0000, Defined WAN Preffered Ports 0000, WAN Preffered Port Result: 0x0000: 149
+Feb 24 06:06:47 (none) kern.warn kernel:    Chip LAN Only Ports 0000, Defined LAN Only Ports 0000, LAN Only Port Result: 0x0000: 134
+Feb 24 06:06:47 (none) kern.warn kernel:    WAN/LAN Both Capable Ports 0x001f:eth0,eth1,eth2,eth3,wf0 107
+Feb 24 06:06:47 (none) kern.warn kernel: Creating Enet CPU ring for queue number 1 with 512 packets,Descriptor base=a84c8080 130
+Feb 24 06:06:47 (none) kern.warn kernel:  Creating Enet CPU ring for queue number 0 with 512 packets,Descriptor base=a84cc080 131
+Feb 24 06:06:47 (none) kern.warn kernel:  <2>wf0 Link UP 1000 mbps full duplex  84
+Feb 24 06:06:47 (none) kern.warn kernel: ^M **** invalid port 5 - has no EMAC related  91
+Feb 24 06:06:47 (none) kern.crit kernel: eth5 Link UP 1000 mbps full duplex  81
+Feb 24 06:06:47 (none) kern.crit kernel: eth0 (Int switch port: 0) (Logical Port: 0) Link UP 100 mbps full duplex 119
+Feb 24 06:06:47 (none) kern.info kernel: Initializing USB Mass Storage driver...  86
+Feb 24 06:06:47 (none) kern.info kernel: usbcore: registered new interface driver usb-storage  99
+Feb 24 06:06:47 (none) kern.info kernel: USB Mass Storage support registered.  83
+Feb 24 06:06:47 (none) kern.warn kernel: netdev path : wf0.6 -> wf0  73
+Feb 24 06:06:47 (none) kern.warn kernel: netdev path : wf0.0 -> wf0  73
+Feb 24 06:06:47 (none) kern.warn kernel: ERR: bridge_if_to_ih_src_matrix#341: Internal error. Can't convert port 7 to ih src matrix 137
+Feb 24 06:06:47 (none) kern.warn kernel: ERR: bridge_if_to_ih_src_matrix#341: Internal error. Can't convert port 7 to ih src matrix 137
+Feb 24 06:06:47 (none) kern.info kernel: device wf0.7.0 entered promiscuous mode  86
+Feb 24 06:06:47 (none) kern.info kernel: device wf0.7 entered promiscuous mode  84
+Feb 24 06:06:47 (none) kern.info kernel: device wf0 entered promiscuous mode  82
+Feb 24 06:06:47 (none) kern.warn kernel: netdev path : wf0.100 -> wf0  75
+Feb 24 06:06:47 (none) kern.info kernel: brqt: port 1(wf0.7.0) entered forwarding state  93
+Feb 24 06:06:47 (none) kern.info kernel: brqt: port 1(wf0.7.0) entered forwarding state  93
+Feb 24 06:06:47 (none) kern.warn kernel: Host MIPS Clock divider pwrsaving is enabled  91
+Feb 24 06:06:47 (none) kern.warn kernel: ERR: port_root_tm_get#2048: rdpa_port_get FAILED: rc(-5) 103
+Feb 24 06:06:47 (none) kern.warn kernel: ERR: rdpa_cmd_tm_ioctl#2611: dev_root_tm_get() failed: dev_type(0) dev_id(0) rc(12) 130
+Feb 24 06:06:47 (none) kern.warn kernel: ERR: rdpa_cmd_tm_ioctl#3209: rdpa_cmd_tm_ioctl() OUT: FAILED: cmd=0 tm(0) rc(0) 126
+Feb 24 06:06:47 (none) kern.info kernel: Netfilter messages via NETLINK v0.30.  84
+Feb 24 06:06:48 (none) daemon.notice syslog: Broadcom SNTP Stack v0.1 (Nov  2 2022, 01:32:45)  99
+Feb 24 06:06:48 (none) daemon.err syslog: sntp:54.702:sntp:459:dns_lookup(ntp.hay.net) failed  99
+Feb 24 06:06:48 (none) daemon.err syslog: sntp:54.704:sntp:459:dns_lookup(time.nist.gov) failed 101
+Feb 24 06:06:48 (none) daemon.err syslog: sntp:54.707:sntp:459:dns_lookup(ntp1.tummy.com) failed 102
+Feb 24 06:06:48 (none) daemon.notice syslog: sntp:54.708:sntp_writeTimeZoneToFile:970:CALIX: timezone update. set timezone info to file. 142
+Feb 24 06:06:48 (none) kern.warn kernel: br_netlink_mcpd.c: Setting registration type 0 pid to 1396 105
+Feb 24 06:06:48 (none) kern.info kernel: ip_tables: (C) 2000-2006 Netfilter Core Team  91
+Feb 24 06:06:48 (none) kern.info kernel: ip6_tables: (C) 2000-2006 Netfilter Core Team  92
+Feb 24 06:06:48 (none) kern.info kernel: ADDRCONF(NETDEV_UP): br0: link is not ready  90
+Feb 24 06:06:49 (none) kern.warn kernel: netdev path : eth0.0 -> eth0  75
+Feb 24 06:06:49 (none) kern.info kernel: device eth0.0 entered promiscuous mode  85
+Feb 24 06:06:49 (none) kern.info kernel: device eth0 entered promiscuous mode  83
+Feb 24 06:06:49 (none) kern.info kernel: br0: port 1(eth0.0) entered listening state  90
+Feb 24 06:06:49 (none) kern.info kernel: br0: port 1(eth0.0) entered listening state  90
+Feb 24 06:06:49 (none) kern.warn kernel: netdev path : eth0.oui -> eth0  77
+Feb 24 06:06:50 (none) kern.crit kernel: eth0 Link DOWN.  62
+Feb 24 06:06:50 (none) kern.info kernel: br0: port 1(eth0.0) entered disabled state  89
+Feb 24 06:06:51 (none) kern.crit kernel: eth0 (Int switch port: 0) (Logical Port: 0) Link UP 100 mbps full duplex 119
+Feb 24 06:06:51 (none) kern.info kernel: br0: port 1(eth0.0) entered listening state  90
+Feb 24 06:06:51 (none) kern.info kernel: br0: port 1(eth0.0) entered listening state  90
+Feb 24 06:06:51 (none) kern.info kernel: ADDRCONF(NETDEV_UP): eth1: link is not ready  91
+Feb 24 06:06:51 (none) kern.warn kernel: netdev path : eth1.0 -> eth1  75
+Feb 24 06:06:51 (none) kern.info kernel: device eth1.0 entered promiscuous mode  85
+Feb 24 06:06:51 (none) kern.info kernel: device eth1 entered promiscuous mode  83
+Feb 24 06:06:51 (none) kern.info kernel: br0: port 2(eth1.0) entered listening state  90
+Feb 24 06:06:51 (none) kern.info kernel: br0: port 2(eth1.0) entered listening state  90
+Feb 24 06:06:51 (none) kern.warn kernel: netdev path : eth1.oui -> eth1  77
+Feb 24 06:06:51 (none) kern.info kernel: br0: port 2(eth1.0) entered disabled state  89
+Feb 24 06:06:52 (none) kern.info kernel: ADDRCONF(NETDEV_UP): eth2: link is not ready  91
+Feb 24 06:06:52 (none) kern.warn kernel: netdev path : eth2.0 -> eth2  75
+Feb 24 06:06:52 (none) kern.info kernel: device eth2.0 entered promiscuous mode  85
+Feb 24 06:06:52 (none) kern.info kernel: device eth2 entered promiscuous mode  83
+Feb 24 06:06:52 (none) kern.info kernel: br0: port 3(eth2.0) entered listening state  90
+Feb 24 06:06:52 (none) kern.info kernel: br0: port 3(eth2.0) entered listening state  90
+Feb 24 06:06:52 (none) kern.warn kernel: netdev path : eth2.oui -> eth2  77
+Feb 24 06:06:52 (none) kern.info kernel: br0: port 3(eth2.0) entered disabled state  89
+Feb 24 06:06:53 (none) kern.info kernel: ADDRCONF(NETDEV_UP): eth3: link is not ready  91
+Feb 24 06:06:53 (none) kern.warn kernel: netdev path : eth3.0 -> eth3  75
+Feb 24 06:06:53 (none) kern.info kernel: device eth3.0 entered promiscuous mode  85
+Feb 24 06:06:53 (none) kern.info kernel: device eth3 entered promiscuous mode  83
+Feb 24 06:06:53 (none) kern.info kernel: br0: port 4(eth3.0) entered listening state  90
+Feb 24 06:06:53 (none) kern.info kernel: br0: port 4(eth3.0) entered listening state  90
+Feb 24 06:06:54 (none) kern.warn kernel: netdev path : eth3.oui -> eth3  77
+Feb 24 06:06:54 (none) kern.info kernel: br0: port 4(eth3.0) entered disabled state  89
+Feb 24 06:06:55 (none) kern.info kernel: br0: port 1(eth0.0) entered learning state  89
+Feb 24 06:06:55 (none) kern.warn kernel: ERR: bridge_if_to_ih_src_matrix#341: Internal error. Can't convert port 7 to ih src matrix 137
+Feb 24 06:06:55 (none) kern.info kernel: ADDRCONF(NETDEV_UP): br1: link is not ready  90
+Feb 24 06:06:55 (none) kern.info kernel: device eth0.oui entered promiscuous mode  87
+Feb 24 06:06:55 (none) kern.info kernel: br1: port 1(eth0.oui) entered listening state  92
+Feb 24 06:06:55 (none) kern.info kernel: br1: port 1(eth0.oui) entered listening state  92
+Feb 24 06:06:56 (none) kern.info kernel: device eth1.oui entered promiscuous mode  87
+Feb 24 06:06:56 (none) kern.info kernel: br1: port 2(eth1.oui) entered listening state  92
+Feb 24 06:06:56 (none) kern.info kernel: br1: port 2(eth1.oui) entered listening state  92
+Feb 24 06:06:56 (none) kern.info kernel: brqt: port 1(wf0.7.0) entered forwarding state  93
+Feb 24 06:06:56 (none) kern.info kernel: device eth2.oui entered promiscuous mode  87
+Feb 24 06:06:56 (none) kern.info kernel: br1: port 3(eth2.oui) entered listening state  92
+Feb 24 06:06:56 (none) kern.info kernel: br1: port 3(eth2.oui) entered listening state  92
+Feb 24 06:06:57 (none) kern.info kernel: device eth3.oui entered promiscuous mode  87
+Feb 24 06:06:57 (none) kern.info kernel: br1: port 4(eth3.oui) entered listening state  92
+Feb 24 06:06:57 (none) kern.info kernel: br1: port 4(eth3.oui) entered listening state  92
+Feb 24 06:06:58 (none) kern.warn kernel: No device name wf0.7.oui found in Ethernet driver  96
+Feb 24 06:06:58 (none) kern.info kernel: ADDRCONF(NETDEV_UP): sit0: link is not ready  91
+Feb 24 06:06:58 (none) kern.info kernel: ADDRCONF(NETDEV_UP): ip6tnl0: link is not ready  94
+Feb 24 06:06:58 (none) kern.info kernel: ADDRCONF(NETDEV_UP): bcmsw: link is not ready  92
+Feb 24 06:06:58 (none) kern.info kernel: ADDRCONF(NETDEV_UP): eth1: link is not ready  91
+Feb 24 06:06:58 (none) kern.info kernel: ADDRCONF(NETDEV_UP): eth2: link is not ready  91
+Feb 24 06:06:58 (none) kern.info kernel: ADDRCONF(NETDEV_UP): eth3: link is not ready  91
+Feb 24 06:06:58 (none) kern.info kernel: ADDRCONF(NETDEV_UP): wl0: link is not ready  90
+Feb 24 06:06:58 (none) kern.info kernel: ADDRCONF(NETDEV_UP): gre0: link is not ready  91
+Feb 24 06:06:58 (none) kern.info kernel: ADDRCONF(NETDEV_UP): wf0.1: link is not ready  92
+Feb 24 06:06:58 (none) kern.info kernel: ADDRCONF(NETDEV_UP): wf0.2: link is not ready  92
+Feb 24 06:06:58 (none) kern.info kernel: ADDRCONF(NETDEV_UP): wf0.3: link is not ready  92
+Feb 24 06:06:59 (none) kern.warn kernel: ^M **** invalid port 5 - has no EMAC related  91
+Feb 24 06:06:59 (none) kern.crit kernel: eth5 Link DOWN.  62
+Feb 24 06:06:59 (none) kern.info kernel: br0: topology change detected, propagating  89
+Feb 24 06:06:59 (none) kern.info kernel: br0: port 1(eth0.0) entered forwarding state  91
+Feb 24 06:06:59 (none) kern.info kernel: ADDRCONF(NETDEV_CHANGE): br0: link becomes ready  95
+Feb 24 06:06:59 (none) kern.warn kernel: ERR: port_root_tm_get#2048: rdpa_port_get FAILED: rc(-5) 103
+Feb 24 06:06:59 (none) kern.warn kernel: ERR: rdpa_cmd_tm_ioctl#2611: dev_root_tm_get() failed: dev_type(0) dev_id(0) rc(12) 130
+Feb 24 06:06:59 (none) kern.warn kernel: ERR: rdpa_cmd_tm_ioctl#3209: rdpa_cmd_tm_ioctl() OUT: FAILED: cmd=0 tm(0) rc(0) 126
+Feb 24 06:06:59 (none) kern.info kernel: br1: port 1(eth0.oui) entered learning state  91
+Feb 24 06:07:00 (none) kern.info kernel: br1: port 2(eth1.oui) entered learning state  91
+Feb 24 06:07:00 (none) kern.info kernel: br0: port 1(eth0.0) received tcn bpdu  84
+Feb 24 06:07:00 (none) kern.info kernel: br0: topology change detected, propagating  89
+Feb 24 06:07:00 (none) kern.info kernel: br1: port 3(eth2.oui) entered learning state  91
+Feb 24 06:07:01 (none) kern.info kernel: br1: port 4(eth3.oui) entered learning state  91
+Feb 24 06:07:03 (none) kern.warn kernel: ^M **** invalid port 5 - has no EMAC related  91
+Feb 24 06:07:03 (none) kern.crit kernel: eth5 (Int switch port: 5) (Logical Port: 5) Link UP 1000 mbps full duplex 120
+Feb 24 06:07:03 (none) kern.info kernel: br1: topology change detected, propagating  89
+Feb 24 06:07:03 (none) kern.info kernel: br1: port 1(eth0.oui) entered forwarding state  93
+Feb 24 06:07:03 (none) kern.info kernel: ADDRCONF(NETDEV_CHANGE): br1: link becomes ready  95
+Feb 24 06:07:03 (none) kern.info kernel: nf_conntrack version 0.5.0 (3541 buckets, 14164 max)  99
+Feb 24 06:07:04 (none) kern.warn kernel: ^[[0;33;41m[ERROR enet] bcmeapi_ioctl_ethsw_port_pause_capability,690: invalid lan port id 8  140
+Feb 24 06:07:04 (none) kern.warn kernel: ^[[0m  52
+Feb 24 06:07:04 (none) kern.info kernel: br1: topology change detected, propagating  89
+Feb 24 06:07:04 (none) kern.info kernel: br1: port 2(eth1.oui) entered forwarding state  93
+Feb 24 06:07:04 (none) kern.info kernel: br1: topology change detected, propagating  89
+Feb 24 06:07:04 (none) kern.info kernel: br1: port 3(eth2.oui) entered forwarding state  93
+Feb 24 06:07:05 (none) kern.info kernel: br1: topology change detected, propagating  89
+Feb 24 06:07:05 (none) kern.info kernel: br1: port 4(eth3.oui) entered forwarding state  93
+Feb 24 06:07:05 (none) daemon.err syslog: dhcpd:72.130:ifAcceptLanHostAccess:192:ifAcceptLanHostAccess receive return 9809. 129
+Feb 24 06:07:05 (none) daemon.err syslog: dhcpd:72.131:add_lease:50:Too many Hosts access, the capacity is not afford an IP in dhcpd lease ! 146
+Feb 24 06:07:06 (none) kern.info kernel: monitor task is initialized pid= 1253   85
+Feb 24 06:07:07 (none) kern.warn kernel: ERR: port_root_tm_get#2048: rdpa_port_get FAILED: rc(-5) 103
+Feb 24 06:07:07 (none) kern.warn kernel: ERR: rdpa_cmd_tm_ioctl#2611: dev_root_tm_get() failed: dev_type(0) dev_id(0) rc(12) 130
+Feb 24 06:07:07 (none) kern.warn kernel: ERR: rdpa_cmd_tm_ioctl#3209: rdpa_cmd_tm_ioctl() OUT: FAILED: cmd=0 tm(0) rc(0) 126
+Feb 24 06:07:07 (none) daemon.err syslog: /bin/smd:73.799:processMessage:2059:CMS_MSG_WAN_LINK_UP src=21 dst=21 flags_event=1 131
+Feb 24 06:07:07 (none) daemon.err syslog: /bin/smd:73.808:processMessage:2059:CMS_MSG_WAN_LINK_UP src=21 dst=20 flags_event=1 131
+Feb 24 06:07:07 (none) kern.warn kernel: ERR: rdpa_cpu_send_sysb#2010: can't map DS port/queue 7/0 P0 to RDD. rc=-5 121
+Feb 24 06:07:07 (none) kern.notice kernel: rdpa_cpu_send_sysb() for LAN port 5 rdpa_if 7 returned -5 106
+Feb 24 06:07:08 (none) kern.warn kernel: eth5.1 MAC address set to D0:76:8F:00:42:6A  90
+Feb 24 06:07:08 (none) kern.warn kernel: netdev path : eth5.1 -> eth5  75
+Feb 24 06:07:08 (none) kern.warn kernel: BCMVLAN : eth5 mode was set to RG  80
+Feb 24 06:07:08 (none) kern.warn kernel: ERR: rdpa_cpu_send_sysb#2010: can't map DS port/queue 7/0 P0 to RDD. rc=-5 121
+Feb 24 06:07:08 (none) kern.notice kernel: rdpa_cpu_send_sysb() for LAN port 5 rdpa_if 7 returned -5 106
+Feb 24 06:07:08 (none) kern.warn kernel: ERR: rdpa_cpu_send_sysb#2010: can't map DS port/queue 7/0 P0 to RDD. rc=-5 121
+Feb 24 06:07:08 (none) kern.notice kernel: rdpa_cpu_send_sysb() for LAN port 5 rdpa_if 7 returned -5 106
+Feb 24 06:07:08 (none) daemon.err syslog: dhcpc:75.221:udhcpc:872:udhcp client (v0.9.6) started 2154 106
+Feb 24 06:07:08 (none) kern.warn kernel: ERR: rdpa_cpu_send_sysb#2010: can't map DS port/queue 7/0 P0 to RDD. rc=-5 121
+Feb 24 06:07:08 (none) kern.notice kernel: rdpa_cpu_send_sysb() for LAN port 5 rdpa_if 7 returned -5 106
+Feb 24 06:07:09 (none) kern.warn kernel: netdev path : eth5.2 -> eth5  75
+Feb 24 06:07:09 (none) kern.warn kernel: BCMVLAN : eth5 mode was set to RG  80
+Feb 24 06:07:09 (none) kern.warn kernel: ERR: rdpa_cpu_send_sysb#2010: can't map DS port/queue 7/0 P0 to RDD. rc=-5 121
+Feb 24 06:07:09 (none) kern.notice kernel: rdpa_cpu_send_sysb() for LAN port 5 rdpa_if 7 returned -5 106
+Feb 24 06:07:09 (none) kern.warn kernel: ERR: port_root_tm_get#2048: rdpa_port_get FAILED: rc(-5) 103
+Feb 24 06:07:09 (none) kern.warn kernel: ERR: rdpa_cmd_tm_ioctl#2611: dev_root_tm_get() failed: dev_type(0) dev_id(0) rc(12) 130
+Feb 24 06:07:09 (none) kern.warn kernel: ERR: rdpa_cmd_tm_ioctl#3209: rdpa_cmd_tm_ioctl() OUT: FAILED: cmd=0 tm(0) rc(0) 126
+Feb 24 06:07:09 (none) kern.warn kernel: ERR: rdpa_cpu_send_sysb#2010: can't map DS port/queue 7/0 P0 to RDD. rc=-5 121
+Feb 24 06:07:09 (none) kern.notice kernel: rdpa_cpu_send_sysb() for LAN port 5 rdpa_if 7 returned -5 106
+Feb 24 06:07:09 (none) kern.info kernel: device eth5.2 entered promiscuous mode  85
+Feb 24 06:07:09 (none) kern.info kernel: device eth5 entered promiscuous mode  83
+Feb 24 06:07:09 (none) kern.info kernel: br1: port 5(eth5.2) entered listening state  90
+Feb 24 06:07:09 (none) kern.info kernel: br1: port 5(eth5.2) entered listening state  90
+Feb 24 06:07:09 (none) daemon.err dhcp6c[2157]: dhcp6_ctl_authinit: failed to open /etc/dhcp6cctlkey: No such file or directory 133
+Feb 24 06:07:09 (none) kern.warn kernel: ERR: rdpa_cpu_send_sysb#2010: can't map DS port/queue 7/0 P0 to RDD. rc=-5 121
+Feb 24 06:07:09 (none) kern.notice kernel: rdpa_cpu_send_sysb() for LAN port 5 rdpa_if 7 returned -5 106
+Feb 24 06:07:10 (none) kern.warn kernel: ERR: rdpa_cpu_send_sysb#2010: can't map DS port/queue 7/0 P0 to RDD. rc=-5 121
+Feb 24 06:07:10 (none) kern.notice kernel: rdpa_cpu_send_sysb() for LAN port 5 rdpa_if 7 returned -5 106
+Feb 24 06:07:10 (none) daemon.err syslog: dhcpd:77.318:ifAcceptLanHostAccess:192:ifAcceptLanHostAccess receive return 9809. 129
+Feb 24 06:07:10 (none) daemon.err syslog: dhcpd:77.318:add_lease:50:Too many Hosts access, the capacity is not afford an IP in dhcpd lease ! 146
+Feb 24 06:07:10 (none) daemon.err syslog: dhcpd:77.447:udhcpd:534:unrecognized msg, type=0x100007c0 dataLength=0 118
+Feb 24 06:07:11 (none) daemon.err syslog: vodsl:77.767:sip_start:161:(((( vodsl: ENTER )))))  98
+Feb 24 06:07:11 (none) daemon.notice syslog: vodsl:77.770:cmsMdm_initWithAcc:309:entered, eid=150 acc=0x0 shmid=0 119
+Feb 24 06:07:11 (none) daemon.notice syslog: vodsl:77.770:oalShm_init:143:attaching to existing shmId=0 109
+Feb 24 06:07:11 (none) daemon.notice syslog: vodsl:77.770:oalLck_init:118:attach existing done, semid=0 109
+Feb 24 06:07:11 (none) daemon.notice syslog: vodsl:77.771:cmsMem_initSharedMemPointer:137:shm pool: 0x58837f48-0x588e2000 127
+Feb 24 06:07:11 (none) kern.warn kernel: ERR: rdpa_cpu_send_sysb#2010: can't map DS port/queue 7/0 P0 to RDD. rc=-5 121
+Feb 24 06:07:11 (none) kern.notice kernel: rdpa_cpu_send_sysb() for LAN port 5 rdpa_if 7 returned -5 106
+Feb 24 06:07:11 (none) kern.warn kernel: ERR: rdpa_cpu_send_sysb#2010: can't map DS port/queue 7/0 P0 to RDD. rc=-5 121
+Feb 24 06:07:11 (none) kern.notice kernel: rdpa_cpu_send_sysb() for LAN port 5 rdpa_if 7 returned -5 106
+Feb 24 06:07:11 (none) daemon.err syslog: ctr69c:78.148:updateTr69cCfgInfo_igd:1060:acsState.boundIfName changes from (null) to eth5.1 140
+Feb 24 06:07:11 (none) daemon.err syslog: ctr69c:78.155:readMessageFromSmd:1378:Rcv msg type=0x10000250, src=20, dst=5008 127
+Feb 24 06:07:11 (none) daemon.err syslog: ssk:78.243:cmsUtl_standardizeIp6Addr:1862:Invalid ipv6 address=ntp.hay.net 122
+Feb 24 06:07:11 (none) daemon.err syslog: ssk:78.243:cmsUtl_standardizeIp6Addr:1862:Invalid ipv6 address=time.nist.gov 124
+Feb 24 06:07:11 (none) daemon.err syslog: ssk:78.243:cmsUtl_standardizeIp6Addr:1862:Invalid ipv6 address=ntp1.tummy.com 125
+Feb 24 06:07:11 (none) daemon.err syslog: ssk:78.501:_insertDescToFile:4636:first fail to open file, errno=2 114
+Feb 24 06:07:11 (none) daemon.err syslog: ssk:78.502:_insertDescToFile:4636:first fail to open file, errno=2 114
+Feb 24 06:07:11 (none) daemon.err syslog: ssk:78.505:sendValueChangeEvent:4569:sendValueChangeEvent orgEvtSourceEid=21 124
+Feb 24 06:07:11 (none) daemon.err syslog: ssk:78.506:ssk_main:1386:cannot handle msg type 0x10000802 from 20 (flags=0x20001243) 133
+Feb 24 06:07:12 (none) daemon.err syslog: ssk:78.611:ifRgcfgApplied:5132:Golden config[version:1.2.0.2] once applied 122
+Feb 24 06:07:12 (none) daemon.err syslog: ssk:78.611:processWanDetectPreEntry:5162:WAN link up, but this model is unfit for run auto framing or Golden/backup config once applied, skip auto framing 202
+Feb 24 06:07:12 (none) daemon.err syslog: ssk:78.620:ssk_main:1386:cannot handle msg type 0x10000802 from 20 (flags=0x20001243) 133
+Feb 24 06:07:12 (none) daemon.err syslog: ssk:78.621:ssk_main:1386:cannot handle msg type 0x10000802 from 20 (flags=0x20001243) 133
+Feb 24 06:07:12 (none) daemon.err syslog: dhcpd:78.625:udhcpd:534:unrecognized msg, type=0x10000884 dataLength=0 118
+Feb 24 06:07:12 (none) daemon.err syslog: dhcpd:78.626:udhcpd:534:unrecognized msg, type=0x10000884 dataLength=0 118
+Feb 24 06:07:12 (none) daemon.err syslog: tr69c:78.677:sendInform:1709:WAN is not UP when send inform, wait for WAN(eth5.1). 130
+Feb 24 06:07:12 (none) daemon.err syslog: ctr69c:79.377:sendInform:1709:WAN is not UP when send inform, wait for WAN(eth5.1). 131
+Feb 24 06:07:12 (none) kern.warn kernel: scratchpad RdpaWanType - GBE   76
+Feb 24 06:07:12 (none) kern.warn kernel: scratchpad WanOEMac - EMAC5   75
+Feb 24 06:07:12 (none) kern.warn kernel: START AE SerDes Init script WAN BPCM reg = 0x4  93
+Feb 24 06:07:12 (none) kern.warn kernel: (*) Configure SATA_PHY  - TX=RX = GEN1 = AE bit rate  99
+Feb 24 06:07:12 (none) kern.info kernel: YYYYYYYYYY - holding PHY in reset, phy_id = 86180041, val = 1940 111
+Feb 24 06:07:12 (none) kern.warn kernel: ZZZZZZZZZZ - holding PHY in reset, phy_id = 86180041, val = 1940 111
+Feb 24 06:07:12 (none) kern.warn kernel: YYYYYYYYYY - Releasing PHY from reset, phy_id = 86180041, val = 1940 115
+Feb 24 06:07:12 (none) kern.warn kernel: ERR: rdpa_if_to_rdd_lan_mac#264: status:Operation is not supported Unexpected lan port 0 (wan0) 142
+Feb 24 06:07:12 (none) kern.warn kernel: enable IH Wan-Wan forwarding...  78
+Feb 24 06:07:13 (none) kern.crit kernel: eth5 Link DOWN.  62
+Feb 24 06:07:13 (none) kern.info kernel: br1: port 5(eth5.2) entered disabled state  89
+Feb 24 06:07:13 (none) daemon.err syslog: /bin/smd:80.199:processMessage:2055:CMS_MSG_WAN_LINK_DOWN src=21 dst=20 flags_event=1 133
+Feb 24 06:07:14 (none) daemon.err syslog: ssk:80.761:removeIptRulesByIpAddress:5852:Entered: domain=2 IpAddress=0.0.0.0 table=nat chain=PREROUTING 152
+Feb 24 06:07:14 (none) daemon.err syslog: ssk:80.810:removeIptRulesByIpAddress:5852:Entered: domain=2 IpAddress=0.0.0.0 table=nat chain=POSTROUTING 153
+Feb 24 06:07:14 (none) daemon.err syslog: ssk:81.177:rut_sendMsgCommon:1214:acquire MDM lock successfully 111
+Feb 24 06:07:15 (none) daemon.err syslog: ssk:81.827:rut_sendMsgCommon:1214:acquire MDM lock successfully 111
+Feb 24 06:07:15 (none) daemon.err syslog: ssk:81.880:rut_sendMsgCommon:1214:acquire MDM lock successfully 111
+Feb 24 06:07:15 (none) daemon.err syslog: ssk:81.999:rut_sendMsgCommon:1214:acquire MDM lock successfully 111
+Feb 24 06:07:15 (none) daemon.err syslog: ssk:82.058:rut_sendMsgCommon:1214:acquire MDM lock successfully 111
+Feb 24 06:07:15 (none) daemon.err syslog: ssk:82.150:rut_sendMsgCommon:1214:acquire MDM lock successfully 111
+Feb 24 06:07:16 (none) daemon.err syslog: /bin/smd:82.743:distributeEventMessage:2444:targetDinfo and srcDinfo are the same, don't send eid=21 148
+Feb 24 06:07:16 (none) daemon.err syslog: ssk:83.132:rutLan_stopBridgeSniffer:4478:cannot open file /var/sniffer_br1 122
+Feb 24 06:07:16 (none) kern.info kernel: device eth5 left promiscuous mode  80
+Feb 24 06:07:16 (none) kern.info kernel: br1: port 5(eth5.2) entered disabled state  89
+Feb 24 06:07:16 (none) kern.info kernel: device eth5.2 left promiscuous mode  82
+Feb 24 06:07:16 (none) kern.info kernel: br1: port 5(eth5.2) entered disabled state  89
+Feb 24 06:07:16 (none) daemon.err syslog: ssk:83.555:rut_sendMsgCommon:1214:acquire MDM lock successfully 111
+Feb 24 06:07:17 (none) kern.crit kernel: eth5 (Int switch port: 5) (Logical Port: 5) Link UP 1000 mbps full duplex 120
+Feb 24 06:07:17 (none) kern.warn kernel: ^[[0;33;41m[ERROR vlan] bcmVlan_removeTagRuleById,2517: Real Device eth5 has no VLAN Interfaces^[[0m 147
+Feb 24 06:07:17 (none) kern.warn kernel: ^[[0;33;41m[ERROR vlan] vlanIoctl ,834: Failed to removed Tag Rule from eth5 (tags=0, dir=1, id=3)^[[0m 150
+Feb 24 06:07:17 (none) kern.warn kernel: ^[[0;33;41m[ERROR vlan] bcmVlan_removeTagRuleById,2517: Real Device eth5 has no VLAN Interfaces^[[0m 147
+Feb 24 06:07:17 (none) kern.warn kernel: ^[[0;33;41m[ERROR vlan] vlanIoctl ,834: Failed to removed Tag Rule from eth5 (tags=0, dir=1, id=4)^[[0m 150
+Feb 24 06:07:17 (none) kern.warn kernel: ^[[0;33;41m[ERROR vlan] bcmVlan_removeTagRuleById,2517: Real Device eth5 has no VLAN Interfaces^[[0m 147
+Feb 24 06:07:17 (none) kern.warn kernel: ^[[0;33;41m[ERROR vlan] vlanIoctl ,834: Failed to removed Tag Rule from eth5 (tags=1, dir=0, id=1)^[[0m 150
+Feb 24 06:07:17 (none) kern.warn kernel: wfd_registerdevice Successfully registered dev wl0.1 ifidx 1 wfd_idx 0 117
+Feb 24 06:07:17 (none) kern.warn kernel: wfd_registerdevice Successfully registered dev wl0.4 ifidx 4 wfd_idx 0 117
+Feb 24 06:07:17 (none) kern.warn kernel: wfd_registerdevice Successfully registered dev wl0.2 ifidx 2 wfd_idx 0 117
+Feb 24 06:07:17 (none) kern.warn kernel: wfd_registerdevice Successfully registered dev wl0.3 ifidx 3 wfd_idx 0 117
+Feb 24 06:07:17 (none) kern.warn kernel: wfd_registerdevice Successfully registered dev wl0.5 ifidx 5 wfd_idx 0 117
+Feb 24 06:07:17 (none) kern.warn kernel: wfd_registerdevice Successfully registered dev wl0.6 ifidx 6 wfd_idx 0 117
+Feb 24 06:07:17 (none) kern.warn kernel: wfd_registerdevice Successfully registered dev wl0.7 ifidx 7 wfd_idx 0 117
+Feb 24 06:07:18 (none) daemon.err syslog: /bin/smd:84.802:distributeEventMessage:2444:targetDinfo and srcDinfo are the same, don't send eid=21 148
+Feb 24 06:07:18 (none) daemon.err syslog: /bin/smd:85.106:processMessage:2059:CMS_MSG_WAN_LINK_UP src=21 dst=21 flags_event=1 131
+Feb 24 06:07:18 (none) daemon.err syslog: /bin/smd:85.106:processMessage:2059:CMS_MSG_WAN_LINK_UP src=21 dst=20 flags_event=1 131
+Feb 24 06:07:18 (none) daemon.err syslog: ctr69c:85.107:readMessageFromSmd:1378:Rcv msg type=0x10000252, src=21, dst=5008 127
+Feb 24 06:07:18 (none) daemon.err dhcp6s[2411]: dhcp6_ctl_authinit: failed to open /etc/dhcp6sctlkey: No such file or directory 133
+Feb 24 06:07:18 (none) kern.warn kernel: eth5.1 MAC address set to D0:76:8F:00:42:6A  90
+Feb 24 06:07:18 (none) kern.warn kernel: netdev path : eth5.1 -> eth5  75
+Feb 24 06:07:18 (none) kern.warn kernel: BCMVLAN : eth5 mode was set to RG  80
+Feb 24 06:07:18 (none) daemon.err syslog: /bin/smd:85.603:stopApp:2635:could not find specificEid=0x86a0017 (pid=2154 eid=23) 131
+Feb 24 06:07:19 (none) daemon.err syslog: ctr69c:85.642:cmsMgm_saveConfigToFlash:281:###################################SSK is still using MDM################################## 182
+Feb 24 06:07:19 (none) daemon.err syslog: ctr69c:85.649:cmsMgm_saveConfigToFlash:282:cmsMgm_saveConfigToFlash caller's eid = 5008 135
+Feb 24 06:07:19 (none) daemon.err syslog: ctr69c:85.653:setDefaultActiveNotification:1884:cmsMgm_saveConfigToFlash failed, ret=9004 137
+Feb 24 06:07:19 (none) daemon.err syslog: ssk:85.682:rut_sendMsgCommon:1214:acquire MDM lock successfully 111
+Feb 24 06:07:19 (none) daemon.err syslog: ssk:85.688:rutWan_startDhcpc:1187:-i eth5.1 -d 844E-1.ENT.dslforum.org -O D0768F -S CXNK0083728A -P ENT 151
+Feb 24 06:07:19 (none) daemon.err syslog: ssk:85.692:rut_sendMsgCommon:1214:acquire MDM lock successfully 111
+Feb 24 06:07:19 (none) daemon.err syslog: ssk:85.692:rutWan_startDhcpc:1194:starting dhcpc, pid=2561 on eth5.1 116
+Feb 24 06:07:19 (none) daemon.err syslog: ssk:85.696:rut_setIPv6AcceptRa:412:filePath:/proc/sys/net/ipv6/conf/eth5/accept_ra enable:0 139
+Feb 24 06:07:19 (none) daemon.err syslog: ssk:85.705:rut_sendMsgCommon:1214:acquire MDM lock successfully 111
+Feb 24 06:07:19 (none) daemon.err syslog: dhcpc:85.846:udhcpc:872:udhcp client (v0.9.6) started 2561 106
+Feb 24 06:07:19 (none) daemon.err dhcp6c[2562]: dhcp6_ctl_authinit: failed to open /etc/dhcp6cctlkey: No such file or directory 133
+Feb 24 06:07:19 (none) kern.warn kernel: netdev path : eth5.2 -> eth5  75
+Feb 24 06:07:19 (none) kern.warn kernel: BCMVLAN : eth5 mode was set to RG  80
+Feb 24 06:07:19 (none) daemon.err syslog: ssk:86.599:rutQos_tmPortShaperCfg:1873:tmctl_setPortShaper ERROR! 113
+Feb 24 06:07:20 (none) kern.warn kernel: ERR: egress_tm_rl_config_on_channel#1607: egress_tm/dir=us,index=0: status:Operation is not supported. Group-level rate limiting is not supported 192
+Feb 24 06:07:20 (none) kern.warn kernel: ERR: rdpa_cmd_tm_ioctl#3104: rdpa_egress_tm_rl_set() failed: tm(0) af(0) rc(-10) 127
+Feb 24 06:07:20 (none) kern.warn kernel: ERR: rdpa_cmd_tm_ioctl#3209: rdpa_cmd_tm_ioctl() OUT: FAILED: cmd=15 tm(0) rc(-10) 129
+Feb 24 06:07:20 (none) daemon.err syslog: ssk:86.631:rutLan_addInterfaceToBridge:2366:running [brctl addif br1 eth5.2] 124
+Feb 24 06:07:20 (none) kern.info kernel: device eth5.2 entered promiscuous mode  85
+Feb 24 06:07:20 (none) kern.info kernel: device eth5 entered promiscuous mode  83
+Feb 24 06:07:20 (none) kern.info kernel: br1: port 5(eth5.2) entered listening state  90
+Feb 24 06:07:20 (none) kern.info kernel: br1: port 5(eth5.2) entered listening state  90
+Feb 24 06:07:20 (none) daemon.err syslog: ssk:86.692:rut_sendMsgCommon:1214:acquire MDM lock successfully 111
+Feb 24 06:07:20 (none) daemon.err syslog: /bin/smd:87.460:distributeEventMessage:2444:targetDinfo and srcDinfo are the same, don't send eid=21 148
+Feb 24 06:07:21 (none) daemon.err syslog: ssk:87.772:ifRgcfgApplied:5132:Golden config[version:1.2.0.2] once applied 122
+Feb 24 06:07:21 (none) daemon.err syslog: ssk:87.773:processWanDetectPreEntry:5162:WAN link up, but this model is unfit for run auto framing or Golden/backup config once applied, skip auto framing 202
+Feb 24 06:07:21 (none) daemon.err syslog: ssk:87.816:processDhcpcStateChanged_igd:1045:got AcsURL=https://tr069.nisc-uss.coop:17547/hay 141
+Feb 24 06:07:21 (none) daemon.err syslog: ssk:87.816:setAcsParams_igd:4145:Could not change main ACS parameters by option43 because ACS URL set by golden configuration 173
+Feb 24 06:07:21 (none) daemon.err syslog: ssk:87.817:processDhcpcStateChanged_igd:1066:got altAcsURL=http://gcs.calix.local:8080 134
+Feb 24 06:07:21 (none) daemon.err syslog: ssk:87.817:setAltAcsParams_igd:4310:Could not change supplemental ACS parameters by option43 because ACS URL set by golden configuration 184
+Feb 24 06:07:21 (none) daemon.err syslog: ssk:87.950:rutIpt_initNatAndFirewallOnWanConnection:1557:IPTABLES INIT ifName=eth5.1 isFullCone=0 idleDisconnect=0 isNat=1 isFirewall=1 isNATProt=0 markForCb=1 207
+Feb 24 06:07:22 (none) kern.info kernel: ctnetlink v0.93: registering with nfnetlink.  91
+Feb 24 06:07:22 (none) daemon.err syslog: sntp:89.492:sntp:459:dns_lookup(ntp.hay.net) failed  99
+Feb 24 06:07:23 (none) daemon.err syslog: ssk:90.430:rutIpt_deleteNatMasquerade:1279:ifname=eth5.1 localSubnet=192.168.1.0 localSubnetMask=255.255.255.0 158
+Feb 24 06:07:23 (none) daemon.err syslog: ssk:90.472:rutIpt_insertNatMasquerade:1305:IPTABLES ifName=eth5.1 localSubnet=192.168.1.0 localSubnetMask=255.255.255.0 167
+Feb 24 06:07:23 (none) daemon.err syslog: ssk:90.500:rutIpt_insertNatForIsolateBridges:1361:failed to get subnet or netmask info for 'br1'! (okay if l2) 158
+Feb 24 06:07:23 (none) daemon.err syslog: ssk:90.517:rutIpt_initNatAndFirewallOnWanConnection:1581:Setting Callback Mark for other WANIPConnections... 156
+Feb 24 06:07:24 (none) kern.info kernel: br1: port 5(eth5.2) entered learning state  89
+Feb 24 06:07:25 (none) daemon.err syslog: dhcpd:92.498:ifAcceptLanHostAccess:192:ifAcceptLanHostAccess receive return 9809. 129
+Feb 24 06:07:25 (none) daemon.err syslog: dhcpd:92.498:add_lease:50:Too many Hosts access, the capacity is not afford an IP in dhcpd lease ! 146
+Feb 24 06:07:25 (none) daemon.err syslog: dhcpd:92.599:udhcpd:534:unrecognized msg, type=0x100007c0 dataLength=0 118
+Feb 24 06:07:26 (none) daemon.err syslog: dhcpd:92.621:udhcpd:534:unrecognized msg, type=0x100007c0 dataLength=0 118
+Feb 24 06:07:26 (none) daemon.err syslog: dhcpd:92.648:udhcpd:534:unrecognized msg, type=0x100007c0 dataLength=0 118
+Feb 24 06:07:27 (none) daemon.err syslog: ssk:93.947:rut_sendMsgCommon:1214:acquire MDM lock successfully 111
+Feb 24 06:07:28 (none) kern.info kernel: br1: topology change detected, propagating  89
+Feb 24 06:07:28 (none) kern.info kernel: br1: port 5(eth5.2) entered forwarding state  91
+Feb 24 06:07:28 (none) daemon.err syslog: /bin/smd:95.314:distributeEventMessage:2444:targetDinfo and srcDinfo are the same, don't send eid=21 148
+Feb 24 06:07:28 (none) daemon.err syslog: ctr69c:95.317:readMessageFromSmd:1378:Rcv msg type=0x10000254, src=21, dst=5008 127
+Feb 24 06:07:29 (none) daemon.err syslog: ssk:96.554:sendValueChangeEvent:4569:sendValueChangeEvent orgEvtSourceEid=21 124
+Feb 24 06:07:30 (none) daemon.err syslog: dhcpd:97.264:udhcpd:534:unrecognized msg, type=0x10000884 dataLength=0 118
+Feb 24 06:07:30 (none) daemon.err syslog: ssk:97.484:sendValueChangeEvent:4569:sendValueChangeEvent orgEvtSourceEid=21 124
+Feb 24 06:07:30 (none) daemon.err syslog: dhcpd:97.545:udhcpd:534:unrecognized msg, type=0x10000884 dataLength=0 118
+Feb 24 06:07:32 (none) daemon.err syslog: ssk:98.697:sendValueChangeEvent:4569:sendValueChangeEvent orgEvtSourceEid=5008 126
+Feb 24 06:07:32 (none) daemon.err syslog: ssk:99.075:sendValueChangeEvent:4569:sendValueChangeEvent orgEvtSourceEid=5008 126
+Feb 24 06:07:33 (none) daemon.err syslog: ssk:100.140:sendValueChangeEvent:4569:sendValueChangeEvent orgEvtSourceEid=5008 127
+Feb 24 06:07:34 (none) daemon.err syslog: wlmngr:101.342:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wl0 (okay if ssid didn't have one), ret = 9804 166
+Feb 24 06:07:35 (none) daemon.err syslog: wlmngr:101.615:rutLan_addInterfaceToBridge:2366:running [brctl addif br0 wl0] 125
+Feb 24 06:07:35 (none) kern.info kernel: device wl0 entered promiscuous mode  82
+Feb 24 06:07:35 (none) kern.info kernel: br0: port 5(wl0) entered listening state  87
+Feb 24 06:07:35 (none) kern.info kernel: br0: port 5(wl0) entered listening state  87
+Feb 24 06:07:35 (none) kern.warn kernel: No device name wl0 found in Ethernet driver  90
+Feb 24 06:07:35 (none) daemon.err syslog: wlmngr:102.184:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wl0.1 (okay if ssid didn't have one), ret = 9804 168
+Feb 24 06:07:35 (none) daemon.err syslog: wlmngr:102.194:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wl0.2 (okay if ssid didn't have one), ret = 9804 168
+Feb 24 06:07:35 (none) daemon.err syslog: wlmngr:102.204:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wl0.3 (okay if ssid didn't have one), ret = 9804 168
+Feb 24 06:07:35 (none) daemon.err syslog: wlmngr:102.213:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wl0.4 (okay if ssid didn't have one), ret = 9804 168
+Feb 24 06:07:35 (none) daemon.err syslog: wlmngr:102.222:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wl0.5 (okay if ssid didn't have one), ret = 9804 168
+Feb 24 06:07:35 (none) daemon.err syslog: wlmngr:102.232:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wl0.6 (okay if ssid didn't have one), ret = 9804 168
+Feb 24 06:07:35 (none) daemon.err syslog: wlmngr:102.242:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wl0.7 (okay if ssid didn't have one), ret = 9804 168
+Feb 24 06:07:35 (none) daemon.err syslog: ssk:102.546:updateCommunityWlan:431:==== Got upatecommunitywlan message 119
+Feb 24 06:07:36 (none) daemon.err syslog: wlmngr:102.685:wl_doTrafficMap:871:traffic cmd is wlctl cs1_be 0. 113
+Feb 24 06:07:36 (none) daemon.err syslog: tr69c:102.982:logInformEvents:2392:events:11,7,1,4.  99
+Feb 24 06:07:36 (none) daemon.err syslog: ctr69c:103.233:resetPeriodicInform:2042:cmsTmr cancel because of acsState.informEnable is FALSE. 144
+Feb 24 06:07:36 (none) daemon.err syslog: ssk:103.404:ssk_main:1386:cannot handle msg type 0x20003010 from 92 (flags=0x20001043) 134
+Feb 24 06:07:37 (none) daemon.err syslog: tr69c:103.786:logInformEvents:2392:events:11,7,1,4.  99
+Feb 24 06:07:37 (none) daemon.err mapagent: map server start connection  77
+Feb 24 06:07:37 (none) daemon.err syslog: tr69c:104.383:runRPC:3415:rcv ACS inform response.  98
+Feb 24 06:07:37 (none) daemon.err syslog: tr69c:104.384:runRPC:3437:Stunc will start later.  97
+Feb 24 06:07:38 (none) daemon.err syslog: tr69c:104.830:wait_for_sslShutdown:577:SSL_shutdown server: (r=-1,sslres=5) error:00000005:lib(0):func(0):reason(5) 163
+Feb 24 06:07:38 (none) daemon.err syslog: sntp:104.998:sntp:459:dns_lookup(ntp1.tummy.com) failed 103
+Feb 24 06:07:38 (none) daemon.err mapdhcp: Bind is ok  59
+Feb 24 06:07:38 (none) daemon.err syslog: ssk:105.344:processLanHostInfoMsg_igd:1220:vendorVersion is NULL 112
+Feb 24 06:07:39 (none) daemon.err syslog: ssk:105.632:process_mesh_client_message:964:come in  99
+Feb 24 06:07:39 (none) kern.info kernel: br0: port 5(wl0) entered learning state  86
+Feb 24 06:07:39 (none) daemon.err syslog: ssk:105.633:process_mesh_client_message:1010:repeaterModeClntNum [0] apModeClntNum [0] apModeNewVerClntNum [0] 158
+Feb 24 06:07:41 (none) local7.crit mapconfig[3175]: cp_cmd_add_attr: vtype=(WIFI_ENCRYPT) not found, fix it! 114
+Feb 24 06:07:41 (none) local7.crit mapconfig[3175]: cp_cmd_add_attr: vtype=(WIFI_ENCRYPT) not found, fix it! 114
+Feb 24 06:07:41 (none) local7.crit mapconfig[3175]: cp_cmd_add_attr: vtype=(WIFI_ENCRYPT) not found, fix it! 114
+Feb 24 06:07:41 (none) daemon.err mapconfig: Bind is ok  61
+Feb 24 06:07:43 (none) kern.info kernel: br0: topology change detected, propagating  89
+Feb 24 06:07:43 (none) kern.info kernel: br0: port 5(wl0) entered forwarding state  88
+Feb 24 06:07:43 (none) local7.err mapspeedtest[3265]: Adding more commands  80
+Feb 24 06:07:44 (none) daemon.err mapspeedtest: Open backup test result file failed (errno=2: No such file or directory). 127
+Feb 24 06:07:44 (none) daemon.err mapspeedtest: map_speedtest_cafii_recover failed.  89
+Feb 24 06:07:44 (none) daemon.notice syslog: sntp:111.089:sntp:604:set utc time gmtime=1677236850 103
+Feb 24 06:07:30 (none) daemon.err syslog: ssk:111.098:cmsUtl_standardizeIp6Addr:1862:Invalid ipv6 address=ntp.hay.net 123
+Feb 24 06:07:30 (none) daemon.err syslog: ssk:111.098:cmsUtl_standardizeIp6Addr:1862:Invalid ipv6 address=time.nist.gov 125
+Feb 24 06:07:30 (none) daemon.err syslog: ssk:111.099:cmsUtl_standardizeIp6Addr:1862:Invalid ipv6 address=ntp1.tummy.com 126
+Feb 24 06:07:31 (none) daemon.err maplatencytest: Retrieve the historic latency request and report! 105
+Feb 24 06:07:31 (none) daemon.err maplatencytest: Fail to open /exa_data/.latencytest/test_report.db! 107
+Feb 24 06:07:31 (none) daemon.err maplatencytest: Fail to open /exa_data/.latencytest/test_request.db! 108
+Feb 24 06:07:31 (none) daemon.err maplatencytest: fail to read request file.  82
+Feb 24 06:07:31 (none) daemon.err maplatencytest: fail to read report file.  81
+Feb 24 06:07:32 (none) daemon.err syslog: ssk:113.404:processLanHostInfoMsg_igd:1220:vendorVersion is NULL 112
+Feb 24 06:07:32 (none) daemon.err mapconfig: error sending config message  79
+Feb 24 06:07:32 (none) daemon.err mapconfig: register error; retry  72
+Feb 24 06:07:32 (none) daemon.err syslog: ssk:113.735:process_mesh_client_message:964:come in  99
+Feb 24 06:07:32 (none) daemon.err syslog: ssk:113.737:process_mesh_client_message:1010:repeaterModeClntNum [0] apModeClntNum [0] apModeNewVerClntNum [0] 158
+Feb 24 06:07:33 (none) daemon.err mapspeedtest: dl_dcsm_send_command_timeout: 0 commands on the queue being dropped! 122
+Feb 24 06:07:33 (none) daemon.err mapspeedtest: error sending config message  82
+Feb 24 06:07:33 (none) daemon.err mapspeedtest: register error; retry  75
+Feb 24 06:07:34 (none) daemon.err maplatencytest: dl_dcsm_send_command_timeout: 0 commands on the queue being dropped! 124
+Feb 24 06:07:34 (none) daemon.err maplatencytest: error sending config message  84
+Feb 24 06:07:34 (none) daemon.err maplatencytest: register error; retry  77
+Feb 24 06:07:37 (none) daemon.notice syslog: sntp:118.122:sntp:604:set utc time gmtime=1677236857 103
+Feb 24 06:07:37 (none) daemon.err mapconfig: dl_dcsm_send_command_timeout: 0 commands on the queue being dropped! 119
+Feb 24 06:07:37 (none) daemon.err mapconfig: error sending config message  79
+Feb 24 06:07:37 (none) daemon.err mapconfig: register error; retry  72
+Feb 24 06:07:37 (none) daemon.err mapspeedtest: dl_dcsm_send_command_timeout: 0 commands on the queue being dropped! 122
+Feb 24 06:07:37 (none) daemon.err mapspeedtest: error sending config message  82
+Feb 24 06:07:37 (none) daemon.err mapspeedtest: register error; retry  75
+Feb 24 06:07:38 (none) daemon.err maplatencytest: dl_dcsm_send_command_timeout: 0 commands on the queue being dropped! 124
+Feb 24 06:07:38 (none) daemon.err maplatencytest: error sending config message  84
+Feb 24 06:07:38 (none) daemon.err maplatencytest: register error; retry  77
+Feb 24 06:07:41 (none) daemon.err mapconfig: dl_dcsm_send_command_timeout: 0 commands on the queue being dropped! 119
+Feb 24 06:07:41 (none) daemon.err mapconfig: error sending config message  79
+Feb 24 06:07:41 (none) daemon.err mapconfig: register error; retry  72
+Feb 24 06:07:41 (none) daemon.err mapagent: lws_log:getaddrinfo failed  76
+Feb 24 06:07:41 (none) daemon.err mapagent: map server connection error: 'getaddrinfo failed'  99
+Feb 24 06:07:41 (none) daemon.err mapagent: start retry timer for 39 seconds  82
+Feb 24 06:07:41 (none) daemon.err mapagent: map_agent_wss.c, 679: stop connecting status monitor. 103
+Feb 24 06:07:44 (none) daemon.err syslog: ssk:125.263:rut_setIPv6AcceptRa:412:filePath:/proc/sys/net/ipv6/conf/eth5/accept_ra enable:0 140
+Feb 24 06:07:44 (none) daemon.err syslog: ssk:125.307:rut_sendMsgCommon:1214:acquire MDM lock successfully 112
+Feb 24 06:07:44 (none) daemon.err syslog: ssk:125.313:rut_sendMsgCommon:1214:acquire MDM lock successfully 112
+Feb 24 06:07:44 (none) daemon.err dhcp6c[3435]: dhcp6_ctl_authinit: failed to open /etc/dhcp6cctlkey: No such file or directory 133
+Feb 24 06:07:48 (none) kern.info kernel: device wf0.7.0 left promiscuous mode  83
+Feb 24 06:07:48 (none) kern.info kernel: device wf0.7 left promiscuous mode  81
+Feb 24 06:07:48 (none) kern.info kernel: device wf0 left promiscuous mode  79
+Feb 24 06:07:48 (none) kern.info kernel: brqt: port 1(wf0.7.0) entered disabled state  91
+Feb 24 06:07:48 (none) kern.info kernel: device wf0.100 entered promiscuous mode  86
+Feb 24 06:07:49 (none) kern.info kernel: device wf0 entered promiscuous mode  82
+Feb 24 06:07:49 (none) kern.info kernel: brqt: port 1(wf0.100) entered forwarding state  93
+Feb 24 06:07:49 (none) kern.info kernel: brqt: port 1(wf0.100) entered forwarding state  93
+Feb 24 06:08:00 (none) kern.info kernel: device wf0.7.0 entered promiscuous mode  86
+Feb 24 06:08:00 (none) kern.info kernel: device wf0.7 entered promiscuous mode  84
+Feb 24 06:08:00 (none) kern.info kernel: br0: port 6(wf0.7.0) entered listening state  91
+Feb 24 06:08:00 (none) kern.info kernel: br0: port 6(wf0.7.0) entered listening state  91
+Feb 24 06:08:04 (none) kern.info kernel: br0: port 6(wf0.7.0) entered learning state  90
+Feb 24 06:08:04 (none) kern.info kernel: brqt: port 1(wf0.100) entered forwarding state  93
+Feb 24 06:08:07 (none) daemon.err syslog: qevt_client:148.183:qevt_client_connect:498:Qevt Connection established 119
+Feb 24 06:08:07 (none) kern.warn kernel: netdev path : wf0.7.oui -> wf0.7 -> wf0  86
+Feb 24 06:08:07 (none) daemon.err syslog: qevt_client:148.453:rutLan_addInterfaceToBridge:2366:running [brctl addif br1 wf0.7.oui] 136
+Feb 24 06:08:07 (none) kern.info kernel: device wf0.7.oui entered promiscuous mode  88
+Feb 24 06:08:07 (none) kern.info kernel: br1: port 6(wf0.7.oui) entered listening state  93
+Feb 24 06:08:07 (none) kern.info kernel: br1: port 6(wf0.7.oui) entered listening state  93
+Feb 24 06:08:08 (none) kern.info kernel: br0: topology change detected, propagating  89
+Feb 24 06:08:08 (none) kern.info kernel: br0: port 6(wf0.7.0) entered forwarding state  92
+Feb 24 06:08:09 (none) daemon.err syslog: WLPROXY-DAEMON:150.586:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.0 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:09 (none) daemon.err syslog: WLPROXY-DAEMON:150.822:rutLan_addInterfaceToBridge:2366:running [brctl addif br0 wf0.0] 135
+Feb 24 06:08:09 (none) kern.info kernel: device wf0.0 entered promiscuous mode  84
+Feb 24 06:08:09 (none) kern.info kernel: br0: port 7(wf0.0) entered listening state  89
+Feb 24 06:08:09 (none) kern.info kernel: br0: port 7(wf0.0) entered listening state  89
+Feb 24 06:08:09 (none) daemon.err syslog: WLPROXY-DAEMON:150.854:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.7 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:10 (none) daemon.err syslog: WLPROXY-DAEMON:151.159:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.1 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:10 (none) daemon.err syslog: WLPROXY-DAEMON:151.167:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.2 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:10 (none) daemon.err syslog: WLPROXY-DAEMON:151.728:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.7 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:10 (none) daemon.err syslog: WLPROXY-DAEMON:151.933:rutLan_addInterfaceToBridge:2366:running [brctl addif br1 wf0.2] 135
+Feb 24 06:08:10 (none) kern.info kernel: device wf0.2 entered promiscuous mode  84
+Feb 24 06:08:10 (none) kern.info kernel: br1: port 7(wf0.2) entered listening state  89
+Feb 24 06:08:10 (none) kern.info kernel: br1: port 7(wf0.2) entered listening state  89
+Feb 24 06:08:10 (none) daemon.err syslog: WLPROXY-DAEMON:151.966:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.7 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:11 (none) kern.info kernel: br1: port 6(wf0.7.oui) entered learning state  92
+Feb 24 06:08:11 (none) local7.err potsmgr[2796]: Big Endian detected  74
+Feb 24 06:08:11 (none) local7.err potsmgr[3746]: PDCP task starting  73
+Feb 24 06:08:11 (none) local7.err potsmgr[3745]: IP Services Task starting  80
+Feb 24 06:08:11 (none) local7.err potsmgr[3746]:  ***** PdcpInit:  ENTERED  80
+Feb 24 06:08:11 (none) local7.err potsmgr[3746]:  ***** pdcpPlatInit: ch->number=0 ch->port=0  cnxId[0]=2 cnxId[1]=3 122
+Feb 24 06:08:11 (none) local7.err potsmgr[3746]:  ***** pdcpPlatInit: ch->number=1 ch->port=1  cnxId[0]=0 cnxId[1]=1 122
+Feb 24 06:08:11 (none) local7.err potsmgr[3746]:  ***** pdcpPlatInit: calling ngxeptapp_start  99
+Feb 24 06:08:11 (none) local7.err potsmgr[3746]: ngxeptapp_start:  ******   ngxeptapp_start: Entry 104
+Feb 24 06:08:11 (none) local7.err potsmgr[3746]: ngxeptapp_start: **** bosSleep ****  90
+Feb 24 06:08:11 (none) local7.err potsmgr[3744]: VOIPUA task starting, ThreadId: 1026 CALIX 844E-1/12.2.12.9.1 116
+Feb 24 06:08:11 (none) local7.err potsmgr[3744]: VOIPUA init complete  75
+Feb 24 06:08:11 (none) daemon.err syslog: vodsl:152.707:sip_start:238:(((( VODSL detects potsmgr is up )))) 113
+Feb 24 06:08:11 (none) local7.err potsmgr[3748]: StartWaitNewActionTimer: wait for 180 secs  97
+Feb 24 06:08:11 (none) daemon.err syslog: WLPROXY-DAEMON:153.092:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.3 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:11 (none) daemon.err syslog: vodsl:153.100:process_tr104_iphost:439:(((((((((( process_tr104_iphost BoundIfName = '(null)' )))))))))) 152
+Feb 24 06:08:11 (none) daemon.err syslog: WLPROXY-DAEMON:153.120:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.4 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:11 (none) daemon.err syslog: vodsl:153.121:write_ipHost_status_dcli:163:((((((( write_ipHost_status_dcli set ip_host 1 addr 0.0.0.0 )))))))) 159
+Feb 24 06:08:12 (none) daemon.err syslog: WLPROXY-DAEMON:153.136:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.5 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:12 (none) daemon.err syslog: WLPROXY-DAEMON:153.204:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.6 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:12 (none) daemon.err syslog: WLPROXY-DAEMON:153.215:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.7 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:12 (none) kern.info kernel: br0: port 6(wf0.7.0) entered disabled state  90
+Feb 24 06:08:12 (none) kern.info kernel: device wf0.7.0 left promiscuous mode  83
+Feb 24 06:08:12 (none) kern.info kernel: br0: port 6(wf0.7.0) entered disabled state  90
+Feb 24 06:08:12 (none) daemon.err syslog: WLPROXY-DAEMON:153.372:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.0 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:12 (none) local7.err potsmgr[3746]: ngxeptapp_start: ******   bosInit delay completed  ****  111
+Feb 24 06:08:12 (none) daemon.err syslog: WLPROXY-DAEMON:153.840:rutLan_addInterfaceToBridge:2366:running [brctl addif br0 wf0.7.0] 137
+Feb 24 06:08:12 (none) kern.info kernel: device wf0.7.0 entered promiscuous mode  86
+Feb 24 06:08:12 (none) kern.info kernel: br0: port 6(wf0.7.0) entered listening state  91
+Feb 24 06:08:12 (none) kern.info kernel: br0: port 6(wf0.7.0) entered listening state  91
+Feb 24 06:08:12 (none) daemon.err syslog: WLPROXY-DAEMON:154.082:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.0 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:13 (none) kern.warn kernel: potsmgr crashed(sig:11) on Fri Feb 24 06:08:13 2023  98
+Feb 24 06:08:13 (none) kern.warn kernel: debug:record the crash info to file.  83
+Feb 24 06:08:13 (none) daemon.err syslog: dnsproxy:154.434:oal_getPidByName:587:could not open /proc/3812/stat 116
+Feb 24 06:08:13 (none) kern.warn kernel: BOS: Enter bosInit   66
+Feb 24 06:08:13 (none) kern.warn kernel: BOS: Exit bosInit   65
+Feb 24 06:08:13 (none) kern.warn kernel: ******* DSP: Found BCM6838 *******  81
+Feb 24 06:08:13 (none) kern.warn kernel: ******* DSP: In APM Mode *******  79
+Feb 24 06:08:13 (none) kern.warn kernel: gInterruptCounter    = 0xC18251F4   81
+Feb 24 06:08:13 (none) kern.warn kernel: gInterruptErrors     = 0xC18251F0   81
+Feb 24 06:08:13 (none) kern.warn kernel: Binding 0x886fe140  65
+Feb 24 06:08:13 (none) kern.info kernel: br0: port 7(wf0.0) entered learning state  88
+Feb 24 06:08:13 (none) kern.warn kernel: boardHalInit completed  69
+Feb 24 06:08:13 (none) kern.warn kernel: DSP: Interrupt Ids  65
+Feb 24 06:08:13 (none) kern.warn kernel: ---------------  62
+Feb 24 06:08:13 (none) kern.warn kernel: InterruptId/Location      = 87/LOW   82
+Feb 24 06:08:13 (none) kern.warn kernel: DSP: Interrupt Masks  67
+Feb 24 06:08:13 (none) kern.warn kernel: ---------------  62
+Feb 24 06:08:13 (none) kern.warn kernel: IrqMask                   = 0x00002200   86
+Feb 24 06:08:13 (none) kern.warn kernel: IrqMaskLow                = 0x00002200   86
+Feb 24 06:08:13 (none) kern.warn kernel: IrqMask1                  = 0x00008000   86
+Feb 24 06:08:13 (none) kern.warn kernel: IrqMaskLow1               = 0x00008000   86
+Feb 24 06:08:13 (none) kern.warn kernel: DSP: Interrupt Status  68
+Feb 24 06:08:13 (none) kern.warn kernel: -----------------  64
+Feb 24 06:08:14 (none) kern.warn kernel: EndpointInit completed  69
+Feb 24 06:08:14 (none) kern.warn kernel: dgasp: kerSysRegisterDyingGaspHandler: endpoint registered  106
+Feb 24 06:08:14 (none) daemon.err syslog: WLPROXY-DAEMON:155.811:cmsMdm_fullPathToPathDescriptor:1556:NULL or zero length fullpath 136
+Feb 24 06:08:14 (none) daemon.err syslog: WLPROXY-DAEMON:155.935:send_dcli:1196:(((( dcli send failed: 1, 'set ssid 2 1 radius_cfg  1812 12345678 0' -> 'set ssid <radio 1-2> <ssid 1-8> radius_cfg <radiusip (^(.*)$)> <radiusport (^(.*)$)> <radiuskey (^(.*)$)> <radiusinterval 0-429T' )))) 293
+Feb 24 06:08:14 (none) kern.info kernel: br1: port 7(wf0.2) entered learning state  88
+Feb 24 06:08:14 (none) daemon.err syslog: WLPROXY-DAEMON:155.966:send_dcli:1196:(((( dcli send failed: 1, 'set ssid 2 2 radius_cfg  1812 12345678 0' -> 'set ssid <radio 1-2> <ssid 1-8> radius_cfg <radiusip (^(.*)$)> <radiusport (^(.*)$)> <radiuskey (^(.*)$)> <radiusinterval 0-429^X' )))) 294
+Feb 24 06:08:14 (none) daemon.err syslog: WLPROXY-DAEMON:156.010:send_dcli:1196:(((( dcli send failed: 1, 'set ssid 2 3 radius_cfg  1812 12345678 0' -> 'set ssid <radio 1-2> <ssid 1-8> radius_cfg <radiusip (^(.*)$)> <radiusport (^(.*)$)> <radiuskey (^(.*)$)> <radiusinterval 0-429(' )))) 293
+Feb 24 06:08:14 (none) daemon.err syslog: WLPROXY-DAEMON:156.039:send_dcli:1196:(((( dcli send failed: 1, 'set ssid 2 4 radius_cfg  1812 12345678 0' -> 'set ssid <radio 1-2> <ssid 1-8> radius_cfg <radiusip (^(.*)$)> <radiusport (^(.*)$)> <radiuskey (^(.*)$)> <radiusinterval 0-4298' )))) 293
+Feb 24 06:08:14 (none) daemon.err syslog: WLPROXY-DAEMON:156.076:send_dcli:1196:(((( dcli send failed: 1, 'set ssid 2 5 radius_cfg  1812 12345678 0' -> 'set ssid <radio 1-2> <ssid 1-8> radius_cfg <radiusip (^(.*)$)> <radiusport (^(.*)$)> <radiuskey (^(.*)$)> <radiusinterval 0-429H' )))) 293
+Feb 24 06:08:14 (none) daemon.err syslog: WLPROXY-DAEMON:156.122:send_dcli:1196:(((( dcli send failed: 1, 'set ssid 2 6 radius_cfg  1812 12345678 0' -> 'set ssid <radio 1-2> <ssid 1-8> radius_cfg <radiusip (^(.*)$)> <radiusport (^(.*)$)> <radiuskey (^(.*)$)> <radiusinterval 0-429X' )))) 293
+Feb 24 06:08:15 (none) daemon.err syslog: WLPROXY-DAEMON:156.158:send_dcli:1196:(((( dcli send failed: 1, 'set ssid 2 7 radius_cfg  1812 12345678 0' -> 'set ssid <radio 1-2> <ssid 1-8> radius_cfg <radiusip (^(.*)$)> <radiusport (^(.*)$)> <radiuskey (^(.*)$)> <radiusinterval 0-429h' )))) 293
+Feb 24 06:08:15 (none) daemon.err syslog: WLPROXY-DAEMON:156.210:send_dcli:1196:(((( dcli send failed: 1, 'set ssid 2 8 radius_cfg  1812 12345678 0' -> 'set ssid <radio 1-2> <ssid 1-8> radius_cfg <radiusip (^(.*)$)> <radiusport (^(.*)$)> <radiuskey (^(.*)$)> <radiusinterval 0-429x' )))) 293
+Feb 24 06:08:15 (none) daemon.err syslog: vodsl:156.321:send_dcli:89:(((( dcli send failed: 'set dial_plan DIAL_PLAN_1 rule 22 ""' -> 'unable to communicate with potsmgr [3]' )))) 185
+Feb 24 06:08:15 (none) kern.info kernel: br1: topology change detected, propagating  89
+Feb 24 06:08:15 (none) kern.info kernel: br1: port 6(wf0.7.oui) entered forwarding state  94
+Feb 24 06:08:16 (none) daemon.err syslog: dnsproxy:157.290:oal_getPidByName:587:could not open /proc/3842/stat 116
+Feb 24 06:08:16 (none) kern.info kernel: br0: port 6(wf0.7.0) entered learning state  90
+Feb 24 06:08:17 (none) daemon.err syslog: WLPROXY-DAEMON:158.226:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.0 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:17 (none) daemon.err syslog: WLPROXY-DAEMON:158.237:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.1 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:17 (none) daemon.err syslog: WLPROXY-DAEMON:158.246:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.2 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:17 (none) daemon.err syslog: WLPROXY-DAEMON:158.256:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.3 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:17 (none) daemon.err syslog: WLPROXY-DAEMON:158.266:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.4 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:17 (none) daemon.err syslog: WLPROXY-DAEMON:158.278:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.5 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:17 (none) daemon.err syslog: WLPROXY-DAEMON:158.289:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.6 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:17 (none) daemon.err syslog: WLPROXY-DAEMON:158.301:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.7 (okay if ssid didn't have one), ret = 9804 176
+Feb 24 06:08:17 (none) daemon.err syslog: ssk:158.303:updateCommunityWlan:431:==== Got upatecommunitywlan message 119
+Feb 24 06:08:17 (none) kern.info kernel: br0: topology change detected, propagating  89
+Feb 24 06:08:17 (none) kern.info kernel: br0: port 7(wf0.0) entered forwarding state  90
+Feb 24 06:08:18 (none) kern.info kernel: br1: topology change detected, propagating  89
+Feb 24 06:08:18 (none) kern.info kernel: br1: port 7(wf0.2) entered forwarding state  90
+Feb 24 06:08:20 (none) daemon.notice syslog: sntp:161.618:sntp:604:set utc time gmtime=1677236900 103
+Feb 24 06:08:20 (none) daemon.err mapagent: wss server connect retry timer  80
+Feb 24 06:08:20 (none) daemon.err mapagent: map server start connection  77

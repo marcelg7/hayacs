@@ -1,0 +1,250 @@
+save to file fd: 21
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 12.2.12.9.1
+potsmgr crashed on Fri Feb 24 06:08:13 2023
+crash type: 11    SIGSEGV
+bad address 0xd8
+$ 0   : 00000000 10009901 00000000 011f6150
+$ 4   : 00001007 00000000 00020000 00001d31
+$ 8   : 000001d9 000001d9 431bde83 0904a2f9
+$12   : 00000380 8be36050 00000400 55f8b693
+$16   : 000000d8 008d9654 0090ecd4 00000000
+$20   : 00770000 00000000 007734a4 00020000
+$24   : 00000000 005c3acc                  
+$28   : 008dcae0 7feb9ea0 0090ec68 00496518
+mdhi  : 00000000
+mdlo  : 00000000
+epc   : 00496528
+ra    : 00496518
+sp    : 7feb9ea0
+Status: 6469616c
+function backtrace:
+0x00496518:DnsClose    :potsmgr     :0x00400000
+0x00496528:DnsClose    :potsmgr     :0x00400000
+0x00488d54:(null)      :potsmgr     :0x00400000
+0x77c2de84:(null)      :libc.so.0   :0x77c10000
+
+raw function backtrace:
+0x00496528:DnsClose    :potsmgr     :0x00400000
+0x00488d54:(null)      :potsmgr     :0x00400000
+0x77f5657c:__dl_runtime_resolve:ld-uClibc.so.0:0x77f54000
+0x77ee7508:_new_prompt_detect:libdaemonlib.so.0:0x77ee3000
+0x77f58a78:_dl_runtime_resolve:ld-uClibc.so.0:0x77f54000
+0x77ee7cf8:dl_client_new_do_read:libdaemonlib.so.0:0x77ee3000
+0x77c22884:__ctype_b_loc:libc.so.0   :0x77c10000
+0x77c40404:(null)      :libc.so.0   :0x77c10000
+0x77c22884:__ctype_b_loc:libc.so.0   :0x77c10000
+0x77c40404:(null)      :libc.so.0   :0x77c10000
+0x77c22884:__ctype_b_loc:libc.so.0   :0x77c10000
+0x77c40404:(null)      :libc.so.0   :0x77c10000
+0x77c22884:__ctype_b_loc:libc.so.0   :0x77c10000
+0x77c40404:(null)      :libc.so.0   :0x77c10000
+0x77c451b0:fputs_unlocked:libc.so.0   :0x77c10000
+0x77c3f870:(null)      :libc.so.0   :0x77c10000
+0x77c208f0:stat        :libc.so.0   :0x77c10000
+0x77f366b4:pthread_mutex_unlock:libpthread.so.0:0x77f30000
+0x77f36440:pthread_mutex_lock:libpthread.so.0:0x77f30000
+0x77f33fe4:_pthread_cleanup_pop_restore:libpthread.so.0:0x77f30000
+0x77ef3000:dl_dcsm_handle_event:libdaemonlib.so.0:0x77ee3000
+0x77ef3000:dl_dcsm_handle_event:libdaemonlib.so.0:0x77ee3000
+0x77eeea3c:dl_log_print_tag:libdaemonlib.so.0:0x77ee3000
+0x77eeea3c:dl_log_print_tag:libdaemonlib.so.0:0x77ee3000
+0x77ef0388:dl_timer_reset_fd:libdaemonlib.so.0:0x77ee3000
+0x77ef3000:dl_dcsm_handle_event:libdaemonlib.so.0:0x77ee3000
+0x77eeff70:dl_check_timers:libdaemonlib.so.0:0x77ee3000
+0x77ef0704:dl_timer_handle_event:libdaemonlib.so.0:0x77ee3000
+0x77eeea3c:dl_log_print_tag:libdaemonlib.so.0:0x77ee3000
+0x00468794:(null)      :potsmgr     :0x00400000
+0x77eefd90:dl_poll_fds_ctx:libdaemonlib.so.0:0x77ee3000
+0x77c6d5d8:(null)      :libc.so.0   :0x77c10000
+
+0x7feb9ea0: 00000000  00000000  77f71010  00000008  
+0x7feb9eb0: 01237570  00000000  008dcae0  40000006  
+0x7feb9ec0: 77ef4bf0  00000001  008d9654  0090ecd4  
+0x7feb9ed0: 00000000  00488d54  0000004c  77ee4df2  
+0x7feb9ee0: 40000006  77ef4de8  7feb9f18  77f5657c  
+0x7feb9ef0: 77f0f5e0  00000000  7feb9f18  01237570  
+0x7feb9f00: 01233230  77ee7508  008dcae0  7feba3d8  
+0x7feb9f10: 7feba3dc  00000008  00000000  0000003e  
+0x7feb9f20: 00000008  7feba3dc  77f0f5e0  77f58a78  
+0x7feb9f30: 01237570  01233230  01235230  00000ff6  
+0x7feb9f40: 7feba3d8  7feba3dc  00000008  40000000  
+0x7feb9f50: 0000003c  77ee7cf8  00000000  00000000  
+0x7feb9f60: 7feb9f78  00000000  00000008  01233230  
+0x7feb9f70: 77f0f5e0  00000000  00000000  00000000  
+0x7feb9f80: 00000000  00000000  00000000  00000000  
+0x7feb9f90: 00000000  00000000  00000000  00000000  
+0x7feb9fa0: 00000001  00000001  00000000  00000000  
+0x7feb9fb0: 00000000  00000000  00000000  00000000  
+0x7feb9fc0: 00000000  00000000  00000000  00000000  
+0x7feb9fd0: 77f593d0  00000000  00000000  77c22884  
+0x7feb9fe0: 00000000  00000000  00000000  00000000  
+0x7feb9ff0: 77c924d0  00000000  00000000  77c40404  
+0x7feba000: 00000000  00000000  00000000  00000000  
+0x7feba010: 77f593d0  00000000  00000000  77c22884  
+0x7feba020: 00000000  00000008  00000000  00000003  
+0x7feba030: 77c924d0  00000000  00000000  77c40404  
+0x7feba040: 00000000  00000000  00000000  00000000  
+0x7feba050: 77f593d0  77c22860  00000000  77c22884  
+0x7feba060: 7fffffff  00000008  00000000  00000003  
+0x7feba070: 77c924d0  0000006d  7feba190  77c40404  
+0x7feba080: 00000025  77c40280  77c924d0  77c28d30  
+0x7feba090: 77f593d0  77c22860  00000000  77c22884  
+0x7feba0a0: 77c75ef3  00000008  00000008  00000000  
+0x7feba0b0: 77c924d0  0000006d  77c924d0  77c40404  
+0x7feba0c0: 77c924d0  77c75ed4  7feba280  00000009  
+0x7feba0d0: 77c924d0  77c22860  00000000  00000000  
+0x7feba0e0: 7fffffff  00000008  00000008  00000000  
+0x7feba0f0: 00000030  0000006d  7feba210  77ef55dc  
+0x7feba100: 00000025  77c40280  77c924d0  7febc194  
+0x7feba110: 0000002a  77c22860  0ccccccc  00000000  
+0x7feba120: 77c75ef3  77c40000  77c75ed4  77c451b0  
+0x7feba130: 00000030  0000006d  77c924d0  7feba300  
+0x7feba140: 77c924d0  77c75ed4  7feba300  0000001f  
+0x7feba150: 7feba300  77c40000  77c75ed4  77c3f870  
+0x7feba160: 00000000  00000000  00000000  00000000  
+0x7feba170: fffffff6  00000057  77c924d0  00000000  
+0x7feba180: 00000000  00000000  00000000  00000000  
+0x7feba190: 77c751c5  00000004  00000000  00000073  
+0x7feba1a0: 00000000  00000020  00000000  00000001  
+0x7feba1b0: 77f593d0  00000100  00000003  77c208f0  
+0x7feba1c0: 00000008  00000008  00000008  00000008  
+0x7feba1d0: 77c924d0  00000008  00000008  7feba340  
+0x7feba1e0: 77c7795c  00000000  00000000  00000000  
+0x7feba1f0: 00000000  00000000  00000000  00000000  
+0x7feba200: 00000000  00003436  34343800  00000000  
+0x7feba210: 77ef55e9  ffffffff  00000000  00000064  
+0x7feba220: 00000000  00000020  00000000  00000001  
+0x7feba230: 00000006  00000100  00000000  00000008  
+0x7feba240: 00000008  00000008  00000008  00000008  
+0x7feba250: 00000008  00000008  00000008  7feba3c0  
+0x7feba260: 0000b570  00000000  00000000  00000000  
+0x7feba270: 00000000  00000000  00000000  00000000  
+0x7feba280: 00000000  00000000  00000000  00000000  
+0x7feba290: 00000000  00000000  00000000  00000000  
+
+maps info:
+00400000-0082c000 r-xp 00000000 1f:00 164        /bin/potsmgr
+0083c000-008da000 rw-p 0042c000 1f:00 164        /bin/potsmgr
+008da000-00a49000 rwxp 00000000 00:00 0 
+011f6000-011f7000 rwxp 00000000 00:00 0          [heap]
+011f7000-01243000 rwxp 00000000 00:00 0          [heap]
+77be8000-77bea000 r-xp 00000000 1f:00 1224       /lib/libdl.so.0
+77bea000-77bf9000 ---p 00000000 00:00 0 
+77bf9000-77bfa000 r--p 00001000 1f:00 1224       /lib/libdl.so.0
+77bfa000-77bfb000 rw-p 00002000 1f:00 1224       /lib/libdl.so.0
+77bfb000-77c00000 r-xp 00000000 1f:00 1198       /lib/libcJSON.so
+77c00000-77c0f000 ---p 00000000 00:00 0 
+77c0f000-77c10000 rw-p 00004000 1f:00 1198       /lib/libcJSON.so
+77c10000-77c7a000 r-xp 00000000 1f:00 1197       /lib/libc.so.0
+77c7a000-77c89000 ---p 00000000 00:00 0 
+77c89000-77c8a000 r--p 00069000 1f:00 1197       /lib/libc.so.0
+77c8a000-77c8c000 rw-p 0006a000 1f:00 1197       /lib/libc.so.0
+77c8c000-77c91000 rw-p 00000000 00:00 0 
+77c91000-77cbb000 r-xp 00000000 1f:00 1253       /lib/libgcc_s.so.1
+77cbb000-77cca000 ---p 00000000 00:00 0 
+77cca000-77ccb000 rw-p 00029000 1f:00 1253       /lib/libgcc_s.so.1
+77ccb000-77ce1000 r-xp 00000000 1f:00 1280       /lib/libm.so.0
+77ce1000-77cf1000 ---p 00000000 00:00 0 
+77cf1000-77cf2000 rw-p 00016000 1f:00 1280       /lib/libm.so.0
+77cf2000-77db6000 r-xp 00000000 1f:00 1331       /lib/libstdc++.so.6
+77db6000-77dc6000 ---p 00000000 00:00 0 
+77dc6000-77dcd000 r--p 000c4000 1f:00 1331       /lib/libstdc++.so.6
+77dcd000-77dd0000 rw-p 000cb000 1f:00 1331       /lib/libstdc++.so.6
+77dd0000-77dd6000 rw-p 00000000 00:00 0 
+77dd6000-77de1000 r-xp 00000000 1f:00 1196       /lib/libbt.so
+77de1000-77df0000 ---p 00000000 00:00 0 
+77df0000-77df1000 rw-p 0000a000 1f:00 1196       /lib/libbt.so
+77df1000-77df7000 r-xp 00000000 1f:00 1294       /lib/libngxutils.so
+77df7000-77e07000 ---p 00000000 00:00 0 
+77e07000-77e08000 rw-p 00006000 1f:00 1294       /lib/libngxutils.so
+77e08000-77e1c000 rw-p 00000000 00:00 0 
+77e1c000-77e30000 r-xp 00000000 1f:00 1193       /lib/libbdinfo.so
+77e30000-77e3f000 ---p 00000000 00:00 0 
+77e3f000-77e41000 rw-p 00013000 1f:00 1193       /lib/libbdinfo.so
+77e41000-77e5f000 r-xp 00000000 1f:00 1307       /lib/libpdcpbrcm.so.0
+77e5f000-77e6e000 ---p 00000000 00:00 0 
+77e6e000-77e70000 rw-p 0001d000 1f:00 1307       /lib/libpdcpbrcm.so.0
+77e70000-77e74000 rw-p 00000000 00:00 0 
+77e74000-77e85000 r-xp 00000000 1f:00 1339       /lib/libtinyxml.so.0.0.0
+77e85000-77e95000 ---p 00000000 00:00 0 
+77e95000-77e96000 rw-p 00011000 1f:00 1339       /lib/libtinyxml.so.0.0.0
+77e96000-77ea0000 r-xp 00000000 1f:00 1345       /lib/libvalidate.so.0.0.1
+77ea0000-77eaf000 ---p 00000000 00:00 0 
+77eaf000-77eb0000 rw-p 00009000 1f:00 1345       /lib/libvalidate.so.0.0.1
+77eb0000-77eb8000 r-xp 00000000 1f:00 1206       /lib/libcmd_parser.so.1.0.1
+77eb8000-77ec8000 ---p 00000000 00:00 0 
+77ec8000-77ec9000 rw-p 00008000 1f:00 1206       /lib/libcmd_parser.so.1.0.1
+77ec9000-77eca000 rw-p 00000000 00:00 0 
+77eca000-77ed3000 r-xp 00000000 1f:00 1183       /lib/libarc.so.0.0.1
+77ed3000-77ee2000 ---p 00000000 00:00 0 
+77ee2000-77ee3000 rw-p 00008000 1f:00 1183       /lib/libarc.so.0.0.1
+77ee3000-77ef8000 r-xp 00000000 1f:00 1223       /lib/libdaemonlib.so.0.0.1
+77ef8000-77f07000 ---p 00000000 00:00 0 
+77f07000-77f08000 rw-p 00014000 1f:00 1223       /lib/libdaemonlib.so.0.0.1
+77f08000-77f0f000 r-xp 00000000 1f:00 1245       /lib/libexa_lib.so.0.0.1
+77f0f000-77f1e000 ---p 00000000 00:00 0 
+77f1e000-77f1f000 rw-p 00006000 1f:00 1245       /lib/libexa_lib.so.0.0.1
+77f1f000-77f20000 r-xp 00000000 1f:00 1326       /lib/librt.so.0
+77f20000-77f2f000 ---p 00000000 00:00 0 
+77f2f000-77f30000 rw-p 00000000 1f:00 1326       /lib/librt.so.0
+77f30000-77f3d000 r-xp 00000000 1f:00 1314       /lib/libpthread.so.0
+77f3d000-77f4c000 ---p 00000000 00:00 0 
+77f4c000-77f4d000 r--p 0000c000 1f:00 1314       /lib/libpthread.so.0
+77f4d000-77f52000 rw-p 0000d000 1f:00 1314       /lib/libpthread.so.0
+77f52000-77f54000 rw-p 00000000 00:00 0 
+77f54000-77f59000 r-xp 00000000 1f:00 1180       /lib/ld-uClibc.so.0
+77f66000-77f67000 rw-p 00000000 00:00 0 
+77f68000-77f69000 r--p 00004000 1f:00 1180       /lib/ld-uClibc.so.0
+77f69000-77f6a000 rw-p 00005000 1f:00 1180       /lib/ld-uClibc.so.0
+77f6a000-77f6b000 rw-p 00000000 00:00 0 
+7e9fd000-7ea00000 rwxp 00000000 00:00 0 
+7ebfd000-7ec00000 rwxp 00000000 00:00 0 
+7edfd000-7ee00000 rwxp 00000000 00:00 0 
+7effd000-7f000000 rwxp 00000000 00:00 0 
+7f1fd000-7f200000 rwxp 00000000 00:00 0 
+7f3fd000-7f400000 rwxp 00000000 00:00 0 
+7f5fd000-7f600000 rwxp 00000000 00:00 0 
+7f7fd000-7f800000 rwxp 00000000 00:00 0 
+7fe9c000-7febd000 rwxp 00000000 00:00 0          [stack]
+7fff7000-7fff8000 r-xp 00000000 00:00 0          [vdso]
+
+meminfo:
+MemTotal:         226668 kB
+MemFree:           59592 kB
+Buffers:               0 kB
+Cached:            61976 kB
+SwapCached:            0 kB
+Active:            31624 kB
+Inactive:          55888 kB
+Active(anon):      25708 kB
+Inactive(anon):    29368 kB
+Active(file):       5916 kB
+Inactive(file):    26520 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+HighTotal:             0 kB
+HighFree:              0 kB
+LowTotal:         226668 kB
+LowFree:           59592 kB
+SwapTotal:             0 kB
+SwapFree:              0 kB
+Dirty:                 0 kB
+Writeback:             0 kB
+AnonPages:         25536 kB
+Mapped:            10048 kB
+Shmem:             29540 kB
+Slab:              64456 kB
+SReclaimable:       1800 kB
+SUnreclaim:        62656 kB
+KernelStack:        7872 kB
+PageTables:         1080 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:      113332 kB
+Committed_AS:      75268 kB
+VmallocTotal:    1015800 kB
+VmallocUsed:       14396 kB
+VmallocChunk:     983072 kB
++++Calix+++CDC+++Premise+++Tailer+++

@@ -1,0 +1,50 @@
+11/14/25 12:42:01 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_get_count_associations wifi6,-19
+11/14/25 12:42:00 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_get_count_associations wifi6,-19
+11/14/25 12:42:00 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_get_count_associations wifi5,-19
+11/14/25 12:42:00 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_get_count_associations wifi5,-19
+11/14/25 12:42:00 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_get_count_associations wifi4,-19
+11/14/25 12:41:59 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_get_count_associations wifi4,-19
+11/14/25 12:41:59 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_get_count_associations wifi3,-19
+11/14/25 12:41:59 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_get_count_associations wifi3,-19
+11/14/25 12:41:59 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_get_count_associations wifi1,-19
+11/14/25 12:41:59 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_get_count_associations wifi1,-19
+11/14/25 12:41:58 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_get_count_associations wifi2,-19
+11/14/25 12:41:58 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_get_count_associations wifi2,-19
+11/12/25 04:41:09 PM wlanmgr: QTNEvent:g_radio.regulatory_domain = CA, radio->regulatory_domain = CA
+11/12/25 04:41:09 PM wlanmgr: QTNEvent:status=1, s_dfs is already enabled
+11/12/25 04:33:47 PM wlanmgr: QTNEvent:qcsapi_wifi_vlan_config ifname = eth1_0, cmd = 34, vlanid = 500
+11/12/25 04:33:47 PM wlanmgr: QTNEvent:qcsapi_wifi_vlan_config ifname = wifi0, cmd = 534, vlanid = 500
+11/12/25 04:33:39 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_del_radius_auth wifi0,-22
+11/12/25 04:33:37 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_enable -19, wifi6, flag = 0
+11/12/25 04:33:37 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_get_status -19, wifi6
+11/12/25 04:33:37 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_enable -19, wifi5, flag = 0
+11/12/25 04:33:36 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_get_status -19, wifi5
+11/12/25 04:33:36 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_enable -19, wifi4, flag = 0
+11/12/25 04:33:36 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_get_status -19, wifi4
+11/12/25 04:33:36 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_enable -19, wifi3, flag = 0
+11/12/25 04:33:35 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_get_status -19, wifi3
+11/12/25 04:33:35 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_enable -19, wifi1, flag = 0
+11/12/25 04:33:35 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_get_status -19, wifi1
+11/12/25 04:33:35 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_enable -19, wifi2, flag = 0
+11/12/25 04:33:34 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_get_status -19, wifi2
+11/12/25 04:33:34 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_del_radius_auth wifi7,-22
+11/12/25 04:33:31 PM wlanmgr: QTNEvent:c_rpc_qcsapi_interface_get_status -19, wifi7
+11/12/25 04:33:30 PM wlanmgr: QTNEvent:g_radio.regulatory_domain = none, radio->regulatory_domain = CA
+11/12/25 04:33:29 PM wlanmgr: QTNEvent:start_pm_binning_timer
+11/12/25 04:33:27 PM wlanmgr: QTNEvent:status=0, enable s_dfs
+11/12/25 04:33:27 PM wlanmgr: QTNEvent:c_rpc_qcsapi_wifi_apply_security_config wifi0,-1010
+11/12/25 04:33:26 PM wlanmgr: QTNEvent:wlanmgrbh_send_prov
+11/12/25 04:33:26 PM wlanmgr: QTNEvent:QTN_IS_STARTPROD_DONE(16)
+11/12/25 04:33:18 PM wlanmgr: QTNEvent:QTN_STARTPROD_NOT_COMPLETE_YET(8)
+11/12/25 04:33:13 PM wlanmgr: QTNEvent:QTN_STARTPROD_NOT_COMPLETE_YET(4)
+11/12/25 04:33:11 PM wlanmgr: QTNEvent:QTN_STARTPROD_NOT_COMPLETE_YET(2)
+11/12/25 04:33:10 PM wlanmgr: QTNEvent:QTN_STARTPROD_NOT_COMPLETE_YET(1)
+11/12/25 04:33:09 PM wlanmgr: QTNEvent:QTN_STARTPROD
+11/12/25 04:33:08 PM wlanmgr: QTNEvent:QTN_CONFIG_REGION ca
+11/12/25 04:33:07 PM wlanmgr: QTNEvent:set region CA(3)
+11/12/25 04:33:06 PM wlanmgr: QTNEvent:QTN_WAITING_CFG_REGION region not set yet(2)
+11/12/25 04:33:05 PM wlanmgr: QTNEvent:QTN_WAITING_CFG_REGION region not set yet(1)
+11/12/25 04:33:04 PM wlanmgr: QTNEvent:QTN_INIT qtn_client_create_success
+11/12/25 04:33:04 PM wlanmgr: QTNEvent:QTN_INIT
+11/12/25 04:33:03 PM wlanmgr: QTNEvent:QTN_BH_REG_DEVICE
+11/12/25 04:33:03 PM wlanmgr: QTNEvent:pid of wlanmgr is [1081]

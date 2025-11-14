@@ -245,8 +245,6 @@
                                     $firstKey = array_key_first($results ?? []);
                                     $prefix = str_starts_with($firstKey, 'Device.IP.') ? 'Device.IP.Diagnostics.IPPingDiagnostics' : 'InternetGatewayDevice.IPPingDiagnostics';
                                 @endphp
-                                <!-- DEBUG: firstKey = {{ $firstKey }} | prefix = {{ $prefix }} -->
-                                <!-- DEBUG: keys = {{ implode(', ', array_keys($results ?? [])) }} -->
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <span class="text-sm font-medium text-gray-500">Success Count:</span>
@@ -278,22 +276,64 @@
                                     $results = is_array($task->result) ? $task->result : json_decode($task->result, true);
                                     $firstKey = array_key_first($results ?? []);
                                     $prefix = str_starts_with($firstKey, 'Device.IP.') ? 'Device.IP.Diagnostics.TraceRouteDiagnostics' : 'InternetGatewayDevice.TraceRouteDiagnostics';
+
+                                    // Extract hop data
+                                    $hops = [];
+                                    foreach ($results as $key => $data) {
+                                        if (preg_match('/.RouteHops\.(\d+)\.(.+)/', $key, $matches)) {
+                                            $hopNum = (int)$matches[1];
+                                            $field = $matches[2];
+                                            if (!isset($hops[$hopNum])) {
+                                                $hops[$hopNum] = ['number' => $hopNum];
+                                            }
+                                            $hops[$hopNum][$field] = $data['value'] ?? '';
+                                        }
+                                    }
+                                    ksort($hops);
                                 @endphp
-                                <!-- DEBUG: firstKey = {{ $firstKey }} | prefix = {{ $prefix }} -->
-                                <!-- DEBUG: keys = {{ implode(', ', array_keys($results ?? [])) }} -->
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <span class="text-sm font-medium text-gray-500">Response Time:</span>
-                                        <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.ResponseTime"]['value'] ?? 'N/A' }} ms</span>
+                                <div class="space-y-4">
+                                    <div class="grid grid-cols-3 gap-4">
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-500">Response Time:</span>
+                                            <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.ResponseTime"]['value'] ?? 'N/A' }} ms</span>
+                                        </div>
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-500">Number of Hops:</span>
+                                            <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.RouteHopsNumberOfEntries"]['value'] ?? 'N/A' }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-500">State:</span>
+                                            <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.DiagnosticsState"]['value'] ?? 'N/A' }}</span>
+                                        </div>
                                     </div>
+
+                                    @if(count($hops) > 0)
                                     <div>
-                                        <span class="text-sm font-medium text-gray-500">Number of Hops:</span>
-                                        <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.RouteHopsNumberOfEntries"]['value'] ?? 'N/A' }}</span>
+                                        <h5 class="text-sm font-semibold text-gray-700 mb-2">Route Hops</h5>
+                                        <div class="overflow-x-auto">
+                                            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                                <thead class="bg-gray-50">
+                                                    <tr>
+                                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Hop</th>
+                                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Host</th>
+                                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">IP Address</th>
+                                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">RTT</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="bg-white divide-y divide-gray-200">
+                                                    @foreach($hops as $hop)
+                                                    <tr>
+                                                        <td class="px-3 py-2 whitespace-nowrap text-gray-900">{{ $hop['number'] }}</td>
+                                                        <td class="px-3 py-2 text-gray-900">{{ $hop['HopHost'] ?? '-' }}</td>
+                                                        <td class="px-3 py-2 whitespace-nowrap text-gray-900">{{ $hop['HopHostAddress'] ?? '-' }}</td>
+                                                        <td class="px-3 py-2 whitespace-nowrap text-gray-900">{{ $hop['HopRTTimes'] ?? '-' }}</td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <span class="text-sm font-medium text-gray-500">State:</span>
-                                        <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.DiagnosticsState"]['value'] ?? 'N/A' }}</span>
-                                    </div>
+                                    @endif
                                 </div>
                             @endif
                         </div>

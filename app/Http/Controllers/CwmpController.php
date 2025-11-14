@@ -516,6 +516,7 @@ class CwmpController extends Controller
                 "{$prefix}.DiagnosticsState",
                 "{$prefix}.ResponseTime",
                 "{$prefix}.RouteHopsNumberOfEntries",
+                "{$prefix}.RouteHops.",  // Partial path query to get all hop entries
             ];
         }
 

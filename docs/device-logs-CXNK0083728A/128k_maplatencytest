@@ -1,0 +1,5 @@
+11-12-2025 16:32:52.017776 maplatencytest: map_latencytest_p1.c.1308: Retrieve the historic latency request and report!
+11-12-2025 16:32:52.019718 maplatencytest: map_latencytest_p1.c.1141: Fail to open /exa_data/.latencytest/test_report.db!
+11-12-2025 16:32:52.020240 maplatencytest: map_latencytest_p1.c.1141: Fail to open /exa_data/.latencytest/test_request.db!
+11-12-2025 16:32:52.020674 maplatencytest: map_latencytest_p1.c.161: fail to read request file.
+11-12-2025 16:32:52.021073 maplatencytest: map_latencytest_p1.c.165: fail to read report file.

@@ -1,0 +1,13 @@
+11-12-2025 16:32:48.344777 mapconfig: ../../src/cmd_parser.c.255: cp_cmd_add_attr: vtype=(WIFI_ENCRYPT) not found, fix it!
+11-12-2025 16:32:48.346876 mapconfig: ../../src/cmd_parser.c.255: cp_cmd_add_attr: vtype=(WIFI_ENCRYPT) not found, fix it!
+11-12-2025 16:32:48.347772 mapconfig: ../../src/cmd_parser.c.255: cp_cmd_add_attr: vtype=(WIFI_ENCRYPT) not found, fix it!
+11-12-2025 16:32:51.618556 mapconfig: map_config_p1.c.454: Bind is ok
+
+11-12-2025 16:41:08.229979 mapconfig: map_config_p1.c.406: Enter map_config_handle_socket
+
+11-12-2025 16:41:08.391107 mapconfig: map_config_p1.c.112: error sending thrift
+11-12-2025 16:41:08.391903 mapconfig: map_config_p1.c.406: Enter map_config_handle_socket
+
+11-12-2025 16:41:13.666762 mapconfig: map_config_p1.c.406: Enter map_config_handle_socket
+
+11-12-2025 16:41:13.827356 mapconfig: map_config_p1.c.112: error sending thrift

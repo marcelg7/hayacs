@@ -1,0 +1,905 @@
+Configuring system...
+kernel.shmmax = 0x8000000
+Finish CONSOLE SAVE
+starting mdev -s...
+Loading drivers and kernel modules... 
+
+<4>rdpa: module license 'Proprietary' taints kernel.
+<4>Disabling lock debugging due to kernel taint
+bash: can't execute 'alias': No such file or directory
+ifconfig: ioctl 0x8913 failed: No such device
+<4>scratchpad RdpaWanType - GBE 
+<4>scratchpad WanOEMac - EMAC5 
+<3>ip class mode is 
+<3>  Reserved memory  name [tm]  address[aea00000]  size [20971520]
+<3>  Reserved memory  name [mc]  address[ae600000]  size [4194304]
+<4>enable IH Wan-Wan forwarding...
+<4>data_path_go Done!!
+<4>Set EMAC4 as RGMII
+<3>  Reserved memory  name [tm]  address[aea00000]  size [20971520]
+<3>  Reserved memory  name [mc]  address[ae600000]  size [4194304]
+<3>  Reserved memory  name [tm]  address[aea00000]  size [20971520]
+<4>Bridge fastpath module. compiled Nov  2 2022 , 00:30:59
+<4>brcmchipinfo: brcm_chipinfo_init entry
+<4>NBUFF v1.0 Initialized
+<4>[0;36;44mInitialized fcache state[0m
+<4>[0;36;44mBroadcom Packet Flow Cache  Char Driver v3.0 Nov  2 2022 00:30:01 Registered<242>[0m
+<4>Created Proc FS /procfs/fcache
+<4>[0;36;44mBroadcom Packet Flow Cache registered with netdev chain[0m
+<4>[0;36;44mBroadcom Packet Flow Cache learning via BLOG enabled.[0m
+<4>[0;35m[FHW]  pktDbgLvl[0xc0634f00]=0[0m
+<4>[0;34m[FHW]  fhw_construct: [0m
+<4>[0;36;44mInitialized Fcache HW accelerator layer state[0m
+<4>flwStatsThread created
+<4>[0;36;44mConstructed Broadcom Packet Flow Cache v3.0 Nov  2 2022 00:30:01[0m
+<4>[0;36;44mBroadcom Packet Flow Cache HW acceleration enabled.[0m
+<4>[0;36;44mBroadcom Packet Flow Cache HW acceleration enabled.[0m
+<4>Broadcom BCM68389_B0 Ethernet Network Device v0.1 Nov  2 2022 00:31:07
+<4>dgasp: kerSysRegisterDyingGaspHandler: bcmsw registered 
+<4>eth0: <4>eth1: <4>eth2: <4>eth3: <4>wf0: <4>
+<4>
+<4> **** invalid port 5 - has no EMAC related
+<4>eth5: <4>Error Access Type 0: Neither SPI nor PMDIO access in extsw_wreg <4>All Port Bit Map: 0x003f: eth0,eth1,eth2,eth3,wf0,eth5
+<4>   Chip WAN Only Ports 0000, Defined WAN Only Ports 0020, WAN Only Port Result: 0x0020:eth5
+<4>   Chip WAN Preffered Ports 0000, Defined WAN Preffered Ports 0000, WAN Preffered Port Result: 0x0000:
+<4>   Chip LAN Only Ports 0000, Defined LAN Only Ports 0000, LAN Only Port Result: 0x0000:
+<4>   WAN/LAN Both Capable Ports 0x001f:eth0,eth1,eth2,eth3,wf0
+<4>Creating Enet CPU ring for queue number 1 with 512 packets,Descriptor base=a84bc080
+<4> Creating Enet CPU ring for queue number 0 with 512 packets,Descriptor base=a84d0080
+<4> <2>wf0 Link UP 1000 mbps full duplex
+<4>
+<4>
+<4> **** invalid port 5 - has no EMAC related
+<2>eth5 Link UP 1000 mbps full duplex
+RDPA lan init
+# Created object <egress_tm/dir=ds,index=111>
+# Created object <egress_tm/dir=ds,index=100>
+# Created object <egress_tm/dir=ds,index=101>
+# Created object <egress_tm/dir=ds,index=102>
+# Created object <egress_tm/dir=ds,index=103>
+# Created object <egress_tm/dir=ds,index=104>
+# Created object <egress_tm/dir=ds,index=105>
+# Created object <egress_tm/dir=ds,index=106>
+# Created object <egress_tm/dir=ds,index=107>
+# Created object <pbit_to_queue/table = 0>
+RDPA lan init end
+<3>  Reserved memory  name [tm]  address[aea00000]  size [20971520]
+<3>  Reserved memory  name [mc]  address[ae600000]  size [4194304]
+<4>[1m[34mWifi Forwarding Driver is initialized![0m
+<4>wl: --wl_module_init start:2nv_1612--
+<4>[func:netlink_socket_init] Hello, netlink_socket_init for SONiQ.
+<4>--SMP support
+<4>wl: dsl_tx_pkt_flush_len=338
+<4>wl: norm_wmark_tot=6678, pktc_wmark_tot=6678
+<4>PCI: Enabling device 0000:04:00.0 (0000 -> 0002)
+<4>wl: passivemode=1
+<4>wl: napimode=0
+<4>initvars_cis_pci: Not CIS format
+<4>Neither SPROM nor OTP has valid image
+<4>wl:srom/otp not programmed, using main memory mapped srom info(wombo board)
+<4>wl: ID=pci/4/0/
+<4>wl: check type high gain
+<4>wl: loading /etc/wlan/bcm43217HG_map.bin
+<4>srom rev:8
+<4>wl: reading /etc/wlan/bcmcmn_nvramvars.bin, file size=32
+<4>wl0: allocskbmode=1 currallocskbsz=1024
+<4>Creating CPU ring for queue number 0 with 1024 packets descriptor=0xc073b958
+<4> [1m[34m wfd_bind: Dev wl%d wfd_idx 0 wl_radio_idx 0 Type skb configured WFD thread wfd0-thrd minQId/maxQId (8/8), status (0) qmask 0x1[0m
+<4>Instantiating WFD 0 thread
+<4>/drv3/bamboo/bamboo-agent/PRB-RBPREM122129-JOB1/bcm_build_8x4SG/bcm963xx/kernel/linux-3.4rt/../../bcmdrivers/opensource/include/bcm963xx/runner_wfd_inline.h rdpa_port_ssid_update Failed to get tc_to_queue table rc(-5)
+<4>wfd_registerdevice Successfully registered dev wl0 ifidx 0 wfd_idx 0
+<4>wl0: Broadcom BCM43227 802.11 Wireless Controller 7.14.164.303.cpe4.16L05xponpatch2.0-kdb
+<4>dgasp: kerSysRegisterDyingGaspHandler: wl0 registered 
+<4>Endpoint: endpoint_init entry
+<4>Endpoint: endpoint_init COMPLETED
+<4>PCIe0: No device found - Powering down
+Quantenna initialization srcipt started......
+<4>Calix ngx board setup cdev, rc = 0, major=252, minor =0.
+<4>
+<4>****
+<4>ds_nvparm2_init: sizeof(ds_nvparm_t) = 16464
+<4>*****
+<4>ds_nvparm2_init - Loading DHCP leases from file since cache was invalid or not presentCalix ngx security setup cdev, rc = 0, major=250, minor =0.
+qtn wait for wf0.7.0 1
+ngx_sec major = 250 minor = 0
+<4>Register kernel console finished!
+Starting event_mod: <4>event-mod 0.0.1 inserted!
+<4>event-mod creating device!
+<4>event-mod major=249
+<4>event-mod started!
+done
+mknod: /dev/events: File exists
+Loading GRE kernel modules...
+writing RSA key
+Starting healthmgr
+Wed Nov 12 21:26:43 UTC 2025
+Wed Nov 12 21:27:43 UTC 2025
+mount: mounting /dev/sda1 on /var/usb failed: No such device
+qtn wait for wf0.7.0 2
+
+healthmgr>set panic_ignore chttpd enabled
+healthmgr>set panic_ignore tr69c enabled
+healthmgr>set panic_ignore ctr69c enabled
+healthmgr>set panic_ignore upnp enabled
+healthmgr>set panic_ignore sshd enabled
+healthmgr>set panic_ignore chttpsd enabled
+healthmgr>set panic_ignore telnetd enabled
+healthmgr>set task_ignore gfastmgr enabled
+healthmgr>set panic_ignore poemgr enabled
+healthmgr>set panic_ignore consoled enabled
+healthmgr>set panic_ignore ctr69c enabled
+healthmgr>set panic_ignore arppingex enabled
+Starting poemgr...
+Saving kernel bootup messages for dumpsysinfo...
+Starting ledmgr...
+qtn wait for wf0.7.0 3
+Starting led legacy profile...
+Starting CMS smd...
+
+===== Release Version 4.16L.05xponpatch2 (build timestamp 221102_0125) =====
+
+===== MFG Version 1.2.0 (build timestamp 221102_0125) =====
+
+Initializing CMS MDM in Legacy98 mode
+<4>netdev path : wf0.7 -> wf0
+<4>BCMVLAN : wf0 mode was set to RG
+<4>[0;33;41m[ERROR vlan] bcmVlan_setRealDevMode,2137: Real Device wf0.7 has no VLAN Interfaces[0m
+<4>[0;33;41m[ERROR vlan] vlanIoctl ,1176: Failed to set Real Device mode: wf0.7 (mode=0)[0m
+<4>netdev path : wf0.7.0 -> wf0.7 -> wf0
+<4>netdev path : wf0.1 -> wf0
+<4>netdev path : wf0.2 -> wf0
+<4>netdev path : wf0.3 -> wf0
+<4>netdev path : wf0.4 -> wf0
+<4>netdev path : wf0.5 -> wf0
+<4>netdev path : wf0.6 -> wf0
+<4>netdev path : wf0.0 -> wf0
+
+
+ !!! starting QTN_START.sh !!!
+
+
+<4>ERR: bridge_if_to_ih_src_matrix#341: Internal error. Can't convert port 7 to ih src matrix
+device wf0.7.0 is not a slave of br0
+br0       Link encap:Ethernet  HWaddr B6:34:87:97:68:AD  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0           txqueuelen:0 
+          RX bytes:0 (0.0 B) TX bytes:0 (0.0 B)
+
+wf0.7.0   Link encap:Ethernet  HWaddr D0:76:8F:00:42:6B  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:1 multicast:0 unicast:0 broadcast:1
+          RX errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 multicast:0 unicast:0 broadcast:0
+          TX errors:0 dropped:0 overruns:0 carrier:0 collisions:0
+          txqueuelen:0
+          RX bytes:46 (46.0 B) TX bytes:0 (0.0 B)
+          RX multicast bytes:0 (0.0 B) TX multicast bytes:0 (0.0 B)
+
+<4>ERR: bridge_if_to_ih_src_matrix#341: Internal error. Can't convert port 7 to ih src matrix
+ssk:error:45.429:oal_readConfigFlashToBuf:1148:read 256 bytes from flash /exa_data/current/parms/gwconfig
+<4>backup_psi_number_blk=0 result=65536
+<4>[sched_delayed] sched: RT throttling activated
+ssk:error:46.211:mdm_loadConfig:1960:set flag to smart activation file to load the SA config
+ssk:error:46.276:resetMainTr069DefaultsIfEmpty:375:correct obj->X_000631_DHCPConfigurable begin 2
+ssk:error:46.363:resetSupplementalTr069DefaultsIfEmpty:566:correct obj->X_000631_DHCPConfigurable begin 2
+Writing to memory done
+ssk:error:46.559:mdm_adjustWlanAdapterNew:2068:Cannot find wlan configuration object, add default instances.
+
+
+CLI/Web GUI admin password: 0da1c4f9
+Wifi default WPA password: afc08386561fe30d
+
+
+ssk:error:46.793:rut_sendMsgCommon:1214:acquire MDM lock successfully
+ssk:error:46.794:rut_sendMsgCommon:1214:acquire MDM lock successfully
+ssk:error:46.798:rut_sendMsgCommon:1214:acquire MDM lock successfully
+ssk:error:46.804:rut_sendMsgCommon:1214:acquire MDM lock successfully
+Board CLEI is BVMD200ARD
+
+Arp spoofing flag=0 
+Arp Spoofing disabled.
+
+ ***************************ARP SPOOFING NEW ADDED***********************<4>Host MIPS Clock divider pwrsaving is enabled
+ssk:error:46.890:cmsUtl_standardizeIp6Addr:1862:Invalid ipv6 address=time.nist.gov
+ssk:error:46.890:cmsUtl_standardizeIp6Addr:1862:Invalid ipv6 address=ntp1.tummy.com
+ssk:error:46.907:rut_sendMsgCommon:1214:acquire MDM lock successfully
+<4>ERR: port_root_tm_get#2048: rdpa_port_get FAILED: rc(-5)
+<4>ERR: rdpa_cmd_tm_ioctl#2611: dev_root_tm_get() failed: dev_type(0) dev_id(0) rc(12)
+<4>ERR: rdpa_cmd_tm_ioctl#3209: rdpa_cmd_tm_ioctl() OUT: FAILED: cmd=0 tm(0) rc(0)
+ERROR[tmctlRdpa_TmInit.615]: rdpaCtl_GetRootTm ERROR! rdpaIf=0 rc=12
+ERROR[tmctl_portTmInit.375]: tmctlRdpa_TmInit ERROR! rdpaDev=0, ifId=0, ret=-1
+ssk:error:46.939:rutQos_tmPortInit:1629:tmctl_portTmInit returns error, ifname=eth5
+cli_dhcp_limit_set_handler port 0 max 0
+cli_dhcp_limit_set_handler port 1 max 0
+PRODID is 844E-1
+cli_dhcp_limit_set_handler port 2 max 0
+cli_dhcp_limit_set_handler port 3 max 0
+ssk:error:48.004:rutLan_checkClearDHCPReservation:3802:newObj = 0x588c0edc, currObj = (nil)
+ssk:error:48.017:rutCalix_isDhcpdRunning:1888:CMS_MSG_IS_APP_RUNNING msg to smd failed, ret=9840
+<4>netdev path : wf0.100 -> wf0
+device br0 already exists; can't create bridge with the same name
+ssk:error:48.828:rut_fullPathToIntfname:2319:invalid argument. mdmPath=0x0 intfname=0x7f9d460c
+ssk:error:48.844:rut_sendMsgCommon:1214:acquire MDM lock successfully
+<4>netdev path : eth0.0 -> eth0
+ssk:error:48.966:rutLan_addInterfaceToBridge:2366:running [brctl addif br0 eth0.0]
+<4>br_netlink_mcpd.c: Setting registration type 0 pid to 1400
+<4>netdev path : eth1.0 -> eth1
+bridge name	bridge id		STP enabled	interfaces
+ssk:error:49.298:rutLan_addInterfaceToBridge:2366:running [brctl addif br0 eth1.0]
+br0		8000.d0768f00426d	yes		eth0.0
+							eth1.0
+brqt		8000.d0768f00426b	no		wf0.7.0
+<4>netdev path : eth2.0 -> eth2
+bcmsw     Link encap:Ethernet  HWaddr D0:76:8F:00:42:6A  
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:9 multicast:0 unicast:9 broadcast:0
+          RX errors:0 dropped:0 overruns:0 frame:0
+          TX packets:4 multicast:0 unicast:4 broadcast:0
+          TX errors:0 dropped:0 overruns:0 carrier:0 collisions:0
+          txqueuelen:1000
+          RX bytes:1504 (1.4 KiB) TX bytes:256 (256.0 B)
+          RX multicast bytes:0 (0.0 B) TX multicast bytes:0 (0.0 B)
+          Base address:0xffff 
+
+br0       Link encap:Ethernet  HWaddr D0:76:8F:00:42:6D  
+          inet addr:192.168.1.1  Bcast:192.168.1.255  Mask:255.255.255.0
+          UP BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 multicast:0 unicast:0 broadcast:0
+          RX errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 multicast:0 unicast:0 broadcast:0
+          TX errors:0 dropped:0 overruns:0 carrier:0 collisions:0
+          txqueuelen:0
+          RX bytes:0 (0.0 B) TX bytes:0 (0.0 B)
+          RX multicast bytes:0 (0.0 B) TX multicast bytes:0 (0.0 B)
+
+brqt      Link encap:Ethernet  HWaddr D0:76:8F:00:42:6B  
+          inet addr:169.254.1.1  Bcast:169.254.1.3  Mask:255.255.255.252
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:1 multicast:0 unicast:0 broadcast:1
+          RX errors:0 dropped:0 overruns:0 frame:0
+          TX packets:1 multicast:0 unicast:1 broadcast:0
+          TX errors:0 dropped:0 overruns:0 carrier:0 collisions:0
+          txqueuelen:0
+          RX bytes:46 (46.0 B) TX bytes:60 (60.0 B)
+          RX multicast bytes:0 (0.0 B) TX multicast bytes:0 (0.0 B)
+
+eth0      Link encap:Ethernet  HWaddr D0:76:8F:00:42:6D  
+          UP BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 multicast:0 unicast:0 broadcast:0
+          RX errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 multicast:0 unicast:0 broadcast:0
+          TX errors:0 dropped:0 overruns:0 carrier:0 collisions:0
+          txqueuelen:1000
+          RX bytes:0 (0.0 B) TX bytes:0 (0.0 B)
+          RX multicast bytes:0 (0.0 B) TX multicast bytes:0 (0.0 B)
+
+eth0.0    Link encap:Ethernet  HWaddr D0:76:8F:00:42:6D  
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:0 multicast:0 unicast:0 broadcast:0
+          RX errors:0 dropped:0 overruns:0 frame:0
+          TX packets:1 multicast:0 unicast:1 broadcast:0
+          TX errors:0 dropped:0 overruns:0 carrier:0 collisions:0
+          txqueuelen:0
+          RX bytes:0 (0.0 B) TX bytes:60 (60.0 B)
+          RX multicast bytes:0 (0.0 B) TX multicast bytes:0 (0.0 B)
+
+eth1      Link encap:Ethernet  HWaddr D0:76:8F:00:42:6E  
+          UP BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 multicast:0 unicast:0 broadcast:0
+          RX errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 multicast:0 unicast:0 broadcast:0
+          TX errors:0 dropped:0 overruns:0 carrier:0 collisions:0
+          txqueuelen:1000
+          RX bytes:0 (0.0 B) TX bytes:0 (0.0 B)
+          RX multicast bytes:0 (0.0 B) TX multicast bytes:0 (0.0 B)
+          
+
+eth1.0    Link encap:Ethernet  HWaddr D0:76:8F:00:42:6E  
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:0 multicast:0 unicast:0 broadcast:0
+          RX errors:0 dropped:0 overruns:0 frame:0
+          TX packets:1 multicast:0 unicast:1 broadcast:0
+          TX errors:0 dropped:0 overruns:0 carrier:0 collisions:0
+          txqueuelen:0
+          RX bytes:0 (0.0 B) TX bytes:60 (60.0 B)
+          RX multicast bytes:0 (0.0 B) TX multicast bytes:0 (0.0 B)
+
+eth2      Link encap:Ethernet  HWaddr D0:76:8F:00:42:6F  
+          UP BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 multicast:0 unicast:0 broadcast:0
+          RX errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 multicast:0 unicast:0 broadcast:0
+          TX errors:0 dropped:0 overruns:0 carrier:0 collisions:0
+          txqueuelen:1000
+          RX bytes:0 (0.0 B) TX bytes:0 (0.0 B)
+          RX multicast bytes:0 (0.0 B) TX multicast bytes:0 (0.0 B)
+          
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          UP LOOPBACK RUNNING  MTU:16436  Metric:1
+          RX packets:1164 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:1164 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0           txqueuelen:0 
+          RX bytes:69381 (67.7 KiB) TX bytes:69381 (67.7 KiB)
+
+ssk:error:49.628:rutLan_addInterfaceToBridge:2366:running [brctl addif br0 eth2.0]
+wf0       Link encap:Ethernet  HWaddr D0:76:8F:00:42:6B  
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:10 multicast:0 unicast:0 broadcast:10
+          RX errors:0 dropped:0 overruns:0 frame:0
+<4>netdev path : eth3.0 -> eth3
+          TX packets:4 multicast:0 unicast:0 broadcast:4
+ssk:error:49.873:rutLan_addInterfaceToBridge:2366:running [brctl addif br0 eth3.0]
+          TX errors:0 dropped:0 overruns:0 carrier:0 collisions:0
+          txqueuelen:1000
+          RX bytes:1604 (1.5 KiB) TX bytes:256 (256.0 B)
+          RX multicast bytes:0 (0.0 B) TX multicast bytes:0 (0.0 B)
+          
+
+wf0.7     Link encap:Ethernet  HWaddr D0:76:8F:00:42:6B  
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:2 multicast:0 unicast:0 broadcast:2
+          RX errors:0 dropped:0 overruns:0 frame:0
+          TX packets:1 multicast:0 unicast:1 broadcast:0
+          TX errors:0 dropped:0 overruns:0 carrier:0 collisions:0
+          txqueuelen:0
+          RX bytes:92 (92.0 B) TX bytes:60 (60.0 B)
+          RX multicast bytes:0 (0.0 B) TX multicast bytes:0 (0.0 B)
+
+wf0.7.0   Link encap:Ethernet  HWaddr D0:76:8F:00:42:6B  
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:2 multicast:0 unicast:0 broadcast:2
+          RX errors:0 dropped:0 overruns:0 frame:0
+          TX packets:1 multicast:0 unicast:1 broadcast:0
+          TX errors:0 dropped:0 overruns:0 carrier:0 collisions:0
+          txqueuelen:0
+          RX bytes:92 (92.0 B) TX bytes:60 (60.0 B)
+          RX multicast bytes:0 (0.0 B) TX multicast bytes:0 (0.0 B)
+
+ssk:error:50.148:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wl0 (okay if ssid didn't have one), ret = 9804
+Wait for Quantenna bootloader
+ssk:error:50.158:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wl0.1 (okay if ssid didn't have one), ret = 9804
+ssk:error:50.164:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wl0.2 (okay if ssid didn't have one), ret = 9804
+ssk:error:50.171:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wl0.3 (okay if ssid didn't have one), ret = 9804
+ssk:error:50.183:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wl0.4 (okay if ssid didn't have one), ret = 9804
+ssk:error:50.192:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wl0.5 (okay if ssid didn't have one), ret = 9804
+ping qtn......
+ssk:error:50.201:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wl0.6 (okay if ssid didn't have one), ret = 9804
+ssk:error:50.209:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wl0.7 (okay if ssid didn't have one), ret = 9804
+ssk:error:50.216:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.0 (okay if ssid didn't have one), ret = 9804
+ssk:error:50.237:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.1 (okay if ssid didn't have one), ret = 9804
+ssk:error:50.248:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.2 (okay if ssid didn't have one), ret = 9804
+ssk:error:50.256:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.3 (okay if ssid didn't have one), ret = 9804
+ssk:error:50.264:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.4 (okay if ssid didn't have one), ret = 9804
+ssk:error:50.272:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.5 (okay if ssid didn't have one), ret = 9804
+ssk:error:50.280:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.6 (okay if ssid didn't have one), ret = 9804
+ssk:error:50.288:rcl_lanWlanObject:1373:Failed to find BridgeKey for WLAN wf0.7 (okay if ssid didn't have one), ret = 9804
+ssk:error:50.324:rutLan_addInterfaceToBridge:2366:running [brctl addif br0 wf0.7.0]
+device wf0.7.0 is already a member of a bridge; can't enslave it to bridge br0.
+<4>ERR: port_root_tm_get#2048: rdpa_port_get FAILED: rc(-5)
+<4>ERR: rdpa_cmd_tm_ioctl#2611: dev_root_tm_get() failed: dev_type(0) dev_id(0) rc(12)
+<4>ERR: rdpa_cmd_tm_ioctl#3209: rdpa_cmd_tm_ioctl() OUT: FAILED: cmd=0 tm(0) rc(0)
+ERROR[tmctlRdpa_TmInit.615]: rdpaCtl_GetRootTm ERROR! rdpaIf=0 rc=12
+ERROR[tmctl_portTmInit.375]: tmctlRdpa_TmInit ERROR! rdpaDev=0, ifId=0, ret=-1
+ssk:error:50.597:rutQos_tmPortInit:1629:tmctl_portTmInit returns error, ifname=eth5
+ssk:error:50.598:stl_wanEthIntfObject:169:rutQos_tmPortInit() returns error. ret=9002
+<4>
+<4>
+<4> **** invalid port 5 - has no EMAC related
+<2>eth5 Link DOWN.
+WLmngr Daemon is running
+main@1179 Create WLAN_ADAPTER_STRUCT structs. BCM_WiFi_Mgmt_Cache.
+wlevt is ready for new msg...
+ssk:error:52.645:stl_possibleChannelQueryObject:2144:msg error, ret = 9809
+
+main@1250 Wlmngr-Init: Calling wlan_restart (WL_SYNC_FROM_MDM_TR098) for radioIdx:0
+ping: warning: got ICMP 3 (Destination Unreachable)
+Exception: it's locked 5 seconds, release the lock now!
+[31m
+MDM owner==> process:ssk(pid=1245) funtion:rut_sendMsgCommon holdtime:5 oid:4013 func:stl
+[0m[31m
+MDM arquirer==> mcpd(pid=1400)
+[0m[31m
+MDM owner==> process:ssk(pid=1245) funtion:rut_sendMsgCommon holdtime:5 oid:4013 func:stl
+[0m[31m
+MDM arquirer==> mcpd(pid=1400)
+[0m<4>
+<4>
+<4> **** invalid port 5 - has no EMAC related
+<2>eth5 (Int switch port: 5) (Logical Port: 5) Link UP 1000 mbps full duplex
+ssk:error:54.649:stl_possibleChannelQueryObject:2144:msg error, ret = 9809
+
+ssk:error:54.683:rcl_calixPoeCtrlObject:131:when booting poemgr is not running, can not execute: dcli poemgr set Register 68 0|dcli poemgr set MaxPower 30
+
+<4>[0;33;41m[ERROR enet] bcmeapi_ioctl_ethsw_port_pause_capability,690: invalid lan port id 8 
+<4>[0m
+ssk:error:55.391:bcm_port_pause_capability_set:1221:ioctl SIOCETHSWCTLOPS returned error 1 (Operation not permitted)
+
+ssk:error:55.494:stl_calixPoeCtrlObject:173:poemgr is not running, can not execute:  dcli poemgr show MaxPower >> /var/tmp/poe_budget
+
+ssk:error:55.502:cmsMgm_getLocalProvisionFileVersion:1249:File [/exa_data/current/parms/goldcfgfile] is invalid, just delete it
+ssk:error:55.503:cmsMgm_getLocalProvisionFileVersion:1253:Read Local Provision File Failed.
+ssk:error:55.511:cmsMgm_getCalixSipCfgFileVersionFromFile:1775:NULL fp for /calix/sip.conf. Can't read SIP Config File.
+
+ssk:error:55.528:rutPMap_availableInterfaceReferenceToMdmObject:2130:could not convert (null) to pathDesc
+ssk:error:55.641:mdm_initCalixGRE:2567:greObj->tunnelNumberOfEntries == 0
+ssk:error:55.642:mdm_initCalixGRE:2622:get MDMOID_LAN_WLAN fullPath=InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.
+
+ssk:error:55.643:mdm_initCalixGRE:2633:get MDMOID_LAN_WLAN object
+
+ssk:error:55.643:mdm_initCalixGRE:2648:add MDMOID_GRE_TUNNEL_INTERFACE
+ssk:error:55.643:mdm_initCalixGRE:2659:get MDMOID_GRE_TUNNEL_INTERFACE
+ssk:error:55.645:mdm_initCalixGRE:2622:get MDMOID_LAN_WLAN fullPath=InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.
+
+ssk:error:55.646:mdm_initCalixGRE:2633:get MDMOID_LAN_WLAN object
+
+ssk:error:55.646:mdm_initCalixGRE:2648:add MDMOID_GRE_TUNNEL_INTERFACE
+ssk:error:55.647:mdm_initCalixGRE:2659:get MDMOID_GRE_TUNNEL_INTERFACE
+ssk:error:55.648:mdm_initCalixGRE:2622:get MDMOID_LAN_WLAN fullPath=InternetGatewayDevice.LANDevice.1.WLANConfiguration.7.
+
+ssk:error:55.649:mdm_initCalixGRE:2633:get MDMOID_LAN_WLAN object
+
+ssk:error:55.650:mdm_initCalixGRE:2648:add MDMOID_GRE_TUNNEL_INTERFACE
+ssk:error:55.650:mdm_initCalixGRE:2659:get MDMOID_GRE_TUNNEL_INTERFACE
+ssk:error:55.652:mdm_initCalixGRE:2622:get MDMOID_LAN_WLAN fullPath=InternetGatewayDevice.LANDevice.1.WLANConfiguration.8.
+
+ssk:error:55.652:mdm_initCalixGRE:2633:get MDMOID_LAN_WLAN object
+
+ssk:error:55.653:mdm_initCalixGRE:2648:add MDMOID_GRE_TUNNEL_INTERFACE
+ssk:error:55.653:mdm_initCalixGRE:2659:get MDMOID_GRE_TUNNEL_INTERFACE
+ssk:error:55.655:mdm_initCalixGRE:2622:get MDMOID_LAN_WLAN fullPath=InternetGatewayDevice.LANDevice.1.WLANConfiguration.13.
+
+ssk:error:55.656:mdm_initCalixGRE:2633:get MDMOID_LAN_WLAN object
+
+ssk:error:55.656:mdm_initCalixGRE:2648:add MDMOID_GRE_TUNNEL_INTERFACE
+ssk:error:55.656:mdm_initCalixGRE:2659:get MDMOID_GRE_TUNNEL_INTERFACE
+ssk:error:55.658:mdm_initCalixGRE:2622:get MDMOID_LAN_WLAN fullPath=InternetGatewayDevice.LANDevice.1.WLANConfiguration.14.
+
+ssk:error:55.659:mdm_initCalixGRE:2633:get MDMOID_LAN_WLAN object
+
+ssk:error:55.659:mdm_initCalixGRE:2648:add MDMOID_GRE_TUNNEL_INTERFACE
+ssk:error:55.660:mdm_initCalixGRE:2659:get MDMOID_GRE_TUNNEL_INTERFACE
+ssk:error:55.662:mdm_initCalixGRE:2622:get MDMOID_LAN_WLAN fullPath=InternetGatewayDevice.LANDevice.1.WLANConfiguration.15.
+
+ssk:error:55.664:mdm_initCalixGRE:2633:get MDMOID_LAN_WLAN object
+
+ssk:error:55.664:mdm_initCalixGRE:2648:add MDMOID_GRE_TUNNEL_INTERFACE
+ssk:error:55.665:mdm_initCalixGRE:2659:get MDMOID_GRE_TUNNEL_INTERFACE
+ssk:error:55.759:cmsLck_releaseLockTraced:266:(((((((((((((((((((((((((((((((((((( released lock. lock occupied 6915 milliseconds; exceeds max timeHold 5000; ))))))))))))))))))))))))))))))))))))
+ssk:error:55.759:cmsLck_releaseLockTraced:268:(((((((((((((((((((((((((((((((((((( acquiring lock callerFuncName rut_sendMsgCommon; releasing lock callerFuncName cmsMdm_initWithAcc; )))))))))))))))))))))))))))))))))))))))
+sh: can't open '/etc/extra_func.sh'
+There is no Predefined DevicePin in CFE
+Starting eventmgr...
+ aemgmtctl::main:963 - EXITING APP NOT IN AE MODE
+setBcmWifiRadio:: map US to Q1/105
+(ssk) EthernetWan eth5 link up
+ledmgr>clear condition c_boardband_off
+ledmgr>set condition c_operational
+
+
+(((( vodsl: ENTER )))))
+
+<4>eth5.1 MAC address set to D0:76:8F:00:42:6A
+<4>netdev path : eth5.1 -> eth5
+<4>BCMVLAN : eth5 mode was set to RG
+ssk:error:60.297:rutWan_startDhcpc:1187:-i eth5.1 -d 844E-1.ENT.dslforum.org -O D0768F -S CXNK0083728A -P ENT -r 0.0.0.0 -a 0.0.0.0
+
+<4>ERR: rdpa_cpu_send_sysb#2010: can't map DS port/queue 7/0 P0 to RDD. rc=-5
+Starting wanconf...
+wanconf: cmsPsp_get: rdpaWanType=GBE
+
+<4>scratchpad RdpaWanType - GBE 
+<4>scratchpad WanOEMac - EMAC5 
+<4>START AE SerDes Init script WAN BPCM reg = 0x4
+<4>(*) Configure SATA_PHY  - TX=RX = GEN1 = AE bit rateYYYYYYYYYY - holding PHY in reset, phy_id = 86180041, val = 1940
+<4>ZZZZZZZZZZ - holding PHY in reset, phy_id = 86180041, val = 1940
+<4>YYYYYYYYYY - Releasing PHY from reset, phy_id = 86180041, val = 1940
+<4>ERR: rdpa_if_to_rdd_lan_mac#264: status:Operation is not supported Unexpected lan port 0 (wan0)
+<4>enable IH Wan-Wan forwarding...
+ssk:error:60.911:rut_sendMsgCommon:1214:acquire MDM lock successfully
+ssk:error:60.911:rutWan_startDhcpc:1194:starting dhcpc, pid=1651 on eth5.1
+12.2.10.0.54,1620842987l,tr69c,2,1,1,1
+12.2.12.2.3,1659174300l,tr69c,1,1,1,1
+12.2.12.8.4,1667481295l,tr69c,2,1,1,1
+12.2.12.9.1,1677236675l,tr69c,1,1,1,1
+12.2.13.0.49,1687341395l,tr69c,2,1,1,1
+12.2.12.9.1,1756819320l,tr69c,1,1,1,1
+<2>eth5 Link DOWN.
+==========607 ssk_main(info):registered wan connection up/down
+(ssk) EthernetWan eth5 link down
+ledmgr>clear condition c_operational
+ledmgr>set condition c_boardband_off
+Starting wlproxy...
+RadioIdx: 	0
+Supported: 	YES
+Freq: 		2.4GHz
+Vendor: 	Broadcom
+
+RadioIdx: 	1
+Supported: 	YES
+Freq: 		5GHz
+Vendor: 	Quantenna
+
+get_vendor_specific: dhcp option60 vendor class id: "844E-1.ENT.dslforum.org".ledmgr>set condition c_service_off
+Failed to acquire lock file: /tmp/shque.lock.
+Held by 1814
+Received CMS_MSG_WAN_LINK_UP message, prepare for checking framing mode and IsDefaultWanFrameAutoDetected!
+Enter wan frame detection flow!
+<2>eth5 (Int switch port: 5) (Logical Port: 5) Link UP 1000 mbps full duplex
+ioctl command return error!
+Starting potsmgr...
+(ssk) EthernetWan eth5 link up
+ledmgr>clear condition c_boardband_off
+ledmgr>set condition c_operational
+<4>eth5.1 MAC address set to D0:76:8F:00:42:6A
+<4>netdev path : eth5.1 -> eth5
+<4>BCMVLAN : eth5 mode was set to RG
+ledmgr>clear condition c_service_off
+ledmgr>set condition c_service_fail
+<4>wfd_registerdevice Successfully registered dev wl0.1 ifidx 1 wfd_idx 0
+<4>wfd_registerdevice Successfully registered dev wl0.2 ifidx 2 wfd_idx 0
+<4>wfd_registerdevice Successfully registered dev wl0.6 ifidx 6 wfd_idx 0
+<4>wfd_registerdevice Successfully registered dev wl0.3 ifidx 3 wfd_idx 0
+<4>wfd_registerdevice Successfully registered dev wl0.4 ifidx 4 wfd_idx 0
+<4>wfd_registerdevice Successfully registered dev wl0.5 ifidx 5 wfd_idx 0
+<4>wfd_registerdevice Successfully registered dev wl0.7 ifidx 7 wfd_idx 0
+Starting mapagent...
+Received CMS_MSG_WAN_LINK_UP message, prepare for checking framing mode and IsDefaultWanFrameAutoDetected!
+Enter wan frame detection flow!
+Failed to send cmd to QTN-Comm-M: No such file or directory
+Failed to send cmd to QTN-Comm-M: No such file or directory
+ping: warning: got ICMP 3 (Destination Unreachable)
+iptables: No chain/target/match by that name.
+conntrack v1.4.1 (conntrack-tools): 33 flow entries have been shown.
+conntrack v1.4.1 (conntrack-tools): 33 flow entries have been shown.
+There is no Predefined DevicePin in CFE
+sched_setaffinity failed, rc=-1, pid_wfd0=750
+Setting SSID: "CXNK0083728A"
+device wl0 is not a slave of br0
+ping: warning: got ICMP 3 (Destination Unreachable)
+<4>No device name wl0 found in Ethernet driver
+All services associated with eth5.1 is activated.
+ledmgr>clear condition c_service_fail
+ledmgr>set condition c_service
+Enter: DetectWanDsConvergedAndSave
+Starting mapdhcp...
+DetectWanDsConvergedAndSave:Got wan connection status: Connected
+<1>Intrusion -> IN=eth5.1 OUT= MAC=d0:76:8f:00:42:6a:28:b8:29:92:5c:98:08:00:45:00:00:34:43:a0:40:00:32:06:f1:d6:2f:fb:56:a5 SRC=47.251.86.165 DST=163.182.232.246 LEN=52 TOS=0x00 PREC=0x00 TTL=50 ID=17312 DF PROTO=TCP SPT=18336 DPT=52869 WINDOW=61690 RES=0x00 SYN URGP=0 MARK=0x8000000 
+ping: warning: got ICMP 3 (Destination Unreachable)
+Starting mapwifi...
+========551 wlmngr_init(error):wlmngr_wlanUpdateNotify idx 0
+wlctl: Unsupported
+main@1309: Entering Main CMS-Message Receive Loop...
+WanDetectHandlerTmr:It is 1th time to tryWanDetectHandlerTmr:Got wan connection status: Connected
+Starting mapconfig...
+ping: warning: got ICMP 3 (Destination Unreachable)
+Don't start maplldp in this version ...
+Starting mapspeedtest...
+<1>Intrusion -> IN=eth5.1 OUT= MAC=d0:76:8f:00:42:6a:28:b8:29:92:5c:98:08:00:45:28:00:28:be:dc:00:00:ed:06:f8:8f:4f:7c:3a:12 SRC=79.124.58.18 DST=163.182.232.246 LEN=40 TOS=0x08 PREC=0x20 TTL=237 ID=48860 PROTO=TCP SPT=42666 DPT=65201 WINDOW=1024 RES=0x00 SYN URGP=0 MARK=0x8000000 
+Starting maplatencytest...
+ping: warning: got ICMP 3 (Destination Unreachable)
+starting pid 2712, tty '': '-/bin/sh -l -c consoled'
+ledmgr>set condition c_main_power
+BCM96838 Broadband Router
+ >  alarmmgr::main:276 - STARTING APP
+ping: warning: got ICMP 3 (Destination Unreachable)
+ping....30
+ping: warning: got ICMP 3 (Destination Unreachable)
+ping: warning: got ICMP 3 (Destination Unreachable)
+ping....37
+start tftpd for qtn first time
+after connect 
+returning valu is
+1
+start tftpd for qtn 2 time
+after connect 
+returning valu is 2
+finish  qtn image down load, return
+bridge name	bridge id		STP enabled	interfaces
+br0		8000.d0768f00426d	yes		eth0.0
+							eth1.0
+							eth2.0
+							eth3.0
+							wl0
+brqt		8000.d0768f00426b	no		wf0.100
+Wait for Quantenna firmware runtime
+Wait for Quantenna firmware runtime
+PING 169.254.1.2 (169.254.1.2): 56 data bytes
+ping: warning: got ICMP 3 (Destination Unreachable)
+<1>Intrusion -> IN=eth5.1 OUT= MAC=d0:76:8f:00:42:6a:28:b8:29:92:5c:98:08:00:45:00:00:28:53:c9:00:00:f4:06:33:c5:2d:37:85:5d SRC=45.55.133.93 DST=163.182.232.246 LEN=40 TOS=0x00 PREC=0x00 TTL=244 ID=21449 PROTO=TCP SPT=60000 DPT=45522 WINDOW=1024 RES=0x00 SYN URGP=0 MARK=0x8000000 
+
+--- 169.254.1.2 ping statistics ---
+1 packets transmitted, 0 packets received, 100% packet loss
+PING 169.254.1.2 (169.254.1.2): 56 data bytes
+ping: warning: got ICMP 3 (Destination Unreachable)
+
+--- 169.254.1.2 ping statistics ---
+1 packets transmitted, 0 packets received, 100% packet loss
+PING 169.254.1.2 (169.254.1.2): 56 data bytes
+
+--- 169.254.1.2 ping statistics ---
+1 packets transmitted, 1 packets received, 0% packet loss
+round-trip min/avg/max = 10.070/10.070/10.070 ms
+
+
+(((( VODSL detects potsmgr is up ))))
+
+169.254.1.2: RPC: Program not registered
+\n\n
+((((((((((((((((((( tr104_voip_snapshot_handler 0 ))))))))))))))))))
+((((((((((((((((( tr104_voip_snapshot_handler )))))))))))))))))
+(((((((((( process_tr104_iphost BoundIfName = '(null)' ))))))))))
+((((((((((((((((( tr104_voip_snapshot_handler 2 )))))))))))))))))
+((((((((((((((((( tr104_voip_snapshot_handler 3 )))))))))))))))))
+((((((((((((((((( tr104_voip_snapshot_handler 4 )))))))))))))))))
+((((((((((((((((( tr104_voip_snapshot_handler 5 port 1 )))))))))))))))))
+((((((((((((((((( tr104_voip_snapshot_handler 6 port 1 ))))))))))))))))) tx gain -30 rx gain -90 tx gain -3.0 rx gain -9.0
+((((((((((((((((( tr104_voip_snapshot_handler 6b signalingProtocol None objLinePtr->enable Disabled)))))))))))))))))
+((((((((((((((((( tr104_voip_snapshot_handler 5 port 2 )))))))))))))))))
+((((((((((((((((( tr104_voip_snapshot_handler 6 port 2 ))))))))))))))))) tx gain -30 rx gain -90 tx gain -3.0 rx gain -9.0
+((((((((((((((((( tr104_voip_snapshot_handler 6b signalingProtocol None objLinePtr->enable Disabled)))))))))))))))))
+NOT FOUND 0
+<4>BOS: Enter bosInit 
+<4>BOS: Exit bosInit 
+<4>******* DSP: Found BCM6838 *******
+<4>******* DSP: In APM Mode *******
+<4>gInterruptCounter    = 0xC18251F4 
+<4>gInterruptErrors     = 0xC18251F0 
+<4>Binding 0x86a4c1d0
+<4>boardHalInit completed
+<4>DSP: Interrupt Ids
+<4>---------------
+<4>InterruptId/Location      = 87/LOW 
+<4>
+<4>DSP: Interrupt Masks
+<4>---------------
+<4>IrqMask                   = 0x00002200 
+<4>IrqMaskLow                = 0x00002200 
+<4>IrqMask1                  = 0x00008000 
+<4>IrqMaskLow1               = 0x00008000 
+<4>
+<4>DSP: Interrupt Status
+<4>-----------------
+<4>IrqStatus                 = 0x00000000 
+<4>IrqStatusLow              = 0x00000000 
+<4>IrqStatus1                = 0x00000000 
+<4>IrqStatusLow1             = 0x00000000 
+169.254.1.2: RPC: Program not registered
+\n\n
+NOT FOUND 1
+<4>EndpointInit completed
+<4>dgasp: kerSysRegisterDyingGaspHandler: endpoint registered 
+169.254.1.2: RPC: Program not registered
+\n\n
+NOT FOUND 2
+169.254.1.2: RPC: Program not registered
+\n\n
+NOT FOUND 3
+\n4000001F
+bit 0  - Ethernet interface
+bit 1  - PCIE EP driver
+bit 2  - PCIE RC driver
+bit 3  - WiFi driver
+bit 4  - Rpcd server
+bit 30 - Calstate mode
+bit 31 - System boot up completely\n
+FOUND 4
+CALSTATE = 3
+retcalstate = 1
+wlanmgr>load QT
+restoring /sbin/hotplug
+net.netfilter.nf_conntrack_tcp_timeout_established = 600
+will connect to qevt sever
+Qevt Connection established
+Server configuration 'nondefined:-PT default:+PITMN nondefined:+PITMN default:+PITMN WPACTRL3:-'
+complete
+device wf0.0 is not a slave of br0
+device wf0.7 is not a slave of br0
+(((( SSID: dcli send: set ssid 2 1 radius_cfg  1812 12345678 0 ))))
+(((( SSID: dcli send: set ssid 2 2 radius_cfg  1812 12345678 0 ))))
+(((( SSID: dcli send: set ssid 2 3 radius_cfg  1812 12345678 0 ))))
+(((( SSID: dcli send: set ssid 2 4 radius_cfg  1812 12345678 0 ))))
+(((( SSID: dcli send: set ssid 2 5 radius_cfg  1812 12345678 0 ))))
+(((( SSID: dcli send: set ssid 2 6 radius_cfg  1812 12345678 0 ))))
+(((( SSID: dcli send: set ssid 2 7 radius_cfg  1812 12345678 0 ))))
+(((( SSID: dcli send: set ssid 2 8 radius_cfg  1812 12345678 0 ))))
+<4>userspace process pid [3144]
+<4>netlink data length is 0
+<4>[netlink_receive][890]Receive a QRPE_CMD_INIT msg. mode = 3
+<4>[netlink_receive][890]Receive a QRPE_CMD_INIT msg. mode = 3
+<4>[netlink_receive][890]Receive a QRPE_CMD_INIT msg. mode = 3
+<4>[netlink_receive][890]Receive a QRPE_CMD_INIT msg. mode = 3
+<4>[netlink_receive][890]Receive a QRPE_CMD_INIT msg. mode = 3
+<4>[netlink_receive][890]Receive a QRPE_CMD_INIT msg. mode = 3
+<4>[netlink_receive][890]Receive a QRPE_CMD_INIT msg. mode = 3
+<4>[netlink_receive][890]Receive a QRPE_CMD_INIT msg. mode = 3
+<1>Intrusion -> IN=eth5.1 OUT= MAC=d0:76:8f:00:42:6a:28:b8:29:92:5c:98:08:00:45:28:00:2c:0e:ec:00:00:f7:06:e8:7f:c1:a3:7d:e7 SRC=193.163.125.231 DST=163.182.232.246 LEN=44 TOS=0x08 PREC=0x20 TTL=247 ID=3820 PROTO=TCP SPT=40967 DPT=40012 WINDOW=14600 RES=0x00 SYN URGP=0 MARK=0x8000000 
+<1>Intrusion -> IN=eth5.1 OUT= MAC=d0:76:8f:00:42:6a:28:b8:29:92:5c:98:08:00:45:00:00:2c:e2:7a:00:00:ed:06:c5:79:9d:e6:fb:43 SRC=157.230.251.67 DST=163.182.232.246 LEN=44 TOS=0x00 PREC=0x00 TTL=237 ID=57978 PROTO=TCP SPT=43937 DPT=5902 WINDOW=1025 RES=0x00 SYN URGP=0 MARK=0x8000000 
+ledmgr>set condition c_pw_tr69_upgrade_image
+MemTotal:         226668 kB
+MemFree:          104980 kB
+Buffers:               0 kB
+Cached:            13408 kB
+SwapCached:            0 kB
+Active:            31508 kB
+Inactive:           9240 kB
+Active(anon):      27392 kB
+Inactive(anon):      908 kB
+Active(file):       4116 kB
+Inactive(file):     8332 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+HighTotal:             0 kB
+HighFree:              0 kB
+LowTotal:         226668 kB
+LowFree:          104980 kB
+SwapTotal:             0 kB
+SwapFree:              0 kB
+Dirty:                 4 kB
+Writeback:             0 kB
+AnonPages:         27440 kB
+Mapped:            11932 kB
+Shmem:               908 kB
+Slab:              65816 kB
+SReclaimable:       1808 kB
+SUnreclaim:        64008 kB
+KernelStack:        8768 kB
+PageTables:         1220 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:      113332 kB
+Committed_AS:      48512 kB
+VmallocTotal:    1015800 kB
+VmallocUsed:       14388 kB
+VmallocChunk:     983896 kB
+HEALTHMGR: resource_memory: OK
+
+HEALTHMGR MEMORY SUFFICIENT
+MODULE_ID 103
+consoled start led powerled.....Ignoring unrecognized param/obj tag X_000631_Acl
+Ignoring unrecognized param/obj tag RemoteAcl inside X_000631_Acl
+Ignoring unrecognized param/obj tag list4 inside X_000631_Acl
+Ignoring unrecognized param/obj tag IPAddress inside X_000631_Acl
+Ignoring unrecognized param/obj tag Type inside X_000631_Acl
+Ignoring unrecognized param/obj tag list4 inside X_000631_Acl
+<4>smd receive reboot command from sid :0x1
+************* clog_opt is 1
+======= smact_RestoreSAFlag:[0] after with flag:[1]==========
+starting pid 3469, tty '': '/bin/sh -l -c "ngx_reboot.sh"'
+ledmgr>clear condition c_pw_tr69_upgrade_image
+ngx_shutdown
+Persisting DHCP leases ...Done
+healthmgr>reset system ngx_reboot.sh
+ 3659 admin     4892 R       20  N  /bin/ash /usr/bin/hm-kill.sh DCLI
+The system is going down NOW!
+Requesting system reboot
+Stopping CMS smd...
+smd received Terminate msg!!  Terminate all apps and then exit.
+syslogd exiting
+get_vendor_specific: dhcp option60 vendor class id: "844E-1.ENT.dslforum˝ˇüsú}ísê<3> ngx_console address [affdffa0] readIndex[56115]  writeIndex[94233]  console buffer size [131056]
+<4>the physical addr for resv flag memroy is 0xfe0fc00
+<4>the resv flag memory is already init, so return directly
+<4>map_hw_timer_interrupt,132: interrupt_id 8
+<4>start watch dog to monitor interrupts
+<6>Serial: BCM63XX driver $Revision: 3.00 $
+<6>[0;33mMagic SysRq with Auxilliary trigger char enabled (type ^ h for list of supported commands)[0m
+<6>ttyS0 at MMIO 0xb4e00500 (irq = 9) is a BCM63XX
+<6>ttyS1 at MMIO 0xb4e00520 (irq = 10) is a BCM63XX
+<4>BPM: tot_mem_size=266338304B (254MB), buf_mem_size <10%> =26633830B (25MB), num of buffers=10275, buf size=2592
+<4>Broadcom BPM Module Char Driver v0.1 Nov  2 2022 00:29:50 Registered<244>[0m
+<6>u32 classifier
+<6>    Actions configured
+<6>xt_time: kernel timezone is -0000
+<6>TCP: cubic registered
+<6>NET: Registered protocol family 10
+<6>IPv6 over IPv4 tunneling driver
+<6>NET: Registered protocol family 17
+<6>Initializing MCPD Module
+<6>Ebtables v2.0 registered
+<6>ebt_time registered
+<3>710 (ebt_dhcprelay_init):dhcprelay registered.
+<6>ebt_ftos registered
+<6>ebt_wmm_mark registered
+<6>8021q: 802.1Q VLAN Support v1.8
+<6>VFS: Mounted root (jffs2 filesystem) readonly on device 31:0.
+<6>Freeing unused kernel memory: 628k freed
+init started: BusyBox v1.17.2 (2022-11-02 01:33:58 CST)
+starting pid 250, tty '': '/bin/sh -l -c /etc/rc'
+sh: can't open '/etc/watchdog_hw.sh'
+Mounting UBI volumes ...
+<5>UBI: attaching mtd6 to ubi0
+<5>UBI: physical eraseblock size:   131072 bytes (128 KiB)
+<5>UBI: logical eraseblock size:    126976 bytes
+<5>UBI: smallest flash I/O unit:    2048
+<5>UBI: VID header offset:          2048 (aligned 2048)
+<5>UBI: data offset:                4096
+<5>UBI: max. sequence number:       7506623
+<5>UBI: attached mtd6 to ubi0
+<5>UBI: MTD device name:            "Data"
+<5>UBI: MTD device size:            146 MiB
+<5>UBI: number of good PEBs:        1175
+<5>UBI: number of bad PEBs:         0
+<5>UBI: number of corrupted PEBs:   0
+<5>UBI: max. allowed volumes:       128
+<5>UBI: wear-leveling threshold:    4096
+<5>UBI: number of internal volumes: 1
+<5>UBI: number of user volumes:     1
+<5>UBI: available PEBs:             0
+<5>UBI: total number of reserved PEBs: 1175
+<5>UBI: number of PEBs reserved for bad PEB handling: 11
+<5>UBI: max/mean erase counter: 6468/6388
+<5>UBI: image sequence number:  702856895
+<5>UBI: background thread "ubi_bgt0d" started, PID 281
+UBI device number 0, total 1175 LEBs (149196800 bytes, 142.3 MiB), available 0 LEBs (0 bytes), LEB size 126976 bytes (124.0 KiB)
+Volume ID:   0 (on ubi0)
+Type:        dynamic
+Alignment:   1
+Size:        1160 LEBs (147292160 bytes, 140.5 MiB)
+State:       OK
+Name:        exa_data_
+Character device major/minor: 254:1
+<5>UBIFS: recovery needed
+<5>UBIFS: recovery completed
+<5>UBIFS: mounted UBI device 0, volume 0, name "exa_data_"
+<5>UBIFS: file system size:   146022400 bytes (142600 KiB, 139 MiB, 1150 LEBs)
+<5>UBIFS: journal size:       7364608 bytes (7192 KiB, 7 MiB, 58 LEBs)
+<5>UBIFS: media format:       w4/r0 (latest is w4/r0)
+<5>UBIFS: default compressor: lzo
+<5>UBIFS: reserved for root:  4952683 bytes (4836 KiB)
+mount /exa_data successfully!
+<5>UBI: attaching mtd7 to ubi1
+<5>UBI: physical eraseblock size:   131072 bytes (128 KiB)
+<5>UBI: logical eraseblock size:    126976 bytes
+<5>UBI: smallest flash I/O unit:    2048
+<5>UBI: VID header offset:          2048 (aligned 2048)
+<5>UBI: data offset:                4096
+<5>UBI: max. sequence number:       32692
+<5>UBI: attached mtd7 to ubi1
+<5>UBI: MTD device name:            "no_erase"
+<5>UBI: MTD device size:            8 MiB
+<5>UBI: number of good PEBs:        64
+<5>UBI: number of bad PEBs:         0
+<5>UBI: number of corrupted PEBs:   0
+<5>UBI: max. allowed volumes:       128
+<5>UBI: wear-leveling threshold:    4096
+<5>UBI: number of internal volumes: 1
+<5>UBI: number of user volumes:     1
+<5>UBI: available PEBs:             0
+<5>UBI: total number of reserved PEBs: 64
+<5>UBI: number of PEBs reserved for bad PEB handling: 2
+<5>UBI: max/mean erase counter: 639/510
+<5>UBI: image sequence number:  1950550910
+<5>UBI: background thread "ubi_bgt1d" started, PID 300
+UBI device number 1, total 64 LEBs (8126464 bytes, 7.8 MiB), available 0 LEBs (0 bytes), LEB size 126976 bytes (124.0 KiB)
+Volume ID:   0 (on ubi1)
+Type:        dynamic
+Alignment:   1
+Size:        58 LEBs (7364608 bytes, 7.0 MiB)
+State:       OK
+Name:        no_erase_
+Character device major/minor: 253:1
+<5>UBIFS: recovery needed
+<5>UBIFS: recovery completed
+<5>UBIFS: mounted UBI device 1, volume 0, name "no_erase_"
+<5>UBIFS: file system size:   6221824 bytes (6076 KiB, 5 MiB, 49 LEBs)
+<5>UBIFS: journal size:       1015809 bytes (992 KiB, 0 MiB, 6 LEBs)
+<5>UBIFS: media format:       w4/r0 (latest is w4/r0)
+<5>UBIFS: default compressor: lzo
+<5>UBIFS: reserved for root:  293871 bytes (286 KiB)
+mount /no_erase successfully!
+ln: /calix/sys/qtn/u-boot.bin: File exists
+Module ID = 103
+Matching version 12.2.12.9.1 in /exa_data/delta_0 ...
+Version match in /exa_data/delta_0, reusing folder ...
+*********************************************
+**** Replacing gwconfig with staged file ****
+*********************************************
+28+0 records in
+28+0 records out
+29360128 bytes (28.0MB) copied, 0.436638 seconds, 64.1MB/s
+Running bcm_boot_launcher ...
+Start CONSOLE SAVE

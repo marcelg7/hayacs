@@ -1,0 +1,246 @@
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 11.2.6.10.2
+ssk backtrace on Wed Dec 31 16:01:41 1969
+reason: hold lock for long time
+hold mdm lock 8 seconds, lock get function: processWanAutoDetectEntry
+task stat D 
+[<80410d14>] __schedule+0x550/0x904
+[<80411174>] schedule+0x30/0xb8
+[<80410054>] schedule_hrtimeout_range_clock+0x128/0x1f4
+[<800fc9a4>] poll_schedule_timeout+0x30/0x54
+[<800fd26c>] do_select+0x47c/0x5c8
+[<800fd55c>] core_sys_select+0x1a4/0x2e0
+[<800fd770>] sys_select+0xd8/0x128
+[<8001babc>] stack_done+0x20/0x40
++++Calix+++CDC+++Premise+++Tailer+++
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 12.2.10.0.54
+ssk backtrace on Wed Dec 31 19:02:54 1969
+reason: hold lock for long time
+hold mdm lock 6 seconds, lock get function: processRAStatus6Info_igd
+task stat S 
+[<8042640c>] __schedule+0x550/0x904
+[<8042686c>] schedule+0x30/0xb8
+[<8042574c>] schedule_hrtimeout_range_clock+0x128/0x1f4
+[<800fce64>] poll_schedule_timeout+0x30/0x54
+[<800fd72c>] do_select+0x47c/0x5c8
+[<800fda1c>] core_sys_select+0x1a4/0x2e0
+[<800fdc30>] sys_select+0xd8/0x128
+[<8001bbbc>] stack_done+0x20/0x40
+rtnl owner is -1
++++Calix+++CDC+++Premise+++Tailer+++
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 12.2.10.0.54
+ssk backtrace on Wed Aug 25 08:47:07 2021
+reason: hold lock for long time
+hold mdm lock 6 seconds, lock get function: processRAStatus6Info_igd
+task stat S 
+[<8042640c>] __schedule+0x550/0x904
+[<8042686c>] schedule+0x30/0xb8
+[<8042574c>] schedule_hrtimeout_range_clock+0x128/0x1f4
+[<800fce64>] poll_schedule_timeout+0x30/0x54
+[<800fd72c>] do_select+0x47c/0x5c8
+[<800fda1c>] core_sys_select+0x1a4/0x2e0
+[<800fdc30>] sys_select+0xd8/0x128
+[<8001bbbc>] stack_done+0x20/0x40
+rtnl owner is -1
++++Calix+++CDC+++Premise+++Tailer+++
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 12.2.10.0.54
+ssk backtrace on Sat Jan 29 04:39:19 2022
+reason: hold lock for long time
+hold mdm lock 6 seconds, lock get function: processRAStatus6Info_igd
+task stat S 
+[<8042640c>] __schedule+0x550/0x904
+[<8042686c>] schedule+0x30/0xb8
+[<800377f8>] do_wait+0x218/0x2a8
+[<80038994>] sys_wait4+0x80/0xfc
+[<8001bbbc>] stack_done+0x20/0x40
+rtnl owner is -1
++++Calix+++CDC+++Premise+++Tailer+++
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 12.2.12.8.4
+ssk backtrace on Thu Nov  3 08:19:06 2022
+reason: hold lock for long time
+hold mdm lock 6 seconds, lock get function: processRAStatus6Info_igd
+task stat S 
+[<804264ac>] __schedule+0x550/0x904
+[<8042690c>] schedule+0x30/0xb8
+[<804257ec>] schedule_hrtimeout_range_clock+0x128/0x1f4
+[<800fce64>] poll_schedule_timeout+0x30/0x54
+[<800fd72c>] do_select+0x47c/0x5c8
+[<800fda1c>] core_sys_select+0x1a4/0x2e0
+[<800fdc30>] sys_select+0xd8/0x128
+[<8001bbbc>] stack_done+0x20/0x40
+rtnl owner is -1
++++Calix+++CDC+++Premise+++Tailer+++
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 12.2.12.8.4
+ssk backtrace on Thu Nov 17 02:07:09 ssk breason: hold lock for long time
+hold mdm lock 6 seconds, lock get funhold mdm lock 6 seconds, lock getask stat S 
+[<804264ac>] __schedule+0x550/0x904
+[<8042690c>] schedule+0x30/0xb8
+[<800377f8>] do_wait+0x218/0x2a8
+[<80038994>] sys_wait4+0x80/0xfc
+[<80[<80038994>] sys_wait4+0x80/0xrtn[<8001bbbc>] s+++Calix+++CDC+++Prertnl owner is -1
++++Calix+++CDC+++Premise+++Tailer+++
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 12.2.12.8.4
+ssk backtrace on Wed Dec 31 19:02:58 1969
+reason: hold lock for long time
+hold mdm lock 6 seconds, lock get function: processDhcpcStateChanged_igd
+task stat S 
+[<804264ac>] __schedule+0x550/0x904
+[<8042690c>] schedule+0x30/0xb8
+[<804257ec>] schedule_hrtimeout_range_clock+0x128/0x1f4
+[<800fce64>] poll_schedule_timeout+0x30/0x54
+[<800fd72c>] do_select+0x47c/0x5c8
+[<800fda1c>] core_sys_select+0x1a4/0x2e0
+[<800fdc30>] sys_select+0xd8/0x128
+[<8001bbbc>] stack_done+0x20/0x40
+rtnl owner is -1
++++Calix+++CDC+++Premise+++Tailer+++
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 12.2.12.8.4
+ssk backtrace on Wed Dec 31 19:02:59 1969
+reason: hold lock for long time
+hold mdm lock 6 seconds, lock get function: processDhcpcStateChanged_igd
+task stat S 
+[<804264ac>] __schedule+0x550/0x904
+[<8042690c>] schedule+0x30/0xb8
+[<804257ec>] schedule_hrtimeout_range_clock+0x128/0x1f4
+[<800fce64>] poll_schedule_timeout+0x30/0x54
+[<800fd72c>] do_select+0x47c/0x5c8
+[<800fda1c>] core_sys_select+0x1a4/0x2e0
+[<800fdc30>] sys_select+0xd8/0x128
+[<8001bbbc>] stack_done+0x20/0x40
+rtnl owner is -1
++++Calix+++CDC+++Premise+++Tailer+++
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 12.2.12.8.4
+ssk backtrace on Sat Dec  3 09:22:53 2022
+reason: hold lock for long time
+hold mdm lock 6 seconds, lock get function: processRAStatus6Info_igd
+task stat S 
+[<804264ac>] __schedule+0x550/0x904
+[<8042690c>] schedule+0x30/0xb8
+[<804257ec>] schedule_hrtimeout_range_clock+0x128/0x1f4
+[<800fce64>] poll_schedule_timeout+0x30/0x54
+[<800fd72c>] do_select+0x47c/0x5c8
+[<800fda1c>] core_sys_select+0x1a4/0x2e0
+[<800fdc30>] sys_select+0xd8/0x128
+[<8001bbbc>] stack_done+0x20/0x40
+rtnl owner is -1
++++Calix+++CDC+++Premise+++Tailer+++
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 12.2.12.8.4
+ssk backtrace on Sat Dec  3 09:23:59 2022
+reason: hold lock for long time
+hold mdm lock 6 seconds, lock get function: processRAStatus6Info_igd
+task stat S 
+[<804264ac>] __schedule+0x550/0x904
+[<8042690c>] schedule+0x30/0xb8
+[<804257ec>] schedule_hrtimeout_range_clock+0x128/0x1f4
+[<800fce64>] poll_schedule_timeout+0x30/0x54
+[<800fd72c>] do_select+0x47c/0x5c8
+[<800fda1c>] core_sys_select+0x1a4/0x2e0
+[<800fdc30>] sys_select+0xd8/0x128
+[<8001bbbc>] stack_done+0x20/0x40
+rtnl owner is -1
++++Calix+++CDC+++Premise+++Tailer+++
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 12.2.12.9.1
+ssk backtrace on Wed Dec 31 19:02:55 1969
+reason: hold lock for long time
+hold mdm lock 6 seconds, lock get function: processDhcpcStateChanged_igd
+task stat S 
+[<804264ac>] __schedule+0x550/0x904
+[<8042690c>] schedule+0x30/0xb8
+[<804257ec>] schedule_hrtimeout_range_clock+0x128/0x1f4
+[<800fce64>] poll_schedule_timeout+0x30/0x54
+[<800fd72c>] do_select+0x47c/0x5c8
+[<800fda1c>] core_sys_select+0x1a4/0x2e0
+[<800fdc30>] sys_select+0xd8/0x128
+[<8001bbbc>] stack_done+0x20/0x40
+rtnl owner is -1
++++Calix+++CDC+++Premise+++Tailer+++
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 12.2.12.9.1
+ssk backtrace on Wed Dec 31 19:02:57 1969
+reason: hold lock for long time
+hold mdm lock 7 seconds, lock get function: processDhcpcStateChanged_igd
+task stat S 
+[<804264ac>] __schedule+0x550/0x904
+[<8042690c>] schedule+0x30/0xb8
+[<804257ec>] schedule_hrtimeout_range_clock+0x128/0x1f4
+[<800fce64>] poll_schedule_timeout+0x30/0x54
+[<800fd72c>] do_select+0x47c/0x5c8
+[<800fda1c>] core_sys_select+0x1a4/0x2e0
+[<800fdc30>] sys_select+0xd8/0x128
+[<8001bbbc>] stack_done+0x20/0x40
+rtnl owner is -1
++++Calix+++CDC+++Premise+++Tailer+++
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 12.2.13.0.49
+ssk backtrace on Thu Jan 23 08:40:00 2025
+reason: hold lock for long time
+hold mdm lock 5 seconds, lock get function: rut_sendMsgCommon
+task stat S 
+[<804264ac>] __schedule+0x550/0x904
+[<8042690c>] schedule+0x30/0xb8
+[<804257ec>] schedule_hrtimeout_range_clock+0x128/0x1f4
+[<800fce64>] poll_schedule_timeout+0x30/0x54
+[<800fd72c>] do_select+0x47c/0x5c8
+[<800fda1c>] core_sys_select+0x1a4/0x2e0
+[<800fdc30>] sys_select+0xd8/0x128
+[<8001bbbc>] stack_done+0x20/0x40
+rtnl owner is -1
++++Calix+++CDC+++Premise+++Tailer+++
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 12.2.13.0.49
+ssk backtrace on Thu Feb  6 07:00:34 2025
+reason: hold lock for long time
+hold mdm lock 5 seconds, lock get function: rut_sendMsgCommon
+task stat S 
+[<804264ac>] __schedule+0x550/0x904
+[<8042690c>] schedule+0x30/0xb8
+[<804257ec>] schedule_hrtimeout_range_clock+0x128/0x1f4
+[<800fce64>] poll_schedule_timeout+0x30/0x54
+[<800fd72c>] do_select+0x47c/0x5c8
+[<800fda1c>] core_sys_select+0x1a4/0x2e0
+[<800fdc30>] sys_select+0xd8/0x128
+[<8001bbbc>] stack_done+0x20/0x40
+rtnl owner is -1
++++Calix+++CDC+++Premise+++Tailer+++
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 12.2.13.0.49
+ssk backtrace on Wed Dec 31 16:00:54 1969
+reason: hold lock for long time
+hold mdm lock 5 seconds, lock get function: rut_sendMsgCommon
+task stat S 
+[<804264ac>] __schedule+0x550/0x904
+[<8042690c>] schedule+0x30/0xb8
+[<804257ec>] schedule_hrtimeout_range_clock+0x128/0x1f4
+[<800fce64>] poll_schedule_timeout+0x30/0x54
+[<800fd72c>] do_select+0x47c/0x5c8
+[<800fda1c>] core_sys_select+0x1a4/0x2e0
+[<800fdc30>] sys_select+0xd8/0x128
+[<8001bbbc>] stack_done+0x20/0x40
+rtnl owner is -1
++++Calix+++CDC+++Premise+++Tailer+++
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 12.2.12.9.1
+ssk backtrace on Wed Nov 12 13:28:03 2025
+reason: hold lock for long time
+hold mdm lock 5 seconds, lock get function: rut_sendMsgCommon
+task stat S 
+[<804264ac>] __schedule+0x550/0x904
+[<8042690c>] schedule+0x30/0xb8
+[<804257ec>] schedule_hrtimeout_range_clock+0x128/0x1f4
+[<800fce64>] poll_schedule_timeout+0x30/0x54
+[<800fd72c>] do_select+0x47c/0x5c8
+[<800fda1c>] core_sys_select+0x1a4/0x2e0
+[<800fdc30>] sys_select+0xd8/0x128
+[<8001bbbc>] stack_done+0x20/0x40
+rtnl owner is -1
++++Calix+++CDC+++Premise+++Tailer+++

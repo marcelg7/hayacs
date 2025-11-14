@@ -1,10 +1,10 @@
 {
   "permissions": {
     "allow": [
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
       "Bash(php artisan:*)",
-      "Bash(php artisan make:migration:*)",
-      "Bash(composer require:*)",
-      "Bash(curl:*)"
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
