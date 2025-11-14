@@ -242,7 +242,8 @@
                             @if($task->task_type === 'ping_diagnostics')
                                 @php
                                     $results = is_array($task->result) ? $task->result : json_decode($task->result, true);
-                                    $prefix = str_contains(array_key_first($results ?? []), 'Device.') ? 'Device.IP.Diagnostics.IPPingDiagnostics' : 'InternetGatewayDevice.IPPingDiagnostics';
+                                    $firstKey = array_key_first($results ?? []);
+                                    $prefix = str_starts_with($firstKey, 'Device.IP.') ? 'Device.IP.Diagnostics.IPPingDiagnostics' : 'InternetGatewayDevice.IPPingDiagnostics';
                                 @endphp
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
@@ -273,7 +274,8 @@
                             @else
                                 @php
                                     $results = is_array($task->result) ? $task->result : json_decode($task->result, true);
-                                    $prefix = str_contains(array_key_first($results ?? []), 'Device.') ? 'Device.IP.Diagnostics.TraceRouteDiagnostics' : 'InternetGatewayDevice.TraceRouteDiagnostics';
+                                    $firstKey = array_key_first($results ?? []);
+                                    $prefix = str_starts_with($firstKey, 'Device.IP.') ? 'Device.IP.Diagnostics.TraceRouteDiagnostics' : 'InternetGatewayDevice.TraceRouteDiagnostics';
                                 @endphp
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
