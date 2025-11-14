@@ -316,16 +316,25 @@ class CwmpController extends Controller
      */
     private function handleSetParameterValuesResponse(array $parsed): string
     {
-        // Find the task that was sent
+        // Find the task that was sent (set_params, ping_diagnostics, or traceroute_diagnostics)
         $task = Task::where('status', 'sent')
-            ->where('task_type', 'set_params')
+            ->whereIn('task_type', ['set_params', 'ping_diagnostics', 'traceroute_diagnostics'])
             ->orderBy('updated_at', 'desc')
             ->first();
 
         if ($task) {
             if ($parsed['status'] === 0) {
-                $task->markAsCompleted(['status' => $parsed['status']]);
-                Log::info('SetParameterValues completed', ['device_id' => $task->device_id]);
+                // For diagnostic tasks, keep them as 'sent' until we get the "8 DIAGNOSTICS COMPLETE" event
+                // and retrieve the actual results
+                if ($task->task_type === 'ping_diagnostics' || $task->task_type === 'traceroute_diagnostics') {
+                    Log::info('Diagnostic task acknowledged by device, awaiting completion', [
+                        'device_id' => $task->device_id,
+                        'task_type' => $task->task_type,
+                    ]);
+                } else {
+                    $task->markAsCompleted(['status' => $parsed['status']]);
+                    Log::info('SetParameterValues completed', ['device_id' => $task->device_id]);
+                }
             } else {
                 $task->markAsFailed('SetParameterValues failed with status: ' . $parsed['status']);
                 Log::warning('SetParameterValues failed', ['device_id' => $task->device_id, 'status' => $parsed['status']]);
