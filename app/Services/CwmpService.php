@@ -399,7 +399,7 @@ class CwmpService
     /**
      * Helper: Create SOAP Envelope structure
      */
-    private function createSoapEnvelope(DOMDocument $dom, bool $includeId = true): DOMElement
+    private function createSoapEnvelope(DOMDocument $dom, bool $includeId = false): DOMElement
     {
         $envelope = $dom->createElementNS(self::SOAP_ENV, 'soap:Envelope');
         $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:soap', self::SOAP_ENV);
@@ -409,14 +409,15 @@ class CwmpService
         $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:cwmp', self::CWMP);
         $dom->appendChild($envelope);
 
-        // Create SOAP Header with cwmp:ID (required by TR-069 spec for ACS->CPE requests)
-        $header = $dom->createElementNS(self::SOAP_ENV, 'soap:Header');
-        $envelope->appendChild($header);
-
+        // Create SOAP Header (optionally with cwmp:ID)
+        // Note: cwmp:ID disabled by default as some devices (e.g., Calix 844E) reject it
         if ($includeId) {
+            $header = $dom->createElementNS(self::SOAP_ENV, 'soap:Header');
+            $envelope->appendChild($header);
+
             // Add cwmp:ID element (required for CPE to correlate requests/responses)
-            $id = $dom->createElementNS(self::CWMP, 'cwmp:ID', '1');
-            $id->setAttributeNS(self::SOAP_ENV, 'soap:mustUnderstand', '1');
+            $id = $dom->createElement('cwmp:ID', '1');
+            $id->setAttribute('soap:mustUnderstand', '1');
             $header->appendChild($id);
         }
 

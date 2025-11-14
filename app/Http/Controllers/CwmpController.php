@@ -42,13 +42,9 @@ class CwmpController extends Controller
                 ]);
             }
 
-            // Handle empty POST (device signaling end of session)
+            // Handle empty POST (device ready for next command or ending session)
             if (empty($xmlContent) || strlen($xmlContent) < 10) {
-                Log::info('Empty POST received - ending CWMP session');
-
-                // Return 204 No Content to end the session
-                return response('', 204)
-                    ->header('Content-Type', 'text/xml; charset=utf-8');
+                return $this->handleEmptyPost($request);
             }
 
             // Parse incoming message
@@ -171,6 +167,29 @@ class CwmpController extends Controller
         // Auto-provision device based on events and rules
         $this->provisioningService->autoProvision($device, $parsed['events']);
 
+        // ALWAYS send InformResponse first (TR-069 spec requirement)
+        // RPCs will be sent after device acknowledges with empty POST
+        return $this->cwmpService->createInformResponse($parsed['max_envelopes']);
+    }
+
+    /**
+     * Handle empty POST from device (signals device is ready for ACS commands)
+     */
+    private function handleEmptyPost(Request $request): Response
+    {
+        Log::info('Empty POST received from device', ['ip' => $request->ip()]);
+
+        // Find the most recent device from this IP address
+        $device = Device::where('ip_address', $request->ip())
+            ->where('last_inform', '>=', now()->subMinutes(5))
+            ->orderBy('last_inform', 'desc')
+            ->first();
+
+        if (!$device) {
+            Log::warning('Empty POST from unknown device', ['ip' => $request->ip()]);
+            return response('', 204)->header('Content-Type', 'text/xml; charset=utf-8');
+        }
+
         // Check for pending tasks
         $pendingTask = $device->tasks()
             ->where('status', 'pending')
@@ -178,15 +197,30 @@ class CwmpController extends Controller
             ->first();
 
         if ($pendingTask) {
+            Log::info('Sending queued RPC to device', [
+                'device_id' => $device->id,
+                'task_type' => $pendingTask->task_type,
+            ]);
+
             // Mark task as sent
             $pendingTask->markAsSent();
 
-            // Generate RPC based on task type
-            return $this->generateRpcForTask($pendingTask);
+            // Generate and send RPC
+            $rpcXml = $this->generateRpcForTask($pendingTask);
+
+            Log::info('CWMP Response sent to device', [
+                'response_size' => strlen($rpcXml),
+                'xml' => $rpcXml,
+            ]);
+
+            return response($rpcXml, 200)
+                ->header('Content-Type', 'text/xml; charset=utf-8')
+                ->header('SOAPAction', '');
         }
 
-        // No tasks - send InformResponse
-        return $this->cwmpService->createInformResponse($parsed['max_envelopes']);
+        // No pending tasks - end session
+        Log::info('No pending tasks - ending CWMP session', ['device_id' => $device->id]);
+        return response('', 204)->header('Content-Type', 'text/xml; charset=utf-8');
     }
 
     /**
