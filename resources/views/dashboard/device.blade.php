@@ -97,6 +97,11 @@
                     class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                 Sessions
             </button>
+            <button @click="activeTab = 'troubleshooting'"
+                    :class="activeTab === 'troubleshooting' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                Troubleshooting
+            </button>
         </nav>
     </div>
 
@@ -388,6 +393,392 @@
                 @endforelse
             </tbody>
         </table>
+    </div>
+
+    <!-- Troubleshooting Tab -->
+    <div x-show="activeTab === 'troubleshooting'" x-cloak class="space-y-6">
+        @php
+            // Helper function to get parameter value
+            $getParam = function($pattern) use ($device) {
+                $param = $device->parameters()->where('name', 'LIKE', "%{$pattern}%")->first();
+                return $param ? $param->value : '-';
+            };
+
+            // Helper to get exact parameter
+            $getExactParam = function($name) use ($device) {
+                $param = $device->parameters()->where('name', $name)->first();
+                return $param ? $param->value : '-';
+            };
+
+            // Determine data model
+            $dataModel = $device->getDataModel();
+            $isDevice2 = $dataModel === 'Device:2';
+        @endphp
+
+        <!-- 1. WAN Information -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-blue-50">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">WAN Information</h3>
+                <p class="mt-1 text-sm text-gray-600">Internet connection details</p>
+            </div>
+            <div class="border-t border-gray-200">
+                <dl>
+                    @if($isDevice2)
+                        @php
+                            $wanPrefix = 'Device.IP.Interface.1';
+                            $pppPrefix = 'Device.PPP.Interface.1';
+                        @endphp
+                    @else
+                        @php
+                            $wanPrefix = 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1';
+                            $pppPrefix = 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1';
+                        @endphp
+                    @endif
+
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Connection Status</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            @php
+                                $status = $isDevice2 ? $getExactParam("{$wanPrefix}.Status") : $getExactParam("{$wanPrefix}.ConnectionStatus");
+                            @endphp
+                            @if($status === 'Connected' || $status === 'Up')
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">{{ $status }}</span>
+                            @else
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ $status }}</span>
+                            @endif
+                        </dd>
+                    </div>
+
+                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">External IP Address</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                            {{ $isDevice2 ? $getExactParam("{$wanPrefix}.IPv4Address.1.IPAddress") : $getExactParam("{$wanPrefix}.ExternalIPAddress") }}
+                        </dd>
+                    </div>
+
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Default Gateway</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                            {{ $isDevice2 ? $getExactParam("Device.Routing.Router.1.IPv4Forwarding.1.GatewayIPAddress") : $getExactParam("{$wanPrefix}.DefaultGateway") }}
+                        </dd>
+                    </div>
+
+                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">DNS Servers</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                            {{ $isDevice2 ? $getExactParam("{$wanPrefix}.IPv4Address.1.DNSServers") : $getExactParam("{$wanPrefix}.DNSServers") }}
+                        </dd>
+                    </div>
+
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">MAC Address</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                            {{ $isDevice2 ? $getExactParam("{$wanPrefix}.MACAddress") : $getExactParam("{$wanPrefix}.MACAddress") }}
+                        </dd>
+                    </div>
+
+                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Uptime</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            @php
+                                $uptime = $isDevice2 ? $getExactParam("{$wanPrefix}.Uptime") : $getExactParam("{$wanPrefix}.Uptime");
+                                if ($uptime !== '-' && is_numeric($uptime)) {
+                                    $days = floor($uptime / 86400);
+                                    $hours = floor(($uptime % 86400) / 3600);
+                                    $minutes = floor(($uptime % 3600) / 60);
+                                    $uptime = "{$days}d {$hours}h {$minutes}m";
+                                }
+                            @endphp
+                            {{ $uptime }}
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <!-- 2. LAN Information -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-green-50">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">LAN Information</h3>
+                <p class="mt-1 text-sm text-gray-600">Local network configuration</p>
+            </div>
+            <div class="border-t border-gray-200">
+                <dl>
+                    @php
+                        $lanPrefix = $isDevice2 ? 'Device.IP.Interface.2' : 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement';
+                        $dhcpPrefix = $isDevice2 ? 'Device.DHCPv4.Server.Pool.1' : 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement';
+                    @endphp
+
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">LAN IP Address</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                            {{ $isDevice2 ? $getExactParam("{$lanPrefix}.IPv4Address.1.IPAddress") : $getExactParam("{$lanPrefix}.IPInterface.1.IPInterfaceIPAddress") }}
+                        </dd>
+                    </div>
+
+                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">Subnet Mask</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                            {{ $isDevice2 ? $getExactParam("{$lanPrefix}.IPv4Address.1.SubnetMask") : $getExactParam("{$lanPrefix}.IPInterface.1.IPInterfaceSubnetMask") }}
+                        </dd>
+                    </div>
+
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">DHCP Server</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            @php
+                                $dhcpEnabled = $isDevice2 ? $getExactParam("{$dhcpPrefix}.Enable") : $getExactParam("{$lanPrefix}.DHCPServerEnable");
+                            @endphp
+                            @if($dhcpEnabled === 'true' || $dhcpEnabled === '1')
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Enabled</span>
+                            @else
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Disabled</span>
+                            @endif
+                        </dd>
+                    </div>
+
+                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">DHCP Start Address</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                            {{ $isDevice2 ? $getExactParam("{$dhcpPrefix}.MinAddress") : $getExactParam("{$lanPrefix}.MinAddress") }}
+                        </dd>
+                    </div>
+
+                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500">DHCP End Address</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                            {{ $isDevice2 ? $getExactParam("{$dhcpPrefix}.MaxAddress") : $getExactParam("{$lanPrefix}.MaxAddress") }}
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <!-- 3. WiFi Radio Status -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-purple-50">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">WiFi Radio Status</h3>
+                <p class="mt-1 text-sm text-gray-600">Wireless radio configuration and status</p>
+            </div>
+            <div class="border-t border-gray-200 space-y-6 p-6">
+                @php
+                    // Get all WiFi-related parameters
+                    $wifiParams = $device->parameters()
+                        ->where(function($q) {
+                            $q->where('name', 'LIKE', '%WiFi.Radio.%')
+                              ->orWhere('name', 'LIKE', '%WiFi.SSID.%')
+                              ->orWhere('name', 'LIKE', '%WLANConfiguration%');
+                        })
+                        ->get();
+
+                    // Organize by radio (1 = 2.4GHz, 2 = 5GHz typically)
+                    $radios = [];
+                    foreach ($wifiParams as $param) {
+                        if (preg_match('/Radio\.(\d+)/', $param->name, $matches)) {
+                            $radioNum = $matches[1];
+                            if (!isset($radios[$radioNum])) {
+                                $radios[$radioNum] = [];
+                            }
+                            $radios[$radioNum][$param->name] = $param->value;
+                        } elseif (preg_match('/WLANConfiguration\.(\d+)/', $param->name, $matches)) {
+                            $radioNum = $matches[1];
+                            if (!isset($radios[$radioNum])) {
+                                $radios[$radioNum] = [];
+                            }
+                            $radios[$radioNum][$param->name] = $param->value;
+                        }
+                    }
+                @endphp
+
+                @forelse($radios as $radioNum => $radioData)
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="text-md font-semibold text-gray-900 mb-4">
+                            Radio {{ $radioNum }}
+                            @php
+                                $freq = null;
+                                foreach ($radioData as $key => $value) {
+                                    if (str_contains($key, 'OperatingFrequencyBand')) {
+                                        $freq = $value;
+                                        break;
+                                    } elseif (str_contains($key, 'Channel') && is_numeric($value)) {
+                                        $freq = (int)$value <= 14 ? '2.4GHz' : '5GHz';
+                                        break;
+                                    }
+                                }
+                            @endphp
+                            @if($freq)
+                                <span class="ml-2 text-sm font-normal text-gray-600">({{ $freq }})</span>
+                            @endif
+                        </h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            @foreach($radioData as $key => $value)
+                                @php
+                                    $label = '';
+                                    $showParam = false;
+
+                                    if (str_contains($key, '.Enable')) {
+                                        $label = 'Status';
+                                        $showParam = true;
+                                    } elseif (str_contains($key, '.SSID') && !str_contains($key, 'BSSID')) {
+                                        $label = 'SSID';
+                                        $showParam = true;
+                                    } elseif (str_contains($key, '.Channel')) {
+                                        $label = 'Channel';
+                                        $showParam = true;
+                                    } elseif (str_contains($key, 'OperatingFrequencyBand')) {
+                                        $label = 'Frequency Band';
+                                        $showParam = true;
+                                    } elseif (str_contains($key, 'TransmitPower')) {
+                                        $label = 'Transmit Power';
+                                        $showParam = true;
+                                    } elseif (str_contains($key, 'Standard')) {
+                                        $label = 'Standard';
+                                        $showParam = true;
+                                    }
+                                @endphp
+
+                                @if($showParam)
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-500">{{ $label }}:</span>
+                                        <span class="ml-2 text-sm text-gray-900">
+                                            @if($label === 'Status')
+                                                @if($value === 'true' || $value === '1')
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Enabled</span>
+                                                @else
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Disabled</span>
+                                                @endif
+                                            @else
+                                                {{ $value }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-sm text-gray-500 text-center py-4">No WiFi radio information available. Click "Query Device Info" to fetch WiFi parameters.</p>
+                @endforelse
+            </div>
+        </div>
+
+        <!-- 4. Connected Devices -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-yellow-50">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Connected Devices</h3>
+                <p class="mt-1 text-sm text-gray-600">Devices connected to this gateway</p>
+            </div>
+            <div class="border-t border-gray-200">
+                @php
+                    // Get all host table entries
+                    $hostParams = $device->parameters()
+                        ->where(function($q) {
+                            $q->where('name', 'LIKE', '%Hosts.Host.%')
+                              ->orWhere('name', 'LIKE', '%LANDevice.1.Hosts.Host.%');
+                        })
+                        ->get();
+
+                    // Organize by host number
+                    $hosts = [];
+                    foreach ($hostParams as $param) {
+                        if (preg_match('/Host\.(\d+)\.(.+)/', $param->name, $matches)) {
+                            $hostNum = $matches[1];
+                            $field = $matches[2];
+                            if (!isset($hosts[$hostNum])) {
+                                $hosts[$hostNum] = [];
+                            }
+                            $hosts[$hostNum][$field] = $param->value;
+                        }
+                    }
+
+                    // Filter out inactive hosts
+                    $hosts = array_filter($hosts, function($host) {
+                        return isset($host['Active']) && ($host['Active'] === 'true' || $host['Active'] === '1');
+                    });
+                @endphp
+
+                @if(count($hosts) > 0)
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hostname</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MAC Address</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interface</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach($hosts as $host)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $host['HostName'] ?? '-' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">{{ $host['IPAddress'] ?? '-' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">{{ $host['MACAddress'] ?? $host['PhysAddress'] ?? '-' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ $host['InterfaceType'] ?? $host['AddressSource'] ?? '-' }}
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @else
+                    <div class="px-6 py-8 text-center">
+                        <p class="text-sm text-gray-500">No connected devices found. Click "Query Device Info" to fetch host table information.</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- 5. ACS Event Log -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-red-50">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">ACS Event Log</h3>
+                <p class="mt-1 text-sm text-gray-600">Recent CWMP session events and activity</p>
+            </div>
+            <div class="border-t border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Messages</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($sessions->take(20) as $session)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ $session->started_at->format('Y-m-d H:i:s') }}
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                @if($session->inform_events)
+                                    @foreach($session->inform_events as $event)
+                                        <span class="inline-block bg-blue-100 text-blue-800 rounded px-2 py-1 text-xs font-semibold mr-1 mb-1">
+                                            {{ $event['code'] ?? 'Unknown' }}
+                                        </span>
+                                    @endforeach
+                                @else
+                                    <span class="text-gray-500">-</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                @if($session->ended_at)
+                                    Duration: {{ $session->started_at->diffInSeconds($session->ended_at) }}s
+                                @else
+                                    <span class="text-yellow-600">In Progress</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $session->messages_exchanged }}</td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">No ACS events found.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 @endsection
