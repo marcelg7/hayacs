@@ -171,6 +171,14 @@ class CwmpController extends Controller
             'param_count' => count($parsed['parameters']),
         ]);
 
+        // Check for DIAGNOSTICS COMPLETE event and queue result retrieval
+        foreach ($parsed['events'] as $event) {
+            if ($event['code'] === '8 DIAGNOSTICS COMPLETE') {
+                $this->queueDiagnosticResultRetrieval($device);
+                break;
+            }
+        }
+
         // Auto-provision device based on events and rules
         $this->provisioningService->autoProvision($device, $parsed['events']);
 
@@ -235,30 +243,55 @@ class CwmpController extends Controller
      */
     private function handleGetParameterValuesResponse(array $parsed): string
     {
-        // Find the task that was sent
+        // Find the task that was sent (either get_params or get_diagnostic_results)
         $task = Task::where('status', 'sent')
-            ->where('task_type', 'get_params')
+            ->whereIn('task_type', ['get_params', 'get_diagnostic_results'])
             ->orderBy('updated_at', 'desc')
             ->first();
 
         if ($task) {
-            // Store parameters
             $device = $task->device;
-            foreach ($parsed['parameters'] as $name => $param) {
-                $device->setParameter(
-                    $name,
-                    $param['value'],
-                    $param['type']
-                );
+
+            // Check if this is a diagnostic result retrieval
+            if ($task->task_type === 'get_diagnostic_results') {
+                // Find the original diagnostic task and store results there
+                $diagnosticTaskId = $task->parameters['diagnostic_task_id'] ?? null;
+                if ($diagnosticTaskId) {
+                    $diagnosticTask = Task::find($diagnosticTaskId);
+                    if ($diagnosticTask) {
+                        $diagnosticTask->update([
+                            'result' => $parsed['parameters'],
+                            'status' => 'completed',
+                            'completed_at' => now(),
+                        ]);
+
+                        Log::info('Diagnostic results stored', [
+                            'device_id' => $device->id,
+                            'diagnostic_type' => $task->parameters['diagnostic_type'] ?? 'unknown',
+                            'results' => $parsed['parameters'],
+                        ]);
+                    }
+                }
+                // Mark the retrieval task as completed
+                $task->markAsCompleted($parsed['parameters']);
+            } else {
+                // Regular get_params - store parameters in device
+                foreach ($parsed['parameters'] as $name => $param) {
+                    $device->setParameter(
+                        $name,
+                        $param['value'],
+                        $param['type']
+                    );
+                }
+
+                // Mark task as completed
+                $task->markAsCompleted($parsed['parameters']);
+
+                Log::info('GetParameterValues completed', [
+                    'device_id' => $device->id,
+                    'param_count' => count($parsed['parameters']),
+                ]);
             }
-
-            // Mark task as completed
-            $task->markAsCompleted($parsed['parameters']);
-
-            Log::info('GetParameterValues completed', [
-                'device_id' => $device->id,
-                'param_count' => count($parsed['parameters']),
-            ]);
         }
 
         // Check for more pending tasks
@@ -360,7 +393,7 @@ class CwmpController extends Controller
     private function generateRpcForTask(Task $task): string
     {
         return match ($task->task_type) {
-            'get_params' => $this->cwmpService->createGetParameterValues(
+            'get_params', 'get_diagnostic_results' => $this->cwmpService->createGetParameterValues(
                 $task->parameters['names'] ?? []
             ),
             'set_params' => $this->cwmpService->createSetParameterValues(
@@ -434,6 +467,65 @@ class CwmpController extends Controller
         ];
 
         return $this->cwmpService->createSetParameterValues($parameters);
+    }
+
+    /**
+     * Queue diagnostic result retrieval after DIAGNOSTICS COMPLETE event
+     */
+    private function queueDiagnosticResultRetrieval(Device $device): void
+    {
+        // Find the most recent completed diagnostic task
+        $diagnosticTask = $device->tasks()
+            ->where('status', 'sent')
+            ->whereIn('task_type', ['ping_diagnostics', 'traceroute_diagnostics'])
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        if (!$diagnosticTask) {
+            Log::warning('DIAGNOSTICS COMPLETE event but no diagnostic task found', [
+                'device_id' => $device->id,
+            ]);
+            return;
+        }
+
+        $dataModel = $device->getDataModel();
+        $isPing = $diagnosticTask->task_type === 'ping_diagnostics';
+
+        if ($isPing) {
+            $prefix = $dataModel === 'Device:2' ? 'Device.IP.Diagnostics.IPPingDiagnostics' : 'InternetGatewayDevice.IPPingDiagnostics';
+            $parameters = [
+                "{$prefix}.DiagnosticsState",
+                "{$prefix}.SuccessCount",
+                "{$prefix}.FailureCount",
+                "{$prefix}.AverageResponseTime",
+                "{$prefix}.MinimumResponseTime",
+                "{$prefix}.MaximumResponseTime",
+            ];
+        } else {
+            $prefix = $dataModel === 'Device:2' ? 'Device.IP.Diagnostics.TraceRouteDiagnostics' : 'InternetGatewayDevice.TraceRouteDiagnostics';
+            $parameters = [
+                "{$prefix}.DiagnosticsState",
+                "{$prefix}.ResponseTime",
+                "{$prefix}.RouteHopsNumberOfEntries",
+            ];
+        }
+
+        // Create a task to retrieve the diagnostic results
+        Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'get_diagnostic_results',
+            'parameters' => [
+                'names' => $parameters,
+                'diagnostic_task_id' => $diagnosticTask->id,
+                'diagnostic_type' => $diagnosticTask->task_type,
+            ],
+            'status' => 'pending',
+        ]);
+
+        Log::info('Queued diagnostic result retrieval', [
+            'device_id' => $device->id,
+            'diagnostic_type' => $diagnosticTask->task_type,
+        ]);
     }
 }
 

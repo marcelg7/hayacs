@@ -193,7 +193,7 @@
     </div>
 
     <!-- Tasks Tab -->
-    <div x-show="activeTab === 'tasks'" x-cloak class="bg-white shadow rounded-lg overflow-hidden">
+    <div x-show="activeTab === 'tasks'" x-cloak class="bg-white shadow rounded-lg overflow-hidden" x-data="{ expandedTask: null }">
         <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
             <h3 class="text-lg leading-6 font-medium text-gray-900">Device Tasks</h3>
         </div>
@@ -209,9 +209,17 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($tasks as $task)
-                <tr class="hover:bg-gray-50">
+                <tr class="hover:bg-gray-50 {{ ($task->task_type === 'ping_diagnostics' || $task->task_type === 'traceroute_diagnostics') && $task->result ? 'cursor-pointer' : '' }}"
+                    @if(($task->task_type === 'ping_diagnostics' || $task->task_type === 'traceroute_diagnostics') && $task->result)
+                    @click="expandedTask = expandedTask === {{ $task->id }} ? null : {{ $task->id }}"
+                    @endif>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{ $task->id }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $task->task_type }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ str_replace('_', ' ', ucwords($task->task_type, '_')) }}
+                        @if(($task->task_type === 'ping_diagnostics' || $task->task_type === 'traceroute_diagnostics') && $task->result)
+                            <span class="ml-2 text-blue-600">▼</span>
+                        @endif
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         @if($task->status === 'pending')
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
@@ -226,6 +234,66 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $task->created_at->format('Y-m-d H:i:s') }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $task->completed_at ? $task->completed_at->format('Y-m-d H:i:s') : '-' }}</td>
                 </tr>
+                @if(($task->task_type === 'ping_diagnostics' || $task->task_type === 'traceroute_diagnostics') && $task->result)
+                <tr x-show="expandedTask === {{ $task->id }}" x-cloak class="bg-gray-50">
+                    <td colspan="5" class="px-6 py-4">
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <h4 class="font-semibold text-gray-900 mb-3">Diagnostic Results</h4>
+                            @if($task->task_type === 'ping_diagnostics')
+                                @php
+                                    $results = is_array($task->result) ? $task->result : json_decode($task->result, true);
+                                    $prefix = str_contains(array_key_first($results ?? []), 'Device.') ? 'Device.IP.Diagnostics.IPPingDiagnostics' : 'InternetGatewayDevice.IPPingDiagnostics';
+                                @endphp
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-500">Success Count:</span>
+                                        <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.SuccessCount"]['value'] ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-500">Failure Count:</span>
+                                        <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.FailureCount"]['value'] ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-500">Average Response Time:</span>
+                                        <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.AverageResponseTime"]['value'] ?? 'N/A' }} ms</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-500">Min Response Time:</span>
+                                        <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.MinimumResponseTime"]['value'] ?? 'N/A' }} ms</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-500">Max Response Time:</span>
+                                        <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.MaximumResponseTime"]['value'] ?? 'N/A' }} ms</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-500">State:</span>
+                                        <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.DiagnosticsState"]['value'] ?? 'N/A' }}</span>
+                                    </div>
+                                </div>
+                            @else
+                                @php
+                                    $results = is_array($task->result) ? $task->result : json_decode($task->result, true);
+                                    $prefix = str_contains(array_key_first($results ?? []), 'Device.') ? 'Device.IP.Diagnostics.TraceRouteDiagnostics' : 'InternetGatewayDevice.TraceRouteDiagnostics';
+                                @endphp
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-500">Response Time:</span>
+                                        <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.ResponseTime"]['value'] ?? 'N/A' }} ms</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-500">Number of Hops:</span>
+                                        <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.RouteHopsNumberOfEntries"]['value'] ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-500">State:</span>
+                                        <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.DiagnosticsState"]['value'] ?? 'N/A' }}</span>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </td>
+                </tr>
+                @endif
                 @empty
                 <tr>
                     <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">No tasks found.</td>
