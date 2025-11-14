@@ -109,8 +109,9 @@ class CwmpService
         $dom->loadXML($xml);
         $xpath = new DOMXPath($dom);
 
-        // Register namespaces
+        // Register namespaces (devices may use SOAP-ENV or soap prefix)
         $xpath->registerNamespace('soap', self::SOAP_ENV);
+        $xpath->registerNamespace('soapenv', self::SOAP_ENV);
         $xpath->registerNamespace('cwmp', self::CWMP);
 
         $result = [
@@ -120,8 +121,8 @@ class CwmpService
             'fault' => null,
         ];
 
-        // Check for SOAP Fault
-        $faultNode = $xpath->query('//soap:Fault')->item(0);
+        // Check for SOAP Fault (try both soap: and soapenv: prefixes)
+        $faultNode = $xpath->query('//soap:Fault | //soapenv:Fault')->item(0);
         if ($faultNode) {
             $result['fault'] = [
                 'faultcode' => $xpath->query('./faultcode', $faultNode)->item(0)?->nodeValue,
@@ -130,19 +131,20 @@ class CwmpService
             return $result;
         }
 
-        // Get method name
-        $methodNode = $xpath->query('//soap:Body/*')->item(0);
+        // Get method name (try both soap: and soapenv: prefixes)
+        $methodNode = $xpath->query('//soap:Body/* | //soapenv:Body/*')->item(0);
         if ($methodNode) {
             $result['method'] = str_replace('Response', '', $methodNode->localName);
         }
 
         // Parse GetParameterValuesResponse
         if ($result['method'] === 'GetParameterValues') {
-            $paramNodes = $xpath->query('//cwmp:GetParameterValuesResponse/ParameterList/ParameterValueStruct');
+            // Query without namespace prefix on ParameterValueStruct (some devices don't use it)
+            $paramNodes = $xpath->query('//cwmp:GetParameterValuesResponse//*[local-name()="ParameterValueStruct"]');
             foreach ($paramNodes as $paramNode) {
-                $name = $xpath->query('./Name', $paramNode)->item(0)?->nodeValue;
-                $value = $xpath->query('./Value', $paramNode)->item(0)?->nodeValue;
-                $type = $xpath->query('./Value', $paramNode)->item(0)?->getAttribute('xsi:type');
+                $name = $xpath->query('.//*[local-name()="Name"]', $paramNode)->item(0)?->nodeValue;
+                $value = $xpath->query('.//*[local-name()="Value"]', $paramNode)->item(0)?->nodeValue;
+                $type = $xpath->query('.//*[local-name()="Value"]', $paramNode)->item(0)?->getAttribute('xsi:type');
 
                 if ($name) {
                     $result['parameters'][$name] = [
@@ -154,8 +156,9 @@ class CwmpService
         }
 
         // Parse SetParameterValuesResponse
-        if ($result['method'] === 'SetParameterValuesResponse') {
-            $statusNode = $xpath->query('//cwmp:SetParameterValuesResponse/Status')->item(0);
+        if ($result['method'] === 'SetParameterValues') {
+            // Use local-name() for compatibility with devices that don't use namespace prefixes
+            $statusNode = $xpath->query('//cwmp:SetParameterValuesResponse/*[local-name()="Status"]')->item(0);
             $result['status'] = (int) ($statusNode?->nodeValue ?? 0);
         }
 
