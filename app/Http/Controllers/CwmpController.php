@@ -42,6 +42,15 @@ class CwmpController extends Controller
                 ]);
             }
 
+            // Handle empty POST (device signaling end of session)
+            if (empty($xmlContent) || strlen($xmlContent) < 10) {
+                Log::info('Empty POST received - ending CWMP session');
+
+                // Return 204 No Content to end the session
+                return response('', 204)
+                    ->header('Content-Type', 'text/xml; charset=utf-8');
+            }
+
             // Parse incoming message
             $parsed = $this->cwmpService->parseInform($xmlContent);
 
