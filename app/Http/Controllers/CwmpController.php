@@ -47,8 +47,15 @@ class CwmpController extends Controller
                 return $this->handleEmptyPost($request);
             }
 
-            // Parse incoming message
-            $parsed = $this->cwmpService->parseInform($xmlContent);
+            // Determine message type and parse accordingly
+            // Quick check: if message contains "Response" it's a response, otherwise it's an Inform
+            $isResponse = str_contains($xmlContent, 'Response>');
+
+            if ($isResponse) {
+                $parsed = $this->cwmpService->parseResponse($xmlContent);
+            } else {
+                $parsed = $this->cwmpService->parseInform($xmlContent);
+            }
 
             // Log the parsed method for debugging
             Log::info('CWMP Method detected', [
@@ -67,10 +74,10 @@ class CwmpController extends Controller
             // Handle based on method
             $responseXml = match ($parsed['method']) {
                 'Inform' => $this->handleInform($request, $parsed),
-                'GetParameterValuesResponse' => $this->handleGetParameterValuesResponse($parsed),
-                'SetParameterValuesResponse' => $this->handleSetParameterValuesResponse($parsed),
-                'RebootResponse' => $this->handleRebootResponse($parsed),
-                'FactoryResetResponse' => $this->handleFactoryResetResponse($parsed),
+                'GetParameterValues' => $this->handleGetParameterValuesResponse($parsed),
+                'SetParameterValues' => $this->handleSetParameterValuesResponse($parsed),
+                'Reboot' => $this->handleRebootResponse($parsed),
+                'FactoryReset' => $this->handleFactoryResetResponse($parsed),
                 default => $this->cwmpService->createEmptyResponse(),
             };
 
