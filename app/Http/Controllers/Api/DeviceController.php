@@ -190,7 +190,7 @@ class DeviceController extends Controller
 
                 // Discovery counters
                 'InternetGatewayDevice.WANDeviceNumberOfEntries',
-                'InternetGatewayDevice.LANDevice.1.WLANConfigurationNumberOfEntries',
+                'InternetGatewayDevice.LANDevice.1.LANWLANConfigurationNumberOfEntries',
                 'InternetGatewayDevice.LANDevice.1.Hosts.HostNumberOfEntries',
             ];
         }
@@ -265,7 +265,7 @@ class DeviceController extends Controller
             }
 
             // WiFi - Use discovered count, query enabled instances
-            $wlanCount = (int) ($discoveryResults['InternetGatewayDevice.LANDevice.1.WLANConfigurationNumberOfEntries']['value'] ?? 0);
+            $wlanCount = (int) ($discoveryResults['InternetGatewayDevice.LANDevice.1.LANWLANConfigurationNumberOfEntries']['value'] ?? 0);
 
             // For Calix, query instances 1-8 (2.4GHz) and 16 (5GHz) which are most common
             // Adjust range based on discovered count
