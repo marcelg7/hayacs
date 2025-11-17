@@ -949,6 +949,64 @@ class DeviceController extends Controller
     }
 
     /**
+     * Enable remote GUI access and return access details
+     */
+    public function remoteGui(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        // Parameters to query for remote GUI access
+        $parametersToQuery = [
+            'InternetGatewayDevice.User.1.Username',
+            'InternetGatewayDevice.User.1.Password',
+            'InternetGatewayDevice.UserInterface.RemoteAccess.Port',
+            'InternetGatewayDevice.UserInterface.RemoteAccess.Enable',
+            'InternetGatewayDevice.User.2.RemoteAccessCapable',
+        ];
+
+        // Also need external IP address
+        $externalIp = $device->parameters()
+            ->where('name', 'LIKE', '%ExternalIPAddress%')
+            ->where('name', 'LIKE', '%WANIPConnection%')
+            ->first();
+
+        // Create task to query parameters and enable remote access
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'get_parameter_values',
+            'status' => 'pending',
+            'parameters' => $parametersToQuery,
+        ]);
+
+        // Also create a task to enable remote access
+        $enableTask = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'set_parameter_values',
+            'status' => 'pending',
+            'parameters' => [
+                'InternetGatewayDevice.UserInterface.RemoteAccess.Enable' => [
+                    'value' => true,
+                    'type' => 'xsd:boolean',
+                ],
+                'InternetGatewayDevice.User.2.RemoteAccessCapable' => [
+                    'value' => true,
+                    'type' => 'xsd:boolean',
+                ],
+            ],
+        ]);
+
+        // Trigger connection request
+        $this->connectionRequestService->sendConnectionRequest($device);
+
+        return response()->json([
+            'task' => $task,
+            'enable_task' => $enableTask,
+            'external_ip' => $externalIp ? $externalIp->value : null,
+            'message' => 'Remote access is being enabled...',
+        ]);
+    }
+
+    /**
      * Delete a device
      */
     public function destroy(string $id): JsonResponse

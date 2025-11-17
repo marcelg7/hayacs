@@ -216,6 +216,86 @@
                     Trace Route
                 </button>
             </form>
+
+            <!-- Refresh Troubleshooting -->
+            <form @submit.prevent="async (e) => {
+                // Show loading overlay immediately
+                taskLoading = true;
+                taskMessage = 'Refreshing Troubleshooting Info...';
+
+                try {
+                    const response = await fetch('/api/devices/{{ $device->id }}/refresh-troubleshooting', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+                    const result = await response.json();
+                    if (result.task && result.task.id) {
+                        startTaskTracking('Refreshing Troubleshooting Info...', result.task.id);
+                    } else {
+                        taskLoading = false;
+                        alert('Refresh started, but no task ID returned');
+                    }
+                } catch (error) {
+                    taskLoading = false;
+                    alert('Error refreshing troubleshooting info: ' + error);
+                }
+            }">
+                @csrf
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Refresh
+                </button>
+            </form>
+
+            <!-- Remote GUI -->
+            <button @click="async () => {
+                // Show loading overlay immediately
+                taskLoading = true;
+                taskMessage = 'Enabling Remote Access...';
+
+                try {
+                    const response = await fetch('/api/devices/{{ $device->id }}/remote-gui', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+                    const result = await response.json();
+
+                    if (result.enable_task && result.enable_task.id) {
+                        // Start tracking the enable task
+                        startTaskTracking('Enabling Remote Access...', result.enable_task.id);
+
+                        // After task completes, open the GUI
+                        // We'll need to wait for the page to reload, then construct the URL
+                        setTimeout(() => {
+                            const port = '8443'; // Default HTTPS port for Calix devices
+                            const externalIp = result.external_ip || '{{ $device->parameters()->where(\"name\", \"LIKE\", \"%ExternalIPAddress%\")->first()?->value }}';
+                            if (externalIp) {
+                                const url = `https://${externalIp}:${port}/`;
+                                window.open(url, '_blank');
+                            } else {
+                                alert('Could not determine external IP address');
+                            }
+                        }, 3000);
+                    } else {
+                        taskLoading = false;
+                        alert('Failed to enable remote access');
+                    }
+                } catch (error) {
+                    taskLoading = false;
+                    alert('Error enabling remote access: ' + error);
+                }
+            }" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                </svg>
+                Remote GUI
+            </button>
         </div>
     </div>
 
@@ -372,34 +452,6 @@
                             @csrf
                             <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
                                 Factory Reset
-                            </button>
-                        </form>
-
-                        <!-- Refresh Troubleshooting (2-column span) -->
-                        <form @submit.prevent="async (e) => {
-                            try {
-                                const response = await fetch('/api/devices/{{ $device->id }}/refresh-troubleshooting', {
-                                    method: 'POST',
-                                    headers: {
-                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                    }
-                                });
-                                const result = await response.json();
-                                if (result.task && result.task.id) {
-                                    startTaskTracking('Refreshing Troubleshooting Info...', result.task.id);
-                                } else {
-                                    alert('Refresh started, but no task ID returned');
-                                }
-                            } catch (error) {
-                                alert('Error refreshing troubleshooting info: ' + error);
-                            }
-                        }" class="col-span-2">
-                            @csrf
-                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                </svg>
-                                Refresh Troubleshooting Info
                             </button>
                         </form>
                     </div>
