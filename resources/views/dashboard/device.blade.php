@@ -347,6 +347,11 @@
                     class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                 WiFi Settings
             </button>
+            <button @click="activeTab = 'backups'"
+                    :class="activeTab === 'backups' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                Config Backups
+            </button>
         </nav>
     </div>
 
@@ -2378,6 +2383,215 @@
             </div>
         </div>
         @endif
+    </div>
+
+    <!-- Config Backups Tab -->
+    <div x-show="activeTab === 'backups'" x-cloak x-data="{
+        backups: [],
+        loading: true,
+        selectedBackup: null,
+        showRestoreConfirm: false,
+
+        async loadBackups() {
+            this.loading = true;
+            try {
+                const response = await fetch('/api/devices/{{ $device->id }}/backups');
+                const data = await response.json();
+                this.backups = data.backups;
+            } catch (error) {
+                console.error('Error loading backups:', error);
+                alert('Error loading backups: ' + error.message);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async createBackup() {
+            if (this.loading) return;
+
+            const name = prompt('Enter a name for this backup (optional):');
+            if (name === null) return; // User canceled
+
+            this.loading = true;
+            try {
+                const response = await fetch('/api/devices/{{ $device->id }}/backups', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        name: name || undefined,
+                        description: 'Manual backup created via UI'
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert(data.message);
+                    await this.loadBackups();
+                } else {
+                    alert('Error creating backup: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error creating backup:', error);
+                alert('Error creating backup: ' + error.message);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        confirmRestore(backup) {
+            this.selectedBackup = backup;
+            this.showRestoreConfirm = true;
+        },
+
+        async restoreBackup() {
+            if (!this.selectedBackup) return;
+
+            this.showRestoreConfirm = false;
+            taskLoading = true;
+            taskMessage = 'Restoring Configuration...';
+
+            try {
+                const response = await fetch(`/api/devices/{{ $device->id }}/backups/${this.selectedBackup.id}/restore`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok && data.task) {
+                    startTaskTracking('Restoring Configuration...', data.task.id);
+                } else {
+                    taskLoading = false;
+                    alert('Error restoring backup: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                taskLoading = false;
+                console.error('Error restoring backup:', error);
+                alert('Error restoring backup: ' + error.message);
+            }
+        },
+
+        init() {
+            this.loadBackups();
+        }
+    }">
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-gray-50 flex justify-between items-center">
+                <div>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Configuration Backups</h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500">Backup and restore device configuration</p>
+                </div>
+                <button @click="createBackup()" :disabled="loading"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Create Backup
+                </button>
+            </div>
+
+            <div class="border-t border-gray-200">
+                <!-- Loading State -->
+                <div x-show="loading" class="px-6 py-12 text-center">
+                    <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="mt-2 text-sm text-gray-500">Loading backups...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div x-show="!loading && backups.length === 0" class="px-6 py-12 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No Backups Found</h3>
+                    <p class="mt-1 text-sm text-gray-500">Create your first backup to preserve the current device configuration.</p>
+                </div>
+
+                <!-- Backups List -->
+                <div x-show="!loading && backups.length > 0" class="divide-y divide-gray-200">
+                    <template x-for="backup in backups" :key="backup.id">
+                        <div class="px-6 py-4 hover:bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center">
+                                        <h4 class="text-sm font-medium text-gray-900" x-text="backup.name"></h4>
+                                        <span x-show="backup.is_auto" class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                            Auto
+                                        </span>
+                                    </div>
+                                    <p x-show="backup.description" class="mt-1 text-sm text-gray-500" x-text="backup.description"></p>
+                                    <div class="mt-2 flex items-center text-xs text-gray-500 space-x-4">
+                                        <span class="flex items-center">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            <span x-text="backup.created_at"></span>
+                                        </span>
+                                        <span class="flex items-center">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                                            </svg>
+                                            <span x-text="backup.parameter_count + ' parameters'"></span>
+                                        </span>
+                                        <span class="flex items-center">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                            </svg>
+                                            <span x-text="backup.size"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <button @click="confirmRestore(backup)"
+                                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                        </svg>
+                                        Restore
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Restore Confirmation Modal -->
+        <div x-show="showRestoreConfirm" x-cloak class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center">
+            <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
+                        <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="ml-4 text-lg font-medium text-gray-900">Restore Configuration?</h3>
+                </div>
+                <p class="text-sm text-gray-500 mb-4">
+                    This will restore the device configuration to the state saved in this backup. All writable parameters will be updated.
+                </p>
+                <p x-show="selectedBackup" class="text-sm font-medium text-gray-900 mb-4">
+                    Backup: <span x-text="selectedBackup?.name"></span>
+                </p>
+                <div class="flex space-x-3">
+                    <button @click="showRestoreConfirm = false"
+                            class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button @click="restoreBackup()"
+                            class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        Restore
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 @endsection

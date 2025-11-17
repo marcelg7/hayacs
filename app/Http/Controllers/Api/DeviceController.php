@@ -35,6 +35,33 @@ class DeviceController extends Controller
     {
         $device = Device::findOrFail($id);
 
+        // Create initial auto-backup if not already created
+        if (!$device->initial_backup_created && $device->parameters()->count() > 0) {
+            $parameters = $device->parameters()
+                ->get()
+                ->mapWithKeys(function ($param) {
+                    return [$param->name => [
+                        'value' => $param->value,
+                        'type' => $param->type,
+                        'writable' => $param->writable,
+                    ]];
+                })
+                ->toArray();
+
+            $device->configBackups()->create([
+                'name' => 'Initial Auto Backup - ' . now()->format('Y-m-d H:i:s'),
+                'description' => 'Automatically created on first access to preserve device configuration',
+                'backup_data' => $parameters,
+                'is_auto' => true,
+                'parameter_count' => count($parameters),
+            ]);
+
+            $device->update([
+                'initial_backup_created' => true,
+                'last_backup_at' => now(),
+            ]);
+        }
+
         return response()->json($device);
     }
 
@@ -1003,6 +1030,131 @@ class DeviceController extends Controller
             'enable_task' => $enableTask,
             'external_ip' => $externalIp ? $externalIp->value : null,
             'message' => 'Remote access is being enabled...',
+        ]);
+    }
+
+    /**
+     * Create a configuration backup for a device
+     */
+    public function createBackup(Request $request, string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'is_auto' => 'boolean',
+        ]);
+
+        // Get all current parameters from the database
+        $parameters = $device->parameters()
+            ->get()
+            ->mapWithKeys(function ($param) {
+                return [$param->name => [
+                    'value' => $param->value,
+                    'type' => $param->type,
+                    'writable' => $param->writable,
+                ]];
+            })
+            ->toArray();
+
+        $parameterCount = count($parameters);
+
+        // Generate backup name if not provided
+        $backupName = $validated['name'] ??
+            ($validated['is_auto'] ?? false ? 'Auto Backup' : 'Manual Backup') .
+            ' - ' . now()->format('Y-m-d H:i:s');
+
+        // Create the backup
+        $backup = $device->configBackups()->create([
+            'name' => $backupName,
+            'description' => $validated['description'] ?? null,
+            'backup_data' => $parameters,
+            'is_auto' => $validated['is_auto'] ?? false,
+            'parameter_count' => $parameterCount,
+        ]);
+
+        // Update device backup tracking
+        $device->update([
+            'initial_backup_created' => true,
+            'last_backup_at' => now(),
+        ]);
+
+        return response()->json([
+            'backup' => $backup,
+            'message' => 'Configuration backup created successfully',
+        ]);
+    }
+
+    /**
+     * Get all backups for a device
+     */
+    public function getBackups(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $backups = $device->configBackups()
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($backup) {
+                return [
+                    'id' => $backup->id,
+                    'name' => $backup->name,
+                    'description' => $backup->description,
+                    'parameter_count' => $backup->parameter_count,
+                    'is_auto' => $backup->is_auto,
+                    'size' => $backup->size,
+                    'created_at' => $backup->created_at->format('Y-m-d H:i:s'),
+                ];
+            });
+
+        return response()->json([
+            'backups' => $backups,
+        ]);
+    }
+
+    /**
+     * Restore a configuration backup
+     */
+    public function restoreBackup(string $id, int $backupId): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+        $backup = $device->configBackups()->findOrFail($backupId);
+
+        // Filter parameters to only include writable ones
+        $writableParams = collect($backup->backup_data)
+            ->filter(function ($param) {
+                return $param['writable'] ?? false;
+            })
+            ->mapWithKeys(function ($param, $name) {
+                return [$name => [
+                    'value' => $param['value'],
+                    'type' => $param['type'] ?? 'xsd:string',
+                ]];
+            })
+            ->toArray();
+
+        if (empty($writableParams)) {
+            return response()->json([
+                'error' => 'No writable parameters found in backup',
+            ], 400);
+        }
+
+        // Create task to restore the parameters
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'set_parameter_values',
+            'status' => 'pending',
+            'parameters' => $writableParams,
+        ]);
+
+        // Trigger connection request
+        $this->connectionRequestService->sendConnectionRequest($device);
+
+        return response()->json([
+            'task' => $task,
+            'message' => 'Configuration restore initiated',
+            'writable_params_count' => count($writableParams),
         ]);
     }
 

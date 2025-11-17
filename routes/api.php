@@ -50,3 +50,8 @@ Route::post('/devices/{id}/traceroute-test', [DeviceController::class, 'tracerou
 Route::get('/devices/{id}/wifi-config', [DeviceController::class, 'getWifiConfig']);
 Route::post('/devices/{id}/wifi-config', [DeviceController::class, 'updateWifi']);
 Route::post('/devices/{id}/wifi-radio', [DeviceController::class, 'updateWifiRadio']);
+
+// Configuration Backups
+Route::get('/devices/{id}/backups', [DeviceController::class, 'getBackups']);
+Route::post('/devices/{id}/backups', [DeviceController::class, 'createBackup']);
+Route::post('/devices/{id}/backups/{backupId}/restore', [DeviceController::class, 'restoreBackup']);

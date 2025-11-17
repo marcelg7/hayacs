@@ -26,13 +26,17 @@ class Device extends Model
         'stun_enabled',
         'online',
         'last_inform',
+        'initial_backup_created',
+        'last_backup_at',
         'tags',
     ];
 
     protected $casts = [
         'online' => 'boolean',
         'stun_enabled' => 'boolean',
+        'initial_backup_created' => 'boolean',
         'last_inform' => 'datetime',
+        'last_backup_at' => 'datetime',
         'tags' => 'array',
     ];
 
@@ -58,6 +62,14 @@ class Device extends Model
     public function sessions(): HasMany
     {
         return $this->hasMany(CwmpSession::class, 'device_id');
+    }
+
+    /**
+     * Get all configuration backups for this device
+     */
+    public function configBackups(): HasMany
+    {
+        return $this->hasMany(ConfigBackup::class, 'device_id');
     }
 
     /**
