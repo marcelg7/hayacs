@@ -157,6 +157,16 @@
                 </div>
             </div>
         </div>
+
+        @php
+            // Get external IP for Remote GUI button
+            $externalIpParam = $device->parameters()
+                ->where('name', 'LIKE', '%ExternalIPAddress%')
+                ->where('name', 'LIKE', '%WANIPConnection%')
+                ->first();
+            $externalIp = $externalIpParam ? $externalIpParam->value : '';
+        @endphp
+
         <div class="mt-4 flex flex-wrap gap-2" x-show="activeTab !== 'dashboard'" x-cloak>
             <!-- Connect Now -->
             <form action="/api/devices/{{ $device->id }}/connection-request" method="POST">
@@ -274,7 +284,7 @@
                         // We'll need to wait for the page to reload, then construct the URL
                         setTimeout(() => {
                             const port = '8443'; // Default HTTPS port for Calix devices
-                            const externalIp = result.external_ip || '{{ $device->parameters()->where(\"name\", \"LIKE\", \"%ExternalIPAddress%\")->first()?->value }}';
+                            const externalIp = result.external_ip || '{{ $externalIp }}';
                             if (externalIp) {
                                 const url = `https://${externalIp}:${port}/`;
                                 window.open(url, '_blank');
