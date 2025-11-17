@@ -3,7 +3,7 @@
 @section('title', $device->id . ' - Device Details')
 
 @section('content')
-<div class="space-y-6" x-data="{ activeTab: 'info' }">
+<div class="space-y-6" x-data="{ activeTab: 'dashboard' }">
     <!-- Header -->
     <div>
         <div class="flex-1 min-w-0">
@@ -23,7 +23,7 @@
                 </div>
             </div>
         </div>
-        <div class="mt-4 flex flex-wrap gap-2">
+        <div class="mt-4 flex flex-wrap gap-2" x-show="activeTab !== 'dashboard'" x-cloak>
             <!-- Connect Now -->
             <form action="/api/devices/{{ $device->id }}/connection-request" method="POST">
                 @csrf
@@ -88,6 +88,11 @@
     <!-- Tab Navigation -->
     <div class="border-b border-gray-200">
         <nav class="-mb-px flex space-x-8">
+            <button @click="activeTab = 'dashboard'"
+                    :class="activeTab === 'dashboard' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                Dashboard
+            </button>
             <button @click="activeTab = 'info'"
                     :class="activeTab === 'info' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                     class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
@@ -114,6 +119,589 @@
                 Troubleshooting
             </button>
         </nav>
+    </div>
+
+    <!-- Dashboard Tab -->
+    <div x-show="activeTab === 'dashboard'" x-cloak>
+        <!-- Two-Column Layout: Device Info & Quick Actions -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Left Column: Device Information Summary -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6 bg-gray-50">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Device Information</h3>
+                </div>
+                <div class="border-t border-gray-200">
+                    <dl>
+                        <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Manufacturer</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $device->manufacturer ?? '-' }}</dd>
+                        </div>
+                        <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Model</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $device->product_class ?? '-' }}</dd>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Serial Number</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">{{ $device->serial_number ?? '-' }}</dd>
+                        </div>
+                        <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Software Version</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">{{ $device->software_version ?? '-' }}</dd>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Hardware Version</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">{{ $device->hardware_version ?? '-' }}</dd>
+                        </div>
+                        <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Uptime</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                @php
+                                    $uptimeParam = $device->parameters()->where('name', 'LIKE', '%DeviceInfo.UpTime%')->first();
+                                    if ($uptimeParam && is_numeric($uptimeParam->value)) {
+                                        $seconds = (int) $uptimeParam->value;
+                                        $days = floor($seconds / 86400);
+                                        $hours = floor(($seconds % 86400) / 3600);
+                                        $minutes = floor(($seconds % 3600) / 60);
+                                        echo "{$days} Day(s), {$hours} Hour(s), {$minutes} Min(s)";
+                                    } else {
+                                        echo '-';
+                                    }
+                                @endphp
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Right Column: Quick Actions Grid -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6 bg-gray-50">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Quick Actions</h3>
+                </div>
+                <div class="border-t border-gray-200 p-6">
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Query Device Info -->
+                        <form action="/api/devices/{{ $device->id }}/query" method="POST">
+                            @csrf
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                Query Device
+                            </button>
+                        </form>
+
+                        <!-- Connect Now -->
+                        <form action="/api/devices/{{ $device->id }}/connection-request" method="POST">
+                            @csrf
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                                Connect Now
+                            </button>
+                        </form>
+
+                        <!-- Reboot -->
+                        <form action="/api/devices/{{ $device->id }}/reboot" method="POST" onsubmit="return confirm('Are you sure you want to reboot this device?');">
+                            @csrf
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                                Reboot
+                            </button>
+                        </form>
+
+                        <!-- Ping Test -->
+                        <form action="/api/devices/{{ $device->id }}/ping-test" method="POST">
+                            @csrf
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700">
+                                Ping Test
+                            </button>
+                        </form>
+
+                        <!-- Trace Route -->
+                        <form action="/api/devices/{{ $device->id }}/traceroute-test" method="POST">
+                            @csrf
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700">
+                                Trace Route
+                            </button>
+                        </form>
+
+                        <!-- Firmware Upgrade -->
+                        <form action="/api/devices/{{ $device->id }}/firmware-upgrade" method="POST" onsubmit="return confirm('Are you sure you want to upgrade the firmware?');">
+                            @csrf
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                                Upgrade Firmware
+                            </button>
+                        </form>
+
+                        <!-- Factory Reset -->
+                        <form action="/api/devices/{{ $device->id }}/factory-reset" method="POST" onsubmit="return confirm('⚠️ WARNING: This will erase ALL device settings!\n\nAre you sure?');">
+                            @csrf
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
+                                Factory Reset
+                            </button>
+                        </form>
+
+                        <!-- Refresh Troubleshooting (2-column span) -->
+                        <form action="/api/devices/{{ $device->id }}/refresh-troubleshooting" method="POST" class="col-span-2">
+                            @csrf
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                Refresh Troubleshooting Info
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- WAN & LAN Section (Side by Side) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- WAN/Internet Section -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6 bg-blue-50">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Internet (WAN)</h3>
+                    <p class="mt-1 text-sm text-gray-600">WAN connection details</p>
+                </div>
+                <div class="border-t border-gray-200">
+                    @php
+                        // Determine data model
+                        $dataModel = $device->getDataModel();
+                        $isDevice2 = $dataModel === 'Device:2';
+
+                        // Get exact parameter helper
+                        $getExactParam = function($name) use ($device) {
+                            $param = $device->parameters()->where('name', $name)->first();
+                            return $param ? $param->value : '-';
+                        };
+
+                        // Dynamically discover WAN prefix
+                        $wanIpParam = $device->parameters()
+                            ->where('name', 'LIKE', 'InternetGatewayDevice.WANDevice.%.WANConnectionDevice.%.WANIPConnection.%.ExternalIPAddress')
+                            ->first();
+
+                        if ($wanIpParam && preg_match('/InternetGatewayDevice\.WANDevice\.(\d+)\.WANConnectionDevice\.(\d+)\.WANIPConnection\.(\d+)\./', $wanIpParam->name, $matches)) {
+                            $wanPrefix = "InternetGatewayDevice.WANDevice.{$matches[1]}.WANConnectionDevice.{$matches[2]}.WANIPConnection.{$matches[3]}";
+                        } else {
+                            $wanPrefix = 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1';
+                        }
+
+                        $status = $isDevice2 ? $getExactParam("Device.IP.Interface.1.Status") : $getExactParam("{$wanPrefix}.ConnectionStatus");
+                    @endphp
+                    <dl>
+                        <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Connection Status</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                @if($status === 'Connected' || $status === 'Up')
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">{{ $status }}</span>
+                                @else
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ $status }}</span>
+                                @endif
+                            </dd>
+                        </div>
+                        <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">External IP Address</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                                {{ $isDevice2 ? $getExactParam("Device.IP.Interface.1.IPv4Address.1.IPAddress") : $getExactParam("{$wanPrefix}.ExternalIPAddress") }}
+                            </dd>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Default Gateway</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                                {{ $isDevice2 ? $getExactParam("Device.Routing.Router.1.IPv4Forwarding.1.GatewayIPAddress") : $getExactParam("{$wanPrefix}.DefaultGateway") }}
+                            </dd>
+                        </div>
+                        <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">DNS Servers</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono text-xs">
+                                {{ $isDevice2 ? $getExactParam("Device.IP.Interface.1.IPv4Address.1.DNSServers") : $getExactParam("{$wanPrefix}.DNSServers") }}
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- LAN Section -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6 bg-green-50">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">LAN</h3>
+                    <p class="mt-1 text-sm text-gray-600">Local network configuration</p>
+                </div>
+                <div class="border-t border-gray-200">
+                    @php
+                        $lanPrefix = $isDevice2 ? 'Device.IP.Interface.2' : 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement';
+                        $dhcpPrefix = $isDevice2 ? 'Device.DHCPv4.Server.Pool.1' : 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement';
+                        $dhcpEnabled = $isDevice2 ? $getExactParam("{$dhcpPrefix}.Enable") : $getExactParam("{$lanPrefix}.DHCPServerEnable");
+                    @endphp
+                    <dl>
+                        <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">LAN IP Address</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                                {{ $isDevice2 ? $getExactParam("{$lanPrefix}.IPv4Address.1.IPAddress") : $getExactParam("{$lanPrefix}.IPInterface.1.IPInterfaceIPAddress") }}
+                            </dd>
+                        </div>
+                        <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Subnet Mask</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                                {{ $isDevice2 ? $getExactParam("{$lanPrefix}.IPv4Address.1.SubnetMask") : $getExactParam("{$lanPrefix}.IPInterface.1.IPInterfaceSubnetMask") }}
+                            </dd>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">DHCP Server</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                @if($dhcpEnabled === 'true' || $dhcpEnabled === '1')
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Enabled</span>
+                                @else
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Disabled</span>
+                                @endif
+                            </dd>
+                        </div>
+                        <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">DHCP Range</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono text-xs">
+                                {{ $isDevice2 ? $getExactParam("{$dhcpPrefix}.MinAddress") : $getExactParam("{$lanPrefix}.MinAddress") }}
+                                -
+                                {{ $isDevice2 ? $getExactParam("{$dhcpPrefix}.MaxAddress") : $getExactParam("{$lanPrefix}.MaxAddress") }}
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- WiFi Section (Full Width) -->
+        @php
+            $wifiParams = $device->parameters()
+                ->where(function($q) {
+                    $q->where('name', 'LIKE', '%WiFi.Radio%')
+                      ->orWhere('name', 'LIKE', '%WiFi.SSID%')
+                      ->orWhere('name', 'LIKE', '%WLANConfiguration%');
+                })
+                ->get();
+
+            // Organize by radio/SSID
+            $radios = [];
+            foreach ($wifiParams as $param) {
+                if (preg_match('/Radio\.(\d+)/', $param->name, $matches) || preg_match('/WLANConfiguration\.(\d+)/', $param->name, $matches)) {
+                    $radioNum = $matches[1];
+                    if (!isset($radios[$radioNum])) {
+                        $radios[$radioNum] = [];
+                    }
+                    $radios[$radioNum][$param->name] = $param->value;
+                }
+            }
+        @endphp
+
+        @if(count($radios) > 0)
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+            <div class="px-4 py-5 sm:px-6 bg-purple-50">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">WiFi Networks</h3>
+                <p class="mt-1 text-sm text-gray-600">Wireless network status</p>
+            </div>
+            <div class="border-t border-gray-200 p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @foreach($radios as $radioNum => $radioData)
+                        @php
+                            $ssid = '';
+                            $enabled = false;
+                            $channel = '-';
+                            $band = '-';
+
+                            foreach ($radioData as $key => $value) {
+                                if (str_contains($key, 'SSID') && !str_contains($key, 'Enable')) {
+                                    $ssid = $value;
+                                } elseif (str_contains($key, 'Enable')) {
+                                    $enabled = ($value === 'true' || $value === '1');
+                                } elseif (str_contains($key, 'Channel')) {
+                                    $channel = $value;
+                                } elseif (str_contains($key, 'OperatingFrequencyBand')) {
+                                    $band = $value;
+                                } elseif (str_contains($key, 'Channel') && is_numeric($value)) {
+                                    $channel = $value;
+                                    $band = (int)$value <= 14 ? '2.4GHz' : '5GHz';
+                                }
+                            }
+                        @endphp
+
+                        <div class="bg-gray-50 rounded-lg p-4 border {{ $enabled ? 'border-green-200' : 'border-gray-200' }}">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-sm font-semibold text-gray-900">{{ $ssid ?: "Radio $radioNum" }}</h4>
+                                @if($enabled)
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                                @else
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">Disabled</span>
+                                @endif
+                            </div>
+                            <div class="text-xs text-gray-600 space-y-1">
+                                <div>Band: <span class="font-mono">{{ $band }}</span></div>
+                                <div>Channel: <span class="font-mono">{{ $channel }}</span></div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Connected Devices Section -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-yellow-50">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Connected Devices</h3>
+                <p class="mt-1 text-sm text-gray-600">Active devices on the network</p>
+            </div>
+            <div class="border-t border-gray-200">
+                @php
+                    // Get all host table entries
+                    $dashboardHostParams = $device->parameters()
+                        ->where(function($q) {
+                            $q->where('name', 'LIKE', '%Hosts.Host.%')
+                              ->orWhere('name', 'LIKE', '%LANDevice.1.Hosts.Host.%');
+                        })
+                        ->get();
+
+                    // Get WiFi AssociatedDevice parameters for signal strength and rates
+                    $dashboardWifiParams = $device->parameters()
+                        ->where(function($q) {
+                            $q->where('name', 'LIKE', '%AssociatedDevice.%')
+                              ->orWhere('name', 'LIKE', '%WLANConfiguration.%AssociatedDevice%');
+                        })
+                        ->get();
+
+                    // Organize by host number
+                    $dashboardHosts = [];
+                    foreach ($dashboardHostParams as $param) {
+                        if (preg_match('/Host\.(\d+)\.(.+)/', $param->name, $matches)) {
+                            $hostNum = $matches[1];
+                            $field = $matches[2];
+                            if (!isset($dashboardHosts[$hostNum])) {
+                                $dashboardHosts[$hostNum] = [];
+                            }
+                            $dashboardHosts[$hostNum][$field] = $param->value;
+                        }
+                    }
+
+                    // Organize WiFi associated devices by MAC address
+                    $dashboardWifiDevices = [];
+                    foreach ($dashboardWifiParams as $param) {
+                        if (preg_match('/AssociatedDevice\.(\d+)\.(.+)/', $param->name, $matches)) {
+                            $deviceNum = $matches[1];
+                            $field = $matches[2];
+                            if (!isset($dashboardWifiDevices[$deviceNum])) {
+                                $dashboardWifiDevices[$deviceNum] = [];
+                            }
+                            $dashboardWifiDevices[$deviceNum][$field] = $param->value;
+
+                            // Also capture which WLAN configuration this is from for band detection
+                            if (preg_match('/WLANConfiguration\.(\d+)\.AssociatedDevice/', $param->name, $wlanMatches)) {
+                                $dashboardWifiDevices[$deviceNum]['_wlan_config'] = $wlanMatches[1];
+                            } elseif (preg_match('/WiFi\.AccessPoint\.(\d+)\.AssociatedDevice/', $param->name, $apMatches)) {
+                                $dashboardWifiDevices[$deviceNum]['_access_point'] = $apMatches[1];
+                            }
+                        }
+                    }
+
+                    // Create a lookup table by MAC address for WiFi devices
+                    $dashboardWifiByMac = [];
+                    foreach ($dashboardWifiDevices as $wifiDevice) {
+                        $mac = $wifiDevice['AssociatedDeviceMACAddress'] ?? $wifiDevice['MACAddress'] ?? null;
+                        if ($mac) {
+                            $dashboardWifiByMac[strtolower(str_replace([':', '-'], '', $mac))] = $wifiDevice;
+                        }
+                    }
+
+                    // Filter out inactive hosts
+                    $dashboardHosts = array_filter($dashboardHosts, function($host) {
+                        return isset($host['Active']) && ($host['Active'] === 'true' || $host['Active'] === '1');
+                    });
+                @endphp
+
+                @if(count($dashboardHosts) > 0)
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interface</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Signal</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach($dashboardHosts as $dashHost)
+                                @php
+                                    // Look up WiFi data by MAC address
+                                    $dashHostMac = $dashHost['MACAddress'] ?? $dashHost['PhysAddress'] ?? '';
+                                    $dashNormalizedMac = strtolower(str_replace([':', '-'], '', $dashHostMac));
+                                    $dashWifiData = $dashboardWifiByMac[$dashNormalizedMac] ?? null;
+
+                                    // Detect device type
+                                    $dashHostname = strtolower($dashHost['HostName'] ?? '');
+                                    $dashInterface = strtolower($dashHost['InterfaceType'] ?? '');
+
+                                    $dashIcon = '❓';
+                                    if (str_contains($dashHostname, 'iphone') || str_contains($dashHostname, 'android') || str_contains($dashHostname, 'samsung')) {
+                                        $dashIcon = '📱';
+                                    } elseif (str_contains($dashHostname, 'ipad') || str_contains($dashHostname, 'tablet')) {
+                                        $dashIcon = '📱';
+                                    } elseif (str_contains($dashHostname, 'macbook') || str_contains($dashHostname, 'laptop')) {
+                                        $dashIcon = '💻';
+                                    } elseif (str_contains($dashHostname, 'desktop') || str_contains($dashHostname, 'pc-')) {
+                                        $dashIcon = '🖥️';
+                                    } elseif (str_contains($dashHostname, 'appletv') || str_contains($dashHostname, 'roku') || str_contains($dashHostname, 'chromecast')) {
+                                        $dashIcon = '📺';
+                                    } elseif (str_contains($dashInterface, 'ethernet') || str_contains($dashInterface, 'eth')) {
+                                        $dashIcon = '🔌';
+                                    } elseif ($dashWifiData) {
+                                        $dashIcon = '📡';
+                                    }
+
+                                    // Get signal strength
+                                    $dashSignalStrength = null;
+                                    $dashSignalClass = '';
+                                    $dashSignalIcon = '';
+                                    if ($dashWifiData) {
+                                        $dashSignalStrength = $dashWifiData['SignalStrength'] ?? null;
+                                        if ($dashSignalStrength !== null) {
+                                            $signal = (int)$dashSignalStrength;
+                                            if ($signal >= -50) {
+                                                $dashSignalClass = 'text-green-600';
+                                                $dashSignalIcon = '▂▃▄▅▆';
+                                            } elseif ($signal >= -60) {
+                                                $dashSignalClass = 'text-green-500';
+                                                $dashSignalIcon = '▂▃▄▅';
+                                            } elseif ($signal >= -70) {
+                                                $dashSignalClass = 'text-yellow-500';
+                                                $dashSignalIcon = '▂▃▄';
+                                            } elseif ($signal >= -80) {
+                                                $dashSignalClass = 'text-orange-500';
+                                                $dashSignalIcon = '▂▃ ⚠️';
+                                            } else {
+                                                $dashSignalClass = 'text-red-500';
+                                                $dashSignalIcon = '▂ ⚠️';
+                                            }
+                                        }
+                                    }
+
+                                    // Get rates
+                                    $dashDownRate = $dashWifiData['LastDataDownlinkRate'] ?? null;
+
+                                    // Get band for interface display
+                                    $dashBand = null;
+                                    if ($dashWifiData) {
+                                        $wlanConfig = $dashWifiData['_wlan_config'] ?? null;
+                                        if ($wlanConfig) {
+                                            $bandParam = $device->parameters()
+                                                ->where('name', 'LIKE', "%WLANConfiguration.{$wlanConfig}.OperatingFrequencyBand")
+                                                ->first();
+                                            if ($bandParam) {
+                                                $dashBand = str_contains($bandParam->value, '2.4') ? '2.4GHz' : '5GHz';
+                                            } else {
+                                                // Try channel-based detection
+                                                $channelParam = $device->parameters()
+                                                    ->where('name', 'LIKE', "%WLANConfiguration.{$wlanConfig}.Channel")
+                                                    ->first();
+                                                if ($channelParam) {
+                                                    $channel = (int)$channelParam->value;
+                                                    $dashBand = ($channel >= 1 && $channel <= 14) ? '2.4GHz' : '5GHz';
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Determine interface display
+                                    $dashInterfaceType = $dashHost['InterfaceType'] ?? $dashHost['AddressSource'] ?? '-';
+                                    if ($dashBand) {
+                                        $dashInterfaceType = "WiFi ({$dashBand})";
+                                    }
+                                @endphp
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm">
+                                        <div class="flex items-center">
+                                            <span class="mr-2">{{ $dashIcon }}</span>
+                                            <span class="text-gray-900">{{ $dashHost['HostName'] ?? 'Unknown' }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-mono">{{ $dashHost['IPAddress'] ?? '-' }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ $dashInterfaceType }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                        @if($dashSignalStrength !== null)
+                                            <div class="flex items-center space-x-1">
+                                                <span class="{{ $dashSignalClass }}">{{ $dashSignalIcon }}</span>
+                                                <span class="{{ $dashSignalClass }} text-xs">{{ $dashSignalStrength }} dBm</span>
+                                            </div>
+                                        @else
+                                            <span class="text-gray-400">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                        @if($dashDownRate)
+                                            <span class="text-gray-900 font-mono text-xs">
+                                                {{ number_format($dashDownRate / 1000, 0) }} Mbps
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400">-</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="px-6 py-4 text-center text-sm text-gray-500">
+                        No connected devices found.
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Recent Tasks Section -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-gray-50">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Recent Tasks</h3>
+            </div>
+            <div class="border-t border-gray-200">
+                @php
+                    $recentTasks = $device->tasks()->orderBy('created_at', 'desc')->limit(5)->get();
+                @endphp
+
+                @if($recentTasks->count() > 0)
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach($recentTasks as $task)
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {{ ucwords(str_replace('_', ' ', $task->task_type)) }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        @if($task->status === 'completed')
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Completed</span>
+                                        @elseif($task->status === 'failed')
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Failed</span>
+                                        @elseif($task->status === 'pending')
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                                        @else
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">{{ ucfirst($task->status) }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ $task->created_at->diffForHumans() }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @else
+                    <div class="px-6 py-4 text-center text-sm text-gray-500">
+                        No tasks yet.
+                    </div>
+                @endif
+            </div>
+        </div>
     </div>
 
     <!-- Device Info Tab -->
@@ -728,6 +1316,14 @@
                         })
                         ->get();
 
+                    // Get WiFi AssociatedDevice parameters for signal strength and rates
+                    $wifiParams = $device->parameters()
+                        ->where(function($q) {
+                            $q->where('name', 'LIKE', '%AssociatedDevice.%')
+                              ->orWhere('name', 'LIKE', '%WLANConfiguration.%AssociatedDevice%');
+                        })
+                        ->get();
+
                     // Organize by host number
                     $hosts = [];
                     foreach ($hostParams as $param) {
@@ -741,6 +1337,103 @@
                         }
                     }
 
+                    // Organize WiFi associated devices by MAC address
+                    $wifiDevices = [];
+                    foreach ($wifiParams as $param) {
+                        if (preg_match('/AssociatedDevice\.(\d+)\.(.+)/', $param->name, $matches)) {
+                            $deviceNum = $matches[1];
+                            $field = $matches[2];
+                            if (!isset($wifiDevices[$deviceNum])) {
+                                $wifiDevices[$deviceNum] = [];
+                            }
+                            $wifiDevices[$deviceNum][$field] = $param->value;
+
+                            // Also capture which WLAN configuration this is from for band detection
+                            if (preg_match('/WLANConfiguration\.(\d+)\.AssociatedDevice/', $param->name, $wlanMatches)) {
+                                $wifiDevices[$deviceNum]['_wlan_config'] = $wlanMatches[1];
+                            } elseif (preg_match('/WiFi\.AccessPoint\.(\d+)\.AssociatedDevice/', $param->name, $apMatches)) {
+                                $wifiDevices[$deviceNum]['_access_point'] = $apMatches[1];
+                            }
+                        }
+                    }
+
+                    // Create a lookup table by MAC address for WiFi devices
+                    $wifiByMac = [];
+                    foreach ($wifiDevices as $wifiDevice) {
+                        $mac = $wifiDevice['AssociatedDeviceMACAddress'] ?? $wifiDevice['MACAddress'] ?? null;
+                        if ($mac) {
+                            $wifiByMac[strtolower(str_replace([':', '-'], '', $mac))] = $wifiDevice;
+                        }
+                    }
+
+                    // Helper function to detect device type based on hostname and interface
+                    $detectDeviceType = function($host, $wifiData) {
+                        $hostname = strtolower($host['HostName'] ?? '');
+                        $interface = strtolower($host['InterfaceType'] ?? '');
+
+                        // Check for common device type patterns
+                        if (str_contains($hostname, 'iphone') || str_contains($hostname, 'android') || str_contains($hostname, 'samsung') || str_contains($hostname, 'pixel')) {
+                            return ['type' => 'Mobile', 'icon' => '📱'];
+                        } elseif (str_contains($hostname, 'ipad') || str_contains($hostname, 'tablet')) {
+                            return ['type' => 'Tablet', 'icon' => '📱'];
+                        } elseif (str_contains($hostname, 'macbook') || str_contains($hostname, 'laptop') || str_contains($hostname, 'thinkpad')) {
+                            return ['type' => 'Laptop', 'icon' => '💻'];
+                        } elseif (str_contains($hostname, 'desktop') || str_contains($hostname, 'pc-')) {
+                            return ['type' => 'Desktop', 'icon' => '🖥️'];
+                        } elseif (str_contains($hostname, 'appletv') || str_contains($hostname, 'roku') || str_contains($hostname, 'chromecast') || str_contains($hostname, 'firetv')) {
+                            return ['type' => 'Media', 'icon' => '📺'];
+                        } elseif (str_contains($hostname, 'printer') || str_contains($hostname, 'canon') || str_contains($hostname, 'hp-')) {
+                            return ['type' => 'Printer', 'icon' => '🖨️'];
+                        } elseif (str_contains($hostname, 'nest') || str_contains($hostname, 'thermostat') || str_contains($hostname, 'camera')) {
+                            return ['type' => 'IoT', 'icon' => '🏠'];
+                        } elseif (str_contains($interface, 'ethernet') || str_contains($interface, 'eth')) {
+                            return ['type' => 'Wired', 'icon' => '🔌'];
+                        } elseif ($wifiData) {
+                            return ['type' => 'WiFi Device', 'icon' => '📡'];
+                        }
+
+                        return ['type' => 'Unknown', 'icon' => '❓'];
+                    };
+
+                    // Helper function to get WiFi band from WLAN config or frequency
+                    $getWifiBand = function($wifiData) use ($device, $isDevice2) {
+                        if (!$wifiData) return null;
+
+                        // Try to get operating frequency band from the radio
+                        $wlanConfig = $wifiData['_wlan_config'] ?? null;
+                        $accessPoint = $wifiData['_access_point'] ?? null;
+
+                        if ($wlanConfig) {
+                            $bandParam = $device->parameters()
+                                ->where('name', 'LIKE', "%WLANConfiguration.{$wlanConfig}.OperatingFrequencyBand")
+                                ->first();
+                            if ($bandParam) {
+                                return str_contains($bandParam->value, '2.4') ? '2.4GHz' : '5GHz';
+                            }
+
+                            // Try channel-based detection
+                            $channelParam = $device->parameters()
+                                ->where('name', 'LIKE', "%WLANConfiguration.{$wlanConfig}.Channel")
+                                ->first();
+                            if ($channelParam) {
+                                $channel = (int)$channelParam->value;
+                                return ($channel >= 1 && $channel <= 14) ? '2.4GHz' : '5GHz';
+                            }
+                        }
+
+                        if ($accessPoint && $isDevice2) {
+                            // For Device:2 model, try to get frequency from radio
+                            $radioParam = $device->parameters()
+                                ->where('name', 'LIKE', "Device.WiFi.Radio.%.OperatingFrequencyBand")
+                                ->first();
+                            if ($radioParam) {
+                                return str_contains($radioParam->value, '2.4') ? '2.4GHz' : '5GHz';
+                            }
+                        }
+
+                        return null;
+                    };
+
                     // Filter out inactive hosts
                     $hosts = array_filter($hosts, function($host) {
                         return isset($host['Active']) && ($host['Active'] === 'true' || $host['Active'] === '1');
@@ -748,28 +1441,116 @@
                 @endphp
 
                 @if(count($hosts) > 0)
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hostname</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MAC Address</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interface</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($hosts as $host)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $host['HostName'] ?? '-' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">{{ $host['IPAddress'] ?? '-' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">{{ $host['MACAddress'] ?? $host['PhysAddress'] ?? '-' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $host['InterfaceType'] ?? $host['AddressSource'] ?? '-' }}
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MAC Address</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interface</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Signal</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Down/Up Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach($hosts as $host)
+                                @php
+                                    // Look up WiFi data by MAC address
+                                    $hostMac = $host['MACAddress'] ?? $host['PhysAddress'] ?? '';
+                                    $normalizedMac = strtolower(str_replace([':', '-'], '', $hostMac));
+                                    $wifiData = $wifiByMac[$normalizedMac] ?? null;
+
+                                    // Get signal strength
+                                    $signalStrength = null;
+                                    $signalClass = '';
+                                    $signalIcon = '';
+                                    if ($wifiData) {
+                                        $signalStrength = $wifiData['SignalStrength'] ?? null;
+                                        if ($signalStrength !== null) {
+                                            $signal = (int)$signalStrength;
+                                            if ($signal >= -50) {
+                                                $signalClass = 'text-green-600';
+                                                $signalIcon = '▂▃▄▅▆';
+                                            } elseif ($signal >= -60) {
+                                                $signalClass = 'text-green-500';
+                                                $signalIcon = '▂▃▄▅';
+                                            } elseif ($signal >= -70) {
+                                                $signalClass = 'text-yellow-500';
+                                                $signalIcon = '▂▃▄';
+                                            } elseif ($signal >= -80) {
+                                                $signalClass = 'text-orange-500';
+                                                $signalIcon = '▂▃ ⚠️';
+                                            } else {
+                                                $signalClass = 'text-red-500';
+                                                $signalIcon = '▂ ⚠️';
+                                            }
+                                        }
+                                    }
+
+                                    // Get rates
+                                    $downRate = $wifiData['LastDataDownlinkRate'] ?? null;
+                                    $upRate = $wifiData['LastDataUplinkRate'] ?? null;
+
+                                    // Get band
+                                    $band = $getWifiBand($wifiData);
+
+                                    // Detect device type
+                                    $deviceTypeInfo = $detectDeviceType($host, $wifiData);
+
+                                    // Determine interface display
+                                    $interfaceType = $host['InterfaceType'] ?? $host['AddressSource'] ?? '-';
+                                    if ($band) {
+                                        $interfaceType = "WiFi ({$band})";
+                                    }
+                                @endphp
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm">
+                                        <div class="flex items-center">
+                                            <span class="mr-2">{{ $deviceTypeInfo['icon'] }}</span>
+                                            <span class="text-gray-900">{{ $host['HostName'] ?? 'Unknown' }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-mono">{{ $host['IPAddress'] ?? '-' }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-mono">{{ $hostMac }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ $deviceTypeInfo['type'] }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ $interfaceType }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                        @if($signalStrength !== null)
+                                            <div class="flex items-center space-x-2">
+                                                <span class="{{ $signalClass }} font-mono">{{ $signalStrength }} dBm</span>
+                                                <span class="{{ $signalClass }}">{{ $signalIcon }}</span>
+                                            </div>
+                                        @else
+                                            <span class="text-gray-400">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                        @if($downRate || $upRate)
+                                            <div class="text-gray-900 font-mono text-xs">
+                                                @if($downRate)
+                                                    <div class="flex items-center">
+                                                        <span class="text-gray-500 mr-1">↓</span>
+                                                        <span>{{ number_format($downRate / 1000, 1) }} Mbps</span>
+                                                    </div>
+                                                @endif
+                                                @if($upRate)
+                                                    <div class="flex items-center">
+                                                        <span class="text-gray-500 mr-1">↑</span>
+                                                        <span>{{ number_format($upRate / 1000, 1) }} Mbps</span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="text-gray-400">-</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 @else
                     <div class="px-6 py-8 text-center">
                         <p class="text-sm text-gray-500">No connected devices found. Click "Query Device Info" to fetch host table information.</p>
