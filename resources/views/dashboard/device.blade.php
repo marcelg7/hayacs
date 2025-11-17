@@ -1897,13 +1897,28 @@
                         <form @submit.prevent="async (e) => {
                             const formData = new FormData(e.target);
                             const data = {};
+
+                            // Get all form elements to properly detect checkboxes
+                            const checkboxNames = new Set();
+                            for (const element of e.target.elements) {
+                                if (element.type === 'checkbox' && element.name) {
+                                    checkboxNames.add(element.name);
+                                }
+                            }
+
+                            // Process FormData entries
+                            // Note: When checkbox is checked, FormData includes BOTH hidden (0) and checkbox (1) values
+                            // We want the last value for each key
                             for (let [key, value] of formData.entries()) {
                                 if (key !== '_token') {
                                     // Convert checkbox values to boolean
-                                    if (e.target[key].type === 'checkbox') {
+                                    if (checkboxNames.has(key)) {
                                         data[key] = value === '1';
+                                    } else if (value === '') {
+                                        // Don't send empty string values
+                                        data[key] = undefined;
                                     } else {
-                                        data[key] = value || undefined;
+                                        data[key] = value;
                                     }
                                 }
                             }
@@ -2095,13 +2110,28 @@
                         <form @submit.prevent="async (e) => {
                             const formData = new FormData(e.target);
                             const data = {};
+
+                            // Get all form elements to properly detect checkboxes
+                            const checkboxNames = new Set();
+                            for (const element of e.target.elements) {
+                                if (element.type === 'checkbox' && element.name) {
+                                    checkboxNames.add(element.name);
+                                }
+                            }
+
+                            // Process FormData entries
+                            // Note: When checkbox is checked, FormData includes BOTH hidden (0) and checkbox (1) values
+                            // We want the last value for each key
                             for (let [key, value] of formData.entries()) {
                                 if (key !== '_token') {
                                     // Convert checkbox values to boolean
-                                    if (e.target[key].type === 'checkbox') {
+                                    if (checkboxNames.has(key)) {
                                         data[key] = value === '1';
+                                    } else if (value === '') {
+                                        // Don't send empty string values
+                                        data[key] = undefined;
                                     } else {
-                                        data[key] = value || undefined;
+                                        data[key] = value;
                                     }
                                 }
                             }
