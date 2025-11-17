@@ -314,7 +314,8 @@ class DeviceController extends Controller
 
                 // Security settings
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.BeaconType";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.PreSharedKey.1.X_000631_KeyPassphrase";
+                // Use direct writable password parameter (not the read-only PreSharedKey.1 path)
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.X_000631_KeyPassphrase";
 
                 // Radio and visibility
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.RadioEnabled";
@@ -733,9 +734,11 @@ class DeviceController extends Controller
             ];
         }
 
-        // WiFi Password (Calix-specific parameter under PreSharedKey.1)
+        // WiFi Password (Calix-specific writable parameter - DIRECT path, not under PreSharedKey.1)
+        // PreSharedKey.1.X_000631_KeyPassphrase is read-only
+        // X_000631_KeyPassphrase (direct) is writable
         if (isset($validated['password'])) {
-            $values["{$prefix}.PreSharedKey.1.X_000631_KeyPassphrase"] = $validated['password'];
+            $values["{$prefix}.X_000631_KeyPassphrase"] = $validated['password'];
         }
 
         // Security Type
@@ -819,11 +822,8 @@ class DeviceController extends Controller
             ->whereNotLike('name', '%AssociatedDevice%')
             ->whereNotLike('name', '%Stats%')
             ->whereNotLike('name', '%WPS%')
-            ->where(function ($query) {
-                // Include PreSharedKey.1 only for X_000631_KeyPassphrase, exclude other PreSharedKey params
-                $query->where('name', 'NOT LIKE', '%PreSharedKey.1%')
-                    ->orWhere('name', 'LIKE', '%PreSharedKey.1.X_000631_KeyPassphrase');
-            })
+            // Exclude all PreSharedKey.1 params (we use direct X_000631_KeyPassphrase instead)
+            ->whereNotLike('name', '%PreSharedKey.1%')
             ->get();
 
         // Organize by instance
@@ -849,7 +849,7 @@ class DeviceController extends Controller
                         $instances[$instance]['enabled'] = ($param->value === '1' || $param->value === 'true');
                         break;
                     case 'X_000631_KeyPassphrase':
-                    case 'PreSharedKey.1.X_000631_KeyPassphrase':
+                        // Direct writable password parameter
                         $instances[$instance]['password'] = $param->value;
                         break;
                     case 'BeaconType':
