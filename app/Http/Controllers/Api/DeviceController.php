@@ -199,10 +199,16 @@ class DeviceController extends Controller
     /**
      * Build detailed troubleshooting parameters from discovery results
      */
-    public function buildDetailedParametersFromDiscovery(array $discoveryResults, string $dataModel): array
+    public function buildDetailedParametersFromDiscovery(array $discoveryResults, string $dataModel, ?Device $device = null): array
     {
         $isDevice2 = $dataModel === 'Device:2';
         $parameters = [];
+
+        // Detect manufacturer for device-specific instance handling
+        $isCalix = $device && (
+            strtolower($device->manufacturer) === 'calix' ||
+            strtoupper($device->oui) === 'D0768F'
+        );
 
         if ($isDevice2) {
             // WAN Information (Device:2 uses standard instances)
@@ -245,15 +251,26 @@ class DeviceController extends Controller
         } else {
             // InternetGatewayDevice data model
 
-            // WAN - Discover which WANDevice instance exists
+            // WAN - Query manufacturer-specific instances
+            // NumberOfEntries doesn't tell us which instance numbers exist, just the count
             $wanDeviceCount = (int) ($discoveryResults['InternetGatewayDevice.WANDeviceNumberOfEntries']['value'] ?? 0);
 
-            // For each WAN device, we need to query its connections
-            // Calix typically uses WANDevice.3, but let's discover all
-            for ($wanIdx = 1; $wanIdx <= min($wanDeviceCount, 5); $wanIdx++) {
-                // Query the most common WAN connection paths
-                // Try both WANIPConnection and WANPPPConnection at common instances
-                foreach ([1, 2, 14] as $connIdx) {
+            if ($wanDeviceCount > 0) {
+                if ($isCalix) {
+                    // Calix uses WANDevice.3.WANConnectionDevice.1.WANIPConnection.14
+                    $wanIdx = 3;
+                    $connIdx = 14;
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.ExternalIPAddress";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.SubnetMask";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.DefaultGateway";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.DNSServers";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.MACAddress";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.ConnectionStatus";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.Uptime";
+                } else {
+                    // Standard devices use WANDevice.1.WANConnectionDevice.1.WANIPConnection.1
+                    $wanIdx = 1;
+                    $connIdx = 1;
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.ExternalIPAddress";
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.SubnetMask";
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.DefaultGateway";

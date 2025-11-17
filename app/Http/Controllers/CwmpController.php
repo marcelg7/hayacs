@@ -332,7 +332,7 @@ class CwmpController extends Controller
 
                 // Build detailed parameters from discovery results
                 $detailedParams = app(\App\Http\Controllers\Api\DeviceController::class)
-                    ->buildDetailedParametersFromDiscovery($parsed['parameters'], $dataModel);
+                    ->buildDetailedParametersFromDiscovery($parsed['parameters'], $dataModel, $device);
 
                 // Create follow-up task for detailed query
                 $detailedTask = Task::create([
