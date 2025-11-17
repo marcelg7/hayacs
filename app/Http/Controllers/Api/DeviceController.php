@@ -163,13 +163,11 @@ class DeviceController extends Controller
                 'Device.WiFi.Radio.1.Channel',
                 'Device.WiFi.Radio.1.OperatingFrequencyBand',
                 'Device.WiFi.Radio.1.OperatingStandards',
-                'Device.WiFi.Radio.1.TransmitPower',
                 'Device.WiFi.Radio.2.Enable',
                 'Device.WiFi.Radio.2.Status',
                 'Device.WiFi.Radio.2.Channel',
                 'Device.WiFi.Radio.2.OperatingFrequencyBand',
                 'Device.WiFi.Radio.2.OperatingStandards',
-                'Device.WiFi.Radio.2.TransmitPower',
                 'Device.WiFi.SSID.1.Enable',
                 'Device.WiFi.SSID.1.SSID',
                 'Device.WiFi.SSID.1.Status',
@@ -183,17 +181,9 @@ class DeviceController extends Controller
                 'Device.WiFi.SSID.4.SSID',
                 'Device.WiFi.SSID.4.Status',
 
-                // Connected Devices - Query host count and first 10 hosts
+                // Connected Devices - Only get count (can't query instances without discovery)
                 'Device.Hosts.HostNumberOfEntries',
             ];
-
-            // Add first 10 hosts
-            for ($i = 1; $i <= 10; $i++) {
-                $parameters[] = "Device.Hosts.Host.{$i}.HostName";
-                $parameters[] = "Device.Hosts.Host.{$i}.IPAddress";
-                $parameters[] = "Device.Hosts.Host.{$i}.PhysAddress";
-                $parameters[] = "Device.Hosts.Host.{$i}.Active";
-            }
         } else {
             // InternetGatewayDevice data model parameters
             // Note: Calix uses non-standard WAN numbering (WANDevice.3, WANIPConnection.14)
@@ -213,25 +203,15 @@ class DeviceController extends Controller
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Channel',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Standard',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Status',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TransmitPower',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.Enable',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.SSID',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.Channel',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.Standard',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.Status',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.TransmitPower',
 
-                // Connected Devices - Get host count and first 10 hosts
+                // Connected Devices - Only get count (can't query instances without discovery)
                 'InternetGatewayDevice.LANDevice.1.Hosts.HostNumberOfEntries',
             ];
-
-            // Add first 10 hosts for IGD
-            for ($i = 1; $i <= 10; $i++) {
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.HostName";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.IPAddress";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.MACAddress";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.Active";
-            }
         }
 
         $task = Task::create([
