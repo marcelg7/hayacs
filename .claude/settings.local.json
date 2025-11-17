@@ -4,7 +4,10 @@
       "Bash(git push:*)",
       "Bash(git commit:*)",
       "Bash(php artisan:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(php -l:*)",
+      "Bash(curl:*)",
+      "Bash(json_pp:*)"
     ],
     "deny": [],
     "ask": []
