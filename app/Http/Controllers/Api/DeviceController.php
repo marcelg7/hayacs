@@ -126,6 +126,7 @@ class DeviceController extends Controller
 
     /**
      * Refresh troubleshooting info (WAN, LAN, WiFi, Connected Devices)
+     * Handles manufacturer-specific instance numbering (e.g., Calix uses WLAN 1 & 16)
      */
     public function refreshTroubleshooting(string $id): JsonResponse
     {
@@ -156,7 +157,7 @@ class DeviceController extends Controller
                 'Device.DHCPv4.Server.Pool.1.MinAddress',
                 'Device.DHCPv4.Server.Pool.1.MaxAddress',
 
-                // WiFi - Query specific radio instances (1-4)
+                // WiFi - Query standard instances (1-4)
                 'Device.WiFi.Radio.1.Enable',
                 'Device.WiFi.Radio.1.Status',
                 'Device.WiFi.Radio.1.Channel',
@@ -184,53 +185,29 @@ class DeviceController extends Controller
 
                 // Connected Devices - Query host count and first 10 hosts
                 'Device.Hosts.HostNumberOfEntries',
-                'Device.Hosts.Host.1.HostName',
-                'Device.Hosts.Host.1.IPAddress',
-                'Device.Hosts.Host.1.PhysAddress',
-                'Device.Hosts.Host.1.Active',
-                'Device.Hosts.Host.2.HostName',
-                'Device.Hosts.Host.2.IPAddress',
-                'Device.Hosts.Host.2.PhysAddress',
-                'Device.Hosts.Host.2.Active',
-                'Device.Hosts.Host.3.HostName',
-                'Device.Hosts.Host.3.IPAddress',
-                'Device.Hosts.Host.3.PhysAddress',
-                'Device.Hosts.Host.3.Active',
-                'Device.Hosts.Host.4.HostName',
-                'Device.Hosts.Host.4.IPAddress',
-                'Device.Hosts.Host.4.PhysAddress',
-                'Device.Hosts.Host.4.Active',
-                'Device.Hosts.Host.5.HostName',
-                'Device.Hosts.Host.5.IPAddress',
-                'Device.Hosts.Host.5.PhysAddress',
-                'Device.Hosts.Host.5.Active',
-                'Device.Hosts.Host.6.HostName',
-                'Device.Hosts.Host.6.IPAddress',
-                'Device.Hosts.Host.6.PhysAddress',
-                'Device.Hosts.Host.6.Active',
-                'Device.Hosts.Host.7.HostName',
-                'Device.Hosts.Host.7.IPAddress',
-                'Device.Hosts.Host.7.PhysAddress',
-                'Device.Hosts.Host.7.Active',
-                'Device.Hosts.Host.8.HostName',
-                'Device.Hosts.Host.8.IPAddress',
-                'Device.Hosts.Host.8.PhysAddress',
-                'Device.Hosts.Host.8.Active',
-                'Device.Hosts.Host.9.HostName',
-                'Device.Hosts.Host.9.IPAddress',
-                'Device.Hosts.Host.9.PhysAddress',
-                'Device.Hosts.Host.9.Active',
-                'Device.Hosts.Host.10.HostName',
-                'Device.Hosts.Host.10.IPAddress',
-                'Device.Hosts.Host.10.PhysAddress',
-                'Device.Hosts.Host.10.Active',
             ];
+
+            // Add first 10 hosts
+            for ($i = 1; $i <= 10; $i++) {
+                $parameters[] = "Device.Hosts.Host.{$i}.HostName";
+                $parameters[] = "Device.Hosts.Host.{$i}.IPAddress";
+                $parameters[] = "Device.Hosts.Host.{$i}.PhysAddress";
+                $parameters[] = "Device.Hosts.Host.{$i}.Active";
+            }
         } else {
             // InternetGatewayDevice data model parameters
-            // Note: Calix devices use non-standard numbering (WANDevice.3, WANIPConnection.2, etc)
-            // For now, query only parameters that are known to exist across all devices
             $parameters = [
-                // LAN Information - these are standard across devices
+                // WAN Information - Query common WAN instances
+                // Try WANDevice 1 first (standard)
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress',
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.SubnetMask',
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.DefaultGateway',
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.DNSServers',
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.MACAddress',
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ConnectionStatus',
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.Uptime',
+
+                // LAN Information
                 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceIPAddress',
                 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceSubnetMask',
                 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPServerEnable',
@@ -238,21 +215,31 @@ class DeviceController extends Controller
                 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MaxAddress',
                 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DNSServers',
 
-                // WiFi - Query first 2 WLAN configurations (most common)
+                // WiFi - Query known Calix WLAN instances (1 for 2.4GHz, 16 for 5GHz)
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Enable',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Channel',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Standard',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Status',
+                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TransmitPower',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.Enable',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.SSID',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.Channel',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.Standard',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.Status',
+                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.TransmitPower',
 
-                // Connected Devices - just get the count for now
+                // Connected Devices - Get host count and first 10 hosts
                 'InternetGatewayDevice.LANDevice.1.Hosts.HostNumberOfEntries',
             ];
+
+            // Add first 10 hosts for IGD
+            for ($i = 1; $i <= 10; $i++) {
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.HostName";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.IPAddress";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.MACAddress";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.Active";
+            }
         }
 
         $task = Task::create([
