@@ -32,9 +32,9 @@ Dump of Entire MDM, this is NOT the config file
       <AdditionalSoftwareVersion>CFE=12.2.21-118.5,BCM=4.16L.05xponpatch2</AdditionalSoftwareVersion>
       <SpecVersion>1.0</SpecVersion>
       <ProvisioningCode>(null)</ProvisioningCode>
-      <UpTime>159036</UpTime>
+      <UpTime>201</UpTime>
       <FirstUseDate>2025-11-12T16:32:37-05:00</FirstUseDate>
-      <X_000631_IGDChangeCounter>89</X_000631_IGDChangeCounter>
+      <X_000631_IGDChangeCounter>17</X_000631_IGDChangeCounter>
       <X_BROADCOM_COM_NumberOfCpuThreads>2</X_BROADCOM_COM_NumberOfCpuThreads>
       <X_BROADCOM_COM_SwBuildTimestamp>221102_0125</X_BROADCOM_COM_SwBuildTimestamp>
       <X_BROADCOM_COM_VoiceServiceVersion>Voice</X_BROADCOM_COM_VoiceServiceVersion>
@@ -45,13 +45,13 @@ Dump of Entire MDM, this is NOT the config file
       <VendorConfigFile instance="1">
         <Name>calix.igd.conf</Name>
         <Version>1.3.0.2</Version>
-        <Date>2025-11-12T13:30:43-08:00</Date>
+        <Date>2025-11-12T16:30:43-05:00</Date>
         <Description>Config file for Calix RG</Description>
       </VendorConfigFile>
       <VendorConfigFile instance="2">
         <Name>calix.sip.conf</Name>
         <Version>0.0.0.0</Version>
-        <Date>2025-11-12T16:32:02-05:00</Date>
+        <Date>2025-11-17T10:12:17-05:00</Date>
         <Description>No provision config file.</Description>
       </VendorConfigFile>
       <VendorConfigFile nextInstance="3" ></VendorConfigFile>
@@ -302,12 +302,12 @@ Dump of Entire MDM, this is NOT the config file
       <EnableCWMP>TRUE</EnableCWMP>
       <URL>https://hayacs.hay.net/cwmp</URL>
       <X_000631_SourceOfUrl>0</X_000631_SourceOfUrl>
-      <X_000631_DHCPConfigurable>FALSE</X_000631_DHCPConfigurable>
+      <X_000631_DHCPConfigurable>TRUE</X_000631_DHCPConfigurable>
       <LastConnectedURL>https://hayacs.hay.net/cwmp</LastConnectedURL>
       <Username>acs-user</Username>
       <Password>acs-password</Password>
       <PeriodicInformEnable>TRUE</PeriodicInformEnable>
-      <PeriodicInformInterval>160</PeriodicInformInterval>
+      <PeriodicInformInterval>30</PeriodicInformInterval>
       <PeriodicInformTime>(null)</PeriodicInformTime>
       <ParameterKey>(null)</ParameterKey>
       <X_BROADCOM_COM_BoundIfName>eth5.1</X_BROADCOM_COM_BoundIfName>
@@ -321,19 +321,19 @@ Dump of Entire MDM, this is NOT the config file
       <CWMPRetryIntervalMultiplier>2000</CWMPRetryIntervalMultiplier>
       <ManageableDeviceNumberOfEntries>0</ManageableDeviceNumberOfEntries>
       <ManageableDeviceNotificationLimit>0</ManageableDeviceNotificationLimit>
-      <UDPConnectionRequestAddress notification="2"></UDPConnectionRequestAddress>
+      <UDPConnectionRequestAddress notification="2">(null)</UDPConnectionRequestAddress>
       <UDPConnectionRequestAddressNotificationLimit>0</UDPConnectionRequestAddressNotificationLimit>
-      <STUNEnable>FALSE</STUNEnable>
-      <STUNServerAddress>(null)</STUNServerAddress>
-      <STUNServerPort>3478</STUNServerPort>
+      <STUNEnable>TRUE</STUNEnable>
+      <STUNServerAddress>stun.l.google.com</STUNServerAddress>
+      <STUNServerPort>19302</STUNServerPort>
       <STUNUsername>(null)</STUNUsername>
       <STUNPassword>(null)</STUNPassword>
       <STUNMaximumKeepAlivePeriod>40</STUNMaximumKeepAlivePeriod>
       <STUNMinimumKeepAlivePeriod>40</STUNMinimumKeepAlivePeriod>
       <NATDetected notification="2">FALSE</NATDetected>
-      <X_000631_StunClientPid>0</X_000631_StunClientPid>
+      <X_000631_StunClientPid>2424</X_000631_StunClientPid>
       <BootStrapped>TRUE</BootStrapped>
-      <X_CALIX_LastSuccessfulPeriodicInformTime>2025-11-14T12:40:08-05:00</X_CALIX_LastSuccessfulPeriodicInformTime>
+      <X_CALIX_LastSuccessfulPeriodicInformTime>2025-11-17T10:15:01-05:00</X_CALIX_LastSuccessfulPeriodicInformTime>
       <X_000631_IPVersion>IPv4</X_000631_IPVersion>
       <X_000631_CWMPClientShareMode>0</X_000631_CWMPClientShareMode>
       <DUStateChangeComplPolicy>
@@ -348,7 +348,7 @@ Dump of Entire MDM, this is NOT the config file
       <URL>http://gcs.calix.local:8080</URL>
       <X_000631_SourceOfUrl>0</X_000631_SourceOfUrl>
       <X_000631_DHCPConfigurable>TRUE</X_000631_DHCPConfigurable>
-      <LastConnectedURL></LastConnectedURL>
+      <LastConnectedURL>(null)</LastConnectedURL>
       <Username>000631-ENT-CXNK005812BD</Username>
       <Password>activate-cxnk</Password>
       <PeriodicInformEnable>FALSE</PeriodicInformEnable>
@@ -366,7 +366,7 @@ Dump of Entire MDM, this is NOT the config file
       <CWMPRetryIntervalMultiplier>2000</CWMPRetryIntervalMultiplier>
       <ManageableDeviceNumberOfEntries>0</ManageableDeviceNumberOfEntries>
       <ManageableDeviceNotificationLimit>0</ManageableDeviceNotificationLimit>
-      <UDPConnectionRequestAddress notification="2"></UDPConnectionRequestAddress>
+      <UDPConnectionRequestAddress notification="2">(null)</UDPConnectionRequestAddress>
       <UDPConnectionRequestAddressNotificationLimit>0</UDPConnectionRequestAddressNotificationLimit>
       <STUNEnable>FALSE</STUNEnable>
       <STUNServerAddress>(null)</STUNServerAddress>
@@ -389,12 +389,12 @@ Dump of Entire MDM, this is NOT the config file
       <NTPServer3>ntp1.tummy.com</NTPServer3>
       <NTPServer4>(null)</NTPServer4>
       <NTPServer5>(null)</NTPServer5>
-      <CurrentLocalTime>2025-11-14T12:41:32-05:00</CurrentLocalTime>
+      <CurrentLocalTime>2025-11-17T10:15:01-05:00</CurrentLocalTime>
       <LocalTimeZone>-05:00</LocalTimeZone>
       <LocalTimeZoneName>Eastern Time (US, Canada)</LocalTimeZoneName>
       <DaylightSavingsUsed>TRUE</DaylightSavingsUsed>
-      <DaylightSavingsStart>2025-11-14T12:41:32-05:00</DaylightSavingsStart>
-      <DaylightSavingsEnd>2025-11-14T12:41:32-05:00</DaylightSavingsEnd>
+      <DaylightSavingsStart>2025-11-17T10:15:01-05:00</DaylightSavingsStart>
+      <DaylightSavingsEnd>2025-11-17T10:15:01-05:00</DaylightSavingsEnd>
       <X_000631_DaylightSavingsEnable>FALSE</X_000631_DaylightSavingsEnable>
     </Time>
     <UserInterface>
@@ -449,7 +449,7 @@ Dump of Entire MDM, this is NOT the config file
       <FilterNumberOfEntries>21</FilterNumberOfEntries>
       <MarkingNumberOfEntries>0</MarkingNumberOfEntries>
       <AvailableInterfaceNumberOfEntries>21</AvailableInterfaceNumberOfEntries>
-      <X_000631_TagRuleLL>1485708424</X_000631_TagRuleLL>
+      <X_000631_TagRuleLL>1485681320</X_000631_TagRuleLL>
       <Bridge instance="1">
         <BridgeKey>0</BridgeKey>
         <BridgeEnable>TRUE</BridgeEnable>
@@ -2721,6 +2721,67 @@ Dump of Entire MDM, this is NOT the config file
       <MaxHopCount>30</MaxHopCount>
       <ResponseTime>0</ResponseTime>
       <RouteHopsNumberOfEntries>0</RouteHopsNumberOfEntries>
+      <RouteHops instance="31">
+        <HopHost>(null)</HopHost>
+        <HopHostAddress>(null)</HopHostAddress>
+        <HopErrorCode>0</HopErrorCode>
+        <HopRTTimes>(null)</HopRTTimes>
+      </RouteHops>
+      <RouteHops instance="32">
+        <HopHost>(null)</HopHost>
+        <HopHostAddress>(null)</HopHostAddress>
+        <HopErrorCode>0</HopErrorCode>
+        <HopRTTimes>(null)</HopRTTimes>
+      </RouteHops>
+      <RouteHops instance="33">
+        <HopHost>(null)</HopHost>
+        <HopHostAddress>(null)</HopHostAddress>
+        <HopErrorCode>0</HopErrorCode>
+        <HopRTTimes>(null)</HopRTTimes>
+      </RouteHops>
+      <RouteHops instance="34">
+        <HopHost>(null)</HopHost>
+        <HopHostAddress>(null)</HopHostAddress>
+        <HopErrorCode>0</HopErrorCode>
+        <HopRTTimes>(null)</HopRTTimes>
+      </RouteHops>
+      <RouteHops instance="35">
+        <HopHost>(null)</HopHost>
+        <HopHostAddress>(null)</HopHostAddress>
+        <HopErrorCode>0</HopErrorCode>
+        <HopRTTimes>(null)</HopRTTimes>
+      </RouteHops>
+      <RouteHops instance="36">
+        <HopHost>(null)</HopHost>
+        <HopHostAddress>(null)</HopHostAddress>
+        <HopErrorCode>0</HopErrorCode>
+        <HopRTTimes>(null)</HopRTTimes>
+      </RouteHops>
+      <RouteHops instance="37">
+        <HopHost>(null)</HopHost>
+        <HopHostAddress>(null)</HopHostAddress>
+        <HopErrorCode>0</HopErrorCode>
+        <HopRTTimes>(null)</HopRTTimes>
+      </RouteHops>
+      <RouteHops instance="38">
+        <HopHost>(null)</HopHost>
+        <HopHostAddress>(null)</HopHostAddress>
+        <HopErrorCode>0</HopErrorCode>
+        <HopRTTimes>(null)</HopRTTimes>
+      </RouteHops>
+      <RouteHops instance="39">
+        <HopHost>(null)</HopHost>
+        <HopHostAddress>(null)</HopHostAddress>
+        <HopErrorCode>0</HopErrorCode>
+        <HopRTTimes>(null)</HopRTTimes>
+      </RouteHops>
+      <RouteHops instance="40">
+        <HopHost>(null)</HopHost>
+        <HopHostAddress>(null)</HopHostAddress>
+        <HopErrorCode>0</HopErrorCode>
+        <HopRTTimes>(null)</HopRTTimes>
+      </RouteHops>
+      <RouteHops nextInstance="41" ></RouteHops>
     </TraceRouteDiagnostics>
     <LANDevice instance="1">
       <LANEthernetInterfaceNumberOfEntries>4</LANEthernetInterfaceNumberOfEntries>
@@ -3684,7 +3745,7 @@ Dump of Entire MDM, this is NOT the config file
         <Status>Up</Status>
         <BSSID>D0:76:8F:00:42:71</BSSID>
         <MaxBitRate>Auto</MaxBitRate>
-        <Channel>11</Channel>
+        <Channel>1</Channel>
         <AutoChannelEnable>TRUE</AutoChannelEnable>
         <SSID>marceltestssid2.4ghz</SSID>
         <BeaconType>11i</BeaconType>
@@ -3727,7 +3788,7 @@ Dump of Entire MDM, this is NOT the config file
         <TotalPacketsSent>0</TotalPacketsSent>
         <TotalPacketsReceived>0</TotalPacketsReceived>
         <X_BROADCOM_COM_RxErrors>0</X_BROADCOM_COM_RxErrors>
-        <X_BROADCOM_COM_RxDrops>9</X_BROADCOM_COM_RxDrops>
+        <X_BROADCOM_COM_RxDrops>1</X_BROADCOM_COM_RxDrops>
         <X_BROADCOM_COM_TxErrors>0</X_BROADCOM_COM_TxErrors>
         <X_BROADCOM_COM_TxDrops>0</X_BROADCOM_COM_TxDrops>
         <X_BROADCOM_COM_MulticastPacketsSent>0</X_BROADCOM_COM_MulticastPacketsSent>
@@ -3773,8 +3834,8 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_SupportedFrequencyBands>2.4GHz,5GHz</X_000631_SupportedFrequencyBands>
         <X_000631_EnableDfsChannels>TRUE</X_000631_EnableDfsChannels>
         <X_000631_ChannelUtilization>3</X_000631_ChannelUtilization>
-        <X_000631_ChannelInterferenceTime>43</X_000631_ChannelInterferenceTime>
-        <X_000631_ChannelFreeTime>54</X_000631_ChannelFreeTime>
+        <X_000631_ChannelInterferenceTime>37</X_000631_ChannelInterferenceTime>
+        <X_000631_ChannelFreeTime>60</X_000631_ChannelFreeTime>
         <X_000631_AirtimeFairness>FALSE</X_000631_AirtimeFairness>
         <X_000631_FrameBurst>TRUE</X_000631_FrameBurst>
         <X_CALIX_SSID_Visibility>1</X_CALIX_SSID_Visibility>
@@ -3869,7 +3930,7 @@ Dump of Entire MDM, this is NOT the config file
           <UnicastPacketsSent>0</UnicastPacketsSent>
           <UnicastPacketsReceived>0</UnicastPacketsReceived>
           <DiscardPacketsSent>0</DiscardPacketsSent>
-          <DiscardPacketsReceived>9</DiscardPacketsReceived>
+          <DiscardPacketsReceived>0</DiscardPacketsReceived>
           <MulticastPacketsSent>0</MulticastPacketsSent>
           <MulticastPacketsReceived>0</MulticastPacketsReceived>
           <BroadcastPacketsSent>0</BroadcastPacketsSent>
@@ -3882,7 +3943,7 @@ Dump of Entire MDM, this is NOT the config file
           <X_BROADCOM_COM_TxErrors>0</X_BROADCOM_COM_TxErrors>
           <X_BROADCOM_COM_RxErrors>0</X_BROADCOM_COM_RxErrors>
           <X_BROADCOM_COM_TxDrops>0</X_BROADCOM_COM_TxDrops>
-          <X_BROADCOM_COM_RxDrops>9</X_BROADCOM_COM_RxDrops>
+          <X_BROADCOM_COM_RxDrops>0</X_BROADCOM_COM_RxDrops>
         </Stats>
         <WPS>
           <Enable>TRUE</Enable>
@@ -4029,7 +4090,7 @@ Dump of Entire MDM, this is NOT the config file
         <Status>Disabled</Status>
         <BSSID>6a:76:8f:00:42:72</BSSID>
         <MaxBitRate>Auto</MaxBitRate>
-        <Channel>11</Channel>
+        <Channel>1</Channel>
         <AutoChannelEnable>TRUE</AutoChannelEnable>
         <SSID>2.4GHz_Guest5812BD</SSID>
         <BeaconType>Basic</BeaconType>
@@ -4118,8 +4179,8 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_SupportedFrequencyBands>2.4GHz,5GHz</X_000631_SupportedFrequencyBands>
         <X_000631_EnableDfsChannels>TRUE</X_000631_EnableDfsChannels>
         <X_000631_ChannelUtilization>3</X_000631_ChannelUtilization>
-        <X_000631_ChannelInterferenceTime>43</X_000631_ChannelInterferenceTime>
-        <X_000631_ChannelFreeTime>54</X_000631_ChannelFreeTime>
+        <X_000631_ChannelInterferenceTime>37</X_000631_ChannelInterferenceTime>
+        <X_000631_ChannelFreeTime>60</X_000631_ChannelFreeTime>
         <X_000631_AirtimeFairness>FALSE</X_000631_AirtimeFairness>
         <X_000631_FrameBurst>TRUE</X_000631_FrameBurst>
         <X_CALIX_SSID_Visibility>1</X_CALIX_SSID_Visibility>
@@ -4374,7 +4435,7 @@ Dump of Entire MDM, this is NOT the config file
         <Status>Disabled</Status>
         <BSSID>6a:76:8f:00:42:73</BSSID>
         <MaxBitRate>Auto</MaxBitRate>
-        <Channel>11</Channel>
+        <Channel>1</Channel>
         <AutoChannelEnable>TRUE</AutoChannelEnable>
         <SSID>2.4GHz_Operator_1</SSID>
         <BeaconType>WPAand11i</BeaconType>
@@ -4463,8 +4524,8 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_SupportedFrequencyBands>2.4GHz,5GHz</X_000631_SupportedFrequencyBands>
         <X_000631_EnableDfsChannels>TRUE</X_000631_EnableDfsChannels>
         <X_000631_ChannelUtilization>3</X_000631_ChannelUtilization>
-        <X_000631_ChannelInterferenceTime>43</X_000631_ChannelInterferenceTime>
-        <X_000631_ChannelFreeTime>54</X_000631_ChannelFreeTime>
+        <X_000631_ChannelInterferenceTime>37</X_000631_ChannelInterferenceTime>
+        <X_000631_ChannelFreeTime>60</X_000631_ChannelFreeTime>
         <X_000631_AirtimeFairness>FALSE</X_000631_AirtimeFairness>
         <X_000631_FrameBurst>TRUE</X_000631_FrameBurst>
         <X_CALIX_SSID_Visibility>2</X_CALIX_SSID_Visibility>
@@ -4719,7 +4780,7 @@ Dump of Entire MDM, this is NOT the config file
         <Status>Disabled</Status>
         <BSSID>6a:76:8f:00:42:74</BSSID>
         <MaxBitRate>Auto</MaxBitRate>
-        <Channel>11</Channel>
+        <Channel>1</Channel>
         <AutoChannelEnable>TRUE</AutoChannelEnable>
         <SSID>2.4GHz_Operator_2</SSID>
         <BeaconType>WPAand11i</BeaconType>
@@ -4808,8 +4869,8 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_SupportedFrequencyBands>2.4GHz,5GHz</X_000631_SupportedFrequencyBands>
         <X_000631_EnableDfsChannels>TRUE</X_000631_EnableDfsChannels>
         <X_000631_ChannelUtilization>3</X_000631_ChannelUtilization>
-        <X_000631_ChannelInterferenceTime>43</X_000631_ChannelInterferenceTime>
-        <X_000631_ChannelFreeTime>54</X_000631_ChannelFreeTime>
+        <X_000631_ChannelInterferenceTime>37</X_000631_ChannelInterferenceTime>
+        <X_000631_ChannelFreeTime>60</X_000631_ChannelFreeTime>
         <X_000631_AirtimeFairness>FALSE</X_000631_AirtimeFairness>
         <X_000631_FrameBurst>TRUE</X_000631_FrameBurst>
         <X_CALIX_SSID_Visibility>2</X_CALIX_SSID_Visibility>
@@ -5064,7 +5125,7 @@ Dump of Entire MDM, this is NOT the config file
         <Status>Disabled</Status>
         <BSSID>6a:76:8f:00:42:75</BSSID>
         <MaxBitRate>Auto</MaxBitRate>
-        <Channel>11</Channel>
+        <Channel>1</Channel>
         <AutoChannelEnable>TRUE</AutoChannelEnable>
         <SSID>2.4GHz_Operator_3</SSID>
         <BeaconType>WPAand11i</BeaconType>
@@ -5153,8 +5214,8 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_SupportedFrequencyBands>2.4GHz,5GHz</X_000631_SupportedFrequencyBands>
         <X_000631_EnableDfsChannels>TRUE</X_000631_EnableDfsChannels>
         <X_000631_ChannelUtilization>3</X_000631_ChannelUtilization>
-        <X_000631_ChannelInterferenceTime>43</X_000631_ChannelInterferenceTime>
-        <X_000631_ChannelFreeTime>54</X_000631_ChannelFreeTime>
+        <X_000631_ChannelInterferenceTime>37</X_000631_ChannelInterferenceTime>
+        <X_000631_ChannelFreeTime>60</X_000631_ChannelFreeTime>
         <X_000631_AirtimeFairness>FALSE</X_000631_AirtimeFairness>
         <X_000631_FrameBurst>TRUE</X_000631_FrameBurst>
         <X_CALIX_SSID_Visibility>2</X_CALIX_SSID_Visibility>
@@ -5409,7 +5470,7 @@ Dump of Entire MDM, this is NOT the config file
         <Status>Disabled</Status>
         <BSSID>6a:76:8f:00:42:76</BSSID>
         <MaxBitRate>Auto</MaxBitRate>
-        <Channel>11</Channel>
+        <Channel>1</Channel>
         <AutoChannelEnable>TRUE</AutoChannelEnable>
         <SSID>2.4GHz_Operator_4</SSID>
         <BeaconType>WPAand11i</BeaconType>
@@ -5498,8 +5559,8 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_SupportedFrequencyBands>2.4GHz,5GHz</X_000631_SupportedFrequencyBands>
         <X_000631_EnableDfsChannels>TRUE</X_000631_EnableDfsChannels>
         <X_000631_ChannelUtilization>3</X_000631_ChannelUtilization>
-        <X_000631_ChannelInterferenceTime>43</X_000631_ChannelInterferenceTime>
-        <X_000631_ChannelFreeTime>54</X_000631_ChannelFreeTime>
+        <X_000631_ChannelInterferenceTime>37</X_000631_ChannelInterferenceTime>
+        <X_000631_ChannelFreeTime>60</X_000631_ChannelFreeTime>
         <X_000631_AirtimeFairness>FALSE</X_000631_AirtimeFairness>
         <X_000631_FrameBurst>TRUE</X_000631_FrameBurst>
         <X_CALIX_SSID_Visibility>2</X_CALIX_SSID_Visibility>
@@ -5754,7 +5815,7 @@ Dump of Entire MDM, this is NOT the config file
         <Status>Disabled</Status>
         <BSSID>6a:76:8f:00:42:77</BSSID>
         <MaxBitRate>Auto</MaxBitRate>
-        <Channel>11</Channel>
+        <Channel>1</Channel>
         <AutoChannelEnable>TRUE</AutoChannelEnable>
         <SSID>2.4GHz_Operator_5</SSID>
         <BeaconType>WPAand11i</BeaconType>
@@ -5843,8 +5904,8 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_SupportedFrequencyBands>2.4GHz,5GHz</X_000631_SupportedFrequencyBands>
         <X_000631_EnableDfsChannels>TRUE</X_000631_EnableDfsChannels>
         <X_000631_ChannelUtilization>3</X_000631_ChannelUtilization>
-        <X_000631_ChannelInterferenceTime>43</X_000631_ChannelInterferenceTime>
-        <X_000631_ChannelFreeTime>54</X_000631_ChannelFreeTime>
+        <X_000631_ChannelInterferenceTime>37</X_000631_ChannelInterferenceTime>
+        <X_000631_ChannelFreeTime>60</X_000631_ChannelFreeTime>
         <X_000631_AirtimeFairness>FALSE</X_000631_AirtimeFairness>
         <X_000631_FrameBurst>TRUE</X_000631_FrameBurst>
         <X_CALIX_SSID_Visibility>2</X_CALIX_SSID_Visibility>
@@ -6099,7 +6160,7 @@ Dump of Entire MDM, this is NOT the config file
         <Status>Disabled</Status>
         <BSSID>6a:76:8f:00:42:70</BSSID>
         <MaxBitRate>Auto</MaxBitRate>
-        <Channel>11</Channel>
+        <Channel>1</Channel>
         <AutoChannelEnable>TRUE</AutoChannelEnable>
         <SSID>2.4GHz_Operator_6</SSID>
         <BeaconType>WPAand11i</BeaconType>
@@ -6188,8 +6249,8 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_SupportedFrequencyBands>2.4GHz,5GHz</X_000631_SupportedFrequencyBands>
         <X_000631_EnableDfsChannels>TRUE</X_000631_EnableDfsChannels>
         <X_000631_ChannelUtilization>3</X_000631_ChannelUtilization>
-        <X_000631_ChannelInterferenceTime>43</X_000631_ChannelInterferenceTime>
-        <X_000631_ChannelFreeTime>54</X_000631_ChannelFreeTime>
+        <X_000631_ChannelInterferenceTime>37</X_000631_ChannelInterferenceTime>
+        <X_000631_ChannelFreeTime>60</X_000631_ChannelFreeTime>
         <X_000631_AirtimeFairness>FALSE</X_000631_AirtimeFairness>
         <X_000631_FrameBurst>TRUE</X_000631_FrameBurst>
         <X_CALIX_SSID_Visibility>2</X_CALIX_SSID_Visibility>
@@ -6444,7 +6505,7 @@ Dump of Entire MDM, this is NOT the config file
         <Status>Up</Status>
         <BSSID>d0:76:8f:00:42:72</BSSID>
         <MaxBitRate>Auto</MaxBitRate>
-        <Channel>161</Channel>
+        <Channel>136</Channel>
         <AutoChannelEnable>TRUE</AutoChannelEnable>
         <SSID>marceltestssid5ghz</SSID>
         <BeaconType>11i</BeaconType>
@@ -6532,9 +6593,9 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_SupportedStandards>n,ac</X_000631_SupportedStandards>
         <X_000631_SupportedFrequencyBands>(null)</X_000631_SupportedFrequencyBands>
         <X_000631_EnableDfsChannels>TRUE</X_000631_EnableDfsChannels>
-        <X_000631_ChannelUtilization>2</X_000631_ChannelUtilization>
+        <X_000631_ChannelUtilization>100</X_000631_ChannelUtilization>
         <X_000631_ChannelInterferenceTime>0</X_000631_ChannelInterferenceTime>
-        <X_000631_ChannelFreeTime>96</X_000631_ChannelFreeTime>
+        <X_000631_ChannelFreeTime>0</X_000631_ChannelFreeTime>
         <X_000631_AirtimeFairness>FALSE</X_000631_AirtimeFairness>
         <X_000631_FrameBurst>TRUE</X_000631_FrameBurst>
         <X_CALIX_SSID_Visibility>1</X_CALIX_SSID_Visibility>
@@ -6556,7 +6617,7 @@ Dump of Entire MDM, this is NOT the config file
         <X_CALIX_Isolate_Gateway>(null)</X_CALIX_Isolate_Gateway>
         <X_000631_SubnetGatewayAddr>(null)</X_000631_SubnetGatewayAddr>
         <X_CALIX_WlMACControl_Mode>Deny</X_CALIX_WlMACControl_Mode>
-        <X_CALIX_InterfaceExists>TRUE</X_CALIX_InterfaceExists>
+        <X_CALIX_InterfaceExists>FALSE</X_CALIX_InterfaceExists>
         <X_CALIX_WlBrName>br0</X_CALIX_WlBrName>
         <X_000631_SubnetHostsRef>(null)</X_000631_SubnetHostsRef>
         <X_000631_EnablePMF>0</X_000631_EnablePMF>
@@ -6571,7 +6632,7 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_OUI_Enable>FALSE</X_000631_OUI_Enable>
         <X_000631_OUI_FilterList>(null)</X_000631_OUI_FilterList>
         <X_000631_VirtualIntf_Status>Ready</X_000631_VirtualIntf_Status>
-        <X_000631_ShareDomain>1</X_000631_ShareDomain>
+        <X_000631_ShareDomain>0</X_000631_ShareDomain>
         <X_000631_SSIDBcastAuditTime>3</X_000631_SSIDBcastAuditTime>
         <RadiusServerIPAddr>(null)</RadiusServerIPAddr>
         <RadiusServerPort>1812</RadiusServerPort>
@@ -6789,7 +6850,7 @@ Dump of Entire MDM, this is NOT the config file
         <Status>Disabled</Status>
         <BSSID>ca:76:8f:00:42:72</BSSID>
         <MaxBitRate>Auto</MaxBitRate>
-        <Channel>161</Channel>
+        <Channel>136</Channel>
         <AutoChannelEnable>TRUE</AutoChannelEnable>
         <SSID>5GHz_Guest5812BD</SSID>
         <BeaconType>Basic</BeaconType>
@@ -6877,9 +6938,9 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_SupportedStandards>n,ac</X_000631_SupportedStandards>
         <X_000631_SupportedFrequencyBands>(null)</X_000631_SupportedFrequencyBands>
         <X_000631_EnableDfsChannels>TRUE</X_000631_EnableDfsChannels>
-        <X_000631_ChannelUtilization>2</X_000631_ChannelUtilization>
+        <X_000631_ChannelUtilization>100</X_000631_ChannelUtilization>
         <X_000631_ChannelInterferenceTime>0</X_000631_ChannelInterferenceTime>
-        <X_000631_ChannelFreeTime>96</X_000631_ChannelFreeTime>
+        <X_000631_ChannelFreeTime>0</X_000631_ChannelFreeTime>
         <X_000631_AirtimeFairness>FALSE</X_000631_AirtimeFairness>
         <X_000631_FrameBurst>TRUE</X_000631_FrameBurst>
         <X_CALIX_SSID_Visibility>1</X_CALIX_SSID_Visibility>
@@ -7134,7 +7195,7 @@ Dump of Entire MDM, this is NOT the config file
         <Status>Disabled</Status>
         <BSSID>c6:76:8f:00:42:72</BSSID>
         <MaxBitRate>Auto</MaxBitRate>
-        <Channel>161</Channel>
+        <Channel>136</Channel>
         <AutoChannelEnable>TRUE</AutoChannelEnable>
         <SSID>5GHz_IPTV_SSID83728A</SSID>
         <BeaconType>WPAand11i</BeaconType>
@@ -7222,9 +7283,9 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_SupportedStandards>n,ac</X_000631_SupportedStandards>
         <X_000631_SupportedFrequencyBands>(null)</X_000631_SupportedFrequencyBands>
         <X_000631_EnableDfsChannels>TRUE</X_000631_EnableDfsChannels>
-        <X_000631_ChannelUtilization>2</X_000631_ChannelUtilization>
+        <X_000631_ChannelUtilization>100</X_000631_ChannelUtilization>
         <X_000631_ChannelInterferenceTime>0</X_000631_ChannelInterferenceTime>
-        <X_000631_ChannelFreeTime>96</X_000631_ChannelFreeTime>
+        <X_000631_ChannelFreeTime>0</X_000631_ChannelFreeTime>
         <X_000631_AirtimeFairness>FALSE</X_000631_AirtimeFairness>
         <X_000631_FrameBurst>TRUE</X_000631_FrameBurst>
         <X_CALIX_SSID_Visibility>2</X_CALIX_SSID_Visibility>
@@ -7479,7 +7540,7 @@ Dump of Entire MDM, this is NOT the config file
         <Status>Disabled</Status>
         <BSSID>ce:76:8f:00:42:72</BSSID>
         <MaxBitRate>Auto</MaxBitRate>
-        <Channel>161</Channel>
+        <Channel>136</Channel>
         <AutoChannelEnable>TRUE</AutoChannelEnable>
         <SSID>5GHz_Operator_1</SSID>
         <BeaconType>WPAand11i</BeaconType>
@@ -7567,9 +7628,9 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_SupportedStandards>n,ac</X_000631_SupportedStandards>
         <X_000631_SupportedFrequencyBands>(null)</X_000631_SupportedFrequencyBands>
         <X_000631_EnableDfsChannels>TRUE</X_000631_EnableDfsChannels>
-        <X_000631_ChannelUtilization>2</X_000631_ChannelUtilization>
+        <X_000631_ChannelUtilization>100</X_000631_ChannelUtilization>
         <X_000631_ChannelInterferenceTime>0</X_000631_ChannelInterferenceTime>
-        <X_000631_ChannelFreeTime>96</X_000631_ChannelFreeTime>
+        <X_000631_ChannelFreeTime>0</X_000631_ChannelFreeTime>
         <X_000631_AirtimeFairness>FALSE</X_000631_AirtimeFairness>
         <X_000631_FrameBurst>TRUE</X_000631_FrameBurst>
         <X_CALIX_SSID_Visibility>2</X_CALIX_SSID_Visibility>
@@ -7824,7 +7885,7 @@ Dump of Entire MDM, this is NOT the config file
         <Status>Disabled</Status>
         <BSSID>d2:76:8f:00:42:72</BSSID>
         <MaxBitRate>Auto</MaxBitRate>
-        <Channel>161</Channel>
+        <Channel>136</Channel>
         <AutoChannelEnable>TRUE</AutoChannelEnable>
         <SSID>5GHz_Operator_2</SSID>
         <BeaconType>WPAand11i</BeaconType>
@@ -7912,9 +7973,9 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_SupportedStandards>n,ac</X_000631_SupportedStandards>
         <X_000631_SupportedFrequencyBands>(null)</X_000631_SupportedFrequencyBands>
         <X_000631_EnableDfsChannels>TRUE</X_000631_EnableDfsChannels>
-        <X_000631_ChannelUtilization>2</X_000631_ChannelUtilization>
+        <X_000631_ChannelUtilization>100</X_000631_ChannelUtilization>
         <X_000631_ChannelInterferenceTime>0</X_000631_ChannelInterferenceTime>
-        <X_000631_ChannelFreeTime>96</X_000631_ChannelFreeTime>
+        <X_000631_ChannelFreeTime>0</X_000631_ChannelFreeTime>
         <X_000631_AirtimeFairness>FALSE</X_000631_AirtimeFairness>
         <X_000631_FrameBurst>TRUE</X_000631_FrameBurst>
         <X_CALIX_SSID_Visibility>2</X_CALIX_SSID_Visibility>
@@ -8169,7 +8230,7 @@ Dump of Entire MDM, this is NOT the config file
         <Status>Disabled</Status>
         <BSSID>d6:76:8f:00:42:72</BSSID>
         <MaxBitRate>Auto</MaxBitRate>
-        <Channel>161</Channel>
+        <Channel>136</Channel>
         <AutoChannelEnable>TRUE</AutoChannelEnable>
         <SSID>5GHz_Operator_3</SSID>
         <BeaconType>WPAand11i</BeaconType>
@@ -8257,9 +8318,9 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_SupportedStandards>n,ac</X_000631_SupportedStandards>
         <X_000631_SupportedFrequencyBands>(null)</X_000631_SupportedFrequencyBands>
         <X_000631_EnableDfsChannels>TRUE</X_000631_EnableDfsChannels>
-        <X_000631_ChannelUtilization>2</X_000631_ChannelUtilization>
+        <X_000631_ChannelUtilization>100</X_000631_ChannelUtilization>
         <X_000631_ChannelInterferenceTime>0</X_000631_ChannelInterferenceTime>
-        <X_000631_ChannelFreeTime>96</X_000631_ChannelFreeTime>
+        <X_000631_ChannelFreeTime>0</X_000631_ChannelFreeTime>
         <X_000631_AirtimeFairness>FALSE</X_000631_AirtimeFairness>
         <X_000631_FrameBurst>TRUE</X_000631_FrameBurst>
         <X_CALIX_SSID_Visibility>2</X_CALIX_SSID_Visibility>
@@ -8514,7 +8575,7 @@ Dump of Entire MDM, this is NOT the config file
         <Status>Disabled</Status>
         <BSSID>da:76:8f:00:42:72</BSSID>
         <MaxBitRate>Auto</MaxBitRate>
-        <Channel>161</Channel>
+        <Channel>136</Channel>
         <AutoChannelEnable>TRUE</AutoChannelEnable>
         <SSID>5GHz_Operator_4</SSID>
         <BeaconType>WPAand11i</BeaconType>
@@ -8602,9 +8663,9 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_SupportedStandards>n,ac</X_000631_SupportedStandards>
         <X_000631_SupportedFrequencyBands>(null)</X_000631_SupportedFrequencyBands>
         <X_000631_EnableDfsChannels>TRUE</X_000631_EnableDfsChannels>
-        <X_000631_ChannelUtilization>2</X_000631_ChannelUtilization>
+        <X_000631_ChannelUtilization>100</X_000631_ChannelUtilization>
         <X_000631_ChannelInterferenceTime>0</X_000631_ChannelInterferenceTime>
-        <X_000631_ChannelFreeTime>96</X_000631_ChannelFreeTime>
+        <X_000631_ChannelFreeTime>0</X_000631_ChannelFreeTime>
         <X_000631_AirtimeFairness>FALSE</X_000631_AirtimeFairness>
         <X_000631_FrameBurst>TRUE</X_000631_FrameBurst>
         <X_CALIX_SSID_Visibility>2</X_CALIX_SSID_Visibility>
@@ -8859,7 +8920,7 @@ Dump of Entire MDM, this is NOT the config file
         <Status>Up</Status>
         <BSSID>c2:76:8f:00:42:72</BSSID>
         <MaxBitRate>Auto</MaxBitRate>
-        <Channel>161</Channel>
+        <Channel>136</Channel>
         <AutoChannelEnable>TRUE</AutoChannelEnable>
         <SSID>5GHz_Backhaul_SSID83728A</SSID>
         <BeaconType>WPAand11i</BeaconType>
@@ -8947,9 +9008,9 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_SupportedStandards>n,ac</X_000631_SupportedStandards>
         <X_000631_SupportedFrequencyBands>(null)</X_000631_SupportedFrequencyBands>
         <X_000631_EnableDfsChannels>TRUE</X_000631_EnableDfsChannels>
-        <X_000631_ChannelUtilization>2</X_000631_ChannelUtilization>
+        <X_000631_ChannelUtilization>100</X_000631_ChannelUtilization>
         <X_000631_ChannelInterferenceTime>0</X_000631_ChannelInterferenceTime>
-        <X_000631_ChannelFreeTime>96</X_000631_ChannelFreeTime>
+        <X_000631_ChannelFreeTime>0</X_000631_ChannelFreeTime>
         <X_000631_AirtimeFairness>FALSE</X_000631_AirtimeFairness>
         <X_000631_FrameBurst>TRUE</X_000631_FrameBurst>
         <X_CALIX_SSID_Visibility>2</X_CALIX_SSID_Visibility>
@@ -8971,7 +9032,7 @@ Dump of Entire MDM, this is NOT the config file
         <X_CALIX_Isolate_Gateway>(null)</X_CALIX_Isolate_Gateway>
         <X_000631_SubnetGatewayAddr>(null)</X_000631_SubnetGatewayAddr>
         <X_CALIX_WlMACControl_Mode>Deny</X_CALIX_WlMACControl_Mode>
-        <X_CALIX_InterfaceExists>FALSE</X_CALIX_InterfaceExists>
+        <X_CALIX_InterfaceExists>TRUE</X_CALIX_InterfaceExists>
         <X_CALIX_WlBrName>br0</X_CALIX_WlBrName>
         <X_000631_SubnetHostsRef>(null)</X_000631_SubnetHostsRef>
         <X_000631_EnablePMF>0</X_000631_EnablePMF>
@@ -8986,7 +9047,7 @@ Dump of Entire MDM, this is NOT the config file
         <X_000631_OUI_Enable>FALSE</X_000631_OUI_Enable>
         <X_000631_OUI_FilterList>(null)</X_000631_OUI_FilterList>
         <X_000631_VirtualIntf_Status>Ready</X_000631_VirtualIntf_Status>
-        <X_000631_ShareDomain>0</X_000631_ShareDomain>
+        <X_000631_ShareDomain>1</X_000631_ShareDomain>
         <X_000631_SSIDBcastAuditTime>3</X_000631_SSIDBcastAuditTime>
         <RadiusServerIPAddr>(null)</RadiusServerIPAddr>
         <RadiusServerPort>1812</RadiusServerPort>
@@ -9202,7 +9263,6 @@ Dump of Entire MDM, this is NOT the config file
       <WLANConfiguration nextInstance="17" ></WLANConfiguration>
       <Hosts>
         <HostNumberOfEntries>0</HostNumberOfEntries>
-        <Host nextInstance="3" ></Host>
       </Hosts>
       <X_000631_IGMP>
         <CacheNumberofEntries>0</CacheNumberofEntries>
@@ -9243,20 +9303,20 @@ Dump of Entire MDM, this is NOT the config file
         <X_BROADCOM_COM_GMAC_Enabled>FALSE</X_BROADCOM_COM_GMAC_Enabled>
         <X_BROADCOM_COM_WanLan_Attribute>WanOnly</X_BROADCOM_COM_WanLan_Attribute>
         <Stats>
-          <BytesSent>351525</BytesSent>
-          <BytesReceived>48688</BytesReceived>
-          <PacketsSent>339</PacketsSent>
-          <PacketsReceived>279</PacketsReceived>
+          <BytesSent>1406</BytesSent>
+          <BytesReceived>1275</BytesReceived>
+          <PacketsSent>7</PacketsSent>
+          <PacketsReceived>7</PacketsReceived>
           <X_BROADCOM_COM_RxDrops>1</X_BROADCOM_COM_RxDrops>
-          <X_BROADCOM_COM_TxDrops>2</X_BROADCOM_COM_TxDrops>
+          <X_BROADCOM_COM_TxDrops>1</X_BROADCOM_COM_TxDrops>
           <X_BROADCOM_COM_RxErrors>0</X_BROADCOM_COM_RxErrors>
           <X_BROADCOM_COM_TxErrors>0</X_BROADCOM_COM_TxErrors>
           <X_BROADCOM_COM_MulticastPacketsSent>0</X_BROADCOM_COM_MulticastPacketsSent>
-          <X_BROADCOM_COM_MulticastPacketsReceived>2</X_BROADCOM_COM_MulticastPacketsReceived>
+          <X_BROADCOM_COM_MulticastPacketsReceived>1</X_BROADCOM_COM_MulticastPacketsReceived>
           <X_BROADCOM_COM_MulticastBytesSent>0</X_BROADCOM_COM_MulticastBytesSent>
           <X_BROADCOM_COM_MulticastBytesReceived>0</X_BROADCOM_COM_MulticastBytesReceived>
-          <X_BROADCOM_COM_UnicastPacketsSent>335</X_BROADCOM_COM_UnicastPacketsSent>
-          <X_BROADCOM_COM_UnicastPacketsReceived>277</X_BROADCOM_COM_UnicastPacketsReceived>
+          <X_BROADCOM_COM_UnicastPacketsSent>3</X_BROADCOM_COM_UnicastPacketsSent>
+          <X_BROADCOM_COM_UnicastPacketsReceived>6</X_BROADCOM_COM_UnicastPacketsReceived>
           <X_BROADCOM_COM_BroadcastPacketsSent>4</X_BROADCOM_COM_BroadcastPacketsSent>
           <X_BROADCOM_COM_BroadcastPacketsReceived>0</X_BROADCOM_COM_BroadcastPacketsReceived>
         </Stats>
@@ -9285,7 +9345,7 @@ Dump of Entire MDM, this is NOT the config file
           <PhyDetected>FALSE</PhyDetected>
         </X_BROADCOM_COM_WANGPONLinkConfig>
         <WANEthernetLinkConfig>
-          <EthernetLinkStatus>Up</EthernetLinkStatus>
+          <EthernetLinkStatus>(null)</EthernetLinkStatus>
         </WANEthernetLinkConfig>
         <WANIPConnection instance="14">
           <Enable>TRUE</Enable>
@@ -9293,7 +9353,7 @@ Dump of Entire MDM, this is NOT the config file
           <PossibleConnectionTypes>Unconfigured, IP_Routed, IP_Bridged</PossibleConnectionTypes>
           <ConnectionType>IP_Routed</ConnectionType>
           <Name>Internet</Name>
-          <Uptime>158960</Uptime>
+          <Uptime>118</Uptime>
           <LastConnectionError>(null)</LastConnectionError>
           <NATEnabled>TRUE</NATEnabled>
           <X_000631_Dscp2PbitMapEnabled>FALSE</X_000631_Dscp2PbitMapEnabled>
@@ -9319,7 +9379,7 @@ Dump of Entire MDM, this is NOT the config file
           <X_BROADCOM_COM_RipDebugMode>(null)</X_BROADCOM_COM_RipDebugMode>
           <X_BROADCOM_COM_IfName>eth5.1</X_BROADCOM_COM_IfName>
           <X_BROADCOM_COM_ConnectionId>1</X_BROADCOM_COM_ConnectionId>
-          <X_BROADCOM_COM_DhcpcPid>1981</X_BROADCOM_COM_DhcpcPid>
+          <X_BROADCOM_COM_DhcpcPid>1930</X_BROADCOM_COM_DhcpcPid>
           <X_BROADCOM_COM_VlanMux8021p>-1</X_BROADCOM_COM_VlanMux8021p>
           <X_000631_VlanMux8021p>-1</X_000631_VlanMux8021p>
           <X_BROADCOM_COM_VlanMuxID>-1</X_BROADCOM_COM_VlanMuxID>
@@ -9373,7 +9433,7 @@ Dump of Entire MDM, this is NOT the config file
           <X_BROADCOM_COM_MLDEnabled>FALSE</X_BROADCOM_COM_MLDEnabled>
           <X_BROADCOM_COM_MLD_SOURCEEnabled>FALSE</X_BROADCOM_COM_MLD_SOURCEEnabled>
           <X_BROADCOM_COM_TransientLayer2LinkStatus>Up</X_BROADCOM_COM_TransientLayer2LinkStatus>
-          <X_CALIX_ConnectionEstablishedTime>76</X_CALIX_ConnectionEstablishedTime>
+          <X_CALIX_ConnectionEstablishedTime>74</X_CALIX_ConnectionEstablishedTime>
           <X_000631_McastFilter>0</X_000631_McastFilter>
           <X_000631_MvrProfile>0</X_000631_MvrProfile>
           <X_000631_MaxStreams>0</X_000631_MaxStreams>
@@ -9394,16 +9454,16 @@ Dump of Entire MDM, this is NOT the config file
             <X_BROADCOM_COM_TxDrops>0</X_BROADCOM_COM_TxDrops>
             <X_BROADCOM_COM_RxErrors>0</X_BROADCOM_COM_RxErrors>
             <X_BROADCOM_COM_TxErrors>0</X_BROADCOM_COM_TxErrors>
-            <EthernetBytesSent>120371</EthernetBytesSent>
-            <EthernetBytesReceived>23274</EthernetBytesReceived>
-            <EthernetPacketsSent>153</EthernetPacketsSent>
-            <EthernetPacketsReceived>123</EthernetPacketsReceived>
+            <EthernetBytesSent>0</EthernetBytesSent>
+            <EthernetBytesReceived>0</EthernetBytesReceived>
+            <EthernetPacketsSent>0</EthernetPacketsSent>
+            <EthernetPacketsReceived>0</EthernetPacketsReceived>
             <X_BROADCOM_COM_MulticastPacketsSent>0</X_BROADCOM_COM_MulticastPacketsSent>
             <X_BROADCOM_COM_MulticastPacketsReceived>0</X_BROADCOM_COM_MulticastPacketsReceived>
             <X_BROADCOM_COM_MulticastBytesSent>0</X_BROADCOM_COM_MulticastBytesSent>
             <X_BROADCOM_COM_MulticastBytesReceived>0</X_BROADCOM_COM_MulticastBytesReceived>
-            <X_BROADCOM_COM_UnicastPacketsSent>153</X_BROADCOM_COM_UnicastPacketsSent>
-            <X_BROADCOM_COM_UnicastPacketsReceived>123</X_BROADCOM_COM_UnicastPacketsReceived>
+            <X_BROADCOM_COM_UnicastPacketsSent>0</X_BROADCOM_COM_UnicastPacketsSent>
+            <X_BROADCOM_COM_UnicastPacketsReceived>0</X_BROADCOM_COM_UnicastPacketsReceived>
             <X_BROADCOM_COM_BroadcastPacketsSent>0</X_BROADCOM_COM_BroadcastPacketsSent>
             <X_BROADCOM_COM_BroadcastPacketsReceived>0</X_BROADCOM_COM_BroadcastPacketsReceived>
             <X_000631_IPv6RxDrops>0</X_000631_IPv6RxDrops>
@@ -9793,12 +9853,12 @@ Dump of Entire MDM, this is NOT the config file
               <List nextInstance="4" ></List>
             </Codec>
             <Session instance="1">
-              <FarEndIPAddress>0.0.0.0</FarEndIPAddress>
+              <FarEndIPAddress>(null)</FarEndIPAddress>
               <FarEndUDPPort>0</FarEndUDPPort>
               <LocalUDPPort>0</LocalUDPPort>
             </Session>
             <Session instance="2">
-              <FarEndIPAddress>0.0.0.0</FarEndIPAddress>
+              <FarEndIPAddress>(null)</FarEndIPAddress>
               <FarEndUDPPort>0</FarEndUDPPort>
               <LocalUDPPort>0</LocalUDPPort>
             </Session>
@@ -9997,12 +10057,12 @@ Dump of Entire MDM, this is NOT the config file
               <List nextInstance="4" ></List>
             </Codec>
             <Session instance="1">
-              <FarEndIPAddress>0.0.0.0</FarEndIPAddress>
+              <FarEndIPAddress>(null)</FarEndIPAddress>
               <FarEndUDPPort>0</FarEndUDPPort>
               <LocalUDPPort>0</LocalUDPPort>
             </Session>
             <Session instance="2">
-              <FarEndIPAddress>0.0.0.0</FarEndIPAddress>
+              <FarEndIPAddress>(null)</FarEndIPAddress>
               <FarEndUDPPort>0</FarEndUDPPort>
               <LocalUDPPort>0</LocalUDPPort>
             </Session>
@@ -11128,7 +11188,7 @@ Dump of Entire MDM, this is NOT the config file
           <SupportedStandards>(null)</SupportedStandards>
           <OperatingStandards>bgn</OperatingStandards>
           <PossibleChannels>1,2,3,4,5,6,7,8,9,10,11</PossibleChannels>
-          <Channel>11</Channel>
+          <Channel>1</Channel>
           <AutoChannelEnable>TRUE</AutoChannelEnable>
           <SuppressScsEnable>FALSE</SuppressScsEnable>
           <EnableDfsChannels>TRUE</EnableDfsChannels>
@@ -11138,12 +11198,12 @@ Dump of Entire MDM, this is NOT the config file
           <RegulatoryDomain>CA</RegulatoryDomain>
           <SupportedRegulatoryDomains>AU,CA,US</SupportedRegulatoryDomains>
           <ChannelUtilization>30</ChannelUtilization>
-          <ChannelInterferenceTime>430</ChannelInterferenceTime>
-          <ChannelFreeTime>540</ChannelFreeTime>
+          <ChannelInterferenceTime>260</ChannelInterferenceTime>
+          <ChannelFreeTime>710</ChannelFreeTime>
           <AirtimeFairness>FALSE</AirtimeFairness>
           <FrameBurst>TRUE</FrameBurst>
-          <NoiseLevel>-82</NoiseLevel>
-          <PacketsTransmittedUpstream>570</PacketsTransmittedUpstream>
+          <NoiseLevel>-78</NoiseLevel>
+          <PacketsTransmittedUpstream>3</PacketsTransmittedUpstream>
           <PacketsTransmittedDownstream>0</PacketsTransmittedDownstream>
           <PacketsReTransmittedDownstream>0</PacketsReTransmittedDownstream>
           <PacketsDroppedDownstream>0</PacketsDroppedDownstream>
@@ -11178,7 +11238,7 @@ Dump of Entire MDM, this is NOT the config file
           <SupportedStandards>n,ac</SupportedStandards>
           <OperatingStandards>ac</OperatingStandards>
           <PossibleChannels>36,52,100,132,149</PossibleChannels>
-          <Channel>161</Channel>
+          <Channel>136</Channel>
           <AutoChannelEnable>TRUE</AutoChannelEnable>
           <SuppressScsEnable>FALSE</SuppressScsEnable>
           <EnableDfsChannels>TRUE</EnableDfsChannels>
@@ -11187,12 +11247,12 @@ Dump of Entire MDM, this is NOT the config file
           <TransmitPower>100</TransmitPower>
           <RegulatoryDomain>CA</RegulatoryDomain>
           <SupportedRegulatoryDomains>AU,CA,US</SupportedRegulatoryDomains>
-          <ChannelUtilization>30</ChannelUtilization>
-          <ChannelInterferenceTime>7</ChannelInterferenceTime>
-          <ChannelFreeTime>963</ChannelFreeTime>
+          <ChannelUtilization>36</ChannelUtilization>
+          <ChannelInterferenceTime>9</ChannelInterferenceTime>
+          <ChannelFreeTime>955</ChannelFreeTime>
           <AirtimeFairness>FALSE</AirtimeFairness>
           <FrameBurst>TRUE</FrameBurst>
-          <NoiseLevel>-88</NoiseLevel>
+          <NoiseLevel>-89</NoiseLevel>
           <PacketsTransmittedUpstream>0</PacketsTransmittedUpstream>
           <PacketsTransmittedDownstream>0</PacketsTransmittedDownstream>
           <PacketsReTransmittedDownstream>0</PacketsReTransmittedDownstream>
@@ -11219,17 +11279,17 @@ Dump of Entire MDM, this is NOT the config file
           </PossibleChannelQuery>
           <ChannelChangeLog>
             <NumberOfEntries>32</NumberOfEntries>
-            <Sequence>104</Sequence>
+            <Sequence>0</Sequence>
             <PollPeriod>600</PollPeriod>
             <Entry instance="1">
-              <TimeStamp>1763084347</TimeStamp>
-              <NewChannel>161</NewChannel>
-              <ReasonCode>131073</ReasonCode>
+              <TimeStamp>0</TimeStamp>
+              <NewChannel>0</NewChannel>
+              <ReasonCode>0</ReasonCode>
             </Entry>
             <Entry instance="2">
-              <TimeStamp>1762983228</TimeStamp>
-              <NewChannel>64</NewChannel>
-              <ReasonCode>4</ReasonCode>
+              <TimeStamp>0</TimeStamp>
+              <NewChannel>0</NewChannel>
+              <ReasonCode>0</ReasonCode>
             </Entry>
             <Entry instance="3">
               <TimeStamp>0</TimeStamp>
@@ -11895,7 +11955,7 @@ Dump of Entire MDM, this is NOT the config file
             <TotalTrafficSchedulerNumber>0</TotalTrafficSchedulerNumber>
             <Mode>2</Mode>
             <TotalGemPortIdNumber>32</TotalGemPortIdNumber>
-            <SysUpTime>8953</SysUpTime>
+            <SysUpTime>8554</SysUpTime>
             <ConnectivityCapability>22</ConnectivityCapability>
             <CurrentConnectivityMode>0</CurrentConnectivityMode>
             <QosConfigFlexibiltiy>48</QosConfigFlexibiltiy>
@@ -11951,7 +12011,7 @@ Dump of Entire MDM, this is NOT the config file
           <PrivateInfo>
             <ManagedEntityId>0</ManagedEntityId>
             <MfgSerialNumber>343232303037303336313132</MfgSerialNumber>
-            <TimeSet>1762983124</TimeSet>
+            <TimeSet>1763392338</TimeSet>
             <TelnetEnable>0</TelnetEnable>
             <AuxPowerAdminState>FALSE</AuxPowerAdminState>
             <AuxPowerStatus>0</AuxPowerStatus>

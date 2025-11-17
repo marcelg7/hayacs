@@ -312,7 +312,7 @@ class DeviceController extends Controller
 
                 // Security settings
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.BeaconType";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.X_000631_KeyPassphrase";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.PreSharedKey.1.X_000631_KeyPassphrase";
 
                 // Radio and visibility
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.RadioEnabled";
@@ -732,9 +732,9 @@ class DeviceController extends Controller
             ];
         }
 
-        // WiFi Password (Calix-specific parameter)
+        // WiFi Password (Calix-specific parameter under PreSharedKey.1)
         if (isset($validated['password'])) {
-            $values["{$prefix}.X_000631_KeyPassphrase"] = $validated['password'];
+            $values["{$prefix}.PreSharedKey.1.X_000631_KeyPassphrase"] = $validated['password'];
         }
 
         // Security Type
@@ -826,7 +826,11 @@ class DeviceController extends Controller
             ->whereNotLike('name', '%AssociatedDevice%')
             ->whereNotLike('name', '%Stats%')
             ->whereNotLike('name', '%WPS%')
-            ->whereNotLike('name', '%PreSharedKey.1%')
+            ->where(function ($query) {
+                // Include PreSharedKey.1 only for X_000631_KeyPassphrase, exclude other PreSharedKey params
+                $query->where('name', 'NOT LIKE', '%PreSharedKey.1%')
+                    ->orWhere('name', 'LIKE', '%PreSharedKey.1.X_000631_KeyPassphrase');
+            })
             ->get();
 
         // Organize by instance
@@ -852,6 +856,7 @@ class DeviceController extends Controller
                         $instances[$instance]['enabled'] = ($param->value === '1' || $param->value === 'true');
                         break;
                     case 'X_000631_KeyPassphrase':
+                    case 'PreSharedKey.1.X_000631_KeyPassphrase':
                         $instances[$instance]['password'] = $param->value;
                         break;
                     case 'BeaconType':

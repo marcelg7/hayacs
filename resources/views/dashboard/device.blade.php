@@ -1630,7 +1630,11 @@
                 ->whereNotLike('name', '%AssociatedDevice%')
                 ->whereNotLike('name', '%Stats%')
                 ->whereNotLike('name', '%WPS%')
-                ->whereNotLike('name', '%PreSharedKey.1%')
+                ->where(function ($query) {
+                    // Include PreSharedKey.1 only for X_000631_KeyPassphrase, exclude other PreSharedKey params
+                    $query->where('name', 'NOT LIKE', '%PreSharedKey.1%')
+                        ->orWhere('name', 'LIKE', '%PreSharedKey.1.X_000631_KeyPassphrase');
+                })
                 ->get();
 
             foreach ($wlanParams as $param) {
@@ -1640,6 +1644,11 @@
 
                     if (!isset($wlanConfigs[$instance])) {
                         $wlanConfigs[$instance] = ['instance' => $instance];
+                    }
+
+                    // Normalize PreSharedKey.1.X_000631_KeyPassphrase to just X_000631_KeyPassphrase
+                    if ($field === 'PreSharedKey.1.X_000631_KeyPassphrase') {
+                        $field = 'X_000631_KeyPassphrase';
                     }
 
                     $wlanConfigs[$instance][$field] = $param->value;

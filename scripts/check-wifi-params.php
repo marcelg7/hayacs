@@ -110,7 +110,8 @@ foreach ($byInstance as $instance => $params) {
     // Find key parameters
     $ssid = $params->firstWhere('name', 'like', '%.SSID');
     $enabled = $params->firstWhere('name', 'like', '%.Enable');
-    $passphrase = $params->firstWhere('name', 'like', '%KeyPassphrase%');
+    // Check for password in PreSharedKey.1 path (new) or direct path (old)
+    $passphrase = $params->filter(fn($p) => str_contains($p->name, 'KeyPassphrase'))->first();
 
     if ($ssid) {
         echo "  SSID: {$ssid->value}\n";
