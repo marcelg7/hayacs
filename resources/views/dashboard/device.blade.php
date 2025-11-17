@@ -1858,6 +1858,12 @@
                         <span class="text-sm font-medium text-gray-700">2.4GHz Radio:</span>
                         <button @click="async () => {
                             radio24GhzEnabled = !radio24GhzEnabled;
+                            const message = (radio24GhzEnabled ? 'Enabling' : 'Disabling') + ' 2.4GHz Radio...';
+
+                            // Show loading overlay immediately
+                            taskLoading = true;
+                            taskMessage = message;
+
                             try {
                                 const response = await fetch('/api/devices/{{ $device->id }}/wifi-radio', {
                                     method: 'POST',
@@ -1872,11 +1878,13 @@
                                 });
                                 const result = await response.json();
                                 if (result.task && result.task.id) {
-                                    startTaskTracking((radio24GhzEnabled ? 'Enabling' : 'Disabling') + ' 2.4GHz Radio...', result.task.id);
+                                    startTaskTracking(message, result.task.id);
                                 } else {
+                                    taskLoading = false;
                                     alert('Radio toggled, but no task ID returned');
                                 }
                             } catch (error) {
+                                taskLoading = false;
                                 alert('Error: ' + error);
                                 radio24GhzEnabled = !radio24GhzEnabled;
                             }
@@ -1923,6 +1931,10 @@
                                 }
                             }
 
+                            // Show loading overlay immediately
+                            taskLoading = true;
+                            taskMessage = 'Updating WiFi Configuration...';
+
                             try {
                                 const response = await fetch('/api/devices/{{ $device->id }}/wifi-config', {
                                     method: 'POST',
@@ -1936,9 +1948,11 @@
                                 if (result.task && result.task.id) {
                                     startTaskTracking('Updating WiFi Configuration...', result.task.id);
                                 } else {
+                                    taskLoading = false;
                                     alert('Configuration updated, but no task ID returned');
                                 }
                             } catch (error) {
+                                taskLoading = false;
                                 alert('Error updating configuration: ' + error);
                             }
                         }" class="space-y-3 h-full" x-data="{
@@ -2071,6 +2085,12 @@
                         <span class="text-sm font-medium text-gray-700">5GHz Radio:</span>
                         <button @click="async () => {
                             radio5GhzEnabled = !radio5GhzEnabled;
+                            const message = (radio5GhzEnabled ? 'Enabling' : 'Disabling') + ' 5GHz Radio...';
+
+                            // Show loading overlay immediately
+                            taskLoading = true;
+                            taskMessage = message;
+
                             try {
                                 const response = await fetch('/api/devices/{{ $device->id }}/wifi-radio', {
                                     method: 'POST',
@@ -2085,11 +2105,13 @@
                                 });
                                 const result = await response.json();
                                 if (result.task && result.task.id) {
-                                    startTaskTracking((radio5GhzEnabled ? 'Enabling' : 'Disabling') + ' 5GHz Radio...', result.task.id);
+                                    startTaskTracking(message, result.task.id);
                                 } else {
+                                    taskLoading = false;
                                     alert('Radio toggled, but no task ID returned');
                                 }
                             } catch (error) {
+                                taskLoading = false;
                                 alert('Error: ' + error);
                                 radio5GhzEnabled = !radio5GhzEnabled;
                             }
@@ -2136,6 +2158,10 @@
                                 }
                             }
 
+                            // Show loading overlay immediately
+                            taskLoading = true;
+                            taskMessage = 'Updating WiFi Configuration...';
+
                             try {
                                 const response = await fetch('/api/devices/{{ $device->id }}/wifi-config', {
                                     method: 'POST',
@@ -2149,9 +2175,11 @@
                                 if (result.task && result.task.id) {
                                     startTaskTracking('Updating WiFi Configuration...', result.task.id);
                                 } else {
+                                    taskLoading = false;
                                     alert('Configuration updated, but no task ID returned');
                                 }
                             } catch (error) {
+                                taskLoading = false;
                                 alert('Error updating configuration: ' + error);
                             }
                         }" class="space-y-3 h-full" x-data="{
