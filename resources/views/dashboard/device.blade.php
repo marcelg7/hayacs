@@ -1856,9 +1856,10 @@
                     </div>
                 </div>
             </div>
-            <div class="border-t border-gray-200 p-6 space-y-6">
+            <div class="border-t border-gray-200 p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 @foreach($wifi24Ghz as $config)
-                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50 flex flex-col">
                         <form @submit.prevent="async (e) => {
                             const formData = new FormData(e.target);
                             const data = {};
@@ -1891,25 +1892,25 @@
                             } catch (error) {
                                 alert('Error updating configuration: ' + error);
                             }
-                        }" class="space-y-4" x-data="{
+                        }" class="space-y-3 h-full" x-data="{
                             autoChannel: {{ ($config['AutoChannelEnable'] ?? '0') === '1' ? 'true' : 'false' }},
-                            autoChannelBandwidth: {{ ($config['X_000631_OperatingChannelBandwidth'] ?? '20MHz') === 'Auto' ? 'true' : 'false' }}
+                            autoChannelBandwidth: {{ ($config['X_000631_OperatingChannelBandwidth'] ?? '') === 'Auto' || empty($config['X_000631_OperatingChannelBandwidth'] ?? '') ? 'true' : 'false' }}
                         }">
                             @csrf
                             <input type="hidden" name="instance" value="{{ $config['instance'] }}">
                             <input type="hidden" name="security_type" value="wpa2">
 
-                            <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center justify-between mb-3">
                                 <h4 class="text-md font-semibold text-gray-900">SSID {{ $config['instance'] }}</h4>
                                 <label class="flex items-center">
                                     <input type="hidden" name="enabled" value="0">
                                     <input type="checkbox" name="enabled" value="1" {{ ($config['Enable'] ?? '0') === '1' ? 'checked' : '' }}
                                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                    <span class="ml-2 text-sm font-medium text-gray-700">SSID Enabled</span>
+                                    <span class="ml-2 text-sm font-medium text-gray-700">Enabled</span>
                                 </label>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-3 flex-1">
                                 <!-- SSID Name -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">SSID Name</label>
@@ -1984,21 +1985,22 @@
                                 </div>
                             </div>
 
-                            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
-                                <div class="text-sm text-gray-600">
-                                    <span class="font-medium">Status:</span> {{ $config['Status'] ?? 'Unknown' }} |
+                            <div class="mt-auto pt-3 space-y-2 border-t border-gray-200">
+                                <div class="text-xs text-gray-600 text-center">
+                                    <span class="font-medium">Status:</span> {{ $config['Status'] ?? 'Unknown' }}<br>
                                     <span class="font-medium">Standard:</span> {{ $config['Standard'] ?? '-' }}
                                 </div>
-                                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    Save Configuration
+                                    Save
                                 </button>
                             </div>
                         </form>
                     </div>
                 @endforeach
+                </div>
             </div>
         </div>
         @endif
@@ -2052,9 +2054,10 @@
                     </div>
                 </div>
             </div>
-            <div class="border-t border-gray-200 p-6 space-y-6">
+            <div class="border-t border-gray-200 p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 @foreach($wifi5Ghz as $config)
-                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50 flex flex-col">
                         <form @submit.prevent="async (e) => {
                             const formData = new FormData(e.target);
                             const data = {};
@@ -2087,25 +2090,25 @@
                             } catch (error) {
                                 alert('Error updating configuration: ' + error);
                             }
-                        }" class="space-y-4" x-data="{
+                        }" class="space-y-3 h-full" x-data="{
                             autoChannel: {{ ($config['AutoChannelEnable'] ?? '0') === '1' ? 'true' : 'false' }},
-                            autoChannelBandwidth: {{ ($config['X_000631_OperatingChannelBandwidth'] ?? '80MHz') === 'Auto' ? 'true' : 'false' }}
+                            autoChannelBandwidth: {{ ($config['X_000631_OperatingChannelBandwidth'] ?? '') === 'Auto' || empty($config['X_000631_OperatingChannelBandwidth'] ?? '') ? 'true' : 'false' }}
                         }">
                             @csrf
                             <input type="hidden" name="instance" value="{{ $config['instance'] }}">
                             <input type="hidden" name="security_type" value="wpa2">
 
-                            <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center justify-between mb-3">
                                 <h4 class="text-md font-semibold text-gray-900">SSID {{ $config['instance'] }}</h4>
                                 <label class="flex items-center">
                                     <input type="hidden" name="enabled" value="0">
                                     <input type="checkbox" name="enabled" value="1" {{ ($config['Enable'] ?? '0') === '1' ? 'checked' : '' }}
                                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                    <span class="ml-2 text-sm font-medium text-gray-700">SSID Enabled</span>
+                                    <span class="ml-2 text-sm font-medium text-gray-700">Enabled</span>
                                 </label>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-3 flex-1">
                                 <!-- SSID Name -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">SSID Name</label>
@@ -2190,21 +2193,22 @@
                                 </div>
                             </div>
 
-                            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
-                                <div class="text-sm text-gray-600">
-                                    <span class="font-medium">Status:</span> {{ $config['Status'] ?? 'Unknown' }} |
+                            <div class="mt-auto pt-3 space-y-2 border-t border-gray-200">
+                                <div class="text-xs text-gray-600 text-center">
+                                    <span class="font-medium">Status:</span> {{ $config['Status'] ?? 'Unknown' }}<br>
                                     <span class="font-medium">Standard:</span> {{ $config['Standard'] ?? '-' }}
                                 </div>
-                                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    Save Configuration
+                                    Save
                                 </button>
                             </div>
                         </form>
                     </div>
                 @endforeach
+                </div>
             </div>
         </div>
         @endif
