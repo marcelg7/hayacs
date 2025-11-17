@@ -376,7 +376,24 @@
                         </form>
 
                         <!-- Refresh Troubleshooting (2-column span) -->
-                        <form action="/api/devices/{{ $device->id }}/refresh-troubleshooting" method="POST" class="col-span-2">
+                        <form @submit.prevent="async (e) => {
+                            try {
+                                const response = await fetch('/api/devices/{{ $device->id }}/refresh-troubleshooting', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    }
+                                });
+                                const result = await response.json();
+                                if (result.task && result.task.id) {
+                                    startTaskTracking('Refreshing Troubleshooting Info...', result.task.id);
+                                } else {
+                                    alert('Refresh started, but no task ID returned');
+                                }
+                            } catch (error) {
+                                alert('Error refreshing troubleshooting info: ' + error);
+                            }
+                        }" class="col-span-2">
                             @csrf
                             <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1144,7 +1161,24 @@
                 <h3 class="text-sm font-medium text-blue-900">Troubleshooting Information</h3>
                 <p class="mt-1 text-sm text-blue-700">Click refresh to fetch the latest WAN, LAN, WiFi, and connected device information from the device.</p>
             </div>
-            <form action="/api/devices/{{ $device->id }}/refresh-troubleshooting" method="POST">
+            <form @submit.prevent="async (e) => {
+                try {
+                    const response = await fetch('/api/devices/{{ $device->id }}/refresh-troubleshooting', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+                    const result = await response.json();
+                    if (result.task && result.task.id) {
+                        startTaskTracking('Refreshing Troubleshooting Info...', result.task.id);
+                    } else {
+                        alert('Refresh started, but no task ID returned');
+                    }
+                } catch (error) {
+                    alert('Error refreshing troubleshooting info: ' + error);
+                }
+            }">
                 @csrf
                 <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
