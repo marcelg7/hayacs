@@ -423,6 +423,42 @@ class DeviceController extends Controller
     }
 
     /**
+     * Enable STUN on device for UDP Connection Request
+     */
+    public function enableStun(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        // Set STUN parameters using Google's public STUN server
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'set_params',
+            'parameters' => [
+                'values' => [
+                    'InternetGatewayDevice.ManagementServer.STUNEnable' => 'true',
+                    'InternetGatewayDevice.ManagementServer.STUNServerAddress' => 'stun.l.google.com',
+                    'InternetGatewayDevice.ManagementServer.STUNServerPort' => [
+                        'value' => 19302,
+                        'type' => 'xsd:unsignedInt',
+                    ],
+                ],
+            ],
+            'status' => 'pending',
+        ]);
+
+        // Mark device as STUN enabled
+        $device->update(['stun_enabled' => true]);
+
+        // Trigger immediate connection
+        $this->triggerConnectionRequestForTask($device);
+
+        return response()->json([
+            'message' => 'STUN enabled on device. Device will report UDPConnectionRequestAddress in next Inform.',
+            'task' => $task,
+        ], 201);
+    }
+
+    /**
      * Update device tags/metadata
      */
     public function update(Request $request, string $id): JsonResponse
@@ -618,6 +654,7 @@ class DeviceController extends Controller
     /**
      * Helper: Trigger connection request after creating a task
      * This makes tasks execute immediately instead of waiting for next periodic inform
+     * Uses UDP connection request if STUN is enabled, falls back to HTTP
      */
     private function triggerConnectionRequestForTask(Device $device): void
     {
@@ -625,7 +662,7 @@ class DeviceController extends Controller
         if ($device->connection_request_url) {
             // Trigger in background - don't wait for response
             try {
-                $this->connectionRequestService->sendConnectionRequest($device);
+                $this->connectionRequestService->sendConnectionRequestWithFallback($device);
             } catch (\Exception $e) {
                 // Log but don't fail the task creation
                 \Log::warning('Failed to trigger connection request after task creation', [

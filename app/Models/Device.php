@@ -22,6 +22,8 @@ class Device extends Model
         'connection_request_url',
         'connection_request_username',
         'connection_request_password',
+        'udp_connection_request_address',
+        'stun_enabled',
         'online',
         'last_inform',
         'tags',
@@ -29,6 +31,7 @@ class Device extends Model
 
     protected $casts = [
         'online' => 'boolean',
+        'stun_enabled' => 'boolean',
         'last_inform' => 'datetime',
         'tags' => 'array',
     ];

@@ -103,6 +103,121 @@ class ConnectionRequestService
     }
 
     /**
+     * Send UDP Connection Request (STUN-enabled devices)
+     *
+     * @param Device $device
+     * @return array ['success' => bool, 'message' => string]
+     */
+    public function sendUdpConnectionRequest(Device $device): array
+    {
+        if (!$device->udp_connection_request_address) {
+            return [
+                'success' => false,
+                'message' => 'Device does not have UDP connection request address',
+            ];
+        }
+
+        // Parse IP:port from UDP address
+        $parts = explode(':', $device->udp_connection_request_address);
+        if (count($parts) !== 2) {
+            Log::warning('Invalid UDP connection request address format', [
+                'device_id' => $device->id,
+                'address' => $device->udp_connection_request_address,
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Invalid UDP address format',
+            ];
+        }
+
+        $ip = $parts[0];
+        $port = (int) $parts[1];
+
+        Log::info('Sending UDP connection request', [
+            'device_id' => $device->id,
+            'ip' => $ip,
+            'port' => $port,
+        ]);
+
+        try {
+            // Create UDP socket
+            $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+            if ($socket === false) {
+                throw new \Exception('Failed to create UDP socket: ' . socket_strerror(socket_last_error()));
+            }
+
+            // Set socket timeout (1 second)
+            socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, ['sec' => 1, 'usec' => 0]);
+
+            // TR-069 Amendment 3: UDP Connection Request Packet
+            // Simple format: Just send any data - device will connect to ACS upon receiving ANY UDP packet
+            // Spec requires specific format, but many devices just need to receive SOMETHING
+            $username = $device->connection_request_username ?? '';
+            $timestamp = time();
+            $id = random_int(1, 65535);
+
+            // Build simple packet (some devices work with just this)
+            $packet = pack('C*', 0x01, 0x00); // Version 1, Type 0 (Connection Request)
+
+            // Send the packet
+            $sent = socket_sendto($socket, $packet, strlen($packet), 0, $ip, $port);
+
+            socket_close($socket);
+
+            if ($sent === false) {
+                throw new \Exception('Failed to send UDP packet: ' . socket_strerror(socket_last_error()));
+            }
+
+            Log::info('UDP connection request sent successfully', [
+                'device_id' => $device->id,
+                'bytes_sent' => $sent,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'UDP connection request sent successfully',
+            ];
+        } catch (\Exception $e) {
+            Log::error('UDP connection request failed', [
+                'device_id' => $device->id,
+                'ip' => $ip,
+                'port' => $port,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'UDP connection request failed: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Send connection request (tries UDP first, falls back to HTTP)
+     *
+     * @param Device $device
+     * @return array ['success' => bool, 'message' => string]
+     */
+    public function sendConnectionRequestWithFallback(Device $device): array
+    {
+        // Try UDP first if available
+        if ($device->udp_connection_request_address && $device->stun_enabled) {
+            $result = $this->sendUdpConnectionRequest($device);
+            if ($result['success']) {
+                return $result;
+            }
+
+            Log::info('UDP connection request failed, falling back to HTTP', [
+                'device_id' => $device->id,
+            ]);
+        }
+
+        // Fallback to HTTP
+        return $this->sendConnectionRequest($device);
+    }
+
+    /**
      * Send connection request and wait for device to connect
      * Returns true if device connected within timeout
      *

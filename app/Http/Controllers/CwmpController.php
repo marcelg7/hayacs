@@ -169,6 +169,27 @@ class CwmpController extends Controller
             $device->connection_request_password = $parsed['parameters']['Device.ManagementServer.ConnectionRequestPassword']['value'];
         }
 
+        // Capture UDP Connection Request Address (STUN-discovered address)
+        if (isset($parsed['parameters']['InternetGatewayDevice.ManagementServer.UDPConnectionRequestAddress'])) {
+            $udpAddress = $parsed['parameters']['InternetGatewayDevice.ManagementServer.UDPConnectionRequestAddress']['value'];
+            if ($udpAddress && $udpAddress !== '(null)' && $udpAddress !== '') {
+                $device->udp_connection_request_address = $udpAddress;
+                Log::info('UDP Connection Request Address received', [
+                    'device_id' => $device->id,
+                    'udp_address' => $udpAddress,
+                ]);
+            }
+        } elseif (isset($parsed['parameters']['Device.ManagementServer.UDPConnectionRequestAddress'])) {
+            $udpAddress = $parsed['parameters']['Device.ManagementServer.UDPConnectionRequestAddress']['value'];
+            if ($udpAddress && $udpAddress !== '(null)' && $udpAddress !== '') {
+                $device->udp_connection_request_address = $udpAddress;
+                Log::info('UDP Connection Request Address received', [
+                    'device_id' => $device->id,
+                    'udp_address' => $udpAddress,
+                ]);
+            }
+        }
+
         $device->save();
 
         // Auto-create DeviceType if it doesn't exist for this product_class
