@@ -222,7 +222,7 @@ class CwmpService
 
         // Create ParameterNames array
         $paramNamesArray = $dom->createElement('ParameterNames');
-        $paramNamesArray->setAttribute('soap:arrayType', 'xsd:string[' . count($parameterNames) . ']');
+        $paramNamesArray->setAttribute('soapenc:arrayType', 'xsd:string[' . count($parameterNames) . ']');
         $getParams->appendChild($paramNamesArray);
 
         foreach ($parameterNames as $name) {
@@ -255,7 +255,7 @@ class CwmpService
 
         // Create ParameterList
         $paramList = $dom->createElement('ParameterList');
-        $paramList->setAttribute('soap:arrayType', 'cwmp:ParameterValueStruct[' . count($parameters) . ']');
+        $paramList->setAttribute('soapenc:arrayType', 'cwmp:ParameterValueStruct[' . count($parameters) . ']');
         $setParams->appendChild($paramList);
 
         foreach ($parameters as $name => $value) {
