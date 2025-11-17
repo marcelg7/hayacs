@@ -435,7 +435,10 @@ class DeviceController extends Controller
             'task_type' => 'set_params',
             'parameters' => [
                 'values' => [
-                    'InternetGatewayDevice.ManagementServer.STUNEnable' => 'true',
+                    'InternetGatewayDevice.ManagementServer.STUNEnable' => [
+                        'value' => true,
+                        'type' => 'xsd:boolean',
+                    ],
                     'InternetGatewayDevice.ManagementServer.STUNServerAddress' => 'stun.l.google.com',
                     'InternetGatewayDevice.ManagementServer.STUNServerPort' => [
                         'value' => 19302,
