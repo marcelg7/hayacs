@@ -424,7 +424,7 @@
                             }
                         @endphp
 
-                        <div class="bg-gray-50 rounded-lg p-4 border {{ $enabled ? 'border-green-200' : 'border-gray-200' }}">
+                        <button @click="activeTab = 'wifi'" class="w-full bg-gray-50 hover:bg-gray-100 rounded-lg p-4 border {{ $enabled ? 'border-green-200 hover:border-green-300' : 'border-gray-200 hover:border-gray-300' }} transition-colors text-left">
                             <div class="flex items-center justify-between mb-2">
                                 <h4 class="text-sm font-semibold text-gray-900">{{ $ssid ?: "Radio $radioNum" }}</h4>
                                 @if($enabled)
@@ -437,7 +437,10 @@
                                 <div>Band: <span class="font-mono">{{ $band }}</span></div>
                                 <div>Channel: <span class="font-mono">{{ $channel }}</span></div>
                             </div>
-                        </div>
+                            <div class="mt-2 pt-2 border-t border-gray-200">
+                                <span class="text-xs text-blue-600 font-medium">Click to configure →</span>
+                            </div>
+                        </button>
                     @endforeach
                 </div>
             </div>
@@ -1707,11 +1710,26 @@
 
                                 <!-- Password -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">WiFi Password (WPA2-AES)</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        WiFi Password (WPA2-AES)
+                                        @if(!empty($config['X_000631_KeyPassphrase']))
+                                            <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded bg-green-100 text-green-800">✓ Password Set</span>
+                                        @else
+                                            <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded bg-yellow-100 text-yellow-800">⚠ No Password</span>
+                                        @endif
+                                    </label>
                                     <input type="text" name="password" value="{{ $config['X_000631_KeyPassphrase'] ?? '' }}"
-                                           minlength="8" maxlength="63" placeholder="Min 8 characters"
+                                           minlength="8" maxlength="63" placeholder="Enter new password (min 8 characters)"
                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <p class="mt-1 text-xs text-gray-500">Leave blank to keep current password</p>
+                                    <p class="mt-1 text-xs text-gray-500">
+                                        @if(!empty($config['X_000631_KeyPassphrase']) && $config['X_000631_KeyPassphrase'] === '********')
+                                            <span class="text-green-600 font-medium">Current password: ********</span> (masked for security) - Leave blank to keep, or enter new password to change
+                                        @elseif(!empty($config['X_000631_KeyPassphrase']))
+                                            Current password shown above - Leave blank to keep, or enter new password to change
+                                        @else
+                                            No password currently set - Enter a password (min 8 characters)
+                                        @endif
+                                    </p>
                                 </div>
 
                                 <!-- Auto Channel -->
@@ -1822,11 +1840,26 @@
 
                                 <!-- Password -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">WiFi Password (WPA2-AES)</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        WiFi Password (WPA2-AES)
+                                        @if(!empty($config['X_000631_KeyPassphrase']))
+                                            <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded bg-green-100 text-green-800">✓ Password Set</span>
+                                        @else
+                                            <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded bg-yellow-100 text-yellow-800">⚠ No Password</span>
+                                        @endif
+                                    </label>
                                     <input type="text" name="password" value="{{ $config['X_000631_KeyPassphrase'] ?? '' }}"
-                                           minlength="8" maxlength="63" placeholder="Min 8 characters"
+                                           minlength="8" maxlength="63" placeholder="Enter new password (min 8 characters)"
                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <p class="mt-1 text-xs text-gray-500">Leave blank to keep current password</p>
+                                    <p class="mt-1 text-xs text-gray-500">
+                                        @if(!empty($config['X_000631_KeyPassphrase']) && $config['X_000631_KeyPassphrase'] === '********')
+                                            <span class="text-green-600 font-medium">Current password: ********</span> (masked for security) - Leave blank to keep, or enter new password to change
+                                        @elseif(!empty($config['X_000631_KeyPassphrase']))
+                                            Current password shown above - Leave blank to keep, or enter new password to change
+                                        @else
+                                            No password currently set - Enter a password (min 8 characters)
+                                        @endif
+                                    </p>
                                 </div>
 
                                 <!-- Auto Channel -->
