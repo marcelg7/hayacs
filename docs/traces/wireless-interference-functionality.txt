@@ -1,0 +1,2647 @@
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:13:59.681
+CPE Manager IP Address=172.24.2.29
+Connection ID=370914
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3278
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">654726276</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>Calix</Manufacturer>
+        <OUI>487746</OUI>
+        <ProductClass>ENT</ProductClass>
+        <SerialNumber>CXNK0083217F</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>6 CONNECTION REQUEST</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-17T16:14:05-05:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0009]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.5[](Baseline:1, EthernetLAN:1, Time:1, IPPing:1, DeviceAssociation:1, QoS:1, CaptivePortal:1, WiFiLAN:1, UDPConnReq:1, TraceRoute:1)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">3000219623</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">12.2.12.9.1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://23.155.130.7:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.GatewayInfo.SerialNumber</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">23.155.130.7</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Mon, 17 Nov 2025 21:14:00.232
+CPE Manager IP Address=172.24.2.29
+Connection ID=370914
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Digest     realm="TR069_ip-172-24-2-29",      qop="auth",      nonce="19a93aadea845DE78",      opaque="3983488"
+WWW-Authenticate: Basic realm="TR069_ip-172-24-2-29"
+Connection: close
+Content-Type: text/plain
+Content-Length: 0
+
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:14:00.480
+CPE Manager IP Address=172.24.2.29
+Connection ID=370921
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3278
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">275679532</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>Calix</Manufacturer>
+        <OUI>487746</OUI>
+        <ProductClass>ENT</ProductClass>
+        <SerialNumber>CXNK0083217F</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>6 CONNECTION REQUEST</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-17T16:14:06-05:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0009]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.5[](Baseline:1, EthernetLAN:1, Time:1, IPPing:1, DeviceAssociation:1, QoS:1, CaptivePortal:1, WiFiLAN:1, UDPConnReq:1, TraceRoute:1)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">3000219623</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">12.2.12.9.1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://23.155.130.7:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.GatewayInfo.SerialNumber</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">23.155.130.7</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Mon, 17 Nov 2025 21:14:00.509
+CPE Manager IP Address=172.24.2.29
+Connection ID=370921
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 529
+Connection: close
+Set-Cookie: SessionId=CpeMgr172.24.2.29.CpeSN.CXNK0083217F-370921; Path=/hay
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">275679532</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:InformResponse>
+      <MaxEnvelopes>1</MaxEnvelopes>
+    </cwmp:InformResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:14:00.631
+CPE Manager IP Address=172.24.2.29
+Connection ID=370926
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Cookie: SessionId=CpeMgr172.24.2.29.CpeSN.CXNK0083217F-370921
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA42839D2FC4D28711D54E7DA2E1CA9E506EF128214AA3C297E3FD5A36F2B3BF48A49B96DF50637A4DF50142C167CE4E43B7506F24C351D1FF182F1A851A789F39CE
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 0
+
+
+Packet Sent - Mon, 17 Nov 2025 21:14:00.692
+CPE Manager IP Address=172.24.2.29
+Connection ID=370926
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 789
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap-env:Header>
+    <cwmp:ID soap-env:mustUnderstand="1">108903</cwmp:ID>
+  </soap-env:Header>
+  <soap-env:Body>
+    <cwmp:SetParameterValues>
+      <ParameterList soap-enc:arrayType="cwmp:ParameterValueStruct[1]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState</Name>
+          <Value xsi:type="xsd:string">Requested</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+      <ParameterKey/>
+    </cwmp:SetParameterValues>
+  </soap-env:Body>
+</soap-env:Envelope>
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:14:00.772
+CPE Manager IP Address=172.24.2.29
+Connection ID=370925
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+Cookie: SessionId=CpeMgr172.24.2.29.CpeSN.CXNK0083217F-370921
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA42839D2FC4D28711D54E7DA2E1CA9E506EF128214AA3C297E3FD5A36F2B3BF48A49B96DF50637A4DF50142C167CE4E43B7506F24C351D1FF182F1A851A789F39CE
+SOAPAction: 
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 571
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">108903</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:SetParameterValuesResponse>
+      <Status>0</Status>
+    </cwmp:SetParameterValuesResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Mon, 17 Nov 2025 21:14:00.798
+CPE Manager IP Address=172.24.2.29
+Connection ID=370925
+HTTP/1.1 204 No Content
+Content-Type: text/plain
+Content-Length: 0
+Connection: close
+
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:14:24.332
+CPE Manager IP Address=172.24.2.29
+Connection ID=371141
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3281
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">1296829125</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>Calix</Manufacturer>
+        <OUI>487746</OUI>
+        <ProductClass>ENT</ProductClass>
+        <SerialNumber>CXNK0083217F</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>8 DIAGNOSTICS COMPLETE</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-17T16:14:30-05:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0009]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.5[](Baseline:1, EthernetLAN:1, Time:1, IPPing:1, DeviceAssociation:1, QoS:1, CaptivePortal:1, WiFiLAN:1, UDPConnReq:1, TraceRoute:1)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">3000219623</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">12.2.12.9.1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://23.155.130.7:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.GatewayInfo.SerialNumber</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">23.155.130.7</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Mon, 17 Nov 2025 21:14:24.340
+CPE Manager IP Address=172.24.2.29
+Connection ID=371141
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Digest     realm="TR069_ip-172-24-2-29",      qop="auth",      nonce="19a93ab3cd445DE78",      opaque="53a492c6"
+WWW-Authenticate: Basic realm="TR069_ip-172-24-2-29"
+Connection: close
+Content-Type: text/plain
+Content-Length: 0
+
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:14:24.592
+CPE Manager IP Address=172.24.3.170
+Connection ID=361322
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3280
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">542978094</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>Calix</Manufacturer>
+        <OUI>487746</OUI>
+        <ProductClass>ENT</ProductClass>
+        <SerialNumber>CXNK0083217F</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>8 DIAGNOSTICS COMPLETE</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-17T16:14:30-05:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0009]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.5[](Baseline:1, EthernetLAN:1, Time:1, IPPing:1, DeviceAssociation:1, QoS:1, CaptivePortal:1, WiFiLAN:1, UDPConnReq:1, TraceRoute:1)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">3000219623</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">12.2.12.9.1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://23.155.130.7:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.GatewayInfo.SerialNumber</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">23.155.130.7</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Mon, 17 Nov 2025 21:14:24.614
+CPE Manager IP Address=172.24.3.170
+Connection ID=361322
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 529
+Connection: close
+Set-Cookie: SessionId=CpeMgr172.24.3.170.CpeSN.CXNK0083217F-361322; Path=/hay
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">542978094</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:InformResponse>
+      <MaxEnvelopes>1</MaxEnvelopes>
+    </cwmp:InformResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:14:24.742
+CPE Manager IP Address=172.24.3.170
+Connection ID=361325
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Cookie: SessionId=CpeMgr172.24.3.170.CpeSN.CXNK0083217F-361322
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA427DC09A3F21A4B5732CC4C948017F7B446AAFB55A28B03E29B266A92AF1C5D6C5816309FEB826F16C3AECF0D11E5B95EDF0F57D8B4513FA082361E9F09DA1308B
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 0
+
+
+Packet Sent - Mon, 17 Nov 2025 21:14:24.775
+CPE Manager IP Address=172.24.3.170
+Connection ID=361325
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 909
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap-env:Header>
+    <cwmp:ID soap-env:mustUnderstand="1">106351</cwmp:ID>
+  </soap-env:Header>
+  <soap-env:Body>
+    <cwmp:GetParameterValues>
+      <ParameterNames soap-enc:arrayType="xsd:string[4]">
+        <string>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.</string>
+        <string>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState</string>
+        <string>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.</string>
+        <string>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.</string>
+      </ParameterNames>
+    </cwmp:GetParameterValues>
+  </soap-env:Body>
+</soap-env:Envelope>
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:14:25.325
+CPE Manager IP Address=172.24.3.170
+Connection ID=361333
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+Cookie: SessionId=CpeMgr172.24.3.170.CpeSN.CXNK0083217F-361322
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA427DC09A3F21A4B5732CC4C948017F7B446AAFB55A28B03E29B266A92AF1C5D6C5816309FEB826F16C3AECF0D11E5B95EDF0F57D8B4513FA082361E9F09DA1308B
+SOAPAction: 
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 126418
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">106351</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:GetParameterValuesResponse>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0000]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.Enable</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.Status</Name>
+          <Value xsi:type="xsd:string">Up</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.BSSID</Name>
+          <Value xsi:type="xsd:string">48:77:46:fc:a5:95</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.MaxBitRate</Name>
+          <Value xsi:type="xsd:string">Auto</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.Channel</Name>
+          <Value xsi:type="xsd:unsignedInt">132</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.AutoChannelEnable</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.SSID</Name>
+          <Value xsi:type="xsd:string">STPETERSLUTHERAN</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.BeaconType</Name>
+          <Value xsi:type="xsd:string">WPAand11i</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.MACAddressControlEnabled</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.Standard</Name>
+          <Value xsi:type="xsd:string">ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.WEPKeyIndex</Name>
+          <Value xsi:type="xsd:unsignedInt">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_KeyPassphrase</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.WEPEncryptionLevel</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.BasicEncryptionModes</Name>
+          <Value xsi:type="xsd:string">None</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.BasicAuthenticationMode</Name>
+          <Value xsi:type="xsd:string">None</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.WPAEncryptionModes</Name>
+          <Value xsi:type="xsd:string">AESEncryption</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.WPAAuthenticationMode</Name>
+          <Value xsi:type="xsd:string">PSKAuthentication</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.IEEE11iEncryptionModes</Name>
+          <Value xsi:type="xsd:string">AESEncryption</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.IEEE11iAuthenticationMode</Name>
+          <Value xsi:type="xsd:string">PSKAuthentication</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.PossibleChannels</Name>
+          <Value xsi:type="xsd:string">36,52,100,132,149</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.BasicDataTransmitRates</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.SSIDAdvertisementEnabled</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.RadioEnabled</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.TransmitPowerSupported</Name>
+          <Value xsi:type="xsd:string">0,10,20,30,40,50,60,70,80,90,100</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.TransmitPower</Name>
+          <Value xsi:type="xsd:unsignedInt">100</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.RegulatoryDomain</Name>
+          <Value xsi:type="xsd:string">CA</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.WMMEnable</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.UAPSDEnable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.TotalBytesSent</Name>
+          <Value xsi:type="xsd:unsignedInt">305903978</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.TotalBytesReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">72438101</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.TotalPacketsSent</Name>
+          <Value xsi:type="xsd:unsignedInt">415953</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.TotalPacketsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">213513</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_Radio</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice.X_000631_Device.WiFi.Radio.2.</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_Usage</Name>
+          <Value xsi:type="xsd:string">Primary</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_OperatingFrequencyBand</Name>
+          <Value xsi:type="xsd:string">5GHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_OperatingChannelBandwidth</Name>
+          <Value xsi:type="xsd:string">80MHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_AllowedMACAddresses</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_DeniedMACAddresses</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_SupportedStandards</Name>
+          <Value xsi:type="xsd:string">n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_SupportedFrequencyBands</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_EnableDfsChannels</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_ChannelUtilization</Name>
+          <Value xsi:type="xsd:unsignedInt">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_ChannelInterferenceTime</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_ChannelFreeTime</Name>
+          <Value xsi:type="xsd:unsignedInt">98</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_AirtimeFairness</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_FrameBurst</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_MulticastForwardEnable</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_IntraSsidIsolation</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_L2_Bridge_Enable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_SubnetEnable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_SubnetMinAddr</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_SubnetMaxAddr</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_SubnetMask</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_SubnetGatewayAddr</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_SubnetHostsRef</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_EnablePMF</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_EnableMUMIMO</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_SplitHorizon</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_RestoreDefaultSSID</Name>
+          <Value xsi:type="xsd:int">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_RestoreDefaultKey</Name>
+          <Value xsi:type="xsd:int">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_EnableFCS</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_SuppressSCS</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_AssocL2BridgeKey</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_OUI_Enable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_OUI_FilterList</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_VirtualIntf_Status</Name>
+          <Value xsi:type="xsd:string">Ready</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_SSIDBcastAuditTime</Name>
+          <Value xsi:type="xsd:unsignedInt">3</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.RadiusServerIPAddr</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.RadiusServerPort</Name>
+          <Value xsi:type="xsd:unsignedInt">1812</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.RadiusSecret</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.GroupKeyInterval</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_Vlan</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_Priority</Name>
+          <Value xsi:type="xsd:int">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_EnableQos</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_Qos</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_MaxConcurrentDevices</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_GREInterface</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_Allow_GRE_Enable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.RateLimitEnabled</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.UpstreamLimit</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.DownstreamLimit</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_ScheduleEnable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_ScheduleStartTime</Name>
+          <Value xsi:type="xsd:unsignedLong">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_ScheduleEndTime</Name>
+          <Value xsi:type="xsd:unsignedLong">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_EventName</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_SuppressDfsEnabled</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_IGMPStats.V1ReportsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_IGMPStats.V2ReportsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_IGMPStats.V3ReportsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.X_000631_IGMPStats.V2LeavesReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.WEPKey.1.WEPKey</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.WEPKey.1.X_000631_WEPKey</Name>
+          <Value xsi:type="xsd:string">0987654321</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.WEPKey.2.WEPKey</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.WEPKey.2.X_000631_WEPKey</Name>
+          <Value xsi:type="xsd:string">0987654321</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.WEPKey.3.WEPKey</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.WEPKey.3.X_000631_WEPKey</Name>
+          <Value xsi:type="xsd:string">0987654321</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.WEPKey.4.WEPKey</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.WEPKey.4.X_000631_WEPKey</Name>
+          <Value xsi:type="xsd:string">0987654321</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.PreSharedKey.1.PreSharedKey</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.PreSharedKey.1.X_000631_PreSharedKey</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.PreSharedKey.1.KeyPassphrase</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.PreSharedKey.1.X_000631_KeyPassphrase</Name>
+          <Value xsi:type="xsd:string">churchwifi316</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.PreSharedKey.1.AssociatedDeviceMACAddress</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.Stats.ErrorsSent</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.Stats.ErrorsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">88</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.Stats.UnicastPacketsSent</Name>
+          <Value xsi:type="xsd:unsignedInt">354467</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.Stats.UnicastPacketsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">211099</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.Stats.DiscardPacketsSent</Name>
+          <Value xsi:type="xsd:unsignedInt">1147</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.Stats.DiscardPacketsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.Stats.MulticastPacketsSent</Name>
+          <Value xsi:type="xsd:unsignedInt">50114</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.Stats.MulticastPacketsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">2335</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.Stats.BroadcastPacketsSent</Name>
+          <Value xsi:type="xsd:unsignedInt">12519</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.Stats.BroadcastPacketsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">79</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.Stats.UnknownProtoPacketsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.Stats.BytesSent</Name>
+          <Value xsi:type="xsd:unsignedInt">305903978</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.Stats.BytesReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">72438101</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.WPS.Enable</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.WPS.ConfigMethodsSupported</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.WPS.ConfigMethodsEnabled</Name>
+          <Value xsi:type="xsd:string">PushButton</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.WPS.X_000631_PushButton</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Enable</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Status</Name>
+          <Value xsi:type="xsd:string">Up</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.BSSID</Name>
+          <Value xsi:type="xsd:string">48:77:46:FC:A5:94</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.MaxBitRate</Name>
+          <Value xsi:type="xsd:string">Auto</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Channel</Name>
+          <Value xsi:type="xsd:unsignedInt">11</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AutoChannelEnable</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID</Name>
+          <Value xsi:type="xsd:string">STPETERSLUTHERAN</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.BeaconType</Name>
+          <Value xsi:type="xsd:string">WPAand11i</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.MACAddressControlEnabled</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Standard</Name>
+          <Value xsi:type="xsd:string">bgn</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WEPKeyIndex</Name>
+          <Value xsi:type="xsd:unsignedInt">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_KeyPassphrase</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WEPEncryptionLevel</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.BasicEncryptionModes</Name>
+          <Value xsi:type="xsd:string">None</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.BasicAuthenticationMode</Name>
+          <Value xsi:type="xsd:string">None</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WPAEncryptionModes</Name>
+          <Value xsi:type="xsd:string">AESEncryption</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WPAAuthenticationMode</Name>
+          <Value xsi:type="xsd:string">PSKAuthentication</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.IEEE11iEncryptionModes</Name>
+          <Value xsi:type="xsd:string">AESEncryption</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.IEEE11iAuthenticationMode</Name>
+          <Value xsi:type="xsd:string">PSKAuthentication</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PossibleChannels</Name>
+          <Value xsi:type="xsd:string">1,2,3,4,5,6,7,8,9,10,11</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.BasicDataTransmitRates</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSIDAdvertisementEnabled</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.RadioEnabled</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TransmitPowerSupported</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TransmitPower</Name>
+          <Value xsi:type="xsd:unsignedInt">100</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.RegulatoryDomain</Name>
+          <Value xsi:type="xsd:string">CA</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WMMEnable</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.UAPSDEnable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TotalBytesSent</Name>
+          <Value xsi:type="xsd:unsignedInt">1341134688</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TotalBytesReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">413940716</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TotalPacketsSent</Name>
+          <Value xsi:type="xsd:unsignedInt">1668392</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TotalPacketsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">810116</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_Radio</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice.X_000631_Device.WiFi.Radio.1.</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_Usage</Name>
+          <Value xsi:type="xsd:string">Primary</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_OperatingFrequencyBand</Name>
+          <Value xsi:type="xsd:string">2.4GHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_OperatingChannelBandwidth</Name>
+          <Value xsi:type="xsd:string">20MHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_AllowedMACAddresses</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_DeniedMACAddresses</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_SupportedStandards</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_SupportedFrequencyBands</Name>
+          <Value xsi:type="xsd:string">2.4GHz,5GHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_EnableDfsChannels</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_ChannelUtilization</Name>
+          <Value xsi:type="xsd:unsignedInt">3</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_ChannelInterferenceTime</Name>
+          <Value xsi:type="xsd:unsignedInt">7</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_ChannelFreeTime</Name>
+          <Value xsi:type="xsd:unsignedInt">90</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_AirtimeFairness</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_FrameBurst</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_MulticastForwardEnable</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_IntraSsidIsolation</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_L2_Bridge_Enable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_SubnetEnable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_SubnetMinAddr</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_SubnetMaxAddr</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_SubnetMask</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_SubnetGatewayAddr</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_SubnetHostsRef</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_EnablePMF</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_EnableMUMIMO</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_SplitHorizon</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_RestoreDefaultSSID</Name>
+          <Value xsi:type="xsd:int">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_RestoreDefaultKey</Name>
+          <Value xsi:type="xsd:int">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_EnableFCS</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_SuppressSCS</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_AssocL2BridgeKey</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_OUI_Enable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_OUI_FilterList</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_VirtualIntf_Status</Name>
+          <Value xsi:type="xsd:string">Ready</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_SSIDBcastAuditTime</Name>
+          <Value xsi:type="xsd:unsignedInt">3</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.RadiusServerIPAddr</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.RadiusServerPort</Name>
+          <Value xsi:type="xsd:unsignedInt">1812</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.RadiusSecret</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.GroupKeyInterval</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_Vlan</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_Priority</Name>
+          <Value xsi:type="xsd:int">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_EnableQos</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_Qos</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_MaxConcurrentDevices</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_GREInterface</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_Allow_GRE_Enable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.RateLimitEnabled</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.UpstreamLimit</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.DownstreamLimit</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_ScheduleEnable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_ScheduleStartTime</Name>
+          <Value xsi:type="xsd:unsignedLong">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_ScheduleEndTime</Name>
+          <Value xsi:type="xsd:unsignedLong">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_EventName</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_SuppressDfsEnabled</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_IGMPStats.V1ReportsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_IGMPStats.V2ReportsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">76</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_IGMPStats.V3ReportsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">668</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_000631_IGMPStats.V2LeavesReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">73</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.AssociatedDeviceMACAddress</Name>
+          <Value xsi:type="xsd:string">34:6F:92:01:79:77</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.AssociatedDeviceIPAddress</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.AssociatedDeviceAuthenticationState</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.LastRequestedUnicastCipher</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.LastRequestedMulticastCipher</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.LastPMKId</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.LastDataTransmitRate</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_LastDataDownlinkRate</Name>
+          <Value xsi:type="xsd:unsignedInt">2000</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_LastDataUplinkRate</Name>
+          <Value xsi:type="xsd:unsignedInt">1000</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_SignalStrength</Name>
+          <Value xsi:type="xsd:int">-84</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_Retransmissions</Name>
+          <Value xsi:type="xsd:unsignedInt">93</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_Mode</Name>
+          <Value xsi:type="xsd:string">n</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_UpTime</Name>
+          <Value xsi:type="xsd:unsignedInt">51</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_Metrics.ChannelUtilization</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_Metrics.PhyRateTx</Name>
+          <Value xsi:type="xsd:unsignedInt">2000</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_Metrics.PhyRateRx</Name>
+          <Value xsi:type="xsd:unsignedInt">1000</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_Metrics.RSSIUpstream</Name>
+          <Value xsi:type="xsd:int">-84</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_Metrics.PacketsTransmittedUpstream</Name>
+          <Value xsi:type="xsd:unsignedInt">63</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_Metrics.PacketsTransmittedDownstream</Name>
+          <Value xsi:type="xsd:unsignedInt">22</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_Metrics.PacketsReTransmittedDownstream</Name>
+          <Value xsi:type="xsd:unsignedInt">93</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_Metrics.PacketsDroppedDownstream</Name>
+          <Value xsi:type="xsd:unsignedInt">6</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_Metrics.BytesTransmittedUpstream</Name>
+          <Value xsi:type="xsd:unsignedLong">7278</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_Metrics.BytesTransmittedDownstream</Name>
+          <Value xsi:type="xsd:unsignedLong">2936</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_Metrics.CurrDataRate</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_Metrics.TxMIMONum</Name>
+          <Value xsi:type="xsd:unsignedInt">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_Metrics.RxMIMONum</Name>
+          <Value xsi:type="xsd:unsignedInt">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.1.X_000631_Metrics.Support11v</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.AssociatedDeviceMACAddress</Name>
+          <Value xsi:type="xsd:string">34:6F:92:01:79:84</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.AssociatedDeviceIPAddress</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.AssociatedDeviceAuthenticationState</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.LastRequestedUnicastCipher</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.LastRequestedMulticastCipher</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.LastPMKId</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.LastDataTransmitRate</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_LastDataDownlinkRate</Name>
+          <Value xsi:type="xsd:unsignedInt">19500</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_LastDataUplinkRate</Name>
+          <Value xsi:type="xsd:unsignedInt">1000</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_SignalStrength</Name>
+          <Value xsi:type="xsd:int">-77</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_Retransmissions</Name>
+          <Value xsi:type="xsd:unsignedInt">25</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_Mode</Name>
+          <Value xsi:type="xsd:string">n</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_UpTime</Name>
+          <Value xsi:type="xsd:unsignedInt">831</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_Metrics.ChannelUtilization</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_Metrics.PhyRateTx</Name>
+          <Value xsi:type="xsd:unsignedInt">19500</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_Metrics.PhyRateRx</Name>
+          <Value xsi:type="xsd:unsignedInt">1000</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_Metrics.RSSIUpstream</Name>
+          <Value xsi:type="xsd:int">-77</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_Metrics.PacketsTransmittedUpstream</Name>
+          <Value xsi:type="xsd:unsignedInt">80</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_Metrics.PacketsTransmittedDownstream</Name>
+          <Value xsi:type="xsd:unsignedInt">27</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_Metrics.PacketsReTransmittedDownstream</Name>
+          <Value xsi:type="xsd:unsignedInt">25</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_Metrics.PacketsDroppedDownstream</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_Metrics.BytesTransmittedUpstream</Name>
+          <Value xsi:type="xsd:unsignedLong">8095</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_Metrics.BytesTransmittedDownstream</Name>
+          <Value xsi:type="xsd:unsignedLong">3273</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_Metrics.CurrDataRate</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_Metrics.TxMIMONum</Name>
+          <Value xsi:type="xsd:unsignedInt">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_Metrics.RxMIMONum</Name>
+          <Value xsi:type="xsd:unsignedInt">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.2.X_000631_Metrics.Support11v</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WEPKey.1.WEPKey</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WEPKey.1.X_000631_WEPKey</Name>
+          <Value xsi:type="xsd:string">0987654321</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WEPKey.2.WEPKey</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WEPKey.2.X_000631_WEPKey</Name>
+          <Value xsi:type="xsd:string">0987654321</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WEPKey.3.WEPKey</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WEPKey.3.X_000631_WEPKey</Name>
+          <Value xsi:type="xsd:string">0987654321</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WEPKey.4.WEPKey</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WEPKey.4.X_000631_WEPKey</Name>
+          <Value xsi:type="xsd:string">0987654321</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.PreSharedKey</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.X_000631_PreSharedKey</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.KeyPassphrase</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.X_000631_KeyPassphrase</Name>
+          <Value xsi:type="xsd:string">churchwifi316</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.AssociatedDeviceMACAddress</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats.ErrorsSent</Name>
+          <Value xsi:type="xsd:unsignedInt">7</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats.ErrorsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats.UnicastPacketsSent</Name>
+          <Value xsi:type="xsd:unsignedInt">1188033</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats.UnicastPacketsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">798009</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats.DiscardPacketsSent</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats.DiscardPacketsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">9</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats.MulticastPacketsSent</Name>
+          <Value xsi:type="xsd:unsignedInt">396206</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats.MulticastPacketsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">6500</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats.BroadcastPacketsSent</Name>
+          <Value xsi:type="xsd:unsignedInt">84153</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats.BroadcastPacketsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">5607</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats.UnknownProtoPacketsReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats.BytesSent</Name>
+          <Value xsi:type="xsd:unsignedInt">1341134688</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats.BytesReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">413940716</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WPS.Enable</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WPS.ConfigMethodsSupported</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WPS.ConfigMethodsEnabled</Name>
+          <Value xsi:type="xsd:string">PushButton</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WPS.X_000631_PushButton</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState</Name>
+          <Value xsi:type="xsd:string">Completed</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.1.Radio</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice.X_000631_Device.WiFi.Radio.2.</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.1.SSID</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.1.BSSID</Name>
+          <Value xsi:type="xsd:string">5a:ba:02:57:66:a5</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.1.Mode</Name>
+          <Value xsi:type="xsd:string">Infrastructure</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.1.Channel</Name>
+          <Value xsi:type="xsd:unsignedInt">48</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.1.SignalStrength</Name>
+          <Value xsi:type="xsd:int">-84</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.1.SecurityModeEnabled</Name>
+          <Value xsi:type="xsd:string">WPA2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.1.EncryptionMode</Name>
+          <Value xsi:type="xsd:string">AES</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.1.OperatingFrequencyBand</Name>
+          <Value xsi:type="xsd:string">5GHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.1.SupportedStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.1.OperatingStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.1.OperatingChannelBandwidth</Name>
+          <Value xsi:type="xsd:string">20MHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.1.BeaconPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.1.Noise</Name>
+          <Value xsi:type="xsd:int">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.1.BasicDataTransferRates</Name>
+          <Value xsi:type="xsd:string">780</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.1.SupportedDataTransferRates</Name>
+          <Value xsi:type="xsd:string">780</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.1.DTIMPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.2.Radio</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice.X_000631_Device.WiFi.Radio.2.</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.2.SSID</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.2.BSSID</Name>
+          <Value xsi:type="xsd:string">c2:be:59:25:96:b2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.2.Mode</Name>
+          <Value xsi:type="xsd:string">Infrastructure</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.2.Channel</Name>
+          <Value xsi:type="xsd:unsignedInt">48</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.2.SignalStrength</Name>
+          <Value xsi:type="xsd:int">-84</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.2.SecurityModeEnabled</Name>
+          <Value xsi:type="xsd:string">WPA-WPA2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.2.EncryptionMode</Name>
+          <Value xsi:type="xsd:string">AES</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.2.OperatingFrequencyBand</Name>
+          <Value xsi:type="xsd:string">5GHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.2.SupportedStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.2.OperatingStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.2.OperatingChannelBandwidth</Name>
+          <Value xsi:type="xsd:string">80MHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.2.BeaconPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.2.Noise</Name>
+          <Value xsi:type="xsd:int">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.2.BasicDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1734</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.2.SupportedDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1734</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.2.DTIMPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.3.Radio</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice.X_000631_Device.WiFi.Radio.2.</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.3.SSID</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.3.BSSID</Name>
+          <Value xsi:type="xsd:string">c6:be:59:25:96:b2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.3.Mode</Name>
+          <Value xsi:type="xsd:string">Infrastructure</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.3.Channel</Name>
+          <Value xsi:type="xsd:unsignedInt">48</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.3.SignalStrength</Name>
+          <Value xsi:type="xsd:int">-84</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.3.SecurityModeEnabled</Name>
+          <Value xsi:type="xsd:string">WPA-WPA2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.3.EncryptionMode</Name>
+          <Value xsi:type="xsd:string">AES</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.3.OperatingFrequencyBand</Name>
+          <Value xsi:type="xsd:string">5GHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.3.SupportedStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.3.OperatingStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.3.OperatingChannelBandwidth</Name>
+          <Value xsi:type="xsd:string">80MHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.3.BeaconPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.3.Noise</Name>
+          <Value xsi:type="xsd:int">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.3.BasicDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1734</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.3.SupportedDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1734</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.3.DTIMPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.4.Radio</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice.X_000631_Device.WiFi.Radio.2.</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.4.SSID</Name>
+          <Value xsi:type="xsd:string">BingBak</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.4.BSSID</Name>
+          <Value xsi:type="xsd:string">cc:be:59:25:96:b2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.4.Mode</Name>
+          <Value xsi:type="xsd:string">Infrastructure</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.4.Channel</Name>
+          <Value xsi:type="xsd:unsignedInt">48</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.4.SignalStrength</Name>
+          <Value xsi:type="xsd:int">-84</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.4.SecurityModeEnabled</Name>
+          <Value xsi:type="xsd:string">WPA-WPA2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.4.EncryptionMode</Name>
+          <Value xsi:type="xsd:string">AES</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.4.OperatingFrequencyBand</Name>
+          <Value xsi:type="xsd:string">5GHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.4.SupportedStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.4.OperatingStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.4.OperatingChannelBandwidth</Name>
+          <Value xsi:type="xsd:string">80MHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.4.BeaconPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.4.Noise</Name>
+          <Value xsi:type="xsd:int">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.4.BasicDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1734</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.4.SupportedDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1734</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.4.DTIMPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.5.Radio</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice.X_000631_Device.WiFi.Radio.2.</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.5.SSID</Name>
+          <Value xsi:type="xsd:string">Grainger</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.5.BSSID</Name>
+          <Value xsi:type="xsd:string">f8:85:f9:9c:ce:62</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.5.Mode</Name>
+          <Value xsi:type="xsd:string">Infrastructure</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.5.Channel</Name>
+          <Value xsi:type="xsd:unsignedInt">100</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.5.SignalStrength</Name>
+          <Value xsi:type="xsd:int">-84</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.5.SecurityModeEnabled</Name>
+          <Value xsi:type="xsd:string">WPA2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.5.EncryptionMode</Name>
+          <Value xsi:type="xsd:string">AES</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.5.OperatingFrequencyBand</Name>
+          <Value xsi:type="xsd:string">5GHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.5.SupportedStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.5.OperatingStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.5.OperatingChannelBandwidth</Name>
+          <Value xsi:type="xsd:string">80MHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.5.BeaconPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.5.Noise</Name>
+          <Value xsi:type="xsd:int">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.5.BasicDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1734</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.5.SupportedDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1734</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.5.DTIMPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.6.Radio</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice.X_000631_Device.WiFi.Radio.2.</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.6.SSID</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.6.BSSID</Name>
+          <Value xsi:type="xsd:string">1a:85:f9:9c:ce:62</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.6.Mode</Name>
+          <Value xsi:type="xsd:string">Infrastructure</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.6.Channel</Name>
+          <Value xsi:type="xsd:unsignedInt">100</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.6.SignalStrength</Name>
+          <Value xsi:type="xsd:int">-84</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.6.SecurityModeEnabled</Name>
+          <Value xsi:type="xsd:string">WPA2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.6.EncryptionMode</Name>
+          <Value xsi:type="xsd:string">AES</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.6.OperatingFrequencyBand</Name>
+          <Value xsi:type="xsd:string">5GHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.6.SupportedStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.6.OperatingStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.6.OperatingChannelBandwidth</Name>
+          <Value xsi:type="xsd:string">80MHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.6.BeaconPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.6.Noise</Name>
+          <Value xsi:type="xsd:int">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.6.BasicDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1734</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.6.SupportedDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1734</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.6.DTIMPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.7.Radio</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice.X_000631_Device.WiFi.Radio.1.</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.7.SSID</Name>
+          <Value xsi:type="xsd:string">Kranz-5G-EXT</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.7.BSSID</Name>
+          <Value xsi:type="xsd:string">78:32:1B:C9:08:58</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.7.Mode</Name>
+          <Value xsi:type="xsd:string">Infrastructure</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.7.Channel</Name>
+          <Value xsi:type="xsd:unsignedInt">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.7.SignalStrength</Name>
+          <Value xsi:type="xsd:int">-83</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.7.SecurityModeEnabled</Name>
+          <Value xsi:type="xsd:string">WPA2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.7.EncryptionMode</Name>
+          <Value xsi:type="xsd:string">AES</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.7.OperatingFrequencyBand</Name>
+          <Value xsi:type="xsd:string">2.4GHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.7.SupportedStandards</Name>
+          <Value xsi:type="xsd:string">b,g,n</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.7.OperatingStandards</Name>
+          <Value xsi:type="xsd:string">b,g,n</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.7.OperatingChannelBandwidth</Name>
+          <Value xsi:type="xsd:string">20MHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.7.BeaconPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">100</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.7.Noise</Name>
+          <Value xsi:type="xsd:int">-87</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.7.BasicDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1,2,5.5,6,9,11,12,18,24,36,48,54</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.7.SupportedDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1,2,5.5,6,9,11,12,18,24,36,48,54</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.7.DTIMPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">3</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.8.Radio</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice.X_000631_Device.WiFi.Radio.1.</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.8.SSID</Name>
+          <Value xsi:type="xsd:string">Grainger</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.8.BSSID</Name>
+          <Value xsi:type="xsd:string">84:D3:43:99:02:15</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.8.Mode</Name>
+          <Value xsi:type="xsd:string">Infrastructure</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.8.Channel</Name>
+          <Value xsi:type="xsd:unsignedInt">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.8.SignalStrength</Name>
+          <Value xsi:type="xsd:int">-81</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.8.SecurityModeEnabled</Name>
+          <Value xsi:type="xsd:string">WPA2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.8.EncryptionMode</Name>
+          <Value xsi:type="xsd:string">AES</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.8.OperatingFrequencyBand</Name>
+          <Value xsi:type="xsd:string">2.4GHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.8.SupportedStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.8.OperatingStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.8.OperatingChannelBandwidth</Name>
+          <Value xsi:type="xsd:string">20MHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.8.BeaconPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">100</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.8.Noise</Name>
+          <Value xsi:type="xsd:int">-87</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.8.BasicDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1,2,5.5,6,9,11,12,18,24,36,48,54</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.8.SupportedDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1,2,5.5,6,9,11,12,18,24,36,48,54</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.8.DTIMPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">3</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.9.Radio</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice.X_000631_Device.WiFi.Radio.1.</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.9.SSID</Name>
+          <Value xsi:type="xsd:string">Hidden</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.9.BSSID</Name>
+          <Value xsi:type="xsd:string">A6:D3:43:99:02:15</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.9.Mode</Name>
+          <Value xsi:type="xsd:string">Infrastructure</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.9.Channel</Name>
+          <Value xsi:type="xsd:unsignedInt">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.9.SignalStrength</Name>
+          <Value xsi:type="xsd:int">-80</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.9.SecurityModeEnabled</Name>
+          <Value xsi:type="xsd:string">WPA2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.9.EncryptionMode</Name>
+          <Value xsi:type="xsd:string">AES</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.9.OperatingFrequencyBand</Name>
+          <Value xsi:type="xsd:string">2.4GHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.9.SupportedStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.9.OperatingStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.9.OperatingChannelBandwidth</Name>
+          <Value xsi:type="xsd:string">20MHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.9.BeaconPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">100</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.9.Noise</Name>
+          <Value xsi:type="xsd:int">-87</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.9.BasicDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1,2,5.5,6,9,11,12,18,24,36,48,54</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.9.SupportedDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1,2,5.5,6,9,11,12,18,24,36,48,54</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.9.DTIMPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">3</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.10.Radio</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice.X_000631_Device.WiFi.Radio.1.</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.10.SSID</Name>
+          <Value xsi:type="xsd:string">Grainger</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.10.BSSID</Name>
+          <Value xsi:type="xsd:string">F8:85:F9:9C:CE:61</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.10.Mode</Name>
+          <Value xsi:type="xsd:string">Infrastructure</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.10.Channel</Name>
+          <Value xsi:type="xsd:unsignedInt">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.10.SignalStrength</Name>
+          <Value xsi:type="xsd:int">-79</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.10.SecurityModeEnabled</Name>
+          <Value xsi:type="xsd:string">WPA2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.10.EncryptionMode</Name>
+          <Value xsi:type="xsd:string">AES</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.10.OperatingFrequencyBand</Name>
+          <Value xsi:type="xsd:string">2.4GHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.10.SupportedStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.10.OperatingStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.10.OperatingChannelBandwidth</Name>
+          <Value xsi:type="xsd:string">20MHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.10.BeaconPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">100</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.10.Noise</Name>
+          <Value xsi:type="xsd:int">-87</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.10.BasicDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1,2,5.5,6,9,11,12,18,24,36,48,54</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.10.SupportedDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1,2,5.5,6,9,11,12,18,24,36,48,54</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.10.DTIMPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">3</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.11.Radio</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice.X_000631_Device.WiFi.Radio.1.</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.11.SSID</Name>
+          <Value xsi:type="xsd:string">Hidden</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.11.BSSID</Name>
+          <Value xsi:type="xsd:string">1A:85:F9:9C:CE:61</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.11.Mode</Name>
+          <Value xsi:type="xsd:string">Infrastructure</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.11.Channel</Name>
+          <Value xsi:type="xsd:unsignedInt">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.11.SignalStrength</Name>
+          <Value xsi:type="xsd:int">-78</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.11.SecurityModeEnabled</Name>
+          <Value xsi:type="xsd:string">WPA2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.11.EncryptionMode</Name>
+          <Value xsi:type="xsd:string">AES</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.11.OperatingFrequencyBand</Name>
+          <Value xsi:type="xsd:string">2.4GHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.11.SupportedStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.11.OperatingStandards</Name>
+          <Value xsi:type="xsd:string">a,n,ac</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.11.OperatingChannelBandwidth</Name>
+          <Value xsi:type="xsd:string">20MHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.11.BeaconPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">100</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.11.Noise</Name>
+          <Value xsi:type="xsd:int">-87</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.11.BasicDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1,2,5.5,6,9,11,12,18,24,36,48,54</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.11.SupportedDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1,2,5.5,6,9,11,12,18,24,36,48,54</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.11.DTIMPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">3</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.12.Radio</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice.X_000631_Device.WiFi.Radio.1.</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.12.SSID</Name>
+          <Value xsi:type="xsd:string">BingBak</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.12.BSSID</Name>
+          <Value xsi:type="xsd:string">CC:BE:59:25:96:B1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.12.Mode</Name>
+          <Value xsi:type="xsd:string">Infrastructure</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.12.Channel</Name>
+          <Value xsi:type="xsd:unsignedInt">6</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.12.SignalStrength</Name>
+          <Value xsi:type="xsd:int">-77</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.12.SecurityModeEnabled</Name>
+          <Value xsi:type="xsd:string">WPA-WPA2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.12.EncryptionMode</Name>
+          <Value xsi:type="xsd:string">AES</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.12.OperatingFrequencyBand</Name>
+          <Value xsi:type="xsd:string">2.4GHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.12.SupportedStandards</Name>
+          <Value xsi:type="xsd:string">b,g,n</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.12.OperatingStandards</Name>
+          <Value xsi:type="xsd:string">b,g,n</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.12.OperatingChannelBandwidth</Name>
+          <Value xsi:type="xsd:string">20MHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.12.BeaconPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">100</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.12.Noise</Name>
+          <Value xsi:type="xsd:int">-81</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.12.BasicDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1,2,5.5,6,9,11,12,18,24,36,48,54</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.12.SupportedDataTransferRates</Name>
+          <Value xsi:type="xsd:string">1,2,5.5,6,9,11,12,18,24,36,48,54</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.12.DTIMPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">3</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.13.Radio</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice.X_000631_Device.WiFi.Radio.1.</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.13.SSID</Name>
+          <Value xsi:type="xsd:string">DIRECT-BwDCP-L2550DW_BR32a9</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.13.BSSID</Name>
+          <Value xsi:type="xsd:string">2E:6F:C9:4B:32:A9</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.13.Mode</Name>
+          <Value xsi:type="xsd:string">Infrastructure</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.13.Channel</Name>
+          <Value xsi:type="xsd:unsignedInt">6</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.13.SignalStrength</Name>
+          <Value xsi:type="xsd:int">-82</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.13.SecurityModeEnabled</Name>
+          <Value xsi:type="xsd:string">WPA2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.13.EncryptionMode</Name>
+          <Value xsi:type="xsd:string">AES</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.13.OperatingFrequencyBand</Name>
+          <Value xsi:type="xsd:string">2.4GHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.13.SupportedStandards</Name>
+          <Value xsi:type="xsd:string">g,n</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.13.OperatingStandards</Name>
+          <Value xsi:type="xsd:string">g,n</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.13.OperatingChannelBandwidth</Name>
+          <Value xsi:type="xsd:string">20MHz</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.13.BeaconPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">100</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.13.Noise</Name>
+          <Value xsi:type="xsd:int">-81</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.13.BasicDataTransferRates</Name>
+          <Value xsi:type="xsd:string">6,9,12,18,24,36,48,54</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.13.SupportedDataTransferRates</Name>
+          <Value xsi:type="xsd:string">6,9,12,18,24,36,48,54</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.13.DTIMPeriod</Name>
+          <Value xsi:type="xsd:unsignedInt">3</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:GetParameterValuesResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Mon, 17 Nov 2025 21:14:25.468
+CPE Manager IP Address=172.24.3.170
+Connection ID=361333
+HTTP/1.1 204 No Content
+Content-Type: text/plain
+Content-Length: 0
+Connection: close

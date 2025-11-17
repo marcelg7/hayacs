@@ -1438,6 +1438,104 @@ class DeviceController extends Controller
     }
 
     /**
+     * Start WiFi interference scan (neighboring networks scan)
+     */
+    public function startWiFiScan(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $dataModel = $device->getDataModel();
+        $isDevice2 = $dataModel === 'Device:2';
+
+        if ($isDevice2) {
+            // Device:2 model - standard WiFi diagnostics
+            $diagnosticParam = 'Device.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState';
+        } else {
+            // InternetGatewayDevice model - Calix vendor extension
+            $diagnosticParam = 'InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState';
+        }
+
+        // Create task to trigger the scan
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'set_parameter_values',
+            'status' => 'pending',
+            'parameters' => [
+                $diagnosticParam => [
+                    'value' => 'Requested',
+                    'type' => 'xsd:string',
+                ],
+            ],
+        ]);
+
+        // Trigger connection request
+        $this->connectionRequestService->sendConnectionRequest($device);
+
+        return response()->json([
+            'task' => $task,
+            'message' => 'WiFi scan initiated',
+        ]);
+    }
+
+    /**
+     * Get WiFi interference scan results
+     */
+    public function getWiFiScanResults(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $dataModel = $device->getDataModel();
+        $isDevice2 = $dataModel === 'Device:2';
+
+        if ($isDevice2) {
+            // Device:2 model
+            $resultPrefix = 'Device.WiFi.NeighboringWiFiDiagnostic.Result.';
+            $stateParam = 'Device.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState';
+        } else {
+            // InternetGatewayDevice model - Calix vendor extension
+            $resultPrefix = 'InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.';
+            $stateParam = 'InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState';
+        }
+
+        // Get diagnostic state
+        $state = $device->parameters()
+            ->where('name', $stateParam)
+            ->value('value');
+
+        // Get all scan results
+        $scanResults = $device->parameters()
+            ->where('name', 'LIKE', $resultPrefix . '%')
+            ->get()
+            ->groupBy(function ($param) use ($resultPrefix) {
+                // Extract instance number from parameter name
+                $name = str_replace($resultPrefix, '', $param->name);
+                $parts = explode('.', $name);
+                return $parts[0]; // Instance number
+            })
+            ->map(function ($params, $instance) {
+                $result = ['instance' => (int) $instance];
+                foreach ($params as $param) {
+                    $parts = explode('.', $param->name);
+                    $field = end($parts);
+                    $result[$field] = $param->value;
+                }
+                return $result;
+            })
+            ->values()
+            ->sortByDesc(function ($result) {
+                // Sort by signal strength (strongest first)
+                return (int) ($result['SignalStrength'] ?? -999);
+            })
+            ->values();
+
+        return response()->json([
+            'state' => $state,
+            'results' => $scanResults,
+            'count' => $scanResults->count(),
+        ]);
+    }
+
+    /**
      * Delete a device
      */
     public function destroy(string $id): JsonResponse

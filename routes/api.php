@@ -60,3 +60,7 @@ Route::post('/devices/{id}/backups/{backupId}/restore', [DeviceController::class
 Route::get('/devices/{id}/port-mappings', [DeviceController::class, 'getPortMappings']);
 Route::post('/devices/{id}/port-mappings', [DeviceController::class, 'addPortMapping']);
 Route::delete('/devices/{id}/port-mappings', [DeviceController::class, 'deletePortMapping']);
+
+// WiFi Interference Scan
+Route::post('/devices/{id}/wifi-scan', [DeviceController::class, 'startWiFiScan']);
+Route::get('/devices/{id}/wifi-scan-results', [DeviceController::class, 'getWiFiScanResults']);

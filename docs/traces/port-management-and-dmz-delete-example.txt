@@ -1,0 +1,1360 @@
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:22:27.239
+CPE Manager IP Address=172.24.3.201
+Connection ID=370119
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3279
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">1568506821</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>Calix</Manufacturer>
+        <OUI>487746</OUI>
+        <ProductClass>ENT</ProductClass>
+        <SerialNumber>CXNK0083217F</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>6 CONNECTION REQUEST</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-17T16:22:33-05:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0009]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.5[](Baseline:1, EthernetLAN:1, Time:1, IPPing:1, DeviceAssociation:1, QoS:1, CaptivePortal:1, WiFiLAN:1, UDPConnReq:1, TraceRoute:1)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">3000219623</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">12.2.12.9.1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://23.155.130.7:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.GatewayInfo.SerialNumber</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">23.155.130.7</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Mon, 17 Nov 2025 21:22:27.245
+CPE Manager IP Address=172.24.3.201
+Connection ID=370119
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Digest     realm="TR069_ip-172-24-3-201",      qop="auth",      nonce="19a93b29b2d45DE78",      opaque="4736dbf6"
+WWW-Authenticate: Basic realm="TR069_ip-172-24-3-201"
+Connection: close
+Content-Type: text/plain
+Content-Length: 0
+
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:22:27.501
+CPE Manager IP Address=172.24.3.170
+Connection ID=366720
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3279
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">1320826611</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>Calix</Manufacturer>
+        <OUI>487746</OUI>
+        <ProductClass>ENT</ProductClass>
+        <SerialNumber>CXNK0083217F</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>6 CONNECTION REQUEST</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-17T16:22:33-05:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0009]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.5[](Baseline:1, EthernetLAN:1, Time:1, IPPing:1, DeviceAssociation:1, QoS:1, CaptivePortal:1, WiFiLAN:1, UDPConnReq:1, TraceRoute:1)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">3000219623</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">12.2.12.9.1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://23.155.130.7:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.GatewayInfo.SerialNumber</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">23.155.130.7</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Mon, 17 Nov 2025 21:22:27.528
+CPE Manager IP Address=172.24.3.170
+Connection ID=366720
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 530
+Connection: close
+Set-Cookie: SessionId=CpeMgr172.24.3.170.CpeSN.CXNK0083217F-366720; Path=/hay
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">1320826611</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:InformResponse>
+      <MaxEnvelopes>1</MaxEnvelopes>
+    </cwmp:InformResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:22:27.650
+CPE Manager IP Address=172.24.3.170
+Connection ID=366726
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Cookie: SessionId=CpeMgr172.24.3.170.CpeSN.CXNK0083217F-366720
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA424A7A538B12B7EBD084EF9321E4012BB72EC973825A833D40FA1C34A12156316D75566C5AED9949C980D7B66C4F01F651F0F57D8B4513FA082361E9F09DA1308B
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 0
+
+
+Packet Sent - Mon, 17 Nov 2025 21:22:27.780
+CPE Manager IP Address=172.24.3.170
+Connection ID=366726
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 621
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap-env:Header>
+    <cwmp:ID soap-env:mustUnderstand="1">107690</cwmp:ID>
+  </soap-env:Header>
+  <soap-env:Body>
+    <cwmp:DeleteObject>
+      <ObjectName>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.16.</ObjectName>
+      <ParameterKey/>
+    </cwmp:DeleteObject>
+  </soap-env:Body>
+</soap-env:Envelope>
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:22:28.323
+CPE Manager IP Address=172.24.3.170
+Connection ID=366734
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+Cookie: SessionId=CpeMgr172.24.3.170.CpeSN.CXNK0083217F-366720
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA424A7A538B12B7EBD084EF9321E4012BB72EC973825A833D40FA1C34A12156316D75566C5AED9949C980D7B66C4F01F651F0F57D8B4513FA082361E9F09DA1308B
+SOAPAction: 
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 559
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">107690</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:DeleteObjectResponse>
+      <Status>0</Status>
+    </cwmp:DeleteObjectResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Mon, 17 Nov 2025 21:22:28.415
+CPE Manager IP Address=172.24.3.170
+Connection ID=366734
+HTTP/1.1 204 No Content
+Content-Type: text/plain
+Content-Length: 0
+Connection: close
+
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:22:30.335
+CPE Manager IP Address=172.24.2.231
+Connection ID=372180
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3278
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">396446313</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>Calix</Manufacturer>
+        <OUI>487746</OUI>
+        <ProductClass>ENT</ProductClass>
+        <SerialNumber>CXNK0083217F</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>6 CONNECTION REQUEST</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-17T16:22:36-05:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0009]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.5[](Baseline:1, EthernetLAN:1, Time:1, IPPing:1, DeviceAssociation:1, QoS:1, CaptivePortal:1, WiFiLAN:1, UDPConnReq:1, TraceRoute:1)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">3000219623</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">12.2.12.9.1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://23.155.130.7:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.GatewayInfo.SerialNumber</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">23.155.130.7</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Mon, 17 Nov 2025 21:22:30.345
+CPE Manager IP Address=172.24.2.231
+Connection ID=372180
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Digest     realm="TR069_ip-172-24-2-231",      qop="auth",      nonce="19a93b2a74945DE78",      opaque="7c6701df"
+WWW-Authenticate: Basic realm="TR069_ip-172-24-2-231"
+Connection: close
+Content-Type: text/plain
+Content-Length: 0
+
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:22:30.603
+CPE Manager IP Address=172.24.2.231
+Connection ID=372194
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3277
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">48327377</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>Calix</Manufacturer>
+        <OUI>487746</OUI>
+        <ProductClass>ENT</ProductClass>
+        <SerialNumber>CXNK0083217F</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>6 CONNECTION REQUEST</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-17T16:22:36-05:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0009]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.5[](Baseline:1, EthernetLAN:1, Time:1, IPPing:1, DeviceAssociation:1, QoS:1, CaptivePortal:1, WiFiLAN:1, UDPConnReq:1, TraceRoute:1)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">3000219623</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">12.2.12.9.1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://23.155.130.7:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.GatewayInfo.SerialNumber</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">23.155.130.7</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Mon, 17 Nov 2025 21:22:30.696
+CPE Manager IP Address=172.24.2.231
+Connection ID=372194
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 528
+Connection: close
+Set-Cookie: SessionId=CpeMgr172.24.2.231.CpeSN.CXNK0083217F-372194; Path=/hay
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">48327377</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:InformResponse>
+      <MaxEnvelopes>1</MaxEnvelopes>
+    </cwmp:InformResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:22:30.778
+CPE Manager IP Address=172.24.2.231
+Connection ID=372196
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Cookie: SessionId=CpeMgr172.24.2.231.CpeSN.CXNK0083217F-372194
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA427E49771C6CA45E6AF99151B54969F29C3913FD3A547461591B39D3304E8D142B9B96DF50637A4DF50142C167CE4E43B75D89682D4BE127ED3EEFAAD554D14F1D
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 0
+
+
+Packet Sent - Mon, 17 Nov 2025 21:22:30.991
+CPE Manager IP Address=172.24.2.231
+Connection ID=372196
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 1342
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap-env:Header>
+    <cwmp:ID soap-env:mustUnderstand="1">107381</cwmp:ID>
+  </soap-env:Header>
+  <soap-env:Body>
+    <cwmp:SetParameterValues>
+      <ParameterList soap-enc:arrayType="cwmp:ParameterValueStruct[5]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.User.1.Password</Name>
+          <Value xsi:type="xsd:string">84a64567</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.User.2.Password</Name>
+          <Value xsi:type="xsd:string">keepOut-72863!!!</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UserInterface.RemoteAccess.Enable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.User.2.RemoteAccessCapable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UserInterface.RemoteAccess.Port</Name>
+          <Value xsi:type="xsd:unsignedInt">8443</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+      <ParameterKey/>
+    </cwmp:SetParameterValues>
+  </soap-env:Body>
+</soap-env:Envelope>
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:22:32.207
+CPE Manager IP Address=172.24.2.231
+Connection ID=372204
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+Cookie: SessionId=CpeMgr172.24.2.231.CpeSN.CXNK0083217F-372194
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA427E49771C6CA45E6AF99151B54969F29C3913FD3A547461591B39D3304E8D142B9B96DF50637A4DF50142C167CE4E43B75D89682D4BE127ED3EEFAAD554D14F1D
+SOAPAction: 
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 571
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">107381</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:SetParameterValuesResponse>
+      <Status>0</Status>
+    </cwmp:SetParameterValuesResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Mon, 17 Nov 2025 21:22:32.292
+CPE Manager IP Address=172.24.2.231
+Connection ID=372204
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 995
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">107383</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:GetParameterValues>
+      <ParameterNames SOAP-ENC:arrayType="xsd:string[7]">
+        <string>InternetGatewayDevice.User.1.Username</string>
+        <string>InternetGatewayDevice.User.1.Password</string>
+        <string>InternetGatewayDevice.User.2.Username</string>
+        <string>InternetGatewayDevice.User.2.Password</string>
+        <string>InternetGatewayDevice.UserInterface.RemoteAccess.Enable</string>
+        <string>InternetGatewayDevice.User.2.RemoteAccessCapable</string>
+        <string>InternetGatewayDevice.UserInterface.RemoteAccess.Port</string>
+      </ParameterNames>
+    </cwmp:GetParameterValues>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:22:32.584
+CPE Manager IP Address=172.24.2.231
+Connection ID=372210
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+Cookie: SessionId=CpeMgr172.24.2.231.CpeSN.CXNK0083217F-372194
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA427E49771C6CA45E6AF99151B54969F29C3913FD3A547461591B39D3304E8D142B9B96DF50637A4DF50142C167CE4E43B75D89682D4BE127ED3EEFAAD554D14F1D
+SOAPAction: 
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 2056
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">107383</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:GetParameterValuesResponse>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0000]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UserInterface.RemoteAccess.Port</Name>
+          <Value xsi:type="xsd:unsignedInt">8443</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.User.2.RemoteAccessCapable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UserInterface.RemoteAccess.Enable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.User.2.Password</Name>
+          <Value xsi:type="xsd:string">keepOut-72863!!!</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.User.2.Username</Name>
+          <Value xsi:type="xsd:string">support</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.User.1.Password</Name>
+          <Value xsi:type="xsd:string">84a64567</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.User.1.Username</Name>
+          <Value xsi:type="xsd:string">admin</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:GetParameterValuesResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Mon, 17 Nov 2025 21:22:32.677
+CPE Manager IP Address=172.24.2.231
+Connection ID=372210
+HTTP/1.1 204 No Content
+Content-Type: text/plain
+Content-Length: 0
+Connection: close
+
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:22:33.381
+CPE Manager IP Address=172.24.3.201
+Connection ID=370198
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3278
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">242921980</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>Calix</Manufacturer>
+        <OUI>487746</OUI>
+        <ProductClass>ENT</ProductClass>
+        <SerialNumber>CXNK0083217F</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>6 CONNECTION REQUEST</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-17T16:22:39-05:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0009]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.5[](Baseline:1, EthernetLAN:1, Time:1, IPPing:1, DeviceAssociation:1, QoS:1, CaptivePortal:1, WiFiLAN:1, UDPConnReq:1, TraceRoute:1)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">3000219623</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">12.2.12.9.1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://23.155.130.7:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.GatewayInfo.SerialNumber</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">23.155.130.7</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Mon, 17 Nov 2025 21:22:33.387
+CPE Manager IP Address=172.24.3.201
+Connection ID=370198
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Digest     realm="TR069_ip-172-24-3-201",      qop="auth",      nonce="19a93b2b32b45DE78",      opaque="251588c9"
+WWW-Authenticate: Basic realm="TR069_ip-172-24-3-201"
+Connection: close
+Content-Type: text/plain
+Content-Length: 0
+
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:22:33.638
+CPE Manager IP Address=172.24.1.70
+Connection ID=381147
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3279
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">1014179228</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>Calix</Manufacturer>
+        <OUI>487746</OUI>
+        <ProductClass>ENT</ProductClass>
+        <SerialNumber>CXNK0083217F</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>6 CONNECTION REQUEST</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-17T16:22:39-05:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0009]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.5[](Baseline:1, EthernetLAN:1, Time:1, IPPing:1, DeviceAssociation:1, QoS:1, CaptivePortal:1, WiFiLAN:1, UDPConnReq:1, TraceRoute:1)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">3000219623</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">12.2.12.9.1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://23.155.130.7:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.GatewayInfo.SerialNumber</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">23.155.130.7</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Mon, 17 Nov 2025 21:22:33.655
+CPE Manager IP Address=172.24.1.70
+Connection ID=381147
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 530
+Connection: close
+Set-Cookie: SessionId=CpeMgr172.24.1.70.CpeSN.CXNK0083217F-381147; Path=/hay
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">1014179228</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:InformResponse>
+      <MaxEnvelopes>1</MaxEnvelopes>
+    </cwmp:InformResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:22:34.089
+CPE Manager IP Address=172.24.1.70
+Connection ID=381157
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Cookie: SessionId=CpeMgr172.24.1.70.CpeSN.CXNK0083217F-381147
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA42C25EE67F4B650A77BEED4F04366D48D6377BC6A156EB46E7CDD2B7FBFA5BE34C816309FEB826F16C3AECF0D11E5B95EDBD6BEC7F3CB76E84AF312933CDEEAE3D
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 0
+
+
+Packet Sent - Mon, 17 Nov 2025 21:22:34.189
+CPE Manager IP Address=172.24.1.70
+Connection ID=381157
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 689
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap-env:Header>
+    <cwmp:ID soap-env:mustUnderstand="1">109967</cwmp:ID>
+  </soap-env:Header>
+  <soap-env:Body>
+    <cwmp:GetParameterValues>
+      <ParameterNames soap-enc:arrayType="xsd:string[1]">
+        <string>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMappingNumberOfEntries</string>
+      </ParameterNames>
+    </cwmp:GetParameterValues>
+  </soap-env:Body>
+</soap-env:Envelope>
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:22:34.261
+CPE Manager IP Address=172.24.1.70
+Connection ID=381159
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+Cookie: SessionId=CpeMgr172.24.1.70.CpeSN.CXNK0083217F-381147
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA42C25EE67F4B650A77BEED4F04366D48D6377BC6A156EB46E7CDD2B7FBFA5BE34C816309FEB826F16C3AECF0D11E5B95EDBD6BEC7F3CB76E84AF312933CDEEAE3D
+SOAPAction: 
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 903
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">109967</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:GetParameterValuesResponse>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0000]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMappingNumberOfEntries</Name>
+          <Value xsi:type="xsd:unsignedInt">6</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:GetParameterValuesResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Mon, 17 Nov 2025 21:22:34.291
+CPE Manager IP Address=172.24.1.70
+Connection ID=381159
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 792
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">109971</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:GetParameterValues>
+      <ParameterNames SOAP-ENC:arrayType="xsd:string[2]">
+        <string>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMappingNumberOfEntries</string>
+        <string>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.</string>
+      </ParameterNames>
+    </cwmp:GetParameterValues>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Mon, 17 Nov 2025 21:22:34.396
+CPE Manager IP Address=172.24.1.70
+Connection ID=381158
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+Cookie: SessionId=CpeMgr172.24.1.70.CpeSN.CXNK0083217F-381147
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA42C25EE67F4B650A77BEED4F04366D48D6377BC6A156EB46E7CDD2B7FBFA5BE34C816309FEB826F16C3AECF0D11E5B95EDBD6BEC7F3CB76E84AF312933CDEEAE3D
+SOAPAction: 
+User-Agent: BCM_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 23.155.130.7, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 21641
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">109971</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:GetParameterValuesResponse>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0000]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.9.PortMappingEnabled</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.9.PortMappingLeaseDuration</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.9.RemoteHost</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.9.ExternalPort</Name>
+          <Value xsi:type="xsd:unsignedInt">88</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.9.ExternalPortEndRange</Name>
+          <Value xsi:type="xsd:unsignedInt">88</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.9.X_BROADCOM_COM_ExternalPortEnd</Name>
+          <Value xsi:type="xsd:unsignedInt">88</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.9.InternalPort</Name>
+          <Value xsi:type="xsd:unsignedInt">88</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.9.X_BROADCOM_COM_InternalPortEnd</Name>
+          <Value xsi:type="xsd:unsignedInt">88</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.9.PortMappingProtocol</Name>
+          <Value xsi:type="xsd:string">TCP</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.9.InternalClient</Name>
+          <Value xsi:type="xsd:string">192.168.1.100</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.9.PortMappingDescription</Name>
+          <Value xsi:type="xsd:string">TowerCamera</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.9.X_000631_IsAddByGUI</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.9.X_000631_IsAddByUPNP</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.11.PortMappingEnabled</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.11.PortMappingLeaseDuration</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.11.RemoteHost</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.11.ExternalPort</Name>
+          <Value xsi:type="xsd:unsignedInt">888</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.11.ExternalPortEndRange</Name>
+          <Value xsi:type="xsd:unsignedInt">888</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.11.X_BROADCOM_COM_ExternalPortEnd</Name>
+          <Value xsi:type="xsd:unsignedInt">888</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.11.InternalPort</Name>
+          <Value xsi:type="xsd:unsignedInt">888</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.11.X_BROADCOM_COM_InternalPortEnd</Name>
+          <Value xsi:type="xsd:unsignedInt">888</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.11.PortMappingProtocol</Name>
+          <Value xsi:type="xsd:string">TCP</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.11.InternalClient</Name>
+          <Value xsi:type="xsd:string">192.168.1.100</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.11.PortMappingDescription</Name>
+          <Value xsi:type="xsd:string">TowerCamera</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.11.X_000631_IsAddByGUI</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.11.X_000631_IsAddByUPNP</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.12.PortMappingEnabled</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.12.PortMappingLeaseDuration</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.12.RemoteHost</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.12.ExternalPort</Name>
+          <Value xsi:type="xsd:unsignedInt">5900</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.12.ExternalPortEndRange</Name>
+          <Value xsi:type="xsd:unsignedInt">5900</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.12.X_BROADCOM_COM_ExternalPortEnd</Name>
+          <Value xsi:type="xsd:unsignedInt">5900</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.12.InternalPort</Name>
+          <Value xsi:type="xsd:unsignedInt">5900</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.12.X_BROADCOM_COM_InternalPortEnd</Name>
+          <Value xsi:type="xsd:unsignedInt">5900</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.12.PortMappingProtocol</Name>
+          <Value xsi:type="xsd:string">TCP or UDP</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.12.InternalClient</Name>
+          <Value xsi:type="xsd:string">192.168.1.99</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.12.PortMappingDescription</Name>
+          <Value xsi:type="xsd:string">VNC Streaming</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.12.X_000631_IsAddByGUI</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.12.X_000631_IsAddByUPNP</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.13.PortMappingEnabled</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.13.PortMappingLeaseDuration</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.13.RemoteHost</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.13.ExternalPort</Name>
+          <Value xsi:type="xsd:unsignedInt">5800</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.13.ExternalPortEndRange</Name>
+          <Value xsi:type="xsd:unsignedInt">5800</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.13.X_BROADCOM_COM_ExternalPortEnd</Name>
+          <Value xsi:type="xsd:unsignedInt">5800</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.13.InternalPort</Name>
+          <Value xsi:type="xsd:unsignedInt">5800</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.13.X_BROADCOM_COM_InternalPortEnd</Name>
+          <Value xsi:type="xsd:unsignedInt">5800</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.13.PortMappingProtocol</Name>
+          <Value xsi:type="xsd:string">TCP or UDP</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.13.InternalClient</Name>
+          <Value xsi:type="xsd:string">192.168.1.99</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.13.PortMappingDescription</Name>
+          <Value xsi:type="xsd:string">VNC Streaming</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.13.X_000631_IsAddByGUI</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.13.X_000631_IsAddByUPNP</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.14.PortMappingEnabled</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.14.PortMappingLeaseDuration</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.14.RemoteHost</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.14.ExternalPort</Name>
+          <Value xsi:type="xsd:unsignedInt">9922</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.14.ExternalPortEndRange</Name>
+          <Value xsi:type="xsd:unsignedInt">9922</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.14.X_BROADCOM_COM_ExternalPortEnd</Name>
+          <Value xsi:type="xsd:unsignedInt">9922</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.14.InternalPort</Name>
+          <Value xsi:type="xsd:unsignedInt">22</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.14.X_BROADCOM_COM_InternalPortEnd</Name>
+          <Value xsi:type="xsd:unsignedInt">22</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.14.PortMappingProtocol</Name>
+          <Value xsi:type="xsd:string">TCP</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.14.InternalClient</Name>
+          <Value xsi:type="xsd:string">192.168.1.99</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.14.PortMappingDescription</Name>
+          <Value xsi:type="xsd:string">streaming PC SSH</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.14.X_000631_IsAddByGUI</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.14.X_000631_IsAddByUPNP</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.15.PortMappingEnabled</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.15.PortMappingLeaseDuration</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.15.RemoteHost</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.15.ExternalPort</Name>
+          <Value xsi:type="xsd:unsignedInt">5900</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.15.ExternalPortEndRange</Name>
+          <Value xsi:type="xsd:unsignedInt">5900</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.15.X_BROADCOM_COM_ExternalPortEnd</Name>
+          <Value xsi:type="xsd:unsignedInt">5900</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.15.InternalPort</Name>
+          <Value xsi:type="xsd:unsignedInt">5900</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.15.X_BROADCOM_COM_InternalPortEnd</Name>
+          <Value xsi:type="xsd:unsignedInt">5900</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.15.PortMappingProtocol</Name>
+          <Value xsi:type="xsd:string">TCP</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.15.InternalClient</Name>
+          <Value xsi:type="xsd:string">192.168.1.99</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.15.PortMappingDescription</Name>
+          <Value xsi:type="xsd:string">VNC: stpeters@clock-tower-streaming-pc</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.15.X_000631_IsAddByGUI</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMapping.15.X_000631_IsAddByUPNP</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.PortMappingNumberOfEntries</Name>
+          <Value xsi:type="xsd:unsignedInt">6</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:GetParameterValuesResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Mon, 17 Nov 2025 21:22:34.924
+CPE Manager IP Address=172.24.1.70
+Connection ID=381158
+HTTP/1.1 204 No Content
+Content-Type: text/plain
+Content-Length: 0
+Connection: close

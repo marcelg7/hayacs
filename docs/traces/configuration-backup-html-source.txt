@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    	<meta http-equiv="PRAGMA" content="NO-CACHE" />
+		<meta http-equiv="CACHE-CONTROL" content="NO-STORE, NO-CACHE, MUST-REVALIDATE, POST-CHECK=0, PRE-CHECK=0" />
+		<meta http-equiv="EXPIRES" content="01 Jan 2020 00:00:00 GMT" />
+		<meta http-equiv="Last-Modified" content="01 Jan 2000 00:00:00 GMT" />
+                <meta name="viewport" content="width=device-width, initial-scale=0.8">
+        <title></title>
+        <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+        <link rel="stylesheet" href="/public/common/styles/bootstrap.min.css?v=v4.15.0.177.gbc8eae4-I140" />
+        <link rel="stylesheet" href="/public/common/styles/jqui/jquery-ui-1.10.3.custom.css?v=v4.15.0.177.gbc8eae4-I140" />
+        <link rel="stylesheet" href="/public/common/styles/cphp-angular-components-bridge.css?v=v4.15.0.177.gbc8eae4-I140" />
+        <link rel="stylesheet" href="/public/common/styles/main.css?v=v4.15.0.177.gbc8eae4-I140" />
+        <link rel="stylesheet" href="/public/common/styles/customer.css?v=v4.15.0.177.gbc8eae4-I140" />
+        <link rel="apple-touch-icon" href="/public/common/images/apple-bookmark-icon.png" />
+        <!--[if IE]>
+        <link rel="stylesheet" href="/public/common/styles/ie-overrides.css?v=v4.15.0.177.gbc8eae4-I140" type="text/css" />
+        <![endif]-->
+                <script type="text/javascript">
+        // javascript global user/customer environment vars
+		var sCustomerTag = 'hay';
+		var sBrowserName = 'Firefox'; // see /application/classesclass.browserdetection.php
+		var sOS = 'Windows'; // Windows || Mac || Unknown
+
+		// labels
+		var sLabel_CustomerName = 'Swiftnet';
+
+		var __CLIENT_PORT__ = '63636';
+		var __ENDUSER_VERSION__ = 'v4.15.0-177-gbc8eae4';
+		var __ILOAD_VERSION__ = 'I140';
+		var __TAP_VERSION__ = 'v4.0.0-6-gfd01878';
+		var __AMP_LIB_VERSION__ = 'v4.0.0-30-ga9a9408';
+		var __LANGUAGE__ = 'en-us';
+		var __USERTYPE__ = 'cp';
+
+		var cpeId = '90213';
+        var domainName = 'hay';
+
+		</script>
+        <script src="/public/common/scripts/en-us/moment.min.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/moment-timezone-with-data.min.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/react.production.min.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/react-dom.production.min.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/mobx.umd.min.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/mobxreactlite.umd.production.min.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/mobxreact.umd.production.min.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/store.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/toast.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/jquery-3.6.0.min.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/jquery-migrate-3.3.2.min.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/jquery-ui-1.10.3.custom.min.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/jquery.shorten.min.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/highcharts.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/core.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/server.core.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/utils.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/date.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/underscore-min.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/underscore-mixins.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+        <script src="/public/common/scripts/en-us/ux.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+    </head>
+    <body>
+    	<div style="display:none" id="datarefresh_modal_dock">
+				<div id="datarefresh_container">
+					<div id="datarefresh_status">
+						<p style="text-align:center;"><img src="/public/common/images/loading.gif" /></p>
+					</div>
+				</div>
+			</div>		<div class="notification-messages" style="display: none;">
+			<div style="display: flex; flex: 1 1 0%; padding-top: 1.2rem; padding-bottom: 1.2rem; justify-content: space-between; background-color: red;">
+				<div style="display: flex;"></div>
+				<div style="display: flex; font-size: 1.125rem; gap: .5rem; justify-content: center; align-items: center;">
+					<div style="display: flex; align-items: center; color: white;">
+						<!-- <i class="pi pi-info-circle text-white"></i> -->
+						⚠
+					</div>
+					<div class="notification-messages-text" style="display: flex; color: white;"></div>
+				</div>
+				<div style="display: flex; align-items: center; padding-left: 1rem; padding-right: 1rem; color: white;" 
+					onmouseover="this.style.color = 'yellow'; this.style.cursor = 'pointer'"
+					onmouseout="this.style.color = 'white'; this.style.cursor = 'auto'"
+					onclick="hideNotificationMessages()"
+					>
+					╳	
+				</div>
+			</div>
+		</div>
+        <div class="page">
+
+        	<div class="pageHeader">
+
+    <div class="headerLogo">
+
+    	<ul id="agent_header_menu"><li><em>User:</em> <span id="username_display">10200464&nbsp;[10200464_9991004677@58502.com]</span></li>&nbsp<li><a href="/agent/"><button>Marcel@hay</button></a></li><li><a href="/logout/"><button>Logout</button></a></li></ul>
+
+        <div style="margin-top:10px;" class="TechLogo" id="site_logo" >
+
+            
+        </div>
+
+    </div>
+    <div class="clearboth"></div>
+    <div class='headerMenuContainer'><a id='helpLink' style="float:right;margin-right:0px;" class='main_menu_link ' href='/help/en-us/help_cp.html' target="help_pop">HELP</a>	<span id="main_menu_right"><script> var iCurrentServerTime = 1763414611;</script>
+ <div id='last-update-app'></div><script>var iSubscriberId = 16037;</script><script>var iGatewayId = 90213;</script><script>var aRefreshedDevices = [];</script><script>var sHpLogoUrl = "\/services\/";</script><script>var sCpLogoUrl = "\/agent\/";</script>	</span><a class='main_menu_link ' title='' href='/dashboard/view/subsid/16037/gwid/90213'>DASHBOARD</a><a class='main_menu_link ' title='' href='/household/view/subsid/16037/gwid/90213'>USER's VIEW</a><a class='main_menu_link headerMenuActive' title='' href='/routermanagement/basicsettings/subsid/16037/gwid/90213'>ROUTER SETTINGS</a><a class='main_menu_link ' title='' href='/household/eventlog/subsid/16037/gwid/90213'>EVENT LOG</a>
+
+<script src="/public/common/scripts/en-us/acp_link.js?v=v4.15.0.177.gbc8eae4-I140"></script>
+<script>
+ACP.ACSServerURL = 'https://manager.nisc-uss.coop:443';
+ACP.ACSDefaultAccountName = 'Marcel@hay';
+ACP.sLoginGUIHandle = '438727d55abc730ae9b5c1883be14a69';
+ACP.sAuthToken = 'VVNTOnsKICAiY3JlYXRlVGltZU1zIiA6IDE3NjM0MTM5MzE0MzEsCiAgInR0bFNlY3MiIDogMjg4MDAsCiAgInVzZXJuYW1lIiA6ICJNYXJjZWxAaGF5IiwKICAidHlwZSIgOiAiYWNjZXNzIiwKICAiY29va2llTmFtZSIgOiAicGdXaW4xMDAwIiwKICAiY2xpZW50SVAiIDogIjI2MDA6MWYxNjo4Yjg6MjkwMTpmZDkzOmFkYjA6MjMzNDplYTFmIiwKICAidG9rZW5JZCIgOiAiNDM4NzI3ZDU1YWJjNzMwYWU5YjVjMTg4M2JlMTRhNjkiLAogICJzaWduYXR1cmUiIDogImY0ODJkMmM4NzhiMjJmN2NkZDFkMzU5Yjc2Zjk2NjkxIgp9';
+ACP.pgWindow = 'PRO1000';
+ACP.DeviceID = '';
+</script>
+
+<div class="clearboth"></div></div><script src="/public/common/scripts/en-us/uxtools.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+
+    <script src="/public/common/scripts/en-us/lastUpdate.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+    <!-- <script src="/public/common/scripts/en-us/keepalive.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script> -->
+</div>
+
+            <div class="holder"> <!-- main content frame div -->
+<!-- HEADER CONTENT END -->
+
+<script>
+	if(window.location.href.includes('login/care')) {
+		localStorage.removeItem('hideNotificationMessages');
+	}
+	function hideNotificationMessages() {
+		$('.notification-messages')[0].style.display = 'none';
+		localStorage.setItem('hideNotificationMessages', true);
+	}
+	setTimeout(() => {
+		if (localStorage.getItem('hideNotificationMessages') === 'true' || __USERTYPE__ === 'hp') {
+			return;
+		}
+        rootStore.acsStore.api.notificationMessages
+            .fetch({method: "GET", data: {numDaysBefore: 1, numDaysAfter: 14}})
+            .then((resp) => {
+                if (resp?.data?.length > 0) {
+                    const maintenanceMessages = resp.data
+                        .filter((entry) => entry.data.category === 'Maintenance')
+                        .filter((entry) => entry.data.status === 'Scheduled')
+                        .sort((l, r) => l.data.startTime - r.data.startTime);
+                    if (maintenanceMessages.length > 0 && localStorage.getItem('hideNotificationMessages') !== 'true') {
+                        const lastMaintenanceMessage = maintenanceMessages[0];
+                        // const lastMaintenanceMessage = maintenanceMessages[maintenanceMessages.length - 1];
+                        $('.notification-messages')[0].style.display = 'block';
+                        $('.notification-messages-text')[0].innerText =
+                            `Maintenance scheduled from ${Core.StringDateFromMs(lastMaintenanceMessage.data.startTime)} to ${Core.StringDateFromMs(lastMaintenanceMessage.data.endTime)}`
+                    }
+                }
+            });
+    }, 3000);
+</script><link rel="stylesheet" href="/public/common/styles/routersettings.css?v=v4.15.0.177.gbc8eae4-I140" />
+
+<div class="content">
+
+    <div class="main" id="config-backup-react-app"></div>
+
+    <div class="menu">
+
+    <div class="helpMenu header">
+        Router Settings
+    </div>
+
+    <div class="helpMenu">
+        <a href="/routermanagement/basicsettings/subsid/16037/gwid/90213" id="submenu_basic_settings">Router Details</a>
+    </div>
+
+    <div class="helpMenu">
+        <a href="/routermanagement/wirelesssettings/subsid/16037/gwid/90213" id="submenu_wireless_settings">Wireless Settings</a>
+    </div>
+		<div class="helpMenu">
+		    <a href="/routermanagement/guestsettings/subsid/16037/gwid/90213" id="submenu_guestwifi_settings">Guest Wi-Fi</a>
+		</div>
+    <div class="helpMenu">
+        <a href="/routermanagement/wirelessinterference/subsid/16037/gwid/90213" id="submenu_wireless_interference">Wireless Interference</a>
+    </div>
+
+    <div class="helpMenu">
+        <a href="/routermanagement/portmanagement/subsid/16037/gwid/90213" id="submenu_port_management">Port Management &amp; DMZ</a>
+    </div>
+  <div class="helpMenu">
+      <a href="/routermanagement/configbackup/subsid/16037/gwid/90213" id="submenu_config_backup">Configuration Backup</a>
+  </div>
+
+  <div class="helpMenu">
+      <a href="/routermanagement/internetsettings/subsid/16037/gwid/90213" id="submenu_internet_settings">Internet Settings</a>
+  </div>
+  <div class="helpMenu">
+      <a href="/routermanagement/lansettings/subsid/16037/gwid/90213" id="submenu_lan_settings">LAN Settings</a>
+  </div>
+
+
+    <div class="helpMenu">
+        <a href="/routermanagement/deviceguiaccess/subsid/16037/gwid/90213" id="submenu_deviceguiaccess_settings">Remote GUI Password</a>
+    </div>
+
+    <div class="helpMenu">
+        <a href="/routermanagement/voip/subsid/16037/gwid/90213" id="submenu_voip_settings">VoIP</a>
+    </div>
+
+
+
+    <div class="helpMenu">
+        <a href="/routermanagement/datamodeleditor/subsid/16037/gwid/90213" id="submenu_data_model_editor">Data Model Editor</a>
+    </div>
+
+    
+  <div class="clearboth"></div>
+
+</div>
+
+</div>
+
+<script src="/public/common/scripts/en-us/routersettings.js?v=v4.15.0.177.gbc8eae4-I140" type="text/javascript"></script>
+
+<script>
+    $('#submenu_config_backup').parent().addClass('active'); // make subtab active
+    $(document).ready(function () {
+        routersettings.renderConfigBackupApp();
+    });
+</script>
+
+<!-- FOOTER CONTENT START -->
+				<div class="clearboth"></div>
+	            <div id="footer">
+                    <div>
+                        <div class="Copyright" id="copyright">
+                            Copyright 2023 &copy; All Rights Reserved.    NISC is a registered trademark of National Information Solutions Cooperative, Inc.
+                        </div>
+                    </div>
+                    <div class="PoweredByAndLicenseTerms">
+                        <div class="PowLogo" id="about_button"></div>
+                    </div>
+	            </div> <!-- #footer -->
+            </div> <!-- #holder -->
+    	</div> <!-- .page -->
+
+    </body>
+</html>
+<!-- FOOTER CONTENT END -->
