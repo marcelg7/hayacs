@@ -677,6 +677,209 @@ class DeviceController extends Controller
     }
 
     /**
+     * Update WiFi configuration for a WLAN instance
+     */
+    public function updateWifi(Request $request, string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $validated = $request->validate([
+            'instance' => 'required|integer|min:1',
+            'ssid' => 'nullable|string|max:32',
+            'enabled' => 'nullable|boolean',
+            'password' => 'nullable|string|min:8|max:63',
+            'security_type' => 'nullable|in:none,wpa2',
+            'radio_enabled' => 'nullable|boolean',
+            'auto_channel' => 'nullable|boolean',
+            'channel' => 'nullable|integer',
+            'auto_channel_bandwidth' => 'nullable|boolean',
+            'channel_bandwidth' => 'nullable|in:20MHz,40MHz,80MHz',
+            'ssid_broadcast' => 'nullable|boolean',
+        ]);
+
+        $instance = $validated['instance'];
+        $prefix = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$instance}";
+
+        // Build parameter values array
+        $values = [];
+
+        // SSID Name
+        if (isset($validated['ssid'])) {
+            $values["{$prefix}.SSID"] = $validated['ssid'];
+        }
+
+        // SSID Enable/Disable
+        if (isset($validated['enabled'])) {
+            $values["{$prefix}.Enable"] = [
+                'value' => $validated['enabled'] ? 1 : 0,
+                'type' => 'xsd:boolean',
+            ];
+        }
+
+        // WiFi Password (Calix-specific parameter)
+        if (isset($validated['password'])) {
+            $values["{$prefix}.X_000631_KeyPassphrase"] = $validated['password'];
+        }
+
+        // Security Type
+        if (isset($validated['security_type'])) {
+            if ($validated['security_type'] === 'wpa2') {
+                // WPA2-PSK with AES (most secure)
+                $values["{$prefix}.BeaconType"] = '11i';
+                $values["{$prefix}.IEEE11iAuthenticationMode"] = 'PSKAuthentication';
+                $values["{$prefix}.IEEE11iEncryptionModes"] = 'AESEncryption';
+                $values["{$prefix}.BasicAuthenticationMode"] = 'None';
+                $values["{$prefix}.BasicEncryptionModes"] = 'None';
+            } else {
+                // No security
+                $values["{$prefix}.BeaconType"] = 'Basic';
+                $values["{$prefix}.BasicAuthenticationMode"] = 'None';
+                $values["{$prefix}.BasicEncryptionModes"] = 'None';
+            }
+        }
+
+        // Radio Enable/Disable
+        if (isset($validated['radio_enabled'])) {
+            $values["{$prefix}.RadioEnabled"] = [
+                'value' => $validated['radio_enabled'] ? 1 : 0,
+                'type' => 'xsd:boolean',
+            ];
+        }
+
+        // Auto Channel
+        if (isset($validated['auto_channel'])) {
+            $values["{$prefix}.AutoChannelEnable"] = [
+                'value' => $validated['auto_channel'] ? 1 : 0,
+                'type' => 'xsd:boolean',
+            ];
+        }
+
+        // Manual Channel (only if auto channel is disabled)
+        if (isset($validated['channel']) && !($validated['auto_channel'] ?? false)) {
+            $values["{$prefix}.Channel"] = [
+                'value' => $validated['channel'],
+                'type' => 'xsd:unsignedInt',
+            ];
+        }
+
+        // Channel Bandwidth
+        if (isset($validated['auto_channel_bandwidth']) && $validated['auto_channel_bandwidth']) {
+            $values["{$prefix}.X_000631_OperatingChannelBandwidth"] = 'Auto';
+        } elseif (isset($validated['channel_bandwidth'])) {
+            $values["{$prefix}.X_000631_OperatingChannelBandwidth"] = $validated['channel_bandwidth'];
+        }
+
+        // SSID Broadcast
+        if (isset($validated['ssid_broadcast'])) {
+            $values["{$prefix}.SSIDAdvertisementEnabled"] = [
+                'value' => $validated['ssid_broadcast'] ? 1 : 0,
+                'type' => 'xsd:boolean',
+            ];
+        }
+
+        // Create task to set parameters
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'set_params',
+            'parameters' => [
+                'values' => $values,
+            ],
+            'status' => 'pending',
+        ]);
+
+        // Trigger immediate connection
+        $this->triggerConnectionRequestForTask($device);
+
+        return response()->json([
+            'message' => "WiFi configuration updated for WLAN instance {$instance}",
+            'task' => $task,
+            'values_set' => array_keys($values),
+        ], 201);
+    }
+
+    /**
+     * Get WiFi configuration for all WLAN instances
+     */
+    public function getWifiConfig(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        // Get all WLAN configuration parameters
+        $wlanParams = $device->parameters()
+            ->where('name', 'LIKE', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.%')
+            ->whereNotLike('name', '%AssociatedDevice%')
+            ->whereNotLike('name', '%Stats%')
+            ->whereNotLike('name', '%WPS%')
+            ->whereNotLike('name', '%PreSharedKey.1%')
+            ->get();
+
+        // Organize by instance
+        $instances = [];
+        foreach ($wlanParams as $param) {
+            if (preg_match('/WLANConfiguration\.(\d+)\.(.+)/', $param->name, $matches)) {
+                $instance = (int) $matches[1];
+                $field = $matches[2];
+
+                if (!isset($instances[$instance])) {
+                    $instances[$instance] = [
+                        'instance' => $instance,
+                        'band' => $instance >= 9 ? '5GHz' : '2.4GHz',
+                    ];
+                }
+
+                // Map relevant fields
+                switch ($field) {
+                    case 'SSID':
+                        $instances[$instance]['ssid'] = $param->value;
+                        break;
+                    case 'Enable':
+                        $instances[$instance]['enabled'] = ($param->value === '1' || $param->value === 'true');
+                        break;
+                    case 'X_000631_KeyPassphrase':
+                        $instances[$instance]['password'] = $param->value;
+                        break;
+                    case 'BeaconType':
+                        $instances[$instance]['security_type'] = ($param->value === 'Basic') ? 'none' : 'wpa2';
+                        break;
+                    case 'RadioEnabled':
+                        $instances[$instance]['radio_enabled'] = ($param->value === '1' || $param->value === 'true');
+                        break;
+                    case 'AutoChannelEnable':
+                        $instances[$instance]['auto_channel'] = ($param->value === '1' || $param->value === 'true');
+                        break;
+                    case 'Channel':
+                        $instances[$instance]['channel'] = (int) $param->value;
+                        break;
+                    case 'X_000631_OperatingChannelBandwidth':
+                        $instances[$instance]['channel_bandwidth'] = $param->value;
+                        $instances[$instance]['auto_channel_bandwidth'] = ($param->value === 'Auto');
+                        break;
+                    case 'SSIDAdvertisementEnabled':
+                        $instances[$instance]['ssid_broadcast'] = ($param->value === '1' || $param->value === 'true');
+                        break;
+                    case 'Standard':
+                        $instances[$instance]['standard'] = $param->value;
+                        break;
+                    case 'Status':
+                        $instances[$instance]['status'] = $param->value;
+                        break;
+                    case 'BSSID':
+                        $instances[$instance]['bssid'] = $param->value;
+                        break;
+                }
+            }
+        }
+
+        // Sort by instance number
+        ksort($instances);
+
+        return response()->json([
+            'device_id' => $device->id,
+            'wlan_configurations' => array_values($instances),
+        ]);
+    }
+
+    /**
      * Delete a device
      */
     public function destroy(string $id): JsonResponse

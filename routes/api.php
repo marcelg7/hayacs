@@ -44,3 +44,7 @@ Route::post('/devices/{id}/firmware-upgrade', [DeviceController::class, 'firmwar
 Route::post('/devices/{id}/upload', [DeviceController::class, 'uploadFile']);
 Route::post('/devices/{id}/ping-test', [DeviceController::class, 'pingTest']);
 Route::post('/devices/{id}/traceroute-test', [DeviceController::class, 'tracerouteTest']);
+
+// WiFi Configuration
+Route::get('/devices/{id}/wifi-config', [DeviceController::class, 'getWifiConfig']);
+Route::post('/devices/{id}/wifi-config', [DeviceController::class, 'updateWifi']);

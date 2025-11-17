@@ -118,6 +118,11 @@
                     class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                 Troubleshooting
             </button>
+            <button @click="activeTab = 'wifi'"
+                    :class="activeTab === 'wifi' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                WiFi Settings
+            </button>
         </nav>
     </div>
 
@@ -1610,6 +1615,303 @@
                 </table>
             </div>
         </div>
+    </div>
+
+    <!-- WiFi Settings Tab -->
+    <div x-show="activeTab === 'wifi'" x-cloak>
+        @php
+            // Get all WLAN configuration parameters
+            $wlanConfigs = [];
+            $wlanParams = $device->parameters()
+                ->where('name', 'LIKE', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.%')
+                ->whereNotLike('name', '%AssociatedDevice%')
+                ->whereNotLike('name', '%Stats%')
+                ->whereNotLike('name', '%WPS%')
+                ->whereNotLike('name', '%PreSharedKey.1%')
+                ->get();
+
+            foreach ($wlanParams as $param) {
+                if (preg_match('/WLANConfiguration\.(\d+)\.(.+)/', $param->name, $matches)) {
+                    $instance = (int) $matches[1];
+                    $field = $matches[2];
+
+                    if (!isset($wlanConfigs[$instance])) {
+                        $wlanConfigs[$instance] = ['instance' => $instance];
+                    }
+
+                    $wlanConfigs[$instance][$field] = $param->value;
+                }
+            }
+
+            // Sort by instance number
+            ksort($wlanConfigs);
+
+            // Organize into 2.4GHz and 5GHz groups
+            $wifi24Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] <= 8);
+            $wifi5Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] >= 9);
+        @endphp
+
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-start">
+            <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div>
+                <h3 class="text-sm font-medium text-blue-900">WiFi Configuration</h3>
+                <p class="mt-1 text-sm text-blue-700">Manage wireless network settings for all SSIDs. Changes will be applied immediately via TR-069. Security type is set to WPA2-PSK with AES encryption.</p>
+            </div>
+        </div>
+
+        <!-- 2.4GHz WiFi Networks -->
+        @if(count($wifi24Ghz) > 0)
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+            <div class="px-4 py-5 sm:px-6 bg-green-50">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">2.4GHz Networks</h3>
+                <p class="mt-1 text-sm text-gray-600">Wireless SSIDs on 2.4GHz band (instances 1-8)</p>
+            </div>
+            <div class="border-t border-gray-200 p-6 space-y-6">
+                @foreach($wifi24Ghz as $config)
+                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <form action="/api/devices/{{ $device->id }}/wifi-config" method="POST" class="space-y-4" x-data="{
+                            autoChannel: {{ ($config['AutoChannelEnable'] ?? '0') === '1' ? 'true' : 'false' }},
+                            autoChannelBandwidth: {{ ($config['X_000631_OperatingChannelBandwidth'] ?? '20MHz') === 'Auto' ? 'true' : 'false' }}
+                        }">
+                            @csrf
+                            <input type="hidden" name="instance" value="{{ $config['instance'] }}">
+                            <input type="hidden" name="security_type" value="wpa2">
+
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-md font-semibold text-gray-900">SSID {{ $config['instance'] }}</h4>
+                                <div class="flex items-center space-x-4">
+                                    <label class="flex items-center">
+                                        <input type="hidden" name="enabled" value="0">
+                                        <input type="checkbox" name="enabled" value="1" {{ ($config['Enable'] ?? '0') === '1' ? 'checked' : '' }}
+                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                        <span class="ml-2 text-sm font-medium text-gray-700">SSID Enabled</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="hidden" name="radio_enabled" value="0">
+                                        <input type="checkbox" name="radio_enabled" value="1" {{ ($config['RadioEnabled'] ?? '0') === '1' ? 'checked' : '' }}
+                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                        <span class="ml-2 text-sm font-medium text-gray-700">Radio Enabled</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- SSID Name -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">SSID Name</label>
+                                    <input type="text" name="ssid" value="{{ $config['SSID'] ?? '' }}" maxlength="32"
+                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </div>
+
+                                <!-- Password -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">WiFi Password (WPA2-AES)</label>
+                                    <input type="text" name="password" value="{{ $config['X_000631_KeyPassphrase'] ?? '' }}"
+                                           minlength="8" maxlength="63" placeholder="Min 8 characters"
+                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <p class="mt-1 text-xs text-gray-500">Leave blank to keep current password</p>
+                                </div>
+
+                                <!-- Auto Channel -->
+                                <div>
+                                    <label class="flex items-center">
+                                        <input type="hidden" name="auto_channel" value="0">
+                                        <input type="checkbox" name="auto_channel" value="1"
+                                               x-model="autoChannel"
+                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                        <span class="ml-2 text-sm font-medium text-gray-700">Auto Channel</span>
+                                    </label>
+                                    <div x-show="!autoChannel" class="mt-2">
+                                        <label class="block text-sm font-medium text-gray-700">Manual Channel</label>
+                                        <input type="number" name="channel" value="{{ $config['Channel'] ?? '11' }}" min="1" max="11"
+                                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    </div>
+                                </div>
+
+                                <!-- Channel Bandwidth -->
+                                <div>
+                                    <label class="flex items-center">
+                                        <input type="hidden" name="auto_channel_bandwidth" value="0">
+                                        <input type="checkbox" name="auto_channel_bandwidth" value="1"
+                                               x-model="autoChannelBandwidth"
+                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                        <span class="ml-2 text-sm font-medium text-gray-700">Auto Channel Bandwidth</span>
+                                    </label>
+                                    <div x-show="!autoChannelBandwidth" class="mt-2">
+                                        <label class="block text-sm font-medium text-gray-700">Channel Bandwidth</label>
+                                        <select name="channel_bandwidth" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                            <option value="20MHz" {{ ($config['X_000631_OperatingChannelBandwidth'] ?? '20MHz') === '20MHz' ? 'selected' : '' }}>20 MHz</option>
+                                            <option value="40MHz" {{ ($config['X_000631_OperatingChannelBandwidth'] ?? '') === '40MHz' ? 'selected' : '' }}>40 MHz</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- SSID Broadcast -->
+                                <div class="flex items-center">
+                                    <input type="hidden" name="ssid_broadcast" value="0">
+                                    <input type="checkbox" name="ssid_broadcast" value="1" {{ ($config['SSIDAdvertisementEnabled'] ?? '1') === '1' ? 'checked' : '' }}
+                                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    <span class="ml-2 text-sm font-medium text-gray-700">Broadcast SSID</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                                <div class="text-sm text-gray-600">
+                                    <span class="font-medium">Status:</span> {{ $config['Status'] ?? 'Unknown' }} |
+                                    <span class="font-medium">Standard:</span> {{ $config['Standard'] ?? '-' }}
+                                </div>
+                                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    Save Configuration
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        <!-- 5GHz WiFi Networks -->
+        @if(count($wifi5Ghz) > 0)
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-purple-50">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">5GHz Networks</h3>
+                <p class="mt-1 text-sm text-gray-600">Wireless SSIDs on 5GHz band (instance 16+)</p>
+            </div>
+            <div class="border-t border-gray-200 p-6 space-y-6">
+                @foreach($wifi5Ghz as $config)
+                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <form action="/api/devices/{{ $device->id }}/wifi-config" method="POST" class="space-y-4" x-data="{
+                            autoChannel: {{ ($config['AutoChannelEnable'] ?? '0') === '1' ? 'true' : 'false' }},
+                            autoChannelBandwidth: {{ ($config['X_000631_OperatingChannelBandwidth'] ?? '80MHz') === 'Auto' ? 'true' : 'false' }}
+                        }">
+                            @csrf
+                            <input type="hidden" name="instance" value="{{ $config['instance'] }}">
+                            <input type="hidden" name="security_type" value="wpa2">
+
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-md font-semibold text-gray-900">SSID {{ $config['instance'] }}</h4>
+                                <div class="flex items-center space-x-4">
+                                    <label class="flex items-center">
+                                        <input type="hidden" name="enabled" value="0">
+                                        <input type="checkbox" name="enabled" value="1" {{ ($config['Enable'] ?? '0') === '1' ? 'checked' : '' }}
+                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                        <span class="ml-2 text-sm font-medium text-gray-700">SSID Enabled</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="hidden" name="radio_enabled" value="0">
+                                        <input type="checkbox" name="radio_enabled" value="1" {{ ($config['RadioEnabled'] ?? '0') === '1' ? 'checked' : '' }}
+                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                        <span class="ml-2 text-sm font-medium text-gray-700">Radio Enabled</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- SSID Name -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">SSID Name</label>
+                                    <input type="text" name="ssid" value="{{ $config['SSID'] ?? '' }}" maxlength="32"
+                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </div>
+
+                                <!-- Password -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">WiFi Password (WPA2-AES)</label>
+                                    <input type="text" name="password" value="{{ $config['X_000631_KeyPassphrase'] ?? '' }}"
+                                           minlength="8" maxlength="63" placeholder="Min 8 characters"
+                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <p class="mt-1 text-xs text-gray-500">Leave blank to keep current password</p>
+                                </div>
+
+                                <!-- Auto Channel -->
+                                <div>
+                                    <label class="flex items-center">
+                                        <input type="hidden" name="auto_channel" value="0">
+                                        <input type="checkbox" name="auto_channel" value="1"
+                                               x-model="autoChannel"
+                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                        <span class="ml-2 text-sm font-medium text-gray-700">Auto Channel</span>
+                                    </label>
+                                    <div x-show="!autoChannel" class="mt-2">
+                                        <label class="block text-sm font-medium text-gray-700">Manual Channel</label>
+                                        <select name="channel" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                            <option value="36" {{ ($config['Channel'] ?? '') === '36' ? 'selected' : '' }}>36</option>
+                                            <option value="40" {{ ($config['Channel'] ?? '') === '40' ? 'selected' : '' }}>40</option>
+                                            <option value="44" {{ ($config['Channel'] ?? '') === '44' ? 'selected' : '' }}>44</option>
+                                            <option value="48" {{ ($config['Channel'] ?? '') === '48' ? 'selected' : '' }}>48</option>
+                                            <option value="149" {{ ($config['Channel'] ?? '') === '149' ? 'selected' : '' }}>149</option>
+                                            <option value="153" {{ ($config['Channel'] ?? '') === '153' ? 'selected' : '' }}>153</option>
+                                            <option value="157" {{ ($config['Channel'] ?? '') === '157' ? 'selected' : '' }}>157</option>
+                                            <option value="161" {{ ($config['Channel'] ?? '161') === '161' ? 'selected' : '' }}>161</option>
+                                            <option value="165" {{ ($config['Channel'] ?? '') === '165' ? 'selected' : '' }}>165</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Channel Bandwidth -->
+                                <div>
+                                    <label class="flex items-center">
+                                        <input type="hidden" name="auto_channel_bandwidth" value="0">
+                                        <input type="checkbox" name="auto_channel_bandwidth" value="1"
+                                               x-model="autoChannelBandwidth"
+                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                        <span class="ml-2 text-sm font-medium text-gray-700">Auto Channel Bandwidth</span>
+                                    </label>
+                                    <div x-show="!autoChannelBandwidth" class="mt-2">
+                                        <label class="block text-sm font-medium text-gray-700">Channel Bandwidth</label>
+                                        <select name="channel_bandwidth" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                            <option value="20MHz" {{ ($config['X_000631_OperatingChannelBandwidth'] ?? '') === '20MHz' ? 'selected' : '' }}>20 MHz</option>
+                                            <option value="40MHz" {{ ($config['X_000631_OperatingChannelBandwidth'] ?? '') === '40MHz' ? 'selected' : '' }}>40 MHz</option>
+                                            <option value="80MHz" {{ ($config['X_000631_OperatingChannelBandwidth'] ?? '80MHz') === '80MHz' ? 'selected' : '' }}>80 MHz</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- SSID Broadcast -->
+                                <div class="flex items-center">
+                                    <input type="hidden" name="ssid_broadcast" value="0">
+                                    <input type="checkbox" name="ssid_broadcast" value="1" {{ ($config['SSIDAdvertisementEnabled'] ?? '1') === '1' ? 'checked' : '' }}
+                                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    <span class="ml-2 text-sm font-medium text-gray-700">Broadcast SSID</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                                <div class="text-sm text-gray-600">
+                                    <span class="font-medium">Status:</span> {{ $config['Status'] ?? 'Unknown' }} |
+                                    <span class="font-medium">Standard:</span> {{ $config['Standard'] ?? '-' }}
+                                </div>
+                                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    Save Configuration
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        @if(count($wlanConfigs) === 0)
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-6 py-12 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No WiFi Configuration Found</h3>
+                <p class="mt-1 text-sm text-gray-500">Click "Query Device Info" to fetch WiFi parameters from the device.</p>
+            </div>
+        </div>
+        @endif
     </div>
 </div>
 @endsection
