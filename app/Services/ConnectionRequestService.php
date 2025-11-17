@@ -40,7 +40,9 @@ class ConnectionRequestService
         try {
             // TR-069 Connection Request is a simple HTTP GET/POST with digest auth
             // Most devices expect an empty GET request
-            $response = Http::timeout(10)
+            // Short timeout (3s) since we don't want to block API responses
+            // Device will pick up task on next periodic inform if this fails
+            $response = Http::timeout(3)
                 ->withOptions([
                     'verify' => false, // Many devices use self-signed certs
                 ])

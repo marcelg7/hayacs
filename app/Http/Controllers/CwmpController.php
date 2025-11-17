@@ -213,6 +213,28 @@ class CwmpController extends Controller
             }
         }
 
+        // Check for tasks that were sent but never responded to
+        // This can happen when a device starts a new session without sending responses
+        $abandonedTasks = $device->tasks()
+            ->where('status', 'sent')
+            ->get();
+
+        if ($abandonedTasks->isNotEmpty()) {
+            foreach ($abandonedTasks as $abandonedTask) {
+                $abandonedTask->markAsFailed(
+                    'Device started new TR-069 session without responding to command. ' .
+                    'This usually indicates the device rejected or failed to process the request.'
+                );
+
+                Log::warning('Abandoned task detected and failed', [
+                    'device_id' => $device->id,
+                    'task_id' => $abandonedTask->id,
+                    'task_type' => $abandonedTask->task_type,
+                    'events' => $parsed['events'],
+                ]);
+            }
+        }
+
         // Create session
         $session = CwmpSession::create([
             'device_id' => $deviceId,
