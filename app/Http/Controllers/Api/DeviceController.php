@@ -186,6 +186,7 @@ class DeviceController extends Controller
 
     /**
      * Build discovery parameters to find WAN, WiFi, and Host instances
+     * Enhanced to query full device trees for better coverage and vendor extensions
      */
     private function buildDiscoveryParameters(string $dataModel): array
     {
@@ -193,6 +194,12 @@ class DeviceController extends Controller
 
         if ($isDevice2) {
             return [
+                // Query entire DeviceInfo tree (gets ALL device info + vendor extensions automatically)
+                'Device.DeviceInfo.',
+
+                // Query entire ManagementServer tree (STUN, periodic inform, connection settings)
+                'Device.ManagementServer.',
+
                 // Always include static LAN parameters
                 'Device.IP.Interface.2.IPv4Address.1.IPAddress',
                 'Device.IP.Interface.2.IPv4Address.1.SubnetMask',
@@ -207,6 +214,12 @@ class DeviceController extends Controller
             ];
         } else {
             return [
+                // Query entire DeviceInfo tree (gets ALL device info + vendor extensions automatically)
+                'InternetGatewayDevice.DeviceInfo.',
+
+                // Query entire ManagementServer tree (STUN, periodic inform, connection settings)
+                'InternetGatewayDevice.ManagementServer.',
+
                 // Always include static LAN parameters
                 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceIPAddress',
                 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceSubnetMask',
@@ -247,6 +260,11 @@ class DeviceController extends Controller
                 'Device.IP.Interface.1.MACAddress',
                 'Device.IP.Interface.1.Uptime',
                 'Device.Routing.Router.1.IPv4Forwarding.1.GatewayIPAddress',
+                // WAN traffic statistics for analytics
+                'Device.IP.Interface.1.Stats.BytesSent',
+                'Device.IP.Interface.1.Stats.BytesReceived',
+                'Device.IP.Interface.1.Stats.PacketsSent',
+                'Device.IP.Interface.1.Stats.PacketsReceived',
             ]);
 
             // WiFi Radios - Use discovered count
@@ -265,15 +283,23 @@ class DeviceController extends Controller
                 $parameters[] = "Device.WiFi.SSID.{$i}.Enable";
                 $parameters[] = "Device.WiFi.SSID.{$i}.SSID";
                 $parameters[] = "Device.WiFi.SSID.{$i}.Status";
+                // WiFi traffic statistics for analytics
+                $parameters[] = "Device.WiFi.SSID.{$i}.Stats.BytesSent";
+                $parameters[] = "Device.WiFi.SSID.{$i}.Stats.BytesReceived";
+                $parameters[] = "Device.WiFi.SSID.{$i}.Stats.PacketsSent";
+                $parameters[] = "Device.WiFi.SSID.{$i}.Stats.PacketsReceived";
             }
 
-            // Hosts - Query up to 20 hosts if any exist
+            // Hosts - Query ALL hosts (no limit) for comprehensive troubleshooting
             $hostCount = (int) ($discoveryResults['Device.Hosts.HostNumberOfEntries']['value'] ?? 0);
-            for ($i = 1; $i <= min($hostCount, 20); $i++) {
+            for ($i = 1; $i <= $hostCount; $i++) {
                 $parameters[] = "Device.Hosts.Host.{$i}.HostName";
                 $parameters[] = "Device.Hosts.Host.{$i}.IPAddress";
                 $parameters[] = "Device.Hosts.Host.{$i}.PhysAddress";
                 $parameters[] = "Device.Hosts.Host.{$i}.Active";
+                // Additional host info for AP topology mapping
+                $parameters[] = "Device.Hosts.Host.{$i}.Layer2Interface";
+                $parameters[] = "Device.Hosts.Host.{$i}.AssociatedDevice";
             }
         } else {
             // InternetGatewayDevice data model
@@ -294,6 +320,11 @@ class DeviceController extends Controller
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.MACAddress";
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.ConnectionStatus";
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.Uptime";
+                    // WAN traffic statistics for analytics
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANEthernetInterfaceConfig.Stats.BytesSent";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANEthernetInterfaceConfig.Stats.BytesReceived";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANEthernetInterfaceConfig.Stats.PacketsSent";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANEthernetInterfaceConfig.Stats.PacketsReceived";
                 } else {
                     // Standard devices use WANDevice.1.WANConnectionDevice.1.WANIPConnection.1
                     $wanIdx = 1;
@@ -305,6 +336,11 @@ class DeviceController extends Controller
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.MACAddress";
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.ConnectionStatus";
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.Uptime";
+                    // WAN traffic statistics for analytics
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANEthernetInterfaceConfig.Stats.BytesSent";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANEthernetInterfaceConfig.Stats.BytesReceived";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANEthernetInterfaceConfig.Stats.PacketsSent";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANEthernetInterfaceConfig.Stats.PacketsReceived";
                 }
             }
 
@@ -350,15 +386,31 @@ class DeviceController extends Controller
 
                 // Bandwidth (Calix-specific)
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.X_000631_OperatingChannelBandwidth";
+
+                // WiFi traffic statistics for analytics and troubleshooting
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Stats.BytesSent";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Stats.BytesReceived";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Stats.PacketsSent";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Stats.PacketsReceived";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.TotalBytesReceived";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.TotalBytesSent";
+
+                // Associated devices count (for AP topology mapping)
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.TotalAssociations";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.AssociatedDeviceNumberOfEntries";
             }
 
-            // Hosts - Query up to 20 hosts if any exist
+            // Hosts - Query ALL hosts (no limit) for comprehensive troubleshooting
             $hostCount = (int) ($discoveryResults['InternetGatewayDevice.LANDevice.1.Hosts.HostNumberOfEntries']['value'] ?? 0);
-            for ($i = 1; $i <= min($hostCount, 20); $i++) {
+            for ($i = 1; $i <= $hostCount; $i++) {
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.HostName";
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.IPAddress";
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.MACAddress";
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.Active";
+                // Additional host info for AP topology and signal strength mapping
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.InterfaceType";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.Layer1Interface";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.Layer3Interface";
             }
         }
 
