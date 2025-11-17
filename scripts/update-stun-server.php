@@ -27,8 +27,10 @@ $stunPort = $argv[3] ?? 3478;
 echo "Updating STUN configuration for device: $deviceId\n";
 echo "STUN Server: $stunServer:$stunPort\n\n";
 
+// Load Composer autoloader
+require __DIR__ . '/../vendor/autoload.php';
+
 // Bootstrap Laravel
-require __DIR__ . '/../bootstrap/app.php';
 $app = require_once __DIR__ . '/../bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
