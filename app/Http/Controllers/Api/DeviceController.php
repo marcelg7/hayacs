@@ -126,7 +126,7 @@ class DeviceController extends Controller
 
     /**
      * Refresh troubleshooting info (WAN, LAN, WiFi, Connected Devices)
-     * Handles manufacturer-specific instance numbering (e.g., Calix uses WLAN 1 & 16)
+     * Uses two-stage discovery to handle manufacturer-specific instance numbering
      */
     public function refreshTroubleshooting(string $id): JsonResponse
     {
@@ -134,91 +134,16 @@ class DeviceController extends Controller
 
         // Determine data model
         $dataModel = $device->getDataModel();
-        $isDevice2 = $dataModel === 'Device:2';
 
-        $parameters = [];
-
-        if ($isDevice2) {
-            // Device:2 data model parameters
-            $parameters = [
-                // WAN Information
-                'Device.IP.Interface.1.Status',
-                'Device.IP.Interface.1.IPv4Address.1.IPAddress',
-                'Device.IP.Interface.1.IPv4Address.1.SubnetMask',
-                'Device.IP.Interface.1.IPv4Address.1.DNSServers',
-                'Device.IP.Interface.1.MACAddress',
-                'Device.IP.Interface.1.Uptime',
-                'Device.Routing.Router.1.IPv4Forwarding.1.GatewayIPAddress',
-
-                // LAN Information
-                'Device.IP.Interface.2.IPv4Address.1.IPAddress',
-                'Device.IP.Interface.2.IPv4Address.1.SubnetMask',
-                'Device.DHCPv4.Server.Pool.1.Enable',
-                'Device.DHCPv4.Server.Pool.1.MinAddress',
-                'Device.DHCPv4.Server.Pool.1.MaxAddress',
-
-                // WiFi - Query standard instances (1-4)
-                'Device.WiFi.Radio.1.Enable',
-                'Device.WiFi.Radio.1.Status',
-                'Device.WiFi.Radio.1.Channel',
-                'Device.WiFi.Radio.1.OperatingFrequencyBand',
-                'Device.WiFi.Radio.1.OperatingStandards',
-                'Device.WiFi.Radio.2.Enable',
-                'Device.WiFi.Radio.2.Status',
-                'Device.WiFi.Radio.2.Channel',
-                'Device.WiFi.Radio.2.OperatingFrequencyBand',
-                'Device.WiFi.Radio.2.OperatingStandards',
-                'Device.WiFi.SSID.1.Enable',
-                'Device.WiFi.SSID.1.SSID',
-                'Device.WiFi.SSID.1.Status',
-                'Device.WiFi.SSID.2.Enable',
-                'Device.WiFi.SSID.2.SSID',
-                'Device.WiFi.SSID.2.Status',
-                'Device.WiFi.SSID.3.Enable',
-                'Device.WiFi.SSID.3.SSID',
-                'Device.WiFi.SSID.3.Status',
-                'Device.WiFi.SSID.4.Enable',
-                'Device.WiFi.SSID.4.SSID',
-                'Device.WiFi.SSID.4.Status',
-
-                // Connected Devices - Only get count (can't query instances without discovery)
-                'Device.Hosts.HostNumberOfEntries',
-            ];
-        } else {
-            // InternetGatewayDevice data model parameters
-            // Note: Calix uses non-standard WAN numbering (WANDevice.3, WANIPConnection.14)
-            // Skipping WAN for now - requires discovery to find correct instances
-            $parameters = [
-                // LAN Information
-                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceIPAddress',
-                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceSubnetMask',
-                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPServerEnable',
-                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MinAddress',
-                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MaxAddress',
-                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DNSServers',
-
-                // WiFi - Query known Calix WLAN instances (1 for 2.4GHz, 16 for 5GHz)
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Enable',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Channel',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Standard',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Status',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.Enable',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.SSID',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.Channel',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.Standard',
-                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.16.Status',
-
-                // Connected Devices - Only get count (can't query instances without discovery)
-                'InternetGatewayDevice.LANDevice.1.Hosts.HostNumberOfEntries',
-            ];
-        }
+        // Stage 1: Create discovery task to find instance numbers
+        $discoveryParams = $this->buildDiscoveryParameters($dataModel);
 
         $task = Task::create([
             'device_id' => $device->id,
-            'task_type' => 'get_params',
+            'task_type' => 'discover_troubleshooting',
             'parameters' => [
-                'names' => $parameters,
+                'names' => $discoveryParams,
+                'data_model' => $dataModel,
             ],
             'status' => 'pending',
         ]);
@@ -227,9 +152,154 @@ class DeviceController extends Controller
         $this->triggerConnectionRequestForTask($device);
 
         return response()->json([
-            'message' => 'Troubleshooting refresh task created successfully',
+            'message' => 'Troubleshooting discovery task created successfully',
             'task' => $task,
         ], 201);
+    }
+
+    /**
+     * Build discovery parameters to find WAN, WiFi, and Host instances
+     */
+    private function buildDiscoveryParameters(string $dataModel): array
+    {
+        $isDevice2 = $dataModel === 'Device:2';
+
+        if ($isDevice2) {
+            return [
+                // Always include static LAN parameters
+                'Device.IP.Interface.2.IPv4Address.1.IPAddress',
+                'Device.IP.Interface.2.IPv4Address.1.SubnetMask',
+                'Device.DHCPv4.Server.Pool.1.Enable',
+                'Device.DHCPv4.Server.Pool.1.MinAddress',
+                'Device.DHCPv4.Server.Pool.1.MaxAddress',
+
+                // Discovery counters
+                'Device.WiFi.RadioNumberOfEntries',
+                'Device.WiFi.SSIDNumberOfEntries',
+                'Device.Hosts.HostNumberOfEntries',
+            ];
+        } else {
+            return [
+                // Always include static LAN parameters
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceIPAddress',
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceSubnetMask',
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPServerEnable',
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MinAddress',
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MaxAddress',
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DNSServers',
+
+                // Discovery counters
+                'InternetGatewayDevice.WANDeviceNumberOfEntries',
+                'InternetGatewayDevice.LANDevice.1.WLANConfigurationNumberOfEntries',
+                'InternetGatewayDevice.LANDevice.1.Hosts.HostNumberOfEntries',
+            ];
+        }
+    }
+
+    /**
+     * Build detailed troubleshooting parameters from discovery results
+     */
+    public function buildDetailedParametersFromDiscovery(array $discoveryResults, string $dataModel): array
+    {
+        $isDevice2 = $dataModel === 'Device:2';
+        $parameters = [];
+
+        if ($isDevice2) {
+            // WAN Information (Device:2 uses standard instances)
+            $parameters = array_merge($parameters, [
+                'Device.IP.Interface.1.Status',
+                'Device.IP.Interface.1.IPv4Address.1.IPAddress',
+                'Device.IP.Interface.1.IPv4Address.1.SubnetMask',
+                'Device.IP.Interface.1.IPv4Address.1.DNSServers',
+                'Device.IP.Interface.1.MACAddress',
+                'Device.IP.Interface.1.Uptime',
+                'Device.Routing.Router.1.IPv4Forwarding.1.GatewayIPAddress',
+            ]);
+
+            // WiFi Radios - Use discovered count
+            $radioCount = (int) ($discoveryResults['Device.WiFi.RadioNumberOfEntries']['value'] ?? 2);
+            for ($i = 1; $i <= min($radioCount, 4); $i++) {
+                $parameters[] = "Device.WiFi.Radio.{$i}.Enable";
+                $parameters[] = "Device.WiFi.Radio.{$i}.Status";
+                $parameters[] = "Device.WiFi.Radio.{$i}.Channel";
+                $parameters[] = "Device.WiFi.Radio.{$i}.OperatingFrequencyBand";
+                $parameters[] = "Device.WiFi.Radio.{$i}.OperatingStandards";
+            }
+
+            // WiFi SSIDs - Use discovered count
+            $ssidCount = (int) ($discoveryResults['Device.WiFi.SSIDNumberOfEntries']['value'] ?? 4);
+            for ($i = 1; $i <= min($ssidCount, 8); $i++) {
+                $parameters[] = "Device.WiFi.SSID.{$i}.Enable";
+                $parameters[] = "Device.WiFi.SSID.{$i}.SSID";
+                $parameters[] = "Device.WiFi.SSID.{$i}.Status";
+            }
+
+            // Hosts - Query up to 20 hosts if any exist
+            $hostCount = (int) ($discoveryResults['Device.Hosts.HostNumberOfEntries']['value'] ?? 0);
+            for ($i = 1; $i <= min($hostCount, 20); $i++) {
+                $parameters[] = "Device.Hosts.Host.{$i}.HostName";
+                $parameters[] = "Device.Hosts.Host.{$i}.IPAddress";
+                $parameters[] = "Device.Hosts.Host.{$i}.PhysAddress";
+                $parameters[] = "Device.Hosts.Host.{$i}.Active";
+            }
+        } else {
+            // InternetGatewayDevice data model
+
+            // WAN - Discover which WANDevice instance exists
+            $wanDeviceCount = (int) ($discoveryResults['InternetGatewayDevice.WANDeviceNumberOfEntries']['value'] ?? 0);
+
+            // For each WAN device, we need to query its connections
+            // Calix typically uses WANDevice.3, but let's discover all
+            for ($wanIdx = 1; $wanIdx <= min($wanDeviceCount, 5); $wanIdx++) {
+                // Query the most common WAN connection paths
+                // Try both WANIPConnection and WANPPPConnection at common instances
+                foreach ([1, 2, 14] as $connIdx) {
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.ExternalIPAddress";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.SubnetMask";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.DefaultGateway";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.DNSServers";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.MACAddress";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.ConnectionStatus";
+                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.Uptime";
+                }
+            }
+
+            // WiFi - Use discovered count, query enabled instances
+            $wlanCount = (int) ($discoveryResults['InternetGatewayDevice.LANDevice.1.WLANConfigurationNumberOfEntries']['value'] ?? 0);
+
+            // For Calix, query instances 1-8 (2.4GHz) and 16 (5GHz) which are most common
+            // Adjust range based on discovered count
+            $wlanInstances = [];
+            if ($wlanCount > 0) {
+                // Query first 8 instances (2.4GHz SSIDs)
+                for ($i = 1; $i <= min(8, $wlanCount); $i++) {
+                    $wlanInstances[] = $i;
+                }
+                // Query instance 16 if count suggests 5GHz exists (Calix uses 16 for 5GHz)
+                if ($wlanCount >= 16) {
+                    $wlanInstances[] = 16;
+                }
+            }
+
+            foreach ($wlanInstances as $i) {
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Enable";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.SSID";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Channel";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Standard";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Status";
+            }
+
+            // Hosts - Query up to 20 hosts if any exist
+            $hostCount = (int) ($discoveryResults['InternetGatewayDevice.LANDevice.1.Hosts.HostNumberOfEntries']['value'] ?? 0);
+            for ($i = 1; $i <= min($hostCount, 20); $i++) {
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.HostName";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.IPAddress";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.MACAddress";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.Active";
+            }
+        }
+
+        return $parameters;
     }
 
     /**

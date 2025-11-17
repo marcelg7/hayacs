@@ -278,9 +278,9 @@ class CwmpController extends Controller
      */
     private function handleGetParameterValuesResponse(array $parsed): string
     {
-        // Find the task that was sent (either get_params or get_diagnostic_results)
+        // Find the task that was sent (get_params, discover_troubleshooting, or get_diagnostic_results)
         $task = Task::where('status', 'sent')
-            ->whereIn('task_type', ['get_params', 'get_diagnostic_results'])
+            ->whereIn('task_type', ['get_params', 'discover_troubleshooting', 'get_diagnostic_results'])
             ->orderBy('updated_at', 'desc')
             ->first();
 
@@ -309,6 +309,46 @@ class CwmpController extends Controller
                 }
                 // Mark the retrieval task as completed
                 $task->markAsCompleted($parsed['parameters']);
+            } elseif ($task->task_type === 'discover_troubleshooting') {
+                // Discovery task completed - create detailed query task
+                $dataModel = $task->parameters['data_model'] ?? 'InternetGatewayDevice:1';
+
+                // Store discovery results in device
+                foreach ($parsed['parameters'] as $name => $param) {
+                    $device->setParameter(
+                        $name,
+                        $param['value'],
+                        $param['type']
+                    );
+                }
+
+                // Mark discovery task as completed
+                $task->markAsCompleted($parsed['parameters']);
+
+                Log::info('Discovery completed, building detailed query', [
+                    'device_id' => $device->id,
+                    'discovery_count' => count($parsed['parameters']),
+                ]);
+
+                // Build detailed parameters from discovery results
+                $detailedParams = app(\App\Http\Controllers\Api\DeviceController::class)
+                    ->buildDetailedParametersFromDiscovery($parsed['parameters'], $dataModel);
+
+                // Create follow-up task for detailed query
+                $detailedTask = Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'get_params',
+                    'parameters' => [
+                        'names' => $detailedParams,
+                    ],
+                    'status' => 'pending',
+                ]);
+
+                Log::info('Detailed troubleshooting task created', [
+                    'device_id' => $device->id,
+                    'param_count' => count($detailedParams),
+                    'task_id' => $detailedTask->id,
+                ]);
             } else {
                 // Regular get_params - store parameters in device
                 foreach ($parsed['parameters'] as $name => $param) {
@@ -480,7 +520,7 @@ class CwmpController extends Controller
     private function generateRpcForTask(Task $task): string
     {
         return match ($task->task_type) {
-            'get_params', 'get_diagnostic_results' => $this->cwmpService->createGetParameterValues(
+            'get_params', 'discover_troubleshooting', 'get_diagnostic_results' => $this->cwmpService->createGetParameterValues(
                 $task->parameters['names'] ?? []
             ),
             'set_params' => $this->cwmpService->createSetParameterValues(
