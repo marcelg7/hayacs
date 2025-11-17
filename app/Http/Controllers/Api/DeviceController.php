@@ -284,17 +284,19 @@ class DeviceController extends Controller
             // WiFi - Use discovered count, query enabled instances
             $wlanCount = (int) ($discoveryResults['InternetGatewayDevice.LANDevice.1.LANWLANConfigurationNumberOfEntries']['value'] ?? 0);
 
-            // For Calix, query instances 1-8 (2.4GHz) and 16 (5GHz) which are most common
+            // For Calix, query instances 1-8 (2.4GHz) and 9-16 (5GHz)
             // Adjust range based on discovered count
             $wlanInstances = [];
             if ($wlanCount > 0) {
-                // Query first 8 instances (2.4GHz SSIDs)
+                // Query instances 1-8 (2.4GHz SSIDs)
                 for ($i = 1; $i <= min(8, $wlanCount); $i++) {
                     $wlanInstances[] = $i;
                 }
-                // Query instance 16 if count suggests 5GHz exists (Calix uses 16 for 5GHz)
-                if ($wlanCount >= 16) {
-                    $wlanInstances[] = 16;
+                // Query instances 9-16 (5GHz SSIDs) if count suggests they exist
+                if ($wlanCount >= 9) {
+                    for ($i = 9; $i <= min(16, $wlanCount); $i++) {
+                        $wlanInstances[] = $i;
+                    }
                 }
             }
 
@@ -705,7 +707,6 @@ class DeviceController extends Controller
             'enabled' => 'nullable|boolean',
             'password' => 'nullable|string|min:8|max:63',
             'security_type' => 'nullable|in:none,wpa2',
-            'radio_enabled' => 'nullable|boolean',
             'auto_channel' => 'nullable|boolean',
             'channel' => 'nullable|integer',
             'auto_channel_bandwidth' => 'nullable|boolean',
@@ -752,14 +753,6 @@ class DeviceController extends Controller
                 $values["{$prefix}.BasicAuthenticationMode"] = 'None';
                 $values["{$prefix}.BasicEncryptionModes"] = 'None';
             }
-        }
-
-        // Radio Enable/Disable
-        if (isset($validated['radio_enabled'])) {
-            $values["{$prefix}.RadioEnabled"] = [
-                'value' => $validated['radio_enabled'] ? 1 : 0,
-                'type' => 'xsd:boolean',
-            ];
         }
 
         // Auto Channel
@@ -898,6 +891,57 @@ class DeviceController extends Controller
             'device_id' => $device->id,
             'wlan_configurations' => array_values($instances),
         ]);
+    }
+
+    /**
+     * Enable or disable WiFi radio for a frequency band (2.4GHz or 5GHz)
+     * This sets RadioEnabled for all SSID instances on that band
+     */
+    public function updateWifiRadio(Request $request, string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $validated = $request->validate([
+            'band' => 'required|in:2.4GHz,5GHz',
+            'enabled' => 'required|boolean',
+        ]);
+
+        $band = $validated['band'];
+        $enabled = $validated['enabled'];
+
+        // Determine which instances to update based on band
+        // 2.4GHz: instances 1-8
+        // 5GHz: instances 9-16
+        $instances = $band === '2.4GHz' ? range(1, 8) : range(9, 16);
+
+        // Build parameter values array to set RadioEnabled for all instances
+        $values = [];
+        foreach ($instances as $instance) {
+            $prefix = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$instance}";
+            $values["{$prefix}.RadioEnabled"] = [
+                'value' => $enabled ? 1 : 0,
+                'type' => 'xsd:boolean',
+            ];
+        }
+
+        // Create task to set parameters
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'set_params',
+            'parameters' => [
+                'values' => $values,
+            ],
+            'status' => 'pending',
+        ]);
+
+        // Trigger immediate connection
+        $this->triggerConnectionRequestForTask($device);
+
+        return response()->json([
+            'message' => "{$band} radio " . ($enabled ? 'enabled' : 'disabled'),
+            'task' => $task,
+            'instances_updated' => $instances,
+        ], 201);
     }
 
     /**

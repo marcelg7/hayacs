@@ -48,3 +48,4 @@ Route::post('/devices/{id}/traceroute-test', [DeviceController::class, 'tracerou
 // WiFi Configuration
 Route::get('/devices/{id}/wifi-config', [DeviceController::class, 'getWifiConfig']);
 Route::post('/devices/{id}/wifi-config', [DeviceController::class, 'updateWifi']);
+Route::post('/devices/{id}/wifi-radio', [DeviceController::class, 'updateWifiRadio']);

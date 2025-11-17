@@ -1675,10 +1675,46 @@
 
         <!-- 2.4GHz WiFi Networks -->
         @if(count($wifi24Ghz) > 0)
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+        @php
+            // Get radio enabled status from first instance (all instances on same radio share this)
+            $radio24GhzEnabled = collect($wifi24Ghz)->first()['RadioEnabled'] ?? '0';
+        @endphp
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6" x-data="{ radio24GhzEnabled: {{ $radio24GhzEnabled === '1' ? 'true' : 'false' }} }">
             <div class="px-4 py-5 sm:px-6 bg-green-50">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">2.4GHz Networks</h3>
-                <p class="mt-1 text-sm text-gray-600">Wireless SSIDs on 2.4GHz band (instances 1-8)</p>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">2.4GHz Networks</h3>
+                        <p class="mt-1 text-sm text-gray-600">Wireless SSIDs on 2.4GHz band (instances 1-8)</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="text-sm font-medium text-gray-700">2.4GHz Radio:</span>
+                        <button @click="
+                            radio24GhzEnabled = !radio24GhzEnabled;
+                            fetch('/api/devices/{{ $device->id }}/wifi-radio', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    band: '2.4GHz',
+                                    enabled: radio24GhzEnabled
+                                })
+                            }).then(r => r.json()).then(data => {
+                                alert(data.message);
+                                location.reload();
+                            }).catch(err => {
+                                alert('Error: ' + err);
+                                radio24GhzEnabled = !radio24GhzEnabled;
+                            });
+                        " :class="radio24GhzEnabled ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 hover:bg-gray-500'"
+                        class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                            <span :class="radio24GhzEnabled ? 'translate-x-5' : 'translate-x-0'"
+                                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                        </button>
+                        <span class="text-sm font-medium" :class="radio24GhzEnabled ? 'text-green-600' : 'text-gray-500'" x-text="radio24GhzEnabled ? 'Enabled' : 'Disabled'"></span>
+                    </div>
+                </div>
             </div>
             <div class="border-t border-gray-200 p-6 space-y-6">
                 @foreach($wifi24Ghz as $config)
@@ -1693,20 +1729,12 @@
 
                             <div class="flex items-center justify-between mb-4">
                                 <h4 class="text-md font-semibold text-gray-900">SSID {{ $config['instance'] }}</h4>
-                                <div class="flex items-center space-x-4">
-                                    <label class="flex items-center">
-                                        <input type="hidden" name="enabled" value="0">
-                                        <input type="checkbox" name="enabled" value="1" {{ ($config['Enable'] ?? '0') === '1' ? 'checked' : '' }}
-                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                        <span class="ml-2 text-sm font-medium text-gray-700">SSID Enabled</span>
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="hidden" name="radio_enabled" value="0">
-                                        <input type="checkbox" name="radio_enabled" value="1" {{ ($config['RadioEnabled'] ?? '0') === '1' ? 'checked' : '' }}
-                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                        <span class="ml-2 text-sm font-medium text-gray-700">Radio Enabled</span>
-                                    </label>
-                                </div>
+                                <label class="flex items-center">
+                                    <input type="hidden" name="enabled" value="0">
+                                    <input type="checkbox" name="enabled" value="1" {{ ($config['Enable'] ?? '0') === '1' ? 'checked' : '' }}
+                                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    <span class="ml-2 text-sm font-medium text-gray-700">SSID Enabled</span>
+                                </label>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1805,10 +1833,46 @@
 
         <!-- 5GHz WiFi Networks -->
         @if(count($wifi5Ghz) > 0)
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        @php
+            // Get radio enabled status from first instance (all instances on same radio share this)
+            $radio5GhzEnabled = collect($wifi5Ghz)->first()['RadioEnabled'] ?? '0';
+        @endphp
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg" x-data="{ radio5GhzEnabled: {{ $radio5GhzEnabled === '1' ? 'true' : 'false' }} }">
             <div class="px-4 py-5 sm:px-6 bg-purple-50">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">5GHz Networks</h3>
-                <p class="mt-1 text-sm text-gray-600">Wireless SSIDs on 5GHz band (instance 16+)</p>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">5GHz Networks</h3>
+                        <p class="mt-1 text-sm text-gray-600">Wireless SSIDs on 5GHz band (instances 9-16)</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="text-sm font-medium text-gray-700">5GHz Radio:</span>
+                        <button @click="
+                            radio5GhzEnabled = !radio5GhzEnabled;
+                            fetch('/api/devices/{{ $device->id }}/wifi-radio', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    band: '5GHz',
+                                    enabled: radio5GhzEnabled
+                                })
+                            }).then(r => r.json()).then(data => {
+                                alert(data.message);
+                                location.reload();
+                            }).catch(err => {
+                                alert('Error: ' + err);
+                                radio5GhzEnabled = !radio5GhzEnabled;
+                            });
+                        " :class="radio5GhzEnabled ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 hover:bg-gray-500'"
+                        class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                            <span :class="radio5GhzEnabled ? 'translate-x-5' : 'translate-x-0'"
+                                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                        </button>
+                        <span class="text-sm font-medium" :class="radio5GhzEnabled ? 'text-green-600' : 'text-gray-500'" x-text="radio5GhzEnabled ? 'Enabled' : 'Disabled'"></span>
+                    </div>
+                </div>
             </div>
             <div class="border-t border-gray-200 p-6 space-y-6">
                 @foreach($wifi5Ghz as $config)
@@ -1823,20 +1887,12 @@
 
                             <div class="flex items-center justify-between mb-4">
                                 <h4 class="text-md font-semibold text-gray-900">SSID {{ $config['instance'] }}</h4>
-                                <div class="flex items-center space-x-4">
-                                    <label class="flex items-center">
-                                        <input type="hidden" name="enabled" value="0">
-                                        <input type="checkbox" name="enabled" value="1" {{ ($config['Enable'] ?? '0') === '1' ? 'checked' : '' }}
-                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                        <span class="ml-2 text-sm font-medium text-gray-700">SSID Enabled</span>
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="hidden" name="radio_enabled" value="0">
-                                        <input type="checkbox" name="radio_enabled" value="1" {{ ($config['RadioEnabled'] ?? '0') === '1' ? 'checked' : '' }}
-                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                        <span class="ml-2 text-sm font-medium text-gray-700">Radio Enabled</span>
-                                    </label>
-                                </div>
+                                <label class="flex items-center">
+                                    <input type="hidden" name="enabled" value="0">
+                                    <input type="checkbox" name="enabled" value="1" {{ ($config['Enable'] ?? '0') === '1' ? 'checked' : '' }}
+                                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    <span class="ml-2 text-sm font-medium text-gray-700">SSID Enabled</span>
+                                </label>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
