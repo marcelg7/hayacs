@@ -314,8 +314,8 @@ class DeviceController extends Controller
 
                 // Security settings
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.BeaconType";
-                // Use direct writable password parameter (not the read-only PreSharedKey.1 path)
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.X_000631_KeyPassphrase";
+                // Query the vendor read parameter where device stores the password
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.PreSharedKey.1.X_000631_KeyPassphrase";
 
                 // Radio and visibility
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.RadioEnabled";
@@ -734,11 +734,11 @@ class DeviceController extends Controller
             ];
         }
 
-        // WiFi Password (Calix-specific writable parameter - DIRECT path, not under PreSharedKey.1)
-        // PreSharedKey.1.X_000631_KeyPassphrase is read-only
-        // X_000631_KeyPassphrase (direct) is writable
+        // WiFi Password - Use standard TR-069 parameter (same as NISC USS)
+        // USS writes to: PreSharedKey.1.KeyPassphrase (standard parameter)
+        // Device stores in: PreSharedKey.1.X_000631_KeyPassphrase (vendor read parameter)
         if (isset($validated['password'])) {
-            $values["{$prefix}.X_000631_KeyPassphrase"] = $validated['password'];
+            $values["{$prefix}.PreSharedKey.1.KeyPassphrase"] = $validated['password'];
         }
 
         // Security Type
@@ -822,8 +822,12 @@ class DeviceController extends Controller
             ->whereNotLike('name', '%AssociatedDevice%')
             ->whereNotLike('name', '%Stats%')
             ->whereNotLike('name', '%WPS%')
-            // Exclude all PreSharedKey.1 params (we use direct X_000631_KeyPassphrase instead)
-            ->whereNotLike('name', '%PreSharedKey.1%')
+            ->where(function ($query) {
+                // Include PreSharedKey.1.X_000631_KeyPassphrase for password reading
+                // Exclude other PreSharedKey.1 params
+                $query->where('name', 'NOT LIKE', '%PreSharedKey.1%')
+                    ->orWhere('name', 'LIKE', '%PreSharedKey.1.X_000631_KeyPassphrase');
+            })
             ->get();
 
         // Organize by instance
@@ -848,8 +852,8 @@ class DeviceController extends Controller
                     case 'Enable':
                         $instances[$instance]['enabled'] = ($param->value === '1' || $param->value === 'true');
                         break;
-                    case 'X_000631_KeyPassphrase':
-                        // Direct writable password parameter
+                    case 'PreSharedKey.1.X_000631_KeyPassphrase':
+                        // Vendor read parameter where device stores the password
                         $instances[$instance]['password'] = $param->value;
                         break;
                     case 'BeaconType':
