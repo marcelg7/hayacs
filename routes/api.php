@@ -55,3 +55,8 @@ Route::post('/devices/{id}/wifi-radio', [DeviceController::class, 'updateWifiRad
 Route::get('/devices/{id}/backups', [DeviceController::class, 'getBackups']);
 Route::post('/devices/{id}/backups', [DeviceController::class, 'createBackup']);
 Route::post('/devices/{id}/backups/{backupId}/restore', [DeviceController::class, 'restoreBackup']);
+
+// Port Management
+Route::get('/devices/{id}/port-mappings', [DeviceController::class, 'getPortMappings']);
+Route::post('/devices/{id}/port-mappings', [DeviceController::class, 'addPortMapping']);
+Route::delete('/devices/{id}/port-mappings', [DeviceController::class, 'deletePortMapping']);

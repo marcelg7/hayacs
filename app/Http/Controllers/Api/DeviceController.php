@@ -1211,6 +1211,233 @@ class DeviceController extends Controller
     }
 
     /**
+     * Get all port mappings for a device
+     */
+    public function getPortMappings(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        // Detect manufacturer for device-specific instance handling
+        $isCalix = strtolower($device->manufacturer) === 'calix' ||
+            strtoupper($device->oui) === 'D0768F';
+
+        if ($isCalix) {
+            // Calix uses WANDevice.3.WANConnectionDevice.1.WANIPConnection.2
+            $wanIdx = 3;
+            $connIdx = 2;
+        } else {
+            // Standard devices use WANDevice.1.WANConnectionDevice.1.WANIPConnection.1
+            $wanIdx = 1;
+            $connIdx = 1;
+        }
+
+        $dataModel = $device->getDataModel();
+        $isDevice2 = $dataModel === 'Device:2';
+
+        if ($isDevice2) {
+            // Device:2 model - not yet implemented for Calix
+            $portMappingPrefix = 'Device.NAT.PortMapping.';
+        } else {
+            // InternetGatewayDevice model
+            $portMappingPrefix = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.PortMapping.";
+        }
+
+        // Get all port mapping parameters
+        $portMappings = $device->parameters()
+            ->where('name', 'LIKE', $portMappingPrefix . '%')
+            ->get()
+            ->groupBy(function ($param) use ($portMappingPrefix) {
+                // Extract instance number from parameter name
+                $name = str_replace($portMappingPrefix, '', $param->name);
+                $parts = explode('.', $name);
+                return $parts[0]; // Instance number
+            })
+            ->map(function ($params, $instance) {
+                $mapping = ['instance' => (int) $instance];
+                foreach ($params as $param) {
+                    $parts = explode('.', $param->name);
+                    $field = end($parts);
+                    $mapping[$field] = $param->value;
+                }
+                return $mapping;
+            })
+            ->filter(function ($mapping) {
+                // Only include enabled mappings with required fields
+                return isset($mapping['PortMappingEnabled']) &&
+                    $mapping['PortMappingEnabled'] === '1';
+            })
+            ->values();
+
+        return response()->json([
+            'port_mappings' => $portMappings,
+        ]);
+    }
+
+    /**
+     * Add a new port mapping
+     */
+    public function addPortMapping(Request $request, string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $validated = $request->validate([
+            'description' => 'required|string|max:255',
+            'protocol' => 'required|in:TCP,UDP,Both',
+            'external_port' => 'required|integer|min:1|max:65535',
+            'internal_port' => 'required|integer|min:1|max:65535',
+            'internal_client' => 'required|ip',
+        ]);
+
+        // Detect manufacturer for device-specific instance handling
+        $isCalix = strtolower($device->manufacturer) === 'calix' ||
+            strtoupper($device->oui) === 'D0768F';
+
+        if ($isCalix) {
+            // Calix uses WANDevice.3.WANConnectionDevice.1.WANIPConnection.2
+            $wanIdx = 3;
+            $connIdx = 2;
+        } else {
+            // Standard devices use WANDevice.1.WANConnectionDevice.1.WANIPConnection.1
+            $wanIdx = 1;
+            $connIdx = 1;
+        }
+
+        $dataModel = $device->getDataModel();
+        $isDevice2 = $dataModel === 'Device:2';
+
+        if ($isDevice2) {
+            // Device:2 model
+            $portMappingPrefix = 'Device.NAT.PortMapping';
+        } else {
+            // InternetGatewayDevice model
+            $portMappingPrefix = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.PortMapping";
+        }
+
+        // Find next available instance number
+        $existingInstances = $device->parameters()
+            ->where('name', 'LIKE', $portMappingPrefix . '.%')
+            ->get()
+            ->map(function ($param) use ($portMappingPrefix) {
+                $name = str_replace($portMappingPrefix . '.', '', $param->name);
+                $parts = explode('.', $name);
+                return (int) $parts[0];
+            })
+            ->unique()
+            ->values()
+            ->toArray();
+
+        // Find first available instance (starting from 1)
+        $instance = 1;
+        while (in_array($instance, $existingInstances)) {
+            $instance++;
+        }
+
+        // Build parameters for the new port mapping
+        $parameters = [
+            "{$portMappingPrefix}.{$instance}.PortMappingEnabled" => [
+                'value' => true,
+                'type' => 'xsd:boolean',
+            ],
+            "{$portMappingPrefix}.{$instance}.PortMappingDescription" => [
+                'value' => $validated['description'],
+                'type' => 'xsd:string',
+            ],
+            "{$portMappingPrefix}.{$instance}.PortMappingProtocol" => [
+                'value' => $validated['protocol'],
+                'type' => 'xsd:string',
+            ],
+            "{$portMappingPrefix}.{$instance}.ExternalPort" => [
+                'value' => $validated['external_port'],
+                'type' => 'xsd:unsignedInt',
+            ],
+            "{$portMappingPrefix}.{$instance}.ExternalPortEndRange" => [
+                'value' => $validated['external_port'],
+                'type' => 'xsd:unsignedInt',
+            ],
+            "{$portMappingPrefix}.{$instance}.InternalPort" => [
+                'value' => $validated['internal_port'],
+                'type' => 'xsd:unsignedInt',
+            ],
+            "{$portMappingPrefix}.{$instance}.InternalClient" => [
+                'value' => $validated['internal_client'],
+                'type' => 'xsd:string',
+            ],
+        ];
+
+        // Create task to add the port mapping
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'set_parameter_values',
+            'status' => 'pending',
+            'parameters' => $parameters,
+        ]);
+
+        // Trigger connection request
+        $this->connectionRequestService->sendConnectionRequest($device);
+
+        return response()->json([
+            'task' => $task,
+            'message' => 'Port mapping creation initiated',
+            'instance' => $instance,
+        ]);
+    }
+
+    /**
+     * Delete a port mapping
+     */
+    public function deletePortMapping(Request $request, string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $validated = $request->validate([
+            'instance' => 'required|integer|min:1',
+        ]);
+
+        // Detect manufacturer for device-specific instance handling
+        $isCalix = strtolower($device->manufacturer) === 'calix' ||
+            strtoupper($device->oui) === 'D0768F';
+
+        if ($isCalix) {
+            // Calix uses WANDevice.3.WANConnectionDevice.1.WANIPConnection.2
+            $wanIdx = 3;
+            $connIdx = 2;
+        } else {
+            // Standard devices use WANDevice.1.WANConnectionDevice.1.WANIPConnection.1
+            $wanIdx = 1;
+            $connIdx = 1;
+        }
+
+        $dataModel = $device->getDataModel();
+        $isDevice2 = $dataModel === 'Device:2';
+
+        if ($isDevice2) {
+            // Device:2 model
+            $objectName = "Device.NAT.PortMapping.{$validated['instance']}.";
+        } else {
+            // InternetGatewayDevice model
+            $objectName = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.PortMapping.{$validated['instance']}.";
+        }
+
+        // Create task to delete the port mapping
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'delete_object',
+            'status' => 'pending',
+            'parameters' => [
+                'object_name' => $objectName,
+            ],
+        ]);
+
+        // Trigger connection request
+        $this->connectionRequestService->sendConnectionRequest($device);
+
+        return response()->json([
+            'task' => $task,
+            'message' => 'Port mapping deletion initiated',
+        ]);
+    }
+
+    /**
      * Delete a device
      */
     public function destroy(string $id): JsonResponse
