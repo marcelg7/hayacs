@@ -3,7 +3,102 @@
 @section('title', $device->id . ' - Device Details')
 
 @section('content')
-<div class="space-y-6" x-data="{ activeTab: 'dashboard' }">
+<div class="space-y-6" x-data="{
+    activeTab: localStorage.getItem('deviceActiveTab_{{ $device->id }}') || 'dashboard',
+    taskLoading: false,
+    taskMessage: '',
+    taskId: null,
+    elapsedTime: 0,
+    timerInterval: null,
+
+    init() {
+        // Watch for tab changes and save to localStorage
+        this.$watch('activeTab', value => {
+            localStorage.setItem('deviceActiveTab_{{ $device->id }}', value);
+        });
+    },
+
+    startTaskTracking(message, taskId) {
+        this.taskLoading = true;
+        this.taskMessage = message;
+        this.taskId = taskId;
+        this.elapsedTime = 0;
+
+        // Start count-up timer
+        this.timerInterval = setInterval(() => {
+            this.elapsedTime++;
+        }, 1000);
+
+        // Start polling for task completion
+        this.pollTaskStatus();
+    },
+
+    async pollTaskStatus() {
+        if (!this.taskId) return;
+
+        try {
+            const response = await fetch('/api/devices/{{ $device->id }}/tasks');
+            const data = await response.json();
+
+            // Find our task
+            const task = data.find(t => t.id === this.taskId);
+
+            if (task && (task.status === 'completed' || task.status === 'failed')) {
+                // Task is done - stop timer and reload
+                clearInterval(this.timerInterval);
+                this.taskLoading = false;
+
+                // Wait a moment to show completion, then reload
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            } else {
+                // Keep polling every 2 seconds
+                setTimeout(() => this.pollTaskStatus(), 2000);
+            }
+        } catch (error) {
+            console.error('Error polling task status:', error);
+            // Retry after 2 seconds
+            setTimeout(() => this.pollTaskStatus(), 2000);
+        }
+    },
+
+    formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return mins + ':' + (secs < 10 ? '0' : '') + secs;
+    }
+}">
+    <!-- Loading Overlay -->
+    <div x-show="taskLoading" x-cloak class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
+            <div class="flex flex-col items-center">
+                <!-- Spinner -->
+                <svg class="animate-spin h-16 w-16 text-blue-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+
+                <!-- Message -->
+                <h3 class="text-lg font-semibold text-gray-900 mb-2" x-text="taskMessage"></h3>
+
+                <!-- Timer -->
+                <div class="flex items-center text-3xl font-mono text-blue-600 mb-4">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span x-text="formatTime(elapsedTime)"></span>
+                </div>
+
+                <!-- Status text -->
+                <p class="text-sm text-gray-500 text-center">
+                    Waiting for device to execute task...<br>
+                    <span class="text-xs">The page will refresh automatically when complete.</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
     <!-- Header -->
     <div>
         <div class="flex-1 min-w-0">
@@ -1688,25 +1783,31 @@
                     </div>
                     <div class="flex items-center space-x-3">
                         <span class="text-sm font-medium text-gray-700">2.4GHz Radio:</span>
-                        <button @click="
+                        <button @click="async () => {
                             radio24GhzEnabled = !radio24GhzEnabled;
-                            fetch('/api/devices/{{ $device->id }}/wifi-radio', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                body: JSON.stringify({
-                                    band: '2.4GHz',
-                                    enabled: radio24GhzEnabled
-                                })
-                            }).then(r => r.json()).then(data => {
-                                alert(data.message);
-                                location.reload();
-                            }).catch(err => {
-                                alert('Error: ' + err);
+                            try {
+                                const response = await fetch('/api/devices/{{ $device->id }}/wifi-radio', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify({
+                                        band: '2.4GHz',
+                                        enabled: radio24GhzEnabled
+                                    })
+                                });
+                                const result = await response.json();
+                                if (result.task && result.task.id) {
+                                    startTaskTracking((radio24GhzEnabled ? 'Enabling' : 'Disabling') + ' 2.4GHz Radio...', result.task.id);
+                                } else {
+                                    alert('Radio toggled, but no task ID returned');
+                                }
+                            } catch (error) {
+                                alert('Error: ' + error);
                                 radio24GhzEnabled = !radio24GhzEnabled;
-                            });
+                            }
+                        }
                         " :class="radio24GhzEnabled ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 hover:bg-gray-500'"
                         class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                             <span :class="radio24GhzEnabled ? 'translate-x-5' : 'translate-x-0'"
@@ -1719,7 +1820,39 @@
             <div class="border-t border-gray-200 p-6 space-y-6">
                 @foreach($wifi24Ghz as $config)
                     <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                        <form action="/api/devices/{{ $device->id }}/wifi-config" method="POST" class="space-y-4" x-data="{
+                        <form @submit.prevent="async (e) => {
+                            const formData = new FormData(e.target);
+                            const data = {};
+                            for (let [key, value] of formData.entries()) {
+                                if (key !== '_token') {
+                                    // Convert checkbox values to boolean
+                                    if (e.target[key].type === 'checkbox') {
+                                        data[key] = value === '1';
+                                    } else {
+                                        data[key] = value || undefined;
+                                    }
+                                }
+                            }
+
+                            try {
+                                const response = await fetch('/api/devices/{{ $device->id }}/wifi-config', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify(data)
+                                });
+                                const result = await response.json();
+                                if (result.task && result.task.id) {
+                                    startTaskTracking('Updating WiFi Configuration...', result.task.id);
+                                } else {
+                                    alert('Configuration updated, but no task ID returned');
+                                }
+                            } catch (error) {
+                                alert('Error updating configuration: ' + error);
+                            }
+                        }" class="space-y-4" x-data="{
                             autoChannel: {{ ($config['AutoChannelEnable'] ?? '0') === '1' ? 'true' : 'false' }},
                             autoChannelBandwidth: {{ ($config['X_000631_OperatingChannelBandwidth'] ?? '20MHz') === 'Auto' ? 'true' : 'false' }}
                         }">
@@ -1846,25 +1979,31 @@
                     </div>
                     <div class="flex items-center space-x-3">
                         <span class="text-sm font-medium text-gray-700">5GHz Radio:</span>
-                        <button @click="
+                        <button @click="async () => {
                             radio5GhzEnabled = !radio5GhzEnabled;
-                            fetch('/api/devices/{{ $device->id }}/wifi-radio', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                body: JSON.stringify({
-                                    band: '5GHz',
-                                    enabled: radio5GhzEnabled
-                                })
-                            }).then(r => r.json()).then(data => {
-                                alert(data.message);
-                                location.reload();
-                            }).catch(err => {
-                                alert('Error: ' + err);
+                            try {
+                                const response = await fetch('/api/devices/{{ $device->id }}/wifi-radio', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify({
+                                        band: '5GHz',
+                                        enabled: radio5GhzEnabled
+                                    })
+                                });
+                                const result = await response.json();
+                                if (result.task && result.task.id) {
+                                    startTaskTracking((radio5GhzEnabled ? 'Enabling' : 'Disabling') + ' 5GHz Radio...', result.task.id);
+                                } else {
+                                    alert('Radio toggled, but no task ID returned');
+                                }
+                            } catch (error) {
+                                alert('Error: ' + error);
                                 radio5GhzEnabled = !radio5GhzEnabled;
-                            });
+                            }
+                        }
                         " :class="radio5GhzEnabled ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 hover:bg-gray-500'"
                         class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                             <span :class="radio5GhzEnabled ? 'translate-x-5' : 'translate-x-0'"
@@ -1877,7 +2016,39 @@
             <div class="border-t border-gray-200 p-6 space-y-6">
                 @foreach($wifi5Ghz as $config)
                     <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                        <form action="/api/devices/{{ $device->id }}/wifi-config" method="POST" class="space-y-4" x-data="{
+                        <form @submit.prevent="async (e) => {
+                            const formData = new FormData(e.target);
+                            const data = {};
+                            for (let [key, value] of formData.entries()) {
+                                if (key !== '_token') {
+                                    // Convert checkbox values to boolean
+                                    if (e.target[key].type === 'checkbox') {
+                                        data[key] = value === '1';
+                                    } else {
+                                        data[key] = value || undefined;
+                                    }
+                                }
+                            }
+
+                            try {
+                                const response = await fetch('/api/devices/{{ $device->id }}/wifi-config', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify(data)
+                                });
+                                const result = await response.json();
+                                if (result.task && result.task.id) {
+                                    startTaskTracking('Updating WiFi Configuration...', result.task.id);
+                                } else {
+                                    alert('Configuration updated, but no task ID returned');
+                                }
+                            } catch (error) {
+                                alert('Error updating configuration: ' + error);
+                            }
+                        }" class="space-y-4" x-data="{
                             autoChannel: {{ ($config['AutoChannelEnable'] ?? '0') === '1' ? 'true' : 'false' }},
                             autoChannelBandwidth: {{ ($config['X_000631_OperatingChannelBandwidth'] ?? '80MHz') === 'Auto' ? 'true' : 'false' }}
                         }">
