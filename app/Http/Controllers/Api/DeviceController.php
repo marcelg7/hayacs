@@ -299,11 +299,27 @@ class DeviceController extends Controller
             }
 
             foreach ($wlanInstances as $i) {
+                // Basic WiFi parameters
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Enable";
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.SSID";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Channel";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Standard";
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Status";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Standard";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.BSSID";
+
+                // Channel settings
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Channel";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.AutoChannelEnable";
+
+                // Security settings
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.BeaconType";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.X_000631_KeyPassphrase";
+
+                // Radio and visibility
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.RadioEnabled";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.SSIDAdvertisementEnabled";
+
+                // Bandwidth (Calix-specific)
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.X_000631_OperatingChannelBandwidth";
             }
 
             // Hosts - Query up to 20 hosts if any exist
