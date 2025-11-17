@@ -5,9 +5,9 @@
 @section('content')
 <div class="space-y-6" x-data="{ activeTab: 'info' }">
     <!-- Header -->
-    <div class="md:flex md:items-center md:justify-between">
+    <div>
         <div class="flex-1 min-w-0">
-            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl">
                 {{ $device->id }}
             </h2>
             <div class="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
@@ -23,7 +23,7 @@
                 </div>
             </div>
         </div>
-        <div class="mt-4 flex flex-wrap md:mt-0 md:ml-4 gap-2">
+        <div class="mt-4 flex flex-wrap gap-2">
             <!-- Connect Now -->
             <form action="/api/devices/{{ $device->id }}/connection-request" method="POST">
                 @csrf
