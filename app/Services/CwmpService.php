@@ -162,6 +162,24 @@ class CwmpService
             $result['status'] = (int) ($statusNode?->nodeValue ?? 0);
         }
 
+        // Parse GetParameterNamesResponse
+        if ($result['method'] === 'GetParameterNames') {
+            $result['parameter_list'] = [];
+            // Query without namespace prefix for compatibility
+            $paramNodes = $xpath->query('//cwmp:GetParameterNamesResponse//*[local-name()="ParameterInfoStruct"]');
+            foreach ($paramNodes as $paramNode) {
+                $name = $xpath->query('.//*[local-name()="Name"]', $paramNode)->item(0)?->nodeValue;
+                $writable = $xpath->query('.//*[local-name()="Writable"]', $paramNode)->item(0)?->nodeValue;
+
+                if ($name) {
+                    $result['parameter_list'][] = [
+                        'name' => $name,
+                        'writable' => $writable === '1' || $writable === 'true',
+                    ];
+                }
+            }
+        }
+
         // Parse TransferComplete
         if ($result['method'] === 'TransferComplete') {
             $result['command_key'] = $xpath->query('//cwmp:TransferComplete/CommandKey')->item(0)?->nodeValue;
@@ -229,6 +247,37 @@ class CwmpService
             $paramName = $dom->createElement('string', htmlspecialchars($name));
             $paramNamesArray->appendChild($paramName);
         }
+
+        return $dom->saveXML();
+    }
+
+    /**
+     * Create GetParameterNames RPC
+     * Used to discover all available parameters on a device
+     *
+     * @param string $path Parameter path (e.g., "InternetGatewayDevice." or "Device.")
+     * @param bool $nextLevel If true, only get immediate children. If false, get all recursively
+     */
+    public function createGetParameterNames(string $path, bool $nextLevel = false): string
+    {
+        $dom = new DOMDocument('1.0', 'UTF-8');
+        $dom->formatOutput = true;
+
+        // Create SOAP Envelope
+        $envelope = $this->createSoapEnvelope($dom);
+        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
+
+        // Create GetParameterNames
+        $getParamNames = $dom->createElement('cwmp:GetParameterNames');
+        $body->appendChild($getParamNames);
+
+        // Add ParameterPath
+        $paramPath = $dom->createElement('ParameterPath', htmlspecialchars($path));
+        $getParamNames->appendChild($paramPath);
+
+        // Add NextLevel (boolean)
+        $nextLevelElement = $dom->createElement('NextLevel', $nextLevel ? 'true' : 'false');
+        $getParamNames->appendChild($nextLevelElement);
 
         return $dom->saveXML();
     }

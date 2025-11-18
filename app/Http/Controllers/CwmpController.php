@@ -76,6 +76,7 @@ class CwmpController extends Controller
             $responseXml = match ($parsed['method']) {
                 'Inform' => $this->handleInform($request, $parsed),
                 'GetParameterValues' => $this->handleGetParameterValuesResponse($parsed),
+                'GetParameterNames' => $this->handleGetParameterNamesResponse($parsed),
                 'SetParameterValues' => $this->handleSetParameterValuesResponse($parsed),
                 'Reboot' => $this->handleRebootResponse($parsed),
                 'FactoryReset' => $this->handleFactoryResetResponse($parsed),
@@ -430,6 +431,74 @@ class CwmpController extends Controller
     }
 
     /**
+     * Handle GetParameterNamesResponse
+     */
+    private function handleGetParameterNamesResponse(array $parsed): string
+    {
+        // Find the task that was sent (get_parameter_names)
+        $task = Task::where('status', 'sent')
+            ->where('task_type', 'get_parameter_names')
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        if ($task) {
+            $device = $task->device;
+            $parameterList = $parsed['parameter_list'] ?? [];
+
+            Log::info('GetParameterNames completed', [
+                'device_id' => $device->id,
+                'parameter_count' => count($parameterList),
+            ]);
+
+            // Mark task as completed with the parameter list
+            $task->markAsCompleted([
+                'parameter_list' => $parameterList,
+                'total_parameters' => count($parameterList),
+            ]);
+
+            // Optionally create a follow-up task to retrieve values for all discovered parameters
+            // Only retrieve writable parameters (these are actual values, not just object nodes)
+            $writableParams = array_filter($parameterList, fn($param) => !str_ends_with($param['name'], '.'));
+
+            if (!empty($writableParams)) {
+                $paramNames = array_column($writableParams, 'name');
+
+                // Create follow-up task to get values
+                $valuesTask = Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'get_params',
+                    'parameters' => [
+                        'names' => $paramNames,
+                    ],
+                    'status' => 'pending',
+                ]);
+
+                Log::info('Created follow-up task to retrieve parameter values', [
+                    'device_id' => $device->id,
+                    'param_count' => count($paramNames),
+                    'task_id' => $valuesTask->id,
+                ]);
+            }
+        }
+
+        // Check for more pending tasks
+        if ($task && $task->device) {
+            $nextTask = $task->device->tasks()
+                ->where('status', 'pending')
+                ->orderBy('created_at')
+                ->first();
+
+            if ($nextTask) {
+                $nextTask->markAsSent();
+                return $this->generateRpcForTask($nextTask);
+            }
+        }
+
+        // No more tasks - end session
+        return $this->cwmpService->createEmptyResponse();
+    }
+
+    /**
      * Handle SetParameterValuesResponse
      */
     private function handleSetParameterValuesResponse(array $parsed): string
@@ -565,6 +634,10 @@ class CwmpController extends Controller
         return match ($task->task_type) {
             'get_params', 'discover_troubleshooting', 'get_diagnostic_results' => $this->cwmpService->createGetParameterValues(
                 $task->parameters['names'] ?? []
+            ),
+            'get_parameter_names' => $this->cwmpService->createGetParameterNames(
+                $task->parameters['path'] ?? 'InternetGatewayDevice.',
+                $task->parameters['next_level'] ?? false
             ),
             'set_params' => $this->cwmpService->createSetParameterValues(
                 $task->parameters['values'] ?? []

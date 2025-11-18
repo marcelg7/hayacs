@@ -28,6 +28,7 @@ Route::delete('/devices/{id}', [DeviceController::class, 'destroy']);
 Route::get('/devices/{id}/parameters', [DeviceController::class, 'parameters']);
 Route::post('/devices/{id}/get-parameters', [DeviceController::class, 'getParameters']);
 Route::post('/devices/{id}/set-parameters', [DeviceController::class, 'setParameters']);
+Route::post('/devices/{id}/get-all-parameters', [DeviceController::class, 'getAllParameters']);
 
 // Device Tasks
 Route::get('/devices/{id}/tasks', [DeviceController::class, 'tasks']);

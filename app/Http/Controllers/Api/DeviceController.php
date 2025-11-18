@@ -496,6 +496,37 @@ class DeviceController extends Controller
     }
 
     /**
+     * Get ALL parameters from device (like NISC USS "Get Everything")
+     * Uses GetParameterNames to discover all available parameters
+     */
+    public function getAllParameters(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        // Determine data model root
+        $dataModel = $device->getDataModel();
+        $root = $dataModel === 'Device:2' ? 'Device.' : 'InternetGatewayDevice.';
+
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'get_parameter_names',
+            'parameters' => [
+                'path' => $root,
+                'next_level' => false, // Get ALL parameters recursively
+            ],
+            'status' => 'pending',
+        ]);
+
+        // Trigger immediate connection
+        $this->triggerConnectionRequestForTask($device);
+
+        return response()->json([
+            'message' => 'Get all parameters task created - discovering all device parameters',
+            'task' => $task,
+        ], 201);
+    }
+
+    /**
      * Enable STUN on device for UDP Connection Request
      */
     public function enableStun(string $id): JsonResponse
