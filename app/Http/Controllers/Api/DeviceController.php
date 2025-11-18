@@ -308,14 +308,13 @@ class DeviceController extends Controller
             // NumberOfEntries doesn't tell us which instance numbers exist, just the count
             $wanDeviceCount = (int) ($discoveryResults['InternetGatewayDevice.WANDeviceNumberOfEntries']['value'] ?? 0);
 
-            // TEMPORARILY DISABLED: WAN parameters cause Fault 9005 on some 844E models
-            // Different 844E models use different WAN instance numbers (WANDevice.1 vs WANDevice.3)
-            // Need to implement proper instance discovery before enabling
-            if (false && $wanDeviceCount > 0) {
+            if ($wanDeviceCount > 0) {
+                // Use standard WANDevice.1 for all devices (more universal than WANDevice.3)
+                // Some Calix models use WANDevice.3, but WANDevice.1 works on most
                 if ($isCalix) {
-                    // Calix uses WANDevice.3.WANConnectionDevice.1.WANIPConnection.14
-                    $wanIdx = 3;
-                    $connIdx = 14;
+                    // Try standard instance first (works on most 844E models)
+                    $wanIdx = 1;
+                    $connIdx = 1;
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.ExternalIPAddress";
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.SubnetMask";
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.DefaultGateway";
@@ -323,11 +322,7 @@ class DeviceController extends Controller
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.MACAddress";
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.ConnectionStatus";
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.Uptime";
-                    // WAN traffic statistics for analytics
-                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANEthernetInterfaceConfig.Stats.BytesSent";
-                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANEthernetInterfaceConfig.Stats.BytesReceived";
-                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANEthernetInterfaceConfig.Stats.PacketsSent";
-                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANEthernetInterfaceConfig.Stats.PacketsReceived";
+                    // Note: WAN Stats excluded - don't exist on all device models
                 } else {
                     // Standard devices use WANDevice.1.WANConnectionDevice.1.WANIPConnection.1
                     $wanIdx = 1;
@@ -339,51 +334,56 @@ class DeviceController extends Controller
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.MACAddress";
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.ConnectionStatus";
                     $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.Uptime";
-                    // WAN traffic statistics for analytics
-                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANEthernetInterfaceConfig.Stats.BytesSent";
-                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANEthernetInterfaceConfig.Stats.BytesReceived";
-                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANEthernetInterfaceConfig.Stats.PacketsSent";
-                    $parameters[] = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANEthernetInterfaceConfig.Stats.PacketsReceived";
+                    // Note: WAN Stats excluded - don't exist on all device models
                 }
             }
 
             // WiFi - Use discovered count, query enabled instances
             $wlanCount = (int) ($discoveryResults['InternetGatewayDevice.LANDevice.1.LANWLANConfigurationNumberOfEntries']['value'] ?? 0);
 
-            // Limit to first 4 WLAN configurations to avoid overwhelming devices
-            // Requesting 16 WLANs (320+ parameters) causes timeouts on most devices
+            // Query first 8 WLAN configurations (covers most common use cases)
+            // Balance between getting enough data and avoiding device timeouts
             $wlanInstances = [];
             if ($wlanCount > 0) {
-                // Query only first 4 instances (most common SSIDs)
-                for ($i = 1; $i <= min(4, $wlanCount); $i++) {
+                // Query first 8 instances (2.4GHz SSIDs typically)
+                for ($i = 1; $i <= min(8, $wlanCount); $i++) {
                     $wlanInstances[] = $i;
                 }
             }
 
             foreach ($wlanInstances as $i) {
-                // MINIMAL parameter set - only request parameters that MUST exist per TR-069 spec
-                // This avoids Fault 9005 on devices with different firmware/models
+                // Standard TR-069 WiFi parameters (avoiding vendor-specific extensions)
+
+                // Basic info
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Enable";
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.SSID";
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Status";
 
-                // Optional: Channel (usually exists but not guaranteed)
+                // Radio settings
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Channel";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.AutoChannelEnable";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.RadioEnabled";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.SSIDAdvertisementEnabled";
 
-                // Note: All other parameters (Stats, BeaconType, BSSID, etc.) removed to avoid faults
-                // Can be queried separately after confirming device support
+                // Security (standard parameters only)
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.BeaconType";
+
+                // MAC address
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.BSSID";
+
+                // Note: Vendor-specific parameters (X_000631_*) intentionally excluded
+                // Note: Stats parameters excluded to reduce request size
             }
 
-            // TEMPORARILY DISABLED: Host parameters also cause Fault 9005 on some models
-            // Layer1Interface, Layer3Interface don't exist on all devices
-            // Need to implement proper parameter discovery before enabling
-            // $hostCount = (int) ($discoveryResults['InternetGatewayDevice.LANDevice.1.Hosts.HostNumberOfEntries']['value'] ?? 0);
-            // for ($i = 1; $i <= $hostCount; $i++) {
-            //     $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.HostName";
-            //     $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.IPAddress";
-            //     $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.MACAddress";
-            //     $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.Active";
-            // }
+            // Hosts - Basic parameters only (Layer1/Layer3Interface excluded - not universal)
+            $hostCount = (int) ($discoveryResults['InternetGatewayDevice.LANDevice.1.Hosts.HostNumberOfEntries']['value'] ?? 0);
+            for ($i = 1; $i <= $hostCount; $i++) {
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.HostName";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.IPAddress";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.MACAddress";
+                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.Active";
+                // Note: InterfaceType, Layer1Interface, Layer3Interface excluded - cause faults on some models
+            }
         }
 
         return $parameters;
