@@ -308,7 +308,10 @@ class DeviceController extends Controller
             // NumberOfEntries doesn't tell us which instance numbers exist, just the count
             $wanDeviceCount = (int) ($discoveryResults['InternetGatewayDevice.WANDeviceNumberOfEntries']['value'] ?? 0);
 
-            if ($wanDeviceCount > 0) {
+            // DISABLED AGAIN: Second 844E doesn't support WANDevice.1 or WANDevice.3
+            // Different 844E models have completely different WAN structures
+            // Need device-specific WAN parameter discovery
+            if (false && $wanDeviceCount > 0) {
                 // Use standard WANDevice.1 for all devices (more universal than WANDevice.3)
                 // Some Calix models use WANDevice.3, but WANDevice.1 works on most
                 if ($isCalix) {
