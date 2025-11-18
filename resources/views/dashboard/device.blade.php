@@ -1100,7 +1100,8 @@
         </div>
 
         <!-- Search Results -->
-        <table class="min-w-full divide-y divide-gray-200" x-show="searchResults" x-cloak>
+        <div class="overflow-x-auto" x-show="searchResults" x-cloak>
+            <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parameter Name</th>
@@ -1124,10 +1125,12 @@
                     </tr>
                 </template>
             </tbody>
-        </table>
+            </table>
+        </div>
 
         <!-- Default Parameters Table (when not searching) -->
-        <table class="min-w-full divide-y divide-gray-200" x-show="!searchResults">
+        <div class="overflow-x-auto" x-show="!searchResults">
+            <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parameter Name</th>
@@ -1150,9 +1153,11 @@
                 </tr>
                 @endforelse
             </tbody>
-        </table>
+            </table>
+        </div>
+
         @if($parameters->hasPages())
-        <div class="px-4 py-3 border-t border-gray-200">
+        <div class="px-4 py-3 border-t border-gray-200" x-show="!searchResults">
             {{ $parameters->links() }}
         </div>
         @endif
