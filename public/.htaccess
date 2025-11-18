@@ -5,6 +5,13 @@
 
     RewriteEngine On
 
+    # Redirect HTTP to HTTPS for all requests EXCEPT /cwmp
+    # Use THE_REQUEST to check original request (not rewritten URI)
+    RewriteCond %{HTTPS} off
+    RewriteCond %{THE_REQUEST} !^POST\ /cwmp[\s?]
+    RewriteCond %{THE_REQUEST} !^GET\ /cwmp[\s?]
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -34,6 +41,8 @@
         <RequireAny>
             Require ip 163.182.253.90
             Require ip 163.182.0.0/16
+            Require ip 23.155.130.0/24
+            Require ip 104.247.100.0/24
             Require env allow_cwmp
         </RequireAny>
     </RequireAll>

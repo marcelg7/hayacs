@@ -7,7 +7,15 @@
       "Bash(git add:*)",
       "Bash(php -l:*)",
       "Bash(curl:*)",
-      "Bash(json_pp:*)"
+      "Bash(json_pp:*)",
+      "Bash(apachectl:*)",
+      "Bash(systemctl status:*)",
+      "Bash(sudo tail:*)",
+      "Bash(cat:*)",
+      "Bash(httpd -S:*)",
+      "Bash(echo:*)",
+      "Bash(/var/www/hayacs/public/cwmptest/index.php)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []

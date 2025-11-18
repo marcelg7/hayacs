@@ -1,7 +1,7 @@
 # CLAUDE.md - Project Context & Current State
 
 **Last Updated**: November 18, 2025
-**Current Focus**: Debugging Beacon G6 device connectivity to Hay ACS
+**Current Focus**: ✅ RESOLVED - All devices connected successfully!
 
 ## Current Status
 
@@ -17,29 +17,33 @@
 - WiFi interference scanning
 - Refresh device functionality (enhanced beyond USS capabilities)
 
-### What We're Currently Debugging 🔧
+### Beacon G6 Debugging - RESOLVED ✅
 
-**Problem**: Nokia Beacon G6 device cannot connect to Hay ACS via HTTP
-
-**Background**:
-- Device at IP: 104.247.100.206
-- Serial Number: ALCLFD0A7F1E
-- Currently managed by NISC USS successfully
-- Trying to point it to Hay ACS at: http://hayacs.hay.net/cwmp
-
-**Issues Encountered**:
+**Issues Encountered & Solutions**:
 1. ✅ FIXED: Apache was redirecting all HTTP → HTTPS (including /cwmp)
-2. ✅ FIXED: .htaccess syntax errors
-3. 🔴 CURRENT: Still getting 404 when device POSTs to /cwmp
+   - **Solution**: Removed Apache VirtualHost HTTP→HTTPS redirect
 
-**Current State**:
-- Production server: hayacs.hay.net (163.182.253.70)
-- Laravel route exists: `POST /cwmp` → `CwmpController@handle`
-- Route verified with: `php artisan route:list | grep cwmp`
-- curl test still returns 404: `curl -v -X POST http://hayacs.hay.net/cwmp`
+2. ✅ FIXED: .htaccess was using REQUEST_URI which changes during internal rewrites
+   - **Solution**: Updated .htaccess to use `THE_REQUEST` instead of `REQUEST_URI`
+   - `THE_REQUEST` contains original request line and doesn't change with internal rewrites
+   - Regex: `!^POST\ /cwmp[\s?]` and `!^GET\ /cwmp[\s?]`
 
-**Root Cause Hypothesis**:
-The .htaccess rewrite rules are preventing requests from reaching Laravel's routing system. Need to ensure /cwmp requests are properly routed to index.php while still allowing HTTP (not forcing HTTPS redirect).
+3. ✅ FIXED: IP restrictions were blocking device connections
+   - **Problem**: .htaccess only allowed 163.182.0.0/16 range
+   - **Solution**: Added additional IP ranges for customer devices
+   - Added: 23.155.130.0/24 and 104.247.100.0/24
+
+**Connected Devices** (as of Nov 18, 2025):
+1. **Calix 844E #1** (CXNK0083728A) - IP: 163.182.232.246 - HTTPS connection
+2. **Calix 844E #2** (CXNK0083217F) - IP: 23.155.130.7 - HTTP connection
+3. **Nokia Beacon G6** (ALCLFD0A7F1E) - IP: 104.247.100.206 - HTTP connection
+
+**Final Configuration**:
+- `/cwmp` endpoint accepts both HTTP and HTTPS
+- All other endpoints redirect HTTP → HTTPS
+- IP restrictions allow specified ranges plus any IP for /cwmp endpoint
+- Authentication: acs-user / acs-password
+- Periodic inform: 30 seconds on all devices
 
 ## Production Server Details
 
