@@ -99,6 +99,55 @@ class DeviceController extends Controller
     }
 
     /**
+     * Export device parameters to CSV
+     */
+    public function exportParameters(Request $request, string $id)
+    {
+        $device = Device::findOrFail($id);
+
+        $query = $device->parameters()->orderBy('name');
+
+        // Apply search filter if provided
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('value', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $parameters = $query->get();
+
+        // Generate CSV
+        $filename = 'device_' . $device->serial_number . '_parameters_' . date('Y-m-d_His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($parameters) {
+            $file = fopen('php://output', 'w');
+
+            // Add CSV header
+            fputcsv($file, ['Parameter Name', 'Value', 'Type', 'Last Updated']);
+
+            // Add data rows
+            foreach ($parameters as $param) {
+                fputcsv($file, [
+                    $param->name,
+                    $param->value,
+                    $param->type ?? '',
+                    $param->last_updated ? $param->last_updated->toDateTimeString() : '',
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
      * Get all tasks for a device
      */
     public function tasks(string $id): JsonResponse
