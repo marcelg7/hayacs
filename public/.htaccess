@@ -23,3 +23,18 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# IP Restriction - Allow only specific IPs except for /cwmp endpoint
+<IfModule mod_authz_core.c>
+    # Allow CWMP endpoint from any IP
+    SetEnvIf Request_URI "^/cwmp" allow_cwmp=1
+
+    # Block all except allowed IPs (unless it's the cwmp endpoint)
+    <RequireAll>
+        <RequireAny>
+            Require ip 163.182.253.90
+            Require ip 163.182.0.0/16
+            Require env allow_cwmp
+        </RequireAny>
+    </RequireAll>
+</IfModule>
