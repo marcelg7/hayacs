@@ -347,19 +347,13 @@ class DeviceController extends Controller
             // WiFi - Use discovered count, query enabled instances
             $wlanCount = (int) ($discoveryResults['InternetGatewayDevice.LANDevice.1.LANWLANConfigurationNumberOfEntries']['value'] ?? 0);
 
-            // For Calix, query instances 1-8 (2.4GHz) and 9-16 (5GHz)
-            // Adjust range based on discovered count
+            // Limit to first 4 WLAN configurations to avoid overwhelming devices
+            // Requesting 16 WLANs (320+ parameters) causes timeouts on most devices
             $wlanInstances = [];
             if ($wlanCount > 0) {
-                // Query instances 1-8 (2.4GHz SSIDs)
-                for ($i = 1; $i <= min(8, $wlanCount); $i++) {
+                // Query only first 4 instances (most common SSIDs)
+                for ($i = 1; $i <= min(4, $wlanCount); $i++) {
                     $wlanInstances[] = $i;
-                }
-                // Query instances 9-16 (5GHz SSIDs) if count suggests they exist
-                if ($wlanCount >= 9) {
-                    for ($i = 9; $i <= min(16, $wlanCount); $i++) {
-                        $wlanInstances[] = $i;
-                    }
                 }
             }
 
