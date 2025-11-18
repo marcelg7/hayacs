@@ -371,15 +371,15 @@ class DeviceController extends Controller
 
                 // Security settings
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.BeaconType";
-                // Query the vendor read parameter where device stores the password
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.PreSharedKey.1.X_000631_KeyPassphrase";
+                // Note: X_000631_KeyPassphrase removed - not supported on all 844E models
+                // Causes Fault 9005 (Invalid Parameter Name) on some firmware versions
 
                 // Radio and visibility
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.RadioEnabled";
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.SSIDAdvertisementEnabled";
 
-                // Bandwidth (Calix-specific)
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.X_000631_OperatingChannelBandwidth";
+                // Note: X_000631_OperatingChannelBandwidth removed - not supported on all 844E models
+                // Causes Fault 9005 (Invalid Parameter Name) on some firmware versions
 
                 // WiFi traffic statistics for analytics and troubleshooting
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Stats.BytesSent";
