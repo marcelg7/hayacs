@@ -39,10 +39,12 @@
     # Block all except allowed IPs (unless it's the cwmp endpoint)
     <RequireAll>
         <RequireAny>
-            Require ip 163.182.253.90
             Require ip 163.182.0.0/16
-            Require ip 23.155.130.0/24
-            Require ip 104.247.100.0/24
+            Require ip 104.247.0.0/16
+            Require ip 45.59.0.0/16
+            Require ip 136.175.0.0/16
+            Require ip 206.130.0.0/16
+            Require ip 23.155.0.0/16
             Require env allow_cwmp
         </RequireAny>
     </RequireAll>
