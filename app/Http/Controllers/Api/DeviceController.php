@@ -308,7 +308,10 @@ class DeviceController extends Controller
             // NumberOfEntries doesn't tell us which instance numbers exist, just the count
             $wanDeviceCount = (int) ($discoveryResults['InternetGatewayDevice.WANDeviceNumberOfEntries']['value'] ?? 0);
 
-            if ($wanDeviceCount > 0) {
+            // TEMPORARILY DISABLED: WAN parameters cause Fault 9005 on some 844E models
+            // Different 844E models use different WAN instance numbers (WANDevice.1 vs WANDevice.3)
+            // Need to implement proper instance discovery before enabling
+            if (false && $wanDeviceCount > 0) {
                 if ($isCalix) {
                     // Calix uses WANDevice.3.WANConnectionDevice.1.WANIPConnection.14
                     $wanIdx = 3;
@@ -371,18 +374,16 @@ class DeviceController extends Controller
                 // Can be queried separately after confirming device support
             }
 
-            // Hosts - Query ALL hosts (no limit) for comprehensive troubleshooting
-            $hostCount = (int) ($discoveryResults['InternetGatewayDevice.LANDevice.1.Hosts.HostNumberOfEntries']['value'] ?? 0);
-            for ($i = 1; $i <= $hostCount; $i++) {
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.HostName";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.IPAddress";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.MACAddress";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.Active";
-                // Additional host info for AP topology and signal strength mapping
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.InterfaceType";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.Layer1Interface";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.Layer3Interface";
-            }
+            // TEMPORARILY DISABLED: Host parameters also cause Fault 9005 on some models
+            // Layer1Interface, Layer3Interface don't exist on all devices
+            // Need to implement proper parameter discovery before enabling
+            // $hostCount = (int) ($discoveryResults['InternetGatewayDevice.LANDevice.1.Hosts.HostNumberOfEntries']['value'] ?? 0);
+            // for ($i = 1; $i <= $hostCount; $i++) {
+            //     $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.HostName";
+            //     $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.IPAddress";
+            //     $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.MACAddress";
+            //     $parameters[] = "InternetGatewayDevice.LANDevice.1.Hosts.Host.{$i}.Active";
+            // }
         }
 
         return $parameters;
