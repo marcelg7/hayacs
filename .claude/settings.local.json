@@ -15,7 +15,8 @@
       "Bash(httpd -S:*)",
       "Bash(echo:*)",
       "Bash(/var/www/hayacs/public/cwmptest/index.php)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []

@@ -457,27 +457,44 @@ class CwmpController extends Controller
             ]);
 
             // Optionally create a follow-up task to retrieve values for all discovered parameters
-            // Only retrieve writable parameters (these are actual values, not just object nodes)
-            $writableParams = array_filter($parameterList, fn($param) => !str_ends_with($param['name'], '.'));
+            // Only retrieve leaf parameters (these are actual values, not just object nodes)
+            $leafParams = array_filter($parameterList, fn($param) => !str_ends_with($param['name'], '.'));
 
-            if (!empty($writableParams)) {
-                $paramNames = array_column($writableParams, 'name');
+            if (!empty($leafParams)) {
+                $paramNames = array_column($leafParams, 'name');
 
-                // Create follow-up task to get values
-                $valuesTask = Task::create([
+                // Chunk parameters into batches to avoid overwhelming the device
+                // Many devices can't handle 1000+ parameters in a single request
+                $chunkSize = 100;
+                $chunks = array_chunk($paramNames, $chunkSize);
+
+                Log::info('Creating chunked tasks to retrieve parameter values', [
                     'device_id' => $device->id,
-                    'task_type' => 'get_params',
-                    'parameters' => [
-                        'names' => $paramNames,
-                    ],
-                    'status' => 'pending',
+                    'total_params' => count($paramNames),
+                    'chunk_count' => count($chunks),
+                    'chunk_size' => $chunkSize,
                 ]);
 
-                Log::info('Created follow-up task to retrieve parameter values', [
-                    'device_id' => $device->id,
-                    'param_count' => count($paramNames),
-                    'task_id' => $valuesTask->id,
-                ]);
+                // Create a task for each chunk
+                foreach ($chunks as $index => $chunk) {
+                    $valuesTask = Task::create([
+                        'device_id' => $device->id,
+                        'task_type' => 'get_params',
+                        'parameters' => [
+                            'names' => $chunk,
+                            'chunk_index' => $index + 1,
+                            'total_chunks' => count($chunks),
+                        ],
+                        'status' => 'pending',
+                    ]);
+
+                    Log::info('Created chunked parameter retrieval task', [
+                        'device_id' => $device->id,
+                        'task_id' => $valuesTask->id,
+                        'chunk' => ($index + 1) . '/' . count($chunks),
+                        'param_count' => count($chunk),
+                    ]);
+                }
             }
         }
 
