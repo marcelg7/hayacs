@@ -68,14 +68,34 @@ class DeviceController extends Controller
     /**
      * Get all parameters for a device
      */
-    public function parameters(string $id): JsonResponse
+    public function parameters(Request $request, string $id): JsonResponse
     {
         $device = Device::findOrFail($id);
-        $parameters = $device->parameters()
-            ->orderBy('name')
-            ->get();
 
-        return response()->json($parameters);
+        $query = $device->parameters()->orderBy('name');
+
+        // Add search functionality
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('value', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $parameters = $query->get();
+
+        // Add human-readable timestamps
+        $parameters->transform(function ($param) {
+            $param->last_updated_human = $param->last_updated
+                ? $param->last_updated->diffForHumans()
+                : null;
+            return $param;
+        });
+
+        return response()->json([
+            'data' => $parameters,
+            'total' => $parameters->count(),
+        ]);
     }
 
     /**
