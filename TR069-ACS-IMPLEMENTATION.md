@@ -68,21 +68,55 @@ DELETE /api/devices/{id}                # Delete device
 
 #### Parameters
 ```
-GET  /api/devices/{id}/parameters       # Get all parameters
-POST /api/devices/{id}/get-parameters   # Request specific parameters
-POST /api/devices/{id}/set-parameters   # Set parameters
+GET  /api/devices/{id}/parameters                    # Get all parameters (with optional search)
+GET  /api/devices/{id}/parameters/export             # Export parameters to CSV
+POST /api/devices/{id}/get-parameters                # Request specific parameters
+POST /api/devices/{id}/set-parameters                # Set parameters
+POST /api/devices/{id}/get-all-parameters            # Get Everything - discover and retrieve all
 ```
 
 #### Tasks
 ```
-GET  /api/devices/{id}/tasks            # List device tasks
-POST /api/devices/{id}/tasks            # Create generic task
+GET  /api/devices/{id}/tasks                         # List device tasks
+POST /api/devices/{id}/tasks                         # Create generic task
 ```
 
 #### Device Actions
 ```
-POST /api/devices/{id}/reboot           # Reboot device
-POST /api/devices/{id}/factory-reset    # Factory reset device
+POST /api/devices/{id}/query                         # Query device info
+POST /api/devices/{id}/refresh-troubleshooting       # Enhanced refresh
+POST /api/devices/{id}/enable-stun                   # Enable STUN
+POST /api/devices/{id}/connection-request            # Connection request
+POST /api/devices/{id}/remote-gui                    # Remote GUI access
+POST /api/devices/{id}/reboot                        # Reboot device
+POST /api/devices/{id}/factory-reset                 # Factory reset device
+POST /api/devices/{id}/firmware-upgrade              # Upload firmware
+POST /api/devices/{id}/upload                        # Upload file
+POST /api/devices/{id}/ping-test                     # Ping diagnostic
+POST /api/devices/{id}/traceroute-test               # Traceroute diagnostic
+```
+
+#### WiFi Configuration
+```
+GET  /api/devices/{id}/wifi-config                   # Get WiFi configuration
+POST /api/devices/{id}/wifi-config                   # Update WiFi SSID/security
+POST /api/devices/{id}/wifi-radio                    # Update radio settings
+POST /api/devices/{id}/wifi-scan                     # Start WiFi interference scan
+GET  /api/devices/{id}/wifi-scan-results             # Get scan results
+```
+
+#### Configuration Backups
+```
+GET  /api/devices/{id}/backups                       # List all backups
+POST /api/devices/{id}/backups                       # Create new backup
+POST /api/devices/{id}/backups/{backupId}/restore    # Restore a backup
+```
+
+#### Port Management
+```
+GET    /api/devices/{id}/port-mappings               # List port mappings
+POST   /api/devices/{id}/port-mappings               # Add port mapping
+DELETE /api/devices/{id}/port-mappings               # Delete port mapping
 ```
 
 ## Data Model Support
