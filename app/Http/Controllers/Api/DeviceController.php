@@ -358,40 +358,17 @@ class DeviceController extends Controller
             }
 
             foreach ($wlanInstances as $i) {
-                // Basic WiFi parameters
+                // MINIMAL parameter set - only request parameters that MUST exist per TR-069 spec
+                // This avoids Fault 9005 on devices with different firmware/models
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Enable";
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.SSID";
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Status";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Standard";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.BSSID";
 
-                // Channel settings
+                // Optional: Channel (usually exists but not guaranteed)
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Channel";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.AutoChannelEnable";
 
-                // Security settings
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.BeaconType";
-                // Note: X_000631_KeyPassphrase removed - not supported on all 844E models
-                // Causes Fault 9005 (Invalid Parameter Name) on some firmware versions
-
-                // Radio and visibility
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.RadioEnabled";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.SSIDAdvertisementEnabled";
-
-                // Note: X_000631_OperatingChannelBandwidth removed - not supported on all 844E models
-                // Causes Fault 9005 (Invalid Parameter Name) on some firmware versions
-
-                // WiFi traffic statistics for analytics and troubleshooting
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Stats.BytesSent";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Stats.BytesReceived";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Stats.PacketsSent";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.Stats.PacketsReceived";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.TotalBytesReceived";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.TotalBytesSent";
-
-                // Associated devices count (for AP topology mapping)
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.TotalAssociations";
-                $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.AssociatedDeviceNumberOfEntries";
+                // Note: All other parameters (Stats, BeaconType, BSSID, etc.) removed to avoid faults
+                // Can be queried separately after confirming device support
             }
 
             // Hosts - Query ALL hosts (no limit) for comprehensive troubleshooting
