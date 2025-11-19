@@ -227,6 +227,43 @@
                 </button>
             </form>
 
+            <!-- TR-143 SpeedTest -->
+            <form @submit.prevent="async (e) => {
+                taskLoading = true;
+                taskMessage = 'Starting SpeedTest...';
+
+                try {
+                    const response = await fetch('/api/devices/{{ $device->id }}/speedtest', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            test_type: 'both'  // Run both download and upload tests
+                        })
+                    });
+                    const result = await response.json();
+                    if (result.tasks && result.tasks.length > 0) {
+                        startTaskTracking('Running TR-143 SpeedTest (Download & Upload)...', result.tasks[0].id);
+                    } else {
+                        taskLoading = false;
+                        alert('SpeedTest started, but no task ID returned');
+                    }
+                } catch (error) {
+                    taskLoading = false;
+                    alert('Error starting SpeedTest: ' + error);
+                }
+            }">
+                @csrf
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    SpeedTest
+                </button>
+            </form>
+
             <!-- Refresh Troubleshooting -->
             <form @submit.prevent="async (e) => {
                 // Show loading overlay immediately
@@ -495,6 +532,43 @@
                             @csrf
                             <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700">
                                 Trace Route
+                            </button>
+                        </form>
+
+                        <!-- TR-143 SpeedTest -->
+                        <form @submit.prevent="async (e) => {
+                            taskLoading = true;
+                            taskMessage = 'Starting SpeedTest...';
+
+                            try {
+                                const response = await fetch('/api/devices/{{ $device->id }}/speedtest', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        test_type: 'both'
+                                    })
+                                });
+                                const result = await response.json();
+                                if (result.tasks && result.tasks.length > 0) {
+                                    startTaskTracking('Running TR-143 SpeedTest...', result.tasks[0].id);
+                                } else {
+                                    taskLoading = false;
+                                    alert('SpeedTest started, but no task ID returned');
+                                }
+                            } catch (error) {
+                                taskLoading = false;
+                                alert('Error starting SpeedTest: ' + error);
+                            }
+                        }">
+                            @csrf
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                SpeedTest
                             </button>
                         </form>
 

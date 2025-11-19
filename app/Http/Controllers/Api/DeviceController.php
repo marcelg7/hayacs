@@ -1611,6 +1611,109 @@ class DeviceController extends Controller
     }
 
     /**
+     * Start a TR-143 SpeedTest (Download/Upload diagnostics)
+     */
+    public function startSpeedTest(Request $request, string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $validated = $request->validate([
+            'test_type' => 'required|in:download,upload,both',
+            'download_url' => 'nullable|url',
+            'upload_url' => 'nullable|url',
+            'number_of_connections' => 'nullable|integer|min:1|max:10',
+            'test_duration' => 'nullable|integer|min:1|max:60',
+        ]);
+
+        $testType = $validated['test_type'];
+        // Use smaller test file (10MB) to avoid long downloads when TimeBasedTestDuration isn't respected
+        $downloadUrl = $validated['download_url'] ?? 'http://ipv4.download.thinkbroadband.com/10MB.zip';
+        $uploadUrl = $validated['upload_url'] ?? 'http://tr143.hay.net/upload';
+
+        // USS uses 2 connections for download, 10 for upload
+        $downloadConnections = $validated['number_of_connections'] ?? 2;
+        $uploadConnections = $validated['number_of_connections'] ?? 10;
+        $testDuration = $validated['test_duration'] ?? 12; // USS uses 12 seconds
+        $uploadFileSize = 1858291200; // ~1.7GB (USS default)
+
+        $dataModel = $device->getDataModel();
+        $isDevice2 = $dataModel === 'Device:2';
+
+        $tasks = [];
+
+        // Download Test
+        if ($testType === 'download' || $testType === 'both') {
+            $downloadPrefix = $isDevice2
+                ? 'Device.IP.Diagnostics.DownloadDiagnostics'
+                : 'InternetGatewayDevice.DownloadDiagnostics';
+
+            // Based on USS trace analysis: USS sends DiagnosticsState + DownloadURL in the final call
+            // Sending additional parameters in the same call causes device rejection
+            $downloadParams = [
+                "{$downloadPrefix}.DiagnosticsState" => [
+                    'value' => 'Requested',
+                    'type' => 'xsd:string',
+                ],
+                "{$downloadPrefix}.DownloadURL" => [
+                    'value' => $downloadUrl,
+                    'type' => 'xsd:string',
+                ],
+            ];
+
+            $downloadTask = Task::create([
+                'device_id' => $device->id,
+                'task_type' => 'download_diagnostics',
+                'status' => 'pending',
+                'parameters' => $downloadParams,
+            ]);
+
+            $tasks[] = $downloadTask;
+        }
+
+        // Upload Test
+        if ($testType === 'upload' || $testType === 'both') {
+            $uploadPrefix = $isDevice2
+                ? 'Device.IP.Diagnostics.UploadDiagnostics'
+                : 'InternetGatewayDevice.UploadDiagnostics';
+
+            // Based on USS trace analysis: USS sends DiagnosticsState + UploadURL + TestFileLength in final call
+            // Sending additional parameters causes device rejection on some models
+            $uploadParams = [
+                "{$uploadPrefix}.DiagnosticsState" => [
+                    'value' => 'Requested',
+                    'type' => 'xsd:string',
+                ],
+                "{$uploadPrefix}.UploadURL" => [
+                    'value' => $uploadUrl,
+                    'type' => 'xsd:string',
+                ],
+                "{$uploadPrefix}.TestFileLength" => [
+                    'value' => (string) $uploadFileSize,
+                    'type' => 'xsd:unsignedInt',
+                ],
+            ];
+
+            $uploadTask = Task::create([
+                'device_id' => $device->id,
+                'task_type' => 'upload_diagnostics',
+                'status' => 'pending',
+                'parameters' => $uploadParams,
+            ]);
+
+            $tasks[] = $uploadTask;
+        }
+
+        // Trigger connection request to start the test
+        $this->triggerConnectionRequestForTask($device);
+
+        return response()->json([
+            'tasks' => $tasks,
+            'message' => 'SpeedTest initiated',
+            'test_type' => $testType,
+        ]);
+    }
+
+    /**
      * Delete a device
      */
     public function destroy(string $id): JsonResponse

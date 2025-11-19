@@ -737,7 +737,7 @@ class CwmpController extends Controller
         // Find the most recent completed diagnostic task
         $diagnosticTask = $device->tasks()
             ->where('status', 'sent')
-            ->whereIn('task_type', ['ping_diagnostics', 'traceroute_diagnostics'])
+            ->whereIn('task_type', ['ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics'])
             ->orderBy('updated_at', 'desc')
             ->first();
 
@@ -749,9 +749,9 @@ class CwmpController extends Controller
         }
 
         $dataModel = $device->getDataModel();
-        $isPing = $diagnosticTask->task_type === 'ping_diagnostics';
+        $taskType = $diagnosticTask->task_type;
 
-        if ($isPing) {
+        if ($taskType === 'ping_diagnostics') {
             $prefix = $dataModel === 'Device:2' ? 'Device.IP.Diagnostics.IPPingDiagnostics' : 'InternetGatewayDevice.IPPingDiagnostics';
             $parameters = [
                 "{$prefix}.DiagnosticsState",
@@ -761,7 +761,7 @@ class CwmpController extends Controller
                 "{$prefix}.MinimumResponseTime",
                 "{$prefix}.MaximumResponseTime",
             ];
-        } else {
+        } elseif ($taskType === 'traceroute_diagnostics') {
             $prefix = $dataModel === 'Device:2' ? 'Device.IP.Diagnostics.TraceRouteDiagnostics' : 'InternetGatewayDevice.TraceRouteDiagnostics';
             $parameters = [
                 "{$prefix}.DiagnosticsState",
@@ -769,6 +769,32 @@ class CwmpController extends Controller
                 "{$prefix}.RouteHopsNumberOfEntries",
                 "{$prefix}.RouteHops.",  // Partial path query to get all hop entries
             ];
+        } elseif ($taskType === 'download_diagnostics') {
+            $prefix = $dataModel === 'Device:2' ? 'Device.IP.Diagnostics.DownloadDiagnostics' : 'InternetGatewayDevice.DownloadDiagnostics';
+            $parameters = [
+                "{$prefix}.DiagnosticsState",
+                "{$prefix}.ROMTime",
+                "{$prefix}.BOMTime",
+                "{$prefix}.EOMTime",
+                "{$prefix}.TestBytesReceived",
+                "{$prefix}.TotalBytesReceived",
+                "{$prefix}.TCPOpenRequestTime",
+                "{$prefix}.TCPOpenResponseTime",
+            ];
+        } elseif ($taskType === 'upload_diagnostics') {
+            $prefix = $dataModel === 'Device:2' ? 'Device.IP.Diagnostics.UploadDiagnostics' : 'InternetGatewayDevice.UploadDiagnostics';
+            $parameters = [
+                "{$prefix}.DiagnosticsState",
+                "{$prefix}.ROMTime",
+                "{$prefix}.BOMTime",
+                "{$prefix}.EOMTime",
+                "{$prefix}.TestBytesSent",
+                "{$prefix}.TotalBytesSent",
+                "{$prefix}.TCPOpenRequestTime",
+                "{$prefix}.TCPOpenResponseTime",
+            ];
+        } else {
+            return;
         }
 
         // Create a task to retrieve the diagnostic results

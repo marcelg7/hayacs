@@ -66,3 +66,6 @@ Route::delete('/devices/{id}/port-mappings', [DeviceController::class, 'deletePo
 // WiFi Interference Scan
 Route::post('/devices/{id}/wifi-scan', [DeviceController::class, 'startWiFiScan']);
 Route::get('/devices/{id}/wifi-scan-results', [DeviceController::class, 'getWiFiScanResults']);
+
+// TR-143 SpeedTest
+Route::post('/devices/{id}/speedtest', [DeviceController::class, 'startSpeedTest']);
