@@ -1,0 +1,1668 @@
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:42:25.262
+CPE Manager IP Address=172.24.3.170
+Connection ID=282948
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3231
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">1452804815</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>SmartRG</Manufacturer>
+        <OUI>3c9066</OUI>
+        <ProductClass>963168MBV_17AZZ</ProductClass>
+        <SerialNumber>3c90660d2ca7</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>6 CONNECTION REQUEST</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-19T14:42:24+00:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0008]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.4[](Baseline:1, EthernetLAN:1, WiFiLAN:1, ADSLWAN:1, EthernetWAN:1, Time:1, IPPing:1, CaptivePortal:1, ATMLoopback:1, DSLDiagnostics:1, QoS:1, DeviceAssociation:1, UDPConnReq:1, X_CLEARACCESS_COM_Cns:1, X_CLEARACCESS_COM:1), X_CISCO_COM_CAH:1, X_SMARTRG_COM_CAF:1, X_SMARTRG_COM_DIAG:1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">SR505N</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">2.6.2.6</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://163.182.248.112:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.2.WANConnectionDevice.2.WANIPConnection.6.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">163.182.248.112</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 19 Nov 2025 19:42:25.269
+CPE Manager IP Address=172.24.3.170
+Connection ID=282948
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Digest     realm="TR069_ip-172-24-3-170",      qop="auth",      nonce="19a9da3bdf545DE78",      opaque="263764a1"
+WWW-Authenticate: Basic realm="TR069_ip-172-24-3-170"
+Connection: close
+Content-Type: text/plain
+Content-Length: 0
+
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:42:25.649
+CPE Manager IP Address=172.24.3.170
+Connection ID=282950
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3231
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">1516237061</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>SmartRG</Manufacturer>
+        <OUI>3c9066</OUI>
+        <ProductClass>963168MBV_17AZZ</ProductClass>
+        <SerialNumber>3c90660d2ca7</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>6 CONNECTION REQUEST</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-19T14:42:25+00:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0008]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.4[](Baseline:1, EthernetLAN:1, WiFiLAN:1, ADSLWAN:1, EthernetWAN:1, Time:1, IPPing:1, CaptivePortal:1, ATMLoopback:1, DSLDiagnostics:1, QoS:1, DeviceAssociation:1, UDPConnReq:1, X_CLEARACCESS_COM_Cns:1, X_CLEARACCESS_COM:1), X_CISCO_COM_CAH:1, X_SMARTRG_COM_CAF:1, X_SMARTRG_COM_DIAG:1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">SR505N</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">2.6.2.6</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://163.182.248.112:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.2.WANConnectionDevice.2.WANIPConnection.6.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">163.182.248.112</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 19 Nov 2025 19:42:25.670
+CPE Manager IP Address=172.24.3.170
+Connection ID=282950
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 530
+Connection: close
+Set-Cookie: SessionId=CpeMgr172.24.3.170.CpeSN.3c90660d2ca7-282950; Path=/hay
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">1516237061</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:InformResponse>
+      <MaxEnvelopes>1</MaxEnvelopes>
+    </cwmp:InformResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:42:25.794
+CPE Manager IP Address=172.24.3.170
+Connection ID=282951
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Cookie: SessionId=CpeMgr172.24.3.170.CpeSN.3c90660d2ca7-282950
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA42560A3EB9395D2E9D376CD055473B867E94556DCF5E6F4F5E4695C74720992C00816309FEB826F16C3AECF0D11E5B95EDF0F57D8B4513FA082361E9F09DA1308B
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 0
+
+
+Packet Sent - Wed, 19 Nov 2025 19:42:25.956
+CPE Manager IP Address=172.24.3.170
+Connection ID=282951
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 761
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap-env:Header>
+    <cwmp:ID soap-env:mustUnderstand="1">89614</cwmp:ID>
+  </soap-env:Header>
+  <soap-env:Body>
+    <cwmp:SetParameterValues>
+      <ParameterList soap-enc:arrayType="cwmp:ParameterValueStruct[1]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.NumberOfConnections</Name>
+          <Value xsi:type="xsd:unsignedInt">2</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+      <ParameterKey/>
+    </cwmp:SetParameterValues>
+  </soap-env:Body>
+</soap-env:Envelope>
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:42:26.035
+CPE Manager IP Address=172.24.3.170
+Connection ID=282955
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+Cookie: SessionId=CpeMgr172.24.3.170.CpeSN.3c90660d2ca7-282950
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA42560A3EB9395D2E9D376CD055473B867E94556DCF5E6F4F5E4695C74720992C00816309FEB826F16C3AECF0D11E5B95EDF0F57D8B4513FA082361E9F09DA1308B
+SOAPAction: 
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 570
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">89614</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:SetParameterValuesResponse>
+      <Status>0</Status>
+    </cwmp:SetParameterValuesResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 19 Nov 2025 19:42:26.059
+CPE Manager IP Address=172.24.3.170
+Connection ID=282955
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 764
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">89616</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:SetParameterValues>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[1]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.TimeBasedTestDuration</Name>
+          <Value xsi:type="xsd:unsignedInt">12</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+      <ParameterKey/>
+    </cwmp:SetParameterValues>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:42:26.140
+CPE Manager IP Address=172.24.3.170
+Connection ID=282958
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+Cookie: SessionId=CpeMgr172.24.3.170.CpeSN.3c90660d2ca7-282950
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA42560A3EB9395D2E9D376CD055473B867E94556DCF5E6F4F5E4695C74720992C00816309FEB826F16C3AECF0D11E5B95EDF0F57D8B4513FA082361E9F09DA1308B
+SOAPAction: 
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 570
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">89616</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:SetParameterValuesResponse>
+      <Status>0</Status>
+    </cwmp:SetParameterValuesResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 19 Nov 2025 19:42:26.161
+CPE Manager IP Address=172.24.3.170
+Connection ID=282958
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 950
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">89618</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:SetParameterValues>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[2]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.DiagnosticsState</Name>
+          <Value xsi:type="xsd:string">Requested</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.DownloadURL</Name>
+          <Value xsi:type="xsd:string">http://speedtest.nisc-uss.com/2000mb.test</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+      <ParameterKey/>
+    </cwmp:SetParameterValues>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:42:26.252
+CPE Manager IP Address=172.24.3.170
+Connection ID=282956
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+Cookie: SessionId=CpeMgr172.24.3.170.CpeSN.3c90660d2ca7-282950
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA42560A3EB9395D2E9D376CD055473B867E94556DCF5E6F4F5E4695C74720992C00816309FEB826F16C3AECF0D11E5B95EDF0F57D8B4513FA082361E9F09DA1308B
+SOAPAction: 
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 570
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">89618</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:SetParameterValuesResponse>
+      <Status>0</Status>
+    </cwmp:SetParameterValuesResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 19 Nov 2025 19:42:26.284
+CPE Manager IP Address=172.24.3.170
+Connection ID=282956
+HTTP/1.1 204 No Content
+Content-Type: text/plain
+Content-Length: 0
+Connection: close
+
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:42:39.462
+CPE Manager IP Address=172.24.1.70
+Connection ID=297986
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3233
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">1618836676</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>SmartRG</Manufacturer>
+        <OUI>3c9066</OUI>
+        <ProductClass>963168MBV_17AZZ</ProductClass>
+        <SerialNumber>3c90660d2ca7</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>8 DIAGNOSTICS COMPLETE</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-19T14:42:38+00:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0008]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.4[](Baseline:1, EthernetLAN:1, WiFiLAN:1, ADSLWAN:1, EthernetWAN:1, Time:1, IPPing:1, CaptivePortal:1, ATMLoopback:1, DSLDiagnostics:1, QoS:1, DeviceAssociation:1, UDPConnReq:1, X_CLEARACCESS_COM_Cns:1, X_CLEARACCESS_COM:1), X_CISCO_COM_CAH:1, X_SMARTRG_COM_CAF:1, X_SMARTRG_COM_DIAG:1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">SR505N</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">2.6.2.6</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://163.182.248.112:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.2.WANConnectionDevice.2.WANIPConnection.6.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">163.182.248.112</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 19 Nov 2025 19:42:39.465
+CPE Manager IP Address=172.24.1.70
+Connection ID=297986
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Digest     realm="TR069_ip-172-24-1-70",      qop="auth",      nonce="19a9da3f56945DE78",      opaque="7a7a820f"
+WWW-Authenticate: Basic realm="TR069_ip-172-24-1-70"
+Connection: close
+Content-Type: text/plain
+Content-Length: 0
+
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:42:40.172
+CPE Manager IP Address=172.24.2.231
+Connection ID=285905
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3233
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">1176914336</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>SmartRG</Manufacturer>
+        <OUI>3c9066</OUI>
+        <ProductClass>963168MBV_17AZZ</ProductClass>
+        <SerialNumber>3c90660d2ca7</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>8 DIAGNOSTICS COMPLETE</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-19T14:42:39+00:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0008]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.4[](Baseline:1, EthernetLAN:1, WiFiLAN:1, ADSLWAN:1, EthernetWAN:1, Time:1, IPPing:1, CaptivePortal:1, ATMLoopback:1, DSLDiagnostics:1, QoS:1, DeviceAssociation:1, UDPConnReq:1, X_CLEARACCESS_COM_Cns:1, X_CLEARACCESS_COM:1), X_CISCO_COM_CAH:1, X_SMARTRG_COM_CAF:1, X_SMARTRG_COM_DIAG:1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">SR505N</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">2.6.2.6</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://163.182.248.112:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.2.WANConnectionDevice.2.WANIPConnection.6.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">163.182.248.112</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 19 Nov 2025 19:42:40.200
+CPE Manager IP Address=172.24.2.231
+Connection ID=285905
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 530
+Connection: close
+Set-Cookie: SessionId=CpeMgr172.24.2.231.CpeSN.3c90660d2ca7-285905; Path=/hay
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">1176914336</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:InformResponse>
+      <MaxEnvelopes>1</MaxEnvelopes>
+    </cwmp:InformResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:42:40.325
+CPE Manager IP Address=172.24.2.231
+Connection ID=285909
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Cookie: SessionId=CpeMgr172.24.2.231.CpeSN.3c90660d2ca7-285905
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA42E946E489CC8DA6230A82AC976FF49C1395B6B76B8F13A2E36E36546EA8F83A2875566C5AED9949C980D7B66C4F01F6515D89682D4BE127ED3EEFAAD554D14F1D
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 0
+
+
+Packet Sent - Wed, 19 Nov 2025 19:42:40.386
+CPE Manager IP Address=172.24.2.231
+Connection ID=285909
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 630
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap-env:Header>
+    <cwmp:ID soap-env:mustUnderstand="1">93060</cwmp:ID>
+  </soap-env:Header>
+  <soap-env:Body>
+    <cwmp:GetParameterValues>
+      <ParameterNames soap-enc:arrayType="xsd:string[1]">
+        <string>InternetGatewayDevice.DownloadDiagnostics.</string>
+      </ParameterNames>
+    </cwmp:GetParameterValues>
+  </soap-env:Body>
+</soap-env:Envelope>
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:42:40.601
+CPE Manager IP Address=172.24.2.231
+Connection ID=285912
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+Cookie: SessionId=CpeMgr172.24.2.231.CpeSN.3c90660d2ca7-285905
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA42E946E489CC8DA6230A82AC976FF49C1395B6B76B8F13A2E36E36546EA8F83A2875566C5AED9949C980D7B66C4F01F6515D89682D4BE127ED3EEFAAD554D14F1D
+SOAPAction: 
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 8712
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">93060</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:GetParameterValuesResponse>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0034]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.DiagnosticsState</Name>
+          <Value xsi:type="xsd:string">Completed</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.Interface</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.DownloadURL</Name>
+          <Value xsi:type="xsd:string">http://speedtest.nisc-uss.com/2000mb.test</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.DownloadTransports</Name>
+          <Value xsi:type="xsd:string">HTTP,FTP</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.DownloadDiagnosticsMaxConnections</Name>
+          <Value xsi:type="xsd:unsignedInt">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.DownloadDiagnosticsMaxIncrementalResult</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.DSCP</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.EthernetPriority</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.TimeBasedTestDuration</Name>
+          <Value xsi:type="xsd:unsignedInt">12</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.ProtocolVersion</Name>
+          <Value xsi:type="xsd:string">Any</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.NumberOfConnections</Name>
+          <Value xsi:type="xsd:unsignedInt">2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.IPAddressUsed</Name>
+          <Value xsi:type="xsd:string">163.182.248.112</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.ROMTime</Name>
+          <Value xsi:type="xsd:dateTime">2025-11-19T14:42:26.020751Z</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.BOMTime</Name>
+          <Value xsi:type="xsd:dateTime">2025-11-19T14:42:26.097222Z</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.EOMTime</Name>
+          <Value xsi:type="xsd:dateTime">2025-11-19T14:42:38.100074Z</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.TestBytesReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">99467591</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.TotalBytesReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">103056151</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.TotalBytesSent</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.TestBytesReceivedUnderFullLoading</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.TotalBytesReceivedUnderFullLoading</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.TotalBytesSentUnderFullLoading</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.PeriodOfFullLoading</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.TCPOpenRequestTime</Name>
+          <Value xsi:type="xsd:dateTime">2025-11-19T14:42:25.862314Z</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.TCPOpenResponseTime</Name>
+          <Value xsi:type="xsd:dateTime">2025-11-19T14:42:26.020688Z</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.PerConnectionResultNumberOfEntries</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.EnablePerConnectionResults</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.IncrementalResultNumberOfEntries</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.X_SMARTRG_COM_LoggingLevel</Name>
+          <Value xsi:type="xsd:string">Error</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.X_SMARTRG_COM_LoggingDestination</Name>
+          <Value xsi:type="xsd:string">Standard Error</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.X_SMARTRG_COM_TotalReads</Name>
+          <Value xsi:type="xsd:unsignedInt">28927</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.X_SMARTRG_COM_XferBufferSize</Name>
+          <Value xsi:type="xsd:unsignedInt">16384</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.X_SMARTRG_COM_Histogram</Name>
+          <Value xsi:type="xsd:string">     0--1023  :   1037,  1024--2047  :   4170,  2048--3071  :   3866,  3072--4095  :   3601,  4096--5119  :   2503,  5120--6143  :   1741,  6144--7167  :   1343,  7168--8191  :    962,  8192--9215  :    776,  9216--10239 :    600, 10240--11263 :    502, 11264--12287 :    450, 12288--13311 :    395, 13312--14335 :    333, 14336--15359 :    309, 15360--16383 :   6339</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.X_SMARTRG_COM_DisableDiagnosticsComplete</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DownloadDiagnostics.X_SMARTRG_COM_TimeZoneOffset</Name>
+          <Value xsi:type="xsd:int">0</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:GetParameterValuesResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 19 Nov 2025 19:42:40.823
+CPE Manager IP Address=172.24.2.231
+Connection ID=285912
+HTTP/1.1 204 No Content
+Content-Type: text/plain
+Content-Length: 0
+Connection: close
+
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:42:46.466
+CPE Manager IP Address=172.24.2.231
+Connection ID=285967
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3231
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">2074480497</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>SmartRG</Manufacturer>
+        <OUI>3c9066</OUI>
+        <ProductClass>963168MBV_17AZZ</ProductClass>
+        <SerialNumber>3c90660d2ca7</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>6 CONNECTION REQUEST</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-19T14:42:45+00:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0008]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.4[](Baseline:1, EthernetLAN:1, WiFiLAN:1, ADSLWAN:1, EthernetWAN:1, Time:1, IPPing:1, CaptivePortal:1, ATMLoopback:1, DSLDiagnostics:1, QoS:1, DeviceAssociation:1, UDPConnReq:1, X_CLEARACCESS_COM_Cns:1, X_CLEARACCESS_COM:1), X_CISCO_COM_CAH:1, X_SMARTRG_COM_CAF:1, X_SMARTRG_COM_DIAG:1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">SR505N</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">2.6.2.6</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://163.182.248.112:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.2.WANConnectionDevice.2.WANIPConnection.6.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">163.182.248.112</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 19 Nov 2025 19:42:46.474
+CPE Manager IP Address=172.24.2.231
+Connection ID=285967
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Digest     realm="TR069_ip-172-24-2-231",      qop="auth",      nonce="19a9da410ca45DE78",      opaque="2bf06f52"
+WWW-Authenticate: Basic realm="TR069_ip-172-24-2-231"
+Connection: close
+Content-Type: text/plain
+Content-Length: 0
+
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:42:46.862
+CPE Manager IP Address=172.24.2.29
+Connection ID=286622
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3229
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">97550407</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>SmartRG</Manufacturer>
+        <OUI>3c9066</OUI>
+        <ProductClass>963168MBV_17AZZ</ProductClass>
+        <SerialNumber>3c90660d2ca7</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>6 CONNECTION REQUEST</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-19T14:42:46+00:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0008]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.4[](Baseline:1, EthernetLAN:1, WiFiLAN:1, ADSLWAN:1, EthernetWAN:1, Time:1, IPPing:1, CaptivePortal:1, ATMLoopback:1, DSLDiagnostics:1, QoS:1, DeviceAssociation:1, UDPConnReq:1, X_CLEARACCESS_COM_Cns:1, X_CLEARACCESS_COM:1), X_CISCO_COM_CAH:1, X_SMARTRG_COM_CAF:1, X_SMARTRG_COM_DIAG:1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">SR505N</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">2.6.2.6</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://163.182.248.112:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.2.WANConnectionDevice.2.WANIPConnection.6.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">163.182.248.112</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 19 Nov 2025 19:42:46.891
+CPE Manager IP Address=172.24.2.29
+Connection ID=286622
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 528
+Connection: close
+Set-Cookie: SessionId=CpeMgr172.24.2.29.CpeSN.3c90660d2ca7-286622; Path=/hay
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">97550407</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:InformResponse>
+      <MaxEnvelopes>1</MaxEnvelopes>
+    </cwmp:InformResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:42:47.013
+CPE Manager IP Address=172.24.2.29
+Connection ID=286627
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Cookie: SessionId=CpeMgr172.24.2.29.CpeSN.3c90660d2ca7-286622
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA4245F16D2040567F9A61FD7AAB447406663BE188A9B212077E76E80057C53C736C75566C5AED9949C980D7B66C4F01F651506F24C351D1FF182F1A851A789F39CE
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 0
+
+
+Packet Sent - Wed, 19 Nov 2025 19:42:47.212
+CPE Manager IP Address=172.24.2.29
+Connection ID=286627
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 759
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap-env:Header>
+    <cwmp:ID soap-env:mustUnderstand="1">93320</cwmp:ID>
+  </soap-env:Header>
+  <soap-env:Body>
+    <cwmp:SetParameterValues>
+      <ParameterList soap-enc:arrayType="cwmp:ParameterValueStruct[1]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.NumberOfConnections</Name>
+          <Value xsi:type="xsd:unsignedInt">2</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+      <ParameterKey/>
+    </cwmp:SetParameterValues>
+  </soap-env:Body>
+</soap-env:Envelope>
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:42:47.292
+CPE Manager IP Address=172.24.2.29
+Connection ID=286630
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+Cookie: SessionId=CpeMgr172.24.2.29.CpeSN.3c90660d2ca7-286622
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA4245F16D2040567F9A61FD7AAB447406663BE188A9B212077E76E80057C53C736C75566C5AED9949C980D7B66C4F01F651506F24C351D1FF182F1A851A789F39CE
+SOAPAction: 
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 570
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">93320</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:SetParameterValuesResponse>
+      <Status>0</Status>
+    </cwmp:SetParameterValuesResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 19 Nov 2025 19:42:47.320
+CPE Manager IP Address=172.24.2.29
+Connection ID=286630
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 762
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">93322</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:SetParameterValues>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[1]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.TimeBasedTestDuration</Name>
+          <Value xsi:type="xsd:unsignedInt">12</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+      <ParameterKey/>
+    </cwmp:SetParameterValues>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:42:47.403
+CPE Manager IP Address=172.24.2.29
+Connection ID=286633
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+Cookie: SessionId=CpeMgr172.24.2.29.CpeSN.3c90660d2ca7-286622
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA4245F16D2040567F9A61FD7AAB447406663BE188A9B212077E76E80057C53C736C75566C5AED9949C980D7B66C4F01F651506F24C351D1FF182F1A851A789F39CE
+SOAPAction: 
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 570
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">93322</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:SetParameterValuesResponse>
+      <Status>0</Status>
+    </cwmp:SetParameterValuesResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 19 Nov 2025 19:42:47.431
+CPE Manager IP Address=172.24.2.29
+Connection ID=286633
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 1103
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">93324</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:SetParameterValues>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[3]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.DiagnosticsState</Name>
+          <Value xsi:type="xsd:string">Requested</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.UploadURL</Name>
+          <Value xsi:type="xsd:string">http://speedtest.nisc-uss.com/upload</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.TestFileLength</Name>
+          <Value xsi:type="xsd:unsignedInt">1858291200</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+      <ParameterKey/>
+    </cwmp:SetParameterValues>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:42:47.517
+CPE Manager IP Address=172.24.2.29
+Connection ID=286632
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+Cookie: SessionId=CpeMgr172.24.2.29.CpeSN.3c90660d2ca7-286622
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA4245F16D2040567F9A61FD7AAB447406663BE188A9B212077E76E80057C53C736C75566C5AED9949C980D7B66C4F01F651506F24C351D1FF182F1A851A789F39CE
+SOAPAction: 
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 570
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">93324</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:SetParameterValuesResponse>
+      <Status>0</Status>
+    </cwmp:SetParameterValuesResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 19 Nov 2025 19:42:47.554
+CPE Manager IP Address=172.24.2.29
+Connection ID=286632
+HTTP/1.1 204 No Content
+Content-Type: text/plain
+Content-Length: 0
+Connection: close
+
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:43:00.436
+CPE Manager IP Address=172.24.3.201
+Connection ID=285667
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3232
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">332953650</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>SmartRG</Manufacturer>
+        <OUI>3c9066</OUI>
+        <ProductClass>963168MBV_17AZZ</ProductClass>
+        <SerialNumber>3c90660d2ca7</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>8 DIAGNOSTICS COMPLETE</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-19T14:42:59+00:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0008]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.4[](Baseline:1, EthernetLAN:1, WiFiLAN:1, ADSLWAN:1, EthernetWAN:1, Time:1, IPPing:1, CaptivePortal:1, ATMLoopback:1, DSLDiagnostics:1, QoS:1, DeviceAssociation:1, UDPConnReq:1, X_CLEARACCESS_COM_Cns:1, X_CLEARACCESS_COM:1), X_CISCO_COM_CAH:1, X_SMARTRG_COM_CAF:1, X_SMARTRG_COM_DIAG:1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">SR505N</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">2.6.2.6</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://163.182.248.112:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.2.WANConnectionDevice.2.WANIPConnection.6.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">163.182.248.112</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 19 Nov 2025 19:43:00.443
+CPE Manager IP Address=172.24.3.201
+Connection ID=285667
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Digest     realm="TR069_ip-172-24-3-201",      qop="auth",      nonce="19a9da4475b45DE78",      opaque="3541c0d8"
+WWW-Authenticate: Basic realm="TR069_ip-172-24-3-201"
+Connection: close
+Content-Type: text/plain
+Content-Length: 0
+
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:43:00.833
+CPE Manager IP Address=172.24.2.29
+Connection ID=286819
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+SOAPAction: 
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3232
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">467867985</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>SmartRG</Manufacturer>
+        <OUI>3c9066</OUI>
+        <ProductClass>963168MBV_17AZZ</ProductClass>
+        <SerialNumber>3c90660d2ca7</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>8 DIAGNOSTICS COMPLETE</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-11-19T14:43:00+00:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0008]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.4[](Baseline:1, EthernetLAN:1, WiFiLAN:1, ADSLWAN:1, EthernetWAN:1, Time:1, IPPing:1, CaptivePortal:1, ATMLoopback:1, DSLDiagnostics:1, QoS:1, DeviceAssociation:1, UDPConnReq:1, X_CLEARACCESS_COM_Cns:1, X_CLEARACCESS_COM:1), X_CISCO_COM_CAH:1, X_SMARTRG_COM_CAF:1, X_SMARTRG_COM_DIAG:1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">SR505N</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">2.6.2.6</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://163.182.248.112:30005/</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string">(null)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.2.WANConnectionDevice.2.WANIPConnection.6.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">163.182.248.112</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 19 Nov 2025 19:43:00.861
+CPE Manager IP Address=172.24.2.29
+Connection ID=286819
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 529
+Connection: close
+Set-Cookie: SessionId=CpeMgr172.24.2.29.CpeSN.3c90660d2ca7-286819; Path=/hay
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">467867985</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:InformResponse>
+      <MaxEnvelopes>1</MaxEnvelopes>
+    </cwmp:InformResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:43:00.983
+CPE Manager IP Address=172.24.2.29
+Connection ID=286823
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Cookie: SessionId=CpeMgr172.24.2.29.CpeSN.3c90660d2ca7-286819
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA4203740404324FB11FDFD3AB9B93F75E6D1122519F9B738849AD277D35ED11B81EA3B8E6E2818E1FAC0AC64D74C1FC5FD4A25F88C318AA5DEF464578B99F63EDDF
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 0
+
+
+Packet Sent - Wed, 19 Nov 2025 19:43:01.056
+CPE Manager IP Address=172.24.2.29
+Connection ID=286823
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 628
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap-env:Header>
+    <cwmp:ID soap-env:mustUnderstand="1">93355</cwmp:ID>
+  </soap-env:Header>
+  <soap-env:Body>
+    <cwmp:GetParameterValues>
+      <ParameterNames soap-enc:arrayType="xsd:string[1]">
+        <string>InternetGatewayDevice.UploadDiagnostics.</string>
+      </ParameterNames>
+    </cwmp:GetParameterValues>
+  </soap-env:Body>
+</soap-env:Envelope>
+
+Packet Received on Port 1111 - Wed, 19 Nov 2025 19:43:01.264
+CPE Manager IP Address=172.24.2.29
+Connection ID=286827
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Basic YWNzLXVzZXItZDMwVUo6cUVLT0g1NTBSaE9SSkQz
+Content-Type: text/xml
+Cookie: SessionId=CpeMgr172.24.2.29.CpeSN.3c90660d2ca7-286819
+Cookie: AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA4203740404324FB11FDFD3AB9B93F75E6D1122519F9B738849AD277D35ED11B81EA3B8E6E2818E1FAC0AC64D74C1FC5FD4A25F88C318AA5DEF464578B99F63EDDF
+SOAPAction: 
+User-Agent: CV2_TR69_CPE_04_00
+X-HTTPS-Protocol: TLSv1.2
+X-Forwarded-For: 163.182.248.112, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 8259
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">93355</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:GetParameterValuesResponse>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[0034]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.DiagnosticsState</Name>
+          <Value xsi:type="xsd:string">Completed</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.Interface</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.UploadURL</Name>
+          <Value xsi:type="xsd:string">http://speedtest.nisc-uss.com/upload</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.UploadTransports</Name>
+          <Value xsi:type="xsd:string">HTTP,FTP</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.UploadDiagnosticsMaxConnections</Name>
+          <Value xsi:type="xsd:unsignedInt">8</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.UploadDiagnosticsMaxIncrementalResult</Name>
+          <Value xsi:type="xsd:unsignedInt">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.DSCP</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.EthernetPriority</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.TestFileLength</Name>
+          <Value xsi:type="xsd:unsignedInt">1858291200</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.TimeBasedTestDuration</Name>
+          <Value xsi:type="xsd:unsignedInt">12</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.ProtocolVersion</Name>
+          <Value xsi:type="xsd:string">Any</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.NumberOfConnections</Name>
+          <Value xsi:type="xsd:unsignedInt">2</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.IPAddressUsed</Name>
+          <Value xsi:type="xsd:string">163.182.248.112</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.ROMTime</Name>
+          <Value xsi:type="xsd:dateTime">2025-11-19T14:42:47.109967Z</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.BOMTime</Name>
+          <Value xsi:type="xsd:dateTime">2025-11-19T14:42:47.112972Z</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.EOMTime</Name>
+          <Value xsi:type="xsd:dateTime">2025-11-19T14:42:59.165009Z</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.TestBytesSent</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.TotalBytesReceived</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.TotalBytesSent</Name>
+          <Value xsi:type="xsd:unsignedInt">27511103</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.TestBytesSentUnderFullLoading</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.TotalBytesReceivedUnderFullLoading</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.TotalBytesSentUnderFullLoading</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.TCPOpenRequestTime</Name>
+          <Value xsi:type="xsd:dateTime">2025-11-19T14:42:47.073134Z</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.TCPOpenResponseTime</Name>
+          <Value xsi:type="xsd:dateTime">2025-11-19T14:42:47.109918Z</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.PerConnectionResultNumberOfEntries</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.EnablePerConnectionResults</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.IncrementalResultNumberOfEntries</Name>
+          <Value xsi:type="xsd:unsignedInt">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.X_SMARTRG_COM_LoggingLevel</Name>
+          <Value xsi:type="xsd:string">Error</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.X_SMARTRG_COM_LoggingDestination</Name>
+          <Value xsi:type="xsd:string">Standard Error</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.X_SMARTRG_COM_TotalWrites</Name>
+          <Value xsi:type="xsd:unsignedInt">1597</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.X_SMARTRG_COM_XferBufferSize</Name>
+          <Value xsi:type="xsd:unsignedInt">16384</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.X_SMARTRG_COM_DisableDiagnosticsComplete</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.X_SMARTRG_COM_UploadFileFormat</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UploadDiagnostics.X_SMARTRG_COM_TimeZoneOffset</Name>
+          <Value xsi:type="xsd:int">0</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:GetParameterValuesResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 19 Nov 2025 19:43:01.507
+CPE Manager IP Address=172.24.2.29
+Connection ID=286827
+HTTP/1.1 204 No Content
+Content-Type: text/plain
+Content-Length: 0
+Connection: close

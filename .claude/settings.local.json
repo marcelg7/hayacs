@@ -8,18 +8,11 @@
       "Bash(php -l:*)",
       "Bash(curl:*)",
       "Bash(json_pp:*)",
-      "Bash(apachectl:*)",
-      "Bash(systemctl status:*)",
-      "Bash(sudo tail:*)",
-      "Bash(sudo chcon:*)",
-      "Bash(sudo semanage:*)",
-      "Bash(sudo restorecon:*)",
-      "Bash(cat:*)",
-      "Bash(httpd -S:*)",
-      "Bash(echo:*)",
-      "Bash(/var/www/hayacs/public/cwmptest/index.php)",
-      "Bash(chmod:*)",
-      "Bash(python3:*)"
+      "Bash(php -r:*)",
+      "Bash(php scripts/get-task.php:*)",
+      "Bash(python analyze_ips.py:*)",
+      "Bash(php:*)",
+      "WebFetch(domain:whois.arin.net)"
     ],
     "deny": [],
     "ask": []
