@@ -1519,16 +1519,7 @@ class DeviceController extends Controller
     {
         $device = Device::findOrFail($id);
 
-        $dataModel = $device->getDataModel();
-        $isDevice2 = $dataModel === 'Device:2';
-
-        if ($isDevice2) {
-            // Device:2 model - standard WiFi diagnostics
-            $diagnosticParam = 'Device.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState';
-        } else {
-            // InternetGatewayDevice model - Calix vendor extension
-            $diagnosticParam = 'InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState';
-        }
+        $diagnosticParam = $this->getWiFiDiagnosticParameterPath($device, 'state');
 
         // Create task to trigger the scan
         $task = Task::create([
@@ -1559,18 +1550,8 @@ class DeviceController extends Controller
     {
         $device = Device::findOrFail($id);
 
-        $dataModel = $device->getDataModel();
-        $isDevice2 = $dataModel === 'Device:2';
-
-        if ($isDevice2) {
-            // Device:2 model
-            $resultPrefix = 'Device.WiFi.NeighboringWiFiDiagnostic.Result.';
-            $stateParam = 'Device.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState';
-        } else {
-            // InternetGatewayDevice model - Calix vendor extension
-            $resultPrefix = 'InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.';
-            $stateParam = 'InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState';
-        }
+        $stateParam = $this->getWiFiDiagnosticParameterPath($device, 'state');
+        $resultPrefix = $this->getWiFiDiagnosticParameterPath($device, 'result');
 
         // Get diagnostic state
         $state = $device->parameters()
@@ -1611,7 +1592,46 @@ class DeviceController extends Controller
     }
 
     /**
-     * Start a TR-143 SpeedTest (Download/Upload diagnostics)
+     * Get the WiFi diagnostic parameter path for a device based on data model and manufacturer
+     * Supports vendor-specific extensions for Alcatel-Lucent and Calix devices
+     */
+    private function getWiFiDiagnosticParameterPath(Device $device, string $type): string
+    {
+        $dataModel = $device->getDataModel();
+        $isDevice2 = $dataModel === 'Device:2';
+
+        if ($isDevice2) {
+            // Device:2 model - standard TR-181 WiFi diagnostics
+            return $type === 'state'
+                ? 'Device.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState'
+                : 'Device.WiFi.NeighboringWiFiDiagnostic.Result.';
+        }
+
+        // InternetGatewayDevice (TR-098) model - check for vendor-specific extensions
+
+        // Alcatel-Lucent / Nokia devices (e.g., XS-2426X-A)
+        if (in_array($device->manufacturer, ['ALCL', 'Nokia', 'Alcatel-Lucent'])) {
+            return $type === 'state'
+                ? 'InternetGatewayDevice.X_ALU-COM_NeighboringWiFiDiagnostic.DiagnosticsState'
+                : 'InternetGatewayDevice.X_ALU-COM_NeighboringWiFiDiagnostic.Result.';
+        }
+
+        // Calix devices (GigaSpire, GigaCenter, etc.)
+        if ($device->oui === '000631' || stripos($device->manufacturer, 'Calix') !== false) {
+            return $type === 'state'
+                ? 'InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState'
+                : 'InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.';
+        }
+
+        // Default to standard TR-098 WiFi diagnostics (if device supports it)
+        // Note: Standard TR-098 doesn't have WiFi diagnostics, so this may not work for all devices
+        return $type === 'state'
+            ? 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats'
+            : 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats.';
+    }
+
+    /**
+     * Start TR-143 SpeedTest (Download and Upload diagnostics)
      */
     public function startSpeedTest(Request $request, string $id): JsonResponse
     {
@@ -1621,20 +1641,11 @@ class DeviceController extends Controller
             'test_type' => 'required|in:download,upload,both',
             'download_url' => 'nullable|url',
             'upload_url' => 'nullable|url',
-            'number_of_connections' => 'nullable|integer|min:1|max:10',
-            'test_duration' => 'nullable|integer|min:1|max:60',
         ]);
 
         $testType = $validated['test_type'];
-        // Use smaller test file (10MB) to avoid long downloads when TimeBasedTestDuration isn't respected
         $downloadUrl = $validated['download_url'] ?? 'http://ipv4.download.thinkbroadband.com/10MB.zip';
         $uploadUrl = $validated['upload_url'] ?? 'http://tr143.hay.net/upload';
-
-        // USS uses 2 connections for download, 10 for upload
-        $downloadConnections = $validated['number_of_connections'] ?? 2;
-        $uploadConnections = $validated['number_of_connections'] ?? 10;
-        $testDuration = $validated['test_duration'] ?? 12; // USS uses 12 seconds
-        $uploadFileSize = 1858291200; // ~1.7GB (USS default)
 
         $dataModel = $device->getDataModel();
         $isDevice2 = $dataModel === 'Device:2';
@@ -1647,8 +1658,6 @@ class DeviceController extends Controller
                 ? 'Device.IP.Diagnostics.DownloadDiagnostics'
                 : 'InternetGatewayDevice.DownloadDiagnostics';
 
-            // Based on USS trace analysis: USS sends DiagnosticsState + DownloadURL in the final call
-            // Sending additional parameters in the same call causes device rejection
             $downloadParams = [
                 "{$downloadPrefix}.DiagnosticsState" => [
                     'value' => 'Requested',
@@ -1676,8 +1685,6 @@ class DeviceController extends Controller
                 ? 'Device.IP.Diagnostics.UploadDiagnostics'
                 : 'InternetGatewayDevice.UploadDiagnostics';
 
-            // Based on USS trace analysis: USS sends DiagnosticsState + UploadURL + TestFileLength in final call
-            // Sending additional parameters causes device rejection on some models
             $uploadParams = [
                 "{$uploadPrefix}.DiagnosticsState" => [
                     'value' => 'Requested',
@@ -1686,10 +1693,6 @@ class DeviceController extends Controller
                 "{$uploadPrefix}.UploadURL" => [
                     'value' => $uploadUrl,
                     'type' => 'xsd:string',
-                ],
-                "{$uploadPrefix}.TestFileLength" => [
-                    'value' => (string) $uploadFileSize,
-                    'type' => 'xsd:unsignedInt',
                 ],
             ];
 
@@ -1703,7 +1706,7 @@ class DeviceController extends Controller
             $tasks[] = $uploadTask;
         }
 
-        // Trigger connection request to start the test
+        // Trigger connection request
         $this->triggerConnectionRequestForTask($device);
 
         return response()->json([
@@ -1711,6 +1714,124 @@ class DeviceController extends Controller
             'message' => 'SpeedTest initiated',
             'test_type' => $testType,
         ]);
+    }
+
+    /**
+     * Get SpeedTest status and results
+     */
+    public function getSpeedTestStatus(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $dataModel = $device->getDataModel();
+        $isDevice2 = $dataModel === 'Device:2';
+
+        // Get download diagnostic parameters
+        $downloadPrefix = $isDevice2
+            ? 'Device.IP.Diagnostics.DownloadDiagnostics.'
+            : 'InternetGatewayDevice.DownloadDiagnostics.';
+
+        $downloadParams = $device->parameters()
+            ->where('name', 'LIKE', $downloadPrefix . '%')
+            ->get()
+            ->mapWithKeys(function ($param) use ($downloadPrefix) {
+                $field = str_replace($downloadPrefix, '', $param->name);
+                return [$field => $param->value];
+            });
+
+        // Get upload diagnostic parameters
+        $uploadPrefix = $isDevice2
+            ? 'Device.IP.Diagnostics.UploadDiagnostics.'
+            : 'InternetGatewayDevice.UploadDiagnostics.';
+
+        $uploadParams = $device->parameters()
+            ->where('name', 'LIKE', $uploadPrefix . '%')
+            ->get()
+            ->mapWithKeys(function ($param) use ($uploadPrefix) {
+                $field = str_replace($uploadPrefix, '', $param->name);
+                return [$field => $param->value];
+            });
+
+        return response()->json([
+            'download' => [
+                'state' => $downloadParams['DiagnosticsState'] ?? null,
+                'rom_time' => $downloadParams['ROMTime'] ?? null,
+                'bom_time' => $downloadParams['BOMTime'] ?? null,
+                'eom_time' => $downloadParams['EOMTime'] ?? null,
+                'test_bytes_received' => $downloadParams['TestBytesReceived'] ?? null,
+                'total_bytes_received' => $downloadParams['TotalBytesReceived'] ?? null,
+                'download_speed_kbps' => isset($downloadParams['TestBytesReceived'], $downloadParams['BOMTime'], $downloadParams['EOMTime'])
+                    ? $this->calculateSpeed($downloadParams['TestBytesReceived'], $downloadParams['BOMTime'], $downloadParams['EOMTime'])
+                    : null,
+            ],
+            'upload' => [
+                'state' => $uploadParams['DiagnosticsState'] ?? null,
+                'rom_time' => $uploadParams['ROMTime'] ?? null,
+                'bom_time' => $uploadParams['BOMTime'] ?? null,
+                'eom_time' => $uploadParams['EOMTime'] ?? null,
+                'test_bytes_sent' => $uploadParams['TestBytesSent'] ?? null,
+                'total_bytes_sent' => $uploadParams['TotalBytesSent'] ?? null,
+                'upload_speed_kbps' => isset($uploadParams['TestBytesSent'], $uploadParams['BOMTime'], $uploadParams['EOMTime'])
+                    ? $this->calculateSpeed($uploadParams['TestBytesSent'], $uploadParams['BOMTime'], $uploadParams['EOMTime'])
+                    : null,
+            ],
+        ]);
+    }
+
+    /**
+     * Get historical SpeedTest results for a device
+     */
+    public function getSpeedTestHistory(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $results = $device->speedTestResults()
+            ->orderBy('created_at', 'desc')
+            ->limit(50)
+            ->get()
+            ->map(function ($result) {
+                return [
+                    'id' => $result->id,
+                    'download_mbps' => $result->download_speed_mbps,
+                    'upload_mbps' => $result->upload_speed_mbps,
+                    'latency_ms' => $result->latency_ms,
+                    'jitter_ms' => $result->jitter_ms,
+                    'packet_loss_percent' => $result->packet_loss_percent,
+                    'test_duration_seconds' => $result->test_duration_seconds,
+                    'diagnostics_state' => $result->diagnostics_state,
+                    'rom_time' => $result->rom_time ? $result->rom_time->toIso8601String() : null,
+                    'created_at' => $result->created_at->toIso8601String(),
+                ];
+            });
+
+        return response()->json([
+            'device_id' => $device->id,
+            'results' => $results,
+            'count' => $results->count(),
+        ]);
+    }
+
+    /**
+     * Calculate speed in kbps from bytes and time
+     */
+    private function calculateSpeed(string $bytes, string $startTime, string $endTime): ?int
+    {
+        try {
+            $start = \Carbon\Carbon::parse($startTime);
+            $end = \Carbon\Carbon::parse($endTime);
+            $durationSeconds = $end->diffInSeconds($start);
+
+            if ($durationSeconds <= 0) {
+                return null;
+            }
+
+            $bytesPerSecond = (int) $bytes / $durationSeconds;
+            $kbps = ($bytesPerSecond * 8) / 1000; // Convert bytes/s to kbps
+
+            return (int) round($kbps);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**

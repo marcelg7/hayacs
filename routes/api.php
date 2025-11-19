@@ -69,3 +69,15 @@ Route::get('/devices/{id}/wifi-scan-results', [DeviceController::class, 'getWiFi
 
 // TR-143 SpeedTest
 Route::post('/devices/{id}/speedtest', [DeviceController::class, 'startSpeedTest']);
+Route::get('/devices/{id}/speedtest/status', [DeviceController::class, 'getSpeedTestStatus']);
+Route::get('/devices/{id}/speedtest/history', [DeviceController::class, 'getSpeedTestHistory']);
+
+// Analytics
+use App\Http\Controllers\AnalyticsController;
+
+Route::get('/analytics/device-health', [AnalyticsController::class, 'deviceHealth']);
+Route::get('/analytics/task-performance', [AnalyticsController::class, 'taskPerformance']);
+Route::get('/analytics/parameter-trending', [AnalyticsController::class, 'parameterTrending']);
+Route::get('/analytics/fleet', [AnalyticsController::class, 'fleetAnalytics']);
+Route::get('/analytics/speedtest-results', [AnalyticsController::class, 'speedTestResults']);
+Route::get('/analytics/available-parameters', [AnalyticsController::class, 'getAvailableParameters']);

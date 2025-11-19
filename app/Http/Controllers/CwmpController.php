@@ -214,11 +214,22 @@ class CwmpController extends Controller
             }
         }
 
+        // Check for DIAGNOSTICS COMPLETE event first
+        $hasDiagnosticsComplete = collect($parsed['events'])->contains(function ($event) {
+            return $event['code'] === '8 DIAGNOSTICS COMPLETE';
+        });
+
         // Check for tasks that were sent but never responded to
         // This can happen when a device starts a new session without sending responses
-        $abandonedTasks = $device->tasks()
-            ->where('status', 'sent')
-            ->get();
+        $abandonedTasksQuery = $device->tasks()->where('status', 'sent');
+
+        // If DIAGNOSTICS COMPLETE event is present, exclude diagnostic tasks
+        // (they will be processed by queueDiagnosticResultRetrieval instead)
+        if ($hasDiagnosticsComplete) {
+            $abandonedTasksQuery->whereNotIn('task_type', ['ping_diagnostics', 'traceroute_diagnostics']);
+        }
+
+        $abandonedTasks = $abandonedTasksQuery->get();
 
         if ($abandonedTasks->isNotEmpty()) {
             foreach ($abandonedTasks as $abandonedTask) {

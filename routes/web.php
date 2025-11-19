@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\CwmpController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeviceTypeController;
@@ -13,6 +14,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/password/change', [PasswordChangeController::class, 'show'])->name('password.change');
     Route::post('/password/change', [PasswordChangeController::class, 'update'])->name('password.change.update');
 });
+
+// Theme Switcher Route
+Route::get('/theme/{theme}', function ($theme) {
+    $themes = array_keys(config('themes'));
+    if (in_array($theme, $themes)) {
+        session(['theme' => $theme]);
+    }
+    return redirect()->back();
+})->name('theme.set')->middleware('auth');
 
 // Dashboard Routes (protected by auth)
 Route::middleware(['auth'])->group(function () {
@@ -29,6 +39,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/device-types/{deviceType}/firmware', [FirmwareController::class, 'store'])->name('firmware.store');
     Route::post('/device-types/{deviceType}/firmware/{firmware}/toggle', [FirmwareController::class, 'toggleActive'])->name('firmware.toggle');
     Route::delete('/device-types/{deviceType}/firmware/{firmware}', [FirmwareController::class, 'destroy'])->name('firmware.destroy');
+
+    // Analytics
+    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
 });
 
 // Profile Routes

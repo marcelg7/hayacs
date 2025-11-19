@@ -73,6 +73,38 @@ class Device extends Model
     }
 
     /**
+     * Get health snapshots for this device
+     */
+    public function healthSnapshots(): HasMany
+    {
+        return $this->hasMany(DeviceHealthSnapshot::class, 'device_id');
+    }
+
+    /**
+     * Get task metrics for this device
+     */
+    public function taskMetrics(): HasMany
+    {
+        return $this->hasMany(TaskMetric::class, 'device_id');
+    }
+
+    /**
+     * Get parameter history for this device
+     */
+    public function parameterHistory(): HasMany
+    {
+        return $this->hasMany(ParameterHistory::class, 'device_id');
+    }
+
+    /**
+     * Get speed test results for this device
+     */
+    public function speedTestResults(): HasMany
+    {
+        return $this->hasMany(SpeedTestResult::class, 'device_id');
+    }
+
+    /**
      * Get pending tasks for this device
      */
     public function pendingTasks(): HasMany

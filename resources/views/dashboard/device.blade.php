@@ -3,6 +3,12 @@
 @section('title', $device->id . ' - Device Details')
 
 @section('content')
+@php
+    $theme = session('theme', 'standard');
+    $themeConfig = config("themes.{$theme}");
+    $colors = $themeConfig['colors'];
+    $useColorful = $themeConfig['use_colorful_buttons'] ?? false;
+@endphp
 <div class="space-y-6" x-data="{
     activeTab: localStorage.getItem('deviceActiveTab_{{ $device->id }}') || 'dashboard',
     taskLoading: false,
@@ -27,6 +33,19 @@
         // Start count-up timer
         this.timerInterval = setInterval(() => {
             this.elapsedTime++;
+
+            // Update message with helpful tips based on elapsed time
+            if (this.elapsedTime === 120) {
+                this.taskMessage = message + ' (This is taking longer than usual - device may be on slow connection)';
+            } else if (this.elapsedTime === 300) {
+                this.taskMessage = message + ' (Still waiting - you can close this and check back later)';
+            } else if (this.elapsedTime === 600) {
+                // After 10 minutes, stop polling and show timeout message
+                clearInterval(this.timerInterval);
+                this.taskLoading = false;
+                alert('Task timeout (10 minutes). The task may still be running. Check the Tasks tab for status.');
+                return;
+            }
         }, 1000);
 
         // Start polling for task completion
@@ -52,6 +71,10 @@
                 setTimeout(() => {
                     window.location.reload();
                 }, 500);
+            } else if (this.elapsedTime >= 600) {
+                // Stop polling after 10 minutes
+                clearInterval(this.timerInterval);
+                this.taskLoading = false;
             } else {
                 // Keep polling every 2 seconds
                 setTimeout(() => this.pollTaskStatus(), 2000);
@@ -80,7 +103,7 @@
                 </svg>
 
                 <!-- Message -->
-                <h3 class="text-lg font-semibold text-gray-900 mb-2" x-text="taskMessage"></h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-{{ $colors["text"] }} mb-2" x-text="taskMessage"></h3>
 
                 <!-- Timer -->
                 <div class="flex items-center text-3xl font-mono text-blue-600 mb-4">
@@ -91,68 +114,107 @@
                 </div>
 
                 <!-- Status text -->
-                <p class="text-sm text-gray-500 text-center">
+                <p class="text-sm text-gray-500 text-center mb-4">
                     Waiting for device to execute task...<br>
                     <span class="text-xs">The page will refresh automatically when complete.</span>
                 </p>
+
+                <!-- Cancel button (show after 30 seconds) -->
+                <button x-show="elapsedTime > 30"
+                        @click="clearInterval(timerInterval); taskLoading = false;"
+                        class="mt-4 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md text-sm">
+                    Close (Task continues in background)
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Failed Tasks Alert -->
-    @php
-        $recentFailedTasks = $tasks->where('status', 'failed')->where('created_at', '>', now()->subHours(24))->take(3);
-    @endphp
-    @if($recentFailedTasks->isNotEmpty())
-        <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4" x-data="{ show: true }" x-show="show" x-cloak>
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-                <div class="ml-3 flex-1">
-                    <h3 class="text-sm font-medium text-red-800">
-                        {{ $recentFailedTasks->count() }} task(s) failed in the last 24 hours
-                    </h3>
-                    <div class="mt-2 text-sm text-red-700">
-                        <ul class="list-disc pl-5 space-y-1">
-                            @foreach($recentFailedTasks as $failedTask)
-                                <li>
-                                    <strong>{{ ucfirst(str_replace('_', ' ', $failedTask->task_type)) }}</strong>
-                                    - {{ $failedTask->error ?? 'Unknown error' }}
-                                    <span class="text-xs text-red-600">({{ $failedTask->created_at->diffForHumans() }})</span>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
-                <div class="ml-auto pl-3">
-                    <button @click="show = false" class="inline-flex text-red-400 hover:text-red-600">
-                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-    @endif
+    <!-- Failed Tasks Alert removed - now shown as badge beside device ID -->
 
     <!-- Header -->
     <div>
         <div class="flex-1 min-w-0">
-            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl">
+            @php
+                // Get failed tasks in last 24 hours for indicator
+                $failedTasks = $device->tasks()
+                    ->where('status', 'failed')
+                    ->where('updated_at', '>=', now()->subHours(24))
+                    ->orderBy('updated_at', 'desc')
+                    ->get();
+                $failedCount = $failedTasks->count();
+            @endphp
+
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-{{ $colors['text'] }} sm:text-3xl inline-flex items-center gap-2">
                 {{ $device->id }}
+
+                @if($failedCount > 0)
+                    <span x-data="{ showDetails: false }" class="relative inline-block">
+                        <button @click="showDetails = !showDetails" @click.away="showDetails = false"
+                                class="relative flex items-center justify-center w-7 h-7 rounded-full bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all"
+                                title="{{$failedCount}} failed task(s) in last 24 hours">
+                            <svg class="w-5 h-5 text-white font-bold" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-800 rounded-full">{{ $failedCount }}</span>
+                        </button>
+
+                        <!-- Failed Tasks Details Dropdown -->
+                        <div x-show="showDetails"
+                             x-cloak
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 transform scale-95"
+                             x-transition:enter-end="opacity-100 transform scale-100"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 transform scale-100"
+                             x-transition:leave-end="opacity-0 transform scale-95"
+                             class="absolute left-0 mt-2 w-[500px] rounded-md shadow-lg bg-white dark:bg-{{ $colors['card'] }} ring-1 ring-black ring-opacity-5 z-50">
+                            <div class="py-3 px-4 border-b border-gray-200 dark:border-{{ $colors['border'] }}">
+                                <h3 class="text-sm font-semibold text-gray-900 dark:text-{{ $colors['text'] }}">Failed Tasks (Last 24 Hours)</h3>
+                            </div>
+                            <div class="max-h-96 overflow-y-auto">
+                                @foreach($failedTasks as $task)
+                                    <div class="px-4 py-3 border-b border-gray-100 dark:border-{{ $colors['border'] }} hover:bg-gray-50 dark:hover:bg-{{ $colors['bg'] }}">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex-1">
+                                                <p class="text-sm font-medium text-gray-900 dark:text-{{ $colors['text'] }}">
+                                                    {{ ucfirst(str_replace('_', ' ', $task->task_type)) }}
+                                                </p>
+                                                <p class="mt-1 text-xs text-gray-500 dark:text-{{ $colors['text-muted'] }}">
+                                                    {{ $task->updated_at->format('M d, Y H:i:s') }} ({{ $task->updated_at->diffForHumans() }})
+                                                </p>
+                                                @if($task->result && isset($task->result['error']))
+                                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">
+                                                        <strong>Error:</strong> {{ $task->result['error'] }}
+                                                    </p>
+                                                @endif
+                                                @if($task->parameters)
+                                                    <details class="mt-2" @click.stop>
+                                                        <summary class="text-xs text-blue-600 dark:text-blue-400 cursor-pointer hover:underline">What was being attempted</summary>
+                                                        <div class="mt-1 pl-3 border-l-2 border-gray-200 dark:border-{{ $colors['border'] }}">
+                                                            <p class="text-xs text-gray-700 dark:text-{{ $colors['text-muted'] }} font-mono bg-gray-50 dark:bg-{{ $colors['bg'] }} p-2 rounded">
+                                                                {{ json_encode($task->parameters, JSON_PRETTY_PRINT) }}
+                                                            </p>
+                                                        </div>
+                                                    </details>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </span>
+                @endif
             </h2>
             <div class="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
-                <div class="mt-2 flex items-center text-sm text-gray-500">
+                <div class="mt-2 flex items-center text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}">
                     @if($device->online)
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Online</span>
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Online</span>
                     @else
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Offline</span>
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Offline</span>
                     @endif
                 </div>
-                <div class="mt-2 flex items-center text-sm text-gray-500">
+                <div class="mt-2 flex items-center text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}">
                     Last Inform: {{ $device->last_inform ? $device->last_inform->diffForHumans() : 'Never' }}
                 </div>
             </div>
@@ -171,7 +233,7 @@
             <!-- Connect Now -->
             <form action="/api/devices/{{ $device->id }}/connection-request" method="POST">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                     </svg>
@@ -180,17 +242,75 @@
             </form>
 
             <!-- Query Device Info -->
-            <form action="/api/devices/{{ $device->id }}/query" method="POST">
-                @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                    Query Device Info
+            <div x-data="{ showModal: false, loading: false, deviceInfo: null }">
+                <button @click="
+                    loading = true;
+                    fetch('/api/devices/{{ $device->id }}/query', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        deviceInfo = data;
+                        showModal = true;
+                    })
+                    .catch(err => alert('Error: ' + err.message))
+                    .finally(() => loading = false);
+                "
+                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors['btn-secondary'] }}-600 hover:bg-{{ $colors['btn-secondary'] }}-700">
+                    <svg x-show="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span x-text="loading ? 'Querying...' : 'Query Device Info'"></span>
                 </button>
-            </form>
+
+                <!-- Modal -->
+                <div x-show="showModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                        <div x-show="showModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showModal = false"></div>
+
+                        <div x-show="showModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full sm:p-6">
+                            <div>
+                                <div class="mt-3 text-center sm:mt-5">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}" id="modal-title">Device Information</h3>
+                                    <div class="mt-4 max-h-96 overflow-y-auto">
+                                        <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2 text-left">
+                                            <template x-if="deviceInfo && deviceInfo.task">
+                                                <div class="col-span-2 p-4 bg-blue-50 rounded-lg">
+                                                    <dt class="text-sm font-medium text-blue-900">Task Created</dt>
+                                                    <dd class="mt-1 text-sm text-blue-700">Task queued successfully. Device will process on next inform.</dd>
+                                                </div>
+                                            </template>
+                                            <template x-if="deviceInfo && !deviceInfo.task">
+                                                <template x-for="(value, key) in deviceInfo" :key="key">
+                                                    <div class="border-t border-gray-200 pt-4">
+                                                        <dt class="text-sm font-medium text-gray-500" x-text="key"></dt>
+                                                        <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} break-all" x-text="typeof value === 'object' ? JSON.stringify(value, null, 2) : value"></dd>
+                                                    </div>
+                                                </template>
+                                            </template>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-5 sm:mt-6">
+                                <button type="button" @click="showModal = false" class="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-{{ $colors["btn-primary"] }}-600 text-base font-medium text-white hover:bg-{{ $colors["btn-primary"] }}-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Reboot Device -->
             <form action="/api/devices/{{ $device->id }}/reboot" method="POST" onsubmit="return confirm('Are you sure you want to reboot this device?');">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700">
                     Reboot
                 </button>
             </form>
@@ -198,7 +318,7 @@
             <!-- Factory Reset -->
             <form action="/api/devices/{{ $device->id }}/factory-reset" method="POST" onsubmit="return confirm('⚠️ WARNING: This will erase ALL device settings and data!\n\nAre you absolutely sure you want to factory reset this device?');">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-danger"] }}-600 hover:bg-{{ $colors["btn-danger"] }}-700">
                     Factory Reset
                 </button>
             </form>
@@ -206,23 +326,67 @@
             <!-- Upgrade Firmware -->
             <form action="/api/devices/{{ $device->id }}/firmware-upgrade" method="POST" onsubmit="return confirm('Are you sure you want to upgrade the firmware on this device?');">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700">
                     Upgrade Firmware
                 </button>
             </form>
 
             <!-- Ping Test -->
-            <form action="/api/devices/{{ $device->id }}/ping-test" method="POST">
+            <form @submit.prevent="async (e) => {
+                taskLoading = true;
+                taskMessage = 'Running Ping Test...';
+
+                try {
+                    const response = await fetch('/api/devices/{{ $device->id }}/ping-test', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+                    const result = await response.json();
+                    if (result.task && result.task.id) {
+                        startTaskTracking('Running Ping Test to 8.8.8.8...', result.task.id);
+                    } else {
+                        taskLoading = false;
+                        alert('Ping test started, but no task ID returned');
+                    }
+                } catch (error) {
+                    taskLoading = false;
+                    alert('Error starting ping test: ' + error);
+                }
+            }">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-info"] }}-600 hover:bg-{{ $colors["btn-info"] }}-700">
                     Ping Test
                 </button>
             </form>
 
             <!-- Trace Route Test -->
-            <form action="/api/devices/{{ $device->id }}/traceroute-test" method="POST">
+            <form @submit.prevent="async (e) => {
+                taskLoading = true;
+                taskMessage = 'Running Trace Route...';
+
+                try {
+                    const response = await fetch('/api/devices/{{ $device->id }}/traceroute-test', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+                    const result = await response.json();
+                    if (result.task && result.task.id) {
+                        startTaskTracking('Running Trace Route to 8.8.8.8...', result.task.id);
+                    } else {
+                        taskLoading = false;
+                        alert('Trace route started, but no task ID returned');
+                    }
+                } catch (error) {
+                    taskLoading = false;
+                    alert('Error starting trace route: ' + error);
+                }
+            }">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-warning"] }}-600 hover:bg-{{ $colors["btn-warning"] }}-700">
                     Trace Route
                 </button>
             </form>
@@ -256,7 +420,7 @@
                 }
             }">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                     </svg>
@@ -290,7 +454,7 @@
                 }
             }">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-info"] }}-600 hover:bg-{{ $colors["btn-info"] }}-700">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
@@ -324,7 +488,7 @@
                 }
             }">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
@@ -371,7 +535,7 @@
                     taskLoading = false;
                     alert('Error enabling remote access: ' + error);
                 }
-            }" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+            }" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
                 </svg>
@@ -443,33 +607,33 @@
             <!-- Left Column: Device Information Summary -->
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6 bg-gray-50">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Device Information</h3>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">Device Information</h3>
                 </div>
                 <div class="border-t border-gray-200">
                     <dl>
                         <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Manufacturer</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $device->manufacturer ?? '-' }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">{{ $device->manufacturer ?? '-' }}</dd>
                         </div>
                         <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Model</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $device->product_class ?? '-' }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">{{ $device->product_class ?? '-' }}</dd>
                         </div>
                         <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Serial Number</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">{{ $device->serial_number ?? '-' }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono">{{ $device->serial_number ?? '-' }}</dd>
                         </div>
                         <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Software Version</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">{{ $device->software_version ?? '-' }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono">{{ $device->software_version ?? '-' }}</dd>
                         </div>
                         <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Hardware Version</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">{{ $device->hardware_version ?? '-' }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono">{{ $device->hardware_version ?? '-' }}</dd>
                         </div>
                         <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Uptime</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">
                                 @php
                                     $uptimeParam = $device->parameters()->where('name', 'LIKE', '%DeviceInfo.UpTime%')->first();
                                     if ($uptimeParam && is_numeric($uptimeParam->value)) {
@@ -491,7 +655,7 @@
             <!-- Right Column: Quick Actions Grid -->
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6 bg-gray-50">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Quick Actions</h3>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">Quick Actions</h3>
                 </div>
                 <div class="border-t border-gray-200 p-6">
                     <div class="grid grid-cols-2 gap-3">
@@ -506,7 +670,7 @@
                         <!-- Connect Now -->
                         <form action="/api/devices/{{ $device->id }}/connection-request" method="POST">
                             @csrf
-                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700">
                                 Connect Now
                             </button>
                         </form>
@@ -514,7 +678,7 @@
                         <!-- Reboot -->
                         <form action="/api/devices/{{ $device->id }}/reboot" method="POST" onsubmit="return confirm('Are you sure you want to reboot this device?');">
                             @csrf
-                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700">
                                 Reboot
                             </button>
                         </form>
@@ -522,7 +686,7 @@
                         <!-- Ping Test -->
                         <form action="/api/devices/{{ $device->id }}/ping-test" method="POST">
                             @csrf
-                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700">
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-info"] }}-600 hover:bg-{{ $colors["btn-info"] }}-700">
                                 Ping Test
                             </button>
                         </form>
@@ -530,52 +694,15 @@
                         <!-- Trace Route -->
                         <form action="/api/devices/{{ $device->id }}/traceroute-test" method="POST">
                             @csrf
-                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700">
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-warning"] }}-600 hover:bg-{{ $colors["btn-warning"] }}-700">
                                 Trace Route
-                            </button>
-                        </form>
-
-                        <!-- TR-143 SpeedTest -->
-                        <form @submit.prevent="async (e) => {
-                            taskLoading = true;
-                            taskMessage = 'Starting SpeedTest...';
-
-                            try {
-                                const response = await fetch('/api/devices/{{ $device->id }}/speedtest', {
-                                    method: 'POST',
-                                    headers: {
-                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify({
-                                        test_type: 'both'
-                                    })
-                                });
-                                const result = await response.json();
-                                if (result.tasks && result.tasks.length > 0) {
-                                    startTaskTracking('Running TR-143 SpeedTest...', result.tasks[0].id);
-                                } else {
-                                    taskLoading = false;
-                                    alert('SpeedTest started, but no task ID returned');
-                                }
-                            } catch (error) {
-                                taskLoading = false;
-                                alert('Error starting SpeedTest: ' + error);
-                            }
-                        }">
-                            @csrf
-                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
-                                SpeedTest
                             </button>
                         </form>
 
                         <!-- Firmware Upgrade -->
                         <form action="/api/devices/{{ $device->id }}/firmware-upgrade" method="POST" onsubmit="return confirm('Are you sure you want to upgrade the firmware?');">
                             @csrf
-                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700">
                                 Upgrade Firmware
                             </button>
                         </form>
@@ -583,7 +710,7 @@
                         <!-- Factory Reset -->
                         <form action="/api/devices/{{ $device->id }}/factory-reset" method="POST" onsubmit="return confirm('⚠️ WARNING: This will erase ALL device settings!\n\nAre you sure?');">
                             @csrf
-                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-danger"] }}-600 hover:bg-{{ $colors["btn-danger"] }}-700">
                                 Factory Reset
                             </button>
                         </form>
@@ -597,7 +724,7 @@
             <!-- WAN/Internet Section -->
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6 bg-blue-50">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Internet (WAN)</h3>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">Internet (WAN)</h3>
                     <p class="mt-1 text-sm text-gray-600">WAN connection details</p>
                 </div>
                 <div class="border-t border-gray-200">
@@ -628,7 +755,7 @@
                     <dl>
                         <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Connection Status</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">
                                 @if($status === 'Connected' || $status === 'Up')
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">{{ $status }}</span>
                                 @else
@@ -638,19 +765,19 @@
                         </div>
                         <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">External IP Address</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono">
                                 {{ $isDevice2 ? $getExactParam("Device.IP.Interface.1.IPv4Address.1.IPAddress") : $getExactParam("{$wanPrefix}.ExternalIPAddress") }}
                             </dd>
                         </div>
                         <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Default Gateway</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono">
                                 {{ $isDevice2 ? $getExactParam("Device.Routing.Router.1.IPv4Forwarding.1.GatewayIPAddress") : $getExactParam("{$wanPrefix}.DefaultGateway") }}
                             </dd>
                         </div>
                         <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">DNS Servers</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono text-xs">
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono text-xs">
                                 {{ $isDevice2 ? $getExactParam("Device.IP.Interface.1.IPv4Address.1.DNSServers") : $getExactParam("{$wanPrefix}.DNSServers") }}
                             </dd>
                         </div>
@@ -661,7 +788,7 @@
             <!-- LAN Section -->
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6 bg-green-50">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">LAN</h3>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">LAN</h3>
                     <p class="mt-1 text-sm text-gray-600">Local network configuration</p>
                 </div>
                 <div class="border-t border-gray-200">
@@ -673,19 +800,19 @@
                     <dl>
                         <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">LAN IP Address</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono">
                                 {{ $isDevice2 ? $getExactParam("{$lanPrefix}.IPv4Address.1.IPAddress") : $getExactParam("{$lanPrefix}.IPInterface.1.IPInterfaceIPAddress") }}
                             </dd>
                         </div>
                         <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Subnet Mask</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono">
                                 {{ $isDevice2 ? $getExactParam("{$lanPrefix}.IPv4Address.1.SubnetMask") : $getExactParam("{$lanPrefix}.IPInterface.1.IPInterfaceSubnetMask") }}
                             </dd>
                         </div>
                         <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">DHCP Server</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">
                                 @if($dhcpEnabled === 'true' || $dhcpEnabled === '1')
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Enabled</span>
                                 @else
@@ -695,7 +822,7 @@
                         </div>
                         <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">DHCP Range</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono text-xs">
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono text-xs">
                                 {{ $isDevice2 ? $getExactParam("{$dhcpPrefix}.MinAddress") : $getExactParam("{$lanPrefix}.MinAddress") }}
                                 -
                                 {{ $isDevice2 ? $getExactParam("{$dhcpPrefix}.MaxAddress") : $getExactParam("{$lanPrefix}.MaxAddress") }}
@@ -732,7 +859,7 @@
         @if(count($radios) > 0)
         <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
             <div class="px-4 py-5 sm:px-6 bg-purple-50">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">WiFi Networks</h3>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">WiFi Networks</h3>
                 <p class="mt-1 text-sm text-gray-600">Wireless network status</p>
             </div>
             <div class="border-t border-gray-200 p-6">
@@ -786,7 +913,7 @@
         <!-- Connected Devices Section -->
         <div class="bg-white shadow overflow-hidden sm:rounded-lg">
             <div class="px-4 py-5 sm:px-6 bg-yellow-50">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">Connected Devices</h3>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">Connected Devices</h3>
                 <p class="mt-1 text-sm text-gray-600">Active devices on the network</p>
             </div>
             <div class="border-t border-gray-200">
@@ -999,7 +1126,7 @@
         <!-- Recent Tasks Section -->
         <div class="bg-white shadow overflow-hidden sm:rounded-lg">
             <div class="px-4 py-5 sm:px-6 bg-gray-50">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">Recent Tasks</h3>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">Recent Tasks</h3>
             </div>
             <div class="border-t border-gray-200">
                 @php
@@ -1051,45 +1178,45 @@
     <!-- Device Info Tab -->
     <div x-show="activeTab === 'info'" x-cloak class="bg-white shadow overflow-hidden sm:rounded-lg">
         <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">Device Information</h3>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">Device Information</h3>
         </div>
         <div class="border-t border-gray-200">
             <dl>
                 <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt class="text-sm font-medium text-gray-500">Device ID</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $device->id }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">{{ $device->id }}</dd>
                 </div>
                 <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt class="text-sm font-medium text-gray-500">Manufacturer</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $device->manufacturer ?? '-' }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">{{ $device->manufacturer ?? '-' }}</dd>
                 </div>
                 <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt class="text-sm font-medium text-gray-500">OUI</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $device->oui ?? '-' }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">{{ $device->oui ?? '-' }}</dd>
                 </div>
                 <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt class="text-sm font-medium text-gray-500">Product Class</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $device->product_class ?? '-' }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">{{ $device->product_class ?? '-' }}</dd>
                 </div>
                 <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt class="text-sm font-medium text-gray-500">Serial Number</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $device->serial_number ?? '-' }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">{{ $device->serial_number ?? '-' }}</dd>
                 </div>
                 <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt class="text-sm font-medium text-gray-500">Software Version</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $device->software_version ?? '-' }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">{{ $device->software_version ?? '-' }}</dd>
                 </div>
                 <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt class="text-sm font-medium text-gray-500">Hardware Version</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $device->hardware_version ?? '-' }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">{{ $device->hardware_version ?? '-' }}</dd>
                 </div>
                 <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt class="text-sm font-medium text-gray-500">IP Address</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $device->ip_address ?? '-' }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">{{ $device->ip_address ?? '-' }}</dd>
                 </div>
                 <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt class="text-sm font-medium text-gray-500">Data Model</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                             {{ $device->getDataModel() }}
                         </span>
@@ -1097,7 +1224,7 @@
                 </div>
                 <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt class="text-sm font-medium text-gray-500">Connection Request URL</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 break-all">{{ $device->connection_request_url ?? '-' }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 break-all">{{ $device->connection_request_url ?? '-' }}</dd>
                 </div>
             </dl>
         </div>
@@ -1139,7 +1266,7 @@
         <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Device Parameters</h3>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">Device Parameters</h3>
                     <p class="mt-1 text-sm text-gray-500">All parameters stored for this device</p>
                 </div>
                 <div>
@@ -1249,7 +1376,7 @@
     <!-- Tasks Tab -->
     <div x-show="activeTab === 'tasks'" x-cloak class="bg-white shadow rounded-lg overflow-hidden" x-data="{ expandedTask: null }">
         <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">Device Tasks</h3>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">Device Tasks</h3>
         </div>
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -1406,7 +1533,7 @@
     <!-- Sessions Tab -->
     <div x-show="activeTab === 'sessions'" x-cloak class="bg-white shadow rounded-lg overflow-hidden">
         <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">CWMP Sessions</h3>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">CWMP Sessions</h3>
         </div>
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -1471,7 +1598,7 @@
                 }
             }">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
@@ -1501,7 +1628,7 @@
         <!-- 1. WAN Information -->
         <div class="bg-white shadow overflow-hidden sm:rounded-lg">
             <div class="px-4 py-5 sm:px-6 bg-blue-50">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">WAN Information</h3>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">WAN Information</h3>
                 <p class="mt-1 text-sm text-gray-600">Internet connection details</p>
             </div>
             <div class="border-t border-gray-200">
@@ -1542,7 +1669,7 @@
 
                     <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                         <dt class="text-sm font-medium text-gray-500">Connection Status</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">
                             @php
                                 $status = $isDevice2 ? $getExactParam("{$wanPrefix}.Status") : $getExactParam("{$wanPrefix}.ConnectionStatus");
                             @endphp
@@ -1556,35 +1683,35 @@
 
                     <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                         <dt class="text-sm font-medium text-gray-500">External IP Address</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono">
                             {{ $isDevice2 ? $getExactParam("{$wanPrefix}.IPv4Address.1.IPAddress") : $getExactParam("{$wanPrefix}.ExternalIPAddress") }}
                         </dd>
                     </div>
 
                     <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                         <dt class="text-sm font-medium text-gray-500">Default Gateway</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono">
                             {{ $isDevice2 ? $getExactParam("Device.Routing.Router.1.IPv4Forwarding.1.GatewayIPAddress") : $getExactParam("{$wanPrefix}.DefaultGateway") }}
                         </dd>
                     </div>
 
                     <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                         <dt class="text-sm font-medium text-gray-500">DNS Servers</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono">
                             {{ $isDevice2 ? $getExactParam("{$wanPrefix}.IPv4Address.1.DNSServers") : $getExactParam("{$wanPrefix}.DNSServers") }}
                         </dd>
                     </div>
 
                     <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                         <dt class="text-sm font-medium text-gray-500">MAC Address</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono">
                             {{ $isDevice2 ? $getExactParam("{$wanPrefix}.MACAddress") : $getExactParam("{$wanPrefix}.MACAddress") }}
                         </dd>
                     </div>
 
                     <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                         <dt class="text-sm font-medium text-gray-500">Uptime</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">
                             @php
                                 $uptime = $isDevice2 ? $getExactParam("{$wanPrefix}.Uptime") : $getExactParam("{$wanPrefix}.Uptime");
                                 if ($uptime !== '-' && is_numeric($uptime)) {
@@ -1604,7 +1731,7 @@
         <!-- 2. LAN Information -->
         <div class="bg-white shadow overflow-hidden sm:rounded-lg">
             <div class="px-4 py-5 sm:px-6 bg-green-50">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">LAN Information</h3>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">LAN Information</h3>
                 <p class="mt-1 text-sm text-gray-600">Local network configuration</p>
             </div>
             <div class="border-t border-gray-200">
@@ -1616,21 +1743,21 @@
 
                     <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                         <dt class="text-sm font-medium text-gray-500">LAN IP Address</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono">
                             {{ $isDevice2 ? $getExactParam("{$lanPrefix}.IPv4Address.1.IPAddress") : $getExactParam("{$lanPrefix}.IPInterface.1.IPInterfaceIPAddress") }}
                         </dd>
                     </div>
 
                     <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                         <dt class="text-sm font-medium text-gray-500">Subnet Mask</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono">
                             {{ $isDevice2 ? $getExactParam("{$lanPrefix}.IPv4Address.1.SubnetMask") : $getExactParam("{$lanPrefix}.IPInterface.1.IPInterfaceSubnetMask") }}
                         </dd>
                     </div>
 
                     <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                         <dt class="text-sm font-medium text-gray-500">DHCP Server</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">
                             @php
                                 $dhcpEnabled = $isDevice2 ? $getExactParam("{$dhcpPrefix}.Enable") : $getExactParam("{$lanPrefix}.DHCPServerEnable");
                             @endphp
@@ -1644,14 +1771,14 @@
 
                     <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                         <dt class="text-sm font-medium text-gray-500">DHCP Start Address</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono">
                             {{ $isDevice2 ? $getExactParam("{$dhcpPrefix}.MinAddress") : $getExactParam("{$lanPrefix}.MinAddress") }}
                         </dd>
                     </div>
 
                     <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                         <dt class="text-sm font-medium text-gray-500">DHCP End Address</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono">
                             {{ $isDevice2 ? $getExactParam("{$dhcpPrefix}.MaxAddress") : $getExactParam("{$lanPrefix}.MaxAddress") }}
                         </dd>
                     </div>
@@ -1662,7 +1789,7 @@
         <!-- 3. WiFi Radio Status -->
         <div class="bg-white shadow overflow-hidden sm:rounded-lg">
             <div class="px-4 py-5 sm:px-6 bg-purple-50">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">WiFi Radio Status</h3>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">WiFi Radio Status</h3>
                 <p class="mt-1 text-sm text-gray-600">Wireless radio configuration and status</p>
             </div>
             <div class="border-t border-gray-200 space-y-6 p-6">
@@ -1770,7 +1897,7 @@
         <!-- 4. Connected Devices -->
         <div class="bg-white shadow overflow-hidden sm:rounded-lg">
             <div class="px-4 py-5 sm:px-6 bg-yellow-50">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">Connected Devices</h3>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">Connected Devices</h3>
                 <p class="mt-1 text-sm text-gray-600">Devices connected to this gateway</p>
             </div>
             <div class="border-t border-gray-200">
@@ -2020,7 +2147,7 @@
                     </div>
                 @else
                     <div class="px-6 py-8 text-center">
-                        <p class="text-sm text-gray-500">No connected devices found. Click "Query Device Info" to fetch host table information.</p>
+                        <p class="text-sm text-gray-500 dark:text-{{ $colors["text-muted"] }}">No connected devices found. Click "Query Device Info" to fetch host table information.</p>
                     </div>
                 @endif
             </div>
@@ -2029,7 +2156,7 @@
         <!-- 5. ACS Event Log -->
         <div class="bg-white shadow overflow-hidden sm:rounded-lg">
             <div class="px-4 py-5 sm:px-6 bg-red-50">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">ACS Event Log</h3>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">ACS Event Log</h3>
                 <p class="mt-1 text-sm text-gray-600">Recent CWMP session events and activity</p>
             </div>
             <div class="border-t border-gray-200">
@@ -2142,7 +2269,7 @@
             <div class="px-4 py-5 sm:px-6 bg-green-50">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg leading-6 font-medium text-gray-900">2.4GHz Networks</h3>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">2.4GHz Networks</h3>
                         <p class="mt-1 text-sm text-gray-600">Wireless SSIDs on 2.4GHz band (instances 1-8)</p>
                     </div>
                     <div class="flex items-center space-x-3">
@@ -2180,7 +2307,7 @@
                                 radio24GhzEnabled = !radio24GhzEnabled;
                             }
                         }
-                        " :class="radio24GhzEnabled ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 hover:bg-gray-500'"
+                        " :class="radio24GhzEnabled ? 'bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700' : 'bg-{{ $colors["btn-secondary"] }}-400 hover:bg-{{ $colors["btn-secondary"] }}-500'"
                         class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                             <span :class="radio24GhzEnabled ? 'translate-x-5' : 'translate-x-0'"
                                 class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
@@ -2344,7 +2471,7 @@
                                     <span class="font-medium">Status:</span> {{ $config['Status'] ?? 'Unknown' }}<br>
                                     <span class="font-medium">Standard:</span> {{ $config['Standard'] ?? '-' }}
                                 </div>
-                                <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
@@ -2369,7 +2496,7 @@
             <div class="px-4 py-5 sm:px-6 bg-purple-50">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg leading-6 font-medium text-gray-900">5GHz Networks</h3>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">5GHz Networks</h3>
                         <p class="mt-1 text-sm text-gray-600">Wireless SSIDs on 5GHz band (instances 9-16)</p>
                     </div>
                     <div class="flex items-center space-x-3">
@@ -2407,7 +2534,7 @@
                                 radio5GhzEnabled = !radio5GhzEnabled;
                             }
                         }
-                        " :class="radio5GhzEnabled ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 hover:bg-gray-500'"
+                        " :class="radio5GhzEnabled ? 'bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700' : 'bg-{{ $colors["btn-secondary"] }}-400 hover:bg-{{ $colors["btn-secondary"] }}-500'"
                         class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                             <span :class="radio5GhzEnabled ? 'translate-x-5' : 'translate-x-0'"
                                 class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
@@ -2581,7 +2708,7 @@
                                     <span class="font-medium">Status:</span> {{ $config['Status'] ?? 'Unknown' }}<br>
                                     <span class="font-medium">Standard:</span> {{ $config['Standard'] ?? '-' }}
                                 </div>
-                                <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
@@ -2706,11 +2833,11 @@
         <div class="bg-white shadow overflow-hidden sm:rounded-lg">
             <div class="px-4 py-5 sm:px-6 bg-gray-50 flex justify-between items-center">
                 <div>
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Configuration Backups</h3>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">Configuration Backups</h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">Backup and restore device configuration</p>
                 </div>
                 <button @click="createBackup()" :disabled="loading"
-                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700 disabled:opacity-50 disabled:cursor-not-allowed">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
@@ -2744,7 +2871,7 @@
                             <div class="flex items-center justify-between">
                                 <div class="flex-1">
                                     <div class="flex items-center">
-                                        <h4 class="text-sm font-medium text-gray-900" x-text="backup.name"></h4>
+                                        <h4 class="text-sm font-medium text-gray-900 dark:text-{{ $colors["text"] }}" x-text="backup.name"></h4>
                                         <span x-show="backup.is_auto" class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                                             Auto
                                         </span>
@@ -2810,7 +2937,7 @@
                         Cancel
                     </button>
                     <button @click="restoreBackup()"
-                            class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                            class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700">
                         Restore
                     </button>
                 </div>
@@ -2920,11 +3047,11 @@
         <div class="bg-white shadow overflow-hidden sm:rounded-lg">
             <div class="px-4 py-5 sm:px-6 bg-gray-50 flex justify-between items-center">
                 <div>
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Port Forwarding (NAT)</h3>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">Port Forwarding (NAT)</h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">Manage port forwarding rules for this device</p>
                 </div>
                 <button @click="showAddForm = !showAddForm" :disabled="loading"
-                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700 disabled:opacity-50 disabled:cursor-not-allowed">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
@@ -2967,7 +3094,7 @@
                     </div>
                     <div class="flex items-end">
                         <button type="submit"
-                                class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                                class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700">
                             Add Port Forward
                         </button>
                     </div>
@@ -3064,13 +3191,13 @@
                  },
 
                  async pollResults() {
-                     const maxAttempts = 30; // Poll for up to 30 seconds
+                     const maxAttempts = 120; // Poll for up to 6 minutes (120 attempts × 3 seconds)
                      let attempts = 0;
 
                      const poll = async () => {
                          if (attempts++ >= maxAttempts) {
                              this.scanning = false;
-                             this.scanState = 'Timeout';
+                             this.scanState = 'Timeout - Device may require up to 5 minutes to check in';
                              return;
                          }
 
@@ -3078,18 +3205,18 @@
                              const response = await fetch('/api/devices/{{ $device->id }}/wifi-scan-results');
                              const data = await response.json();
 
-                             this.scanState = data.state;
+                             this.scanState = data.state || 'Waiting for device...';
                              this.lastUpdate = new Date().toLocaleTimeString();
 
                              if (data.state === 'Complete') {
                                  this.scanResults = data.results;
                                  this.scanning = false;
-                             } else if (data.state === 'Error') {
+                             } else if (data.state === 'Error' || data.state === 'Error_Internal') {
                                  this.scanning = false;
-                                 alert('Scan failed');
+                                 alert('Scan failed - device reported an error');
                              } else {
-                                 // Continue polling
-                                 setTimeout(poll, 1000);
+                                 // Continue polling every 3 seconds (reduced from 1 second to avoid flashing)
+                                 setTimeout(poll, 3000);
                              }
                          } catch (error) {
                              console.error('Error polling results:', error);
@@ -3154,7 +3281,7 @@
                     </button>
                     <button @click="startScan()"
                             :disabled="scanning"
-                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700 disabled:opacity-50 disabled:cursor-not-allowed">
                         <svg x-show="!scanning" class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>

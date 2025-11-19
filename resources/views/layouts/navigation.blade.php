@@ -1,12 +1,18 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+@php
+    $theme = session('theme', 'standard');
+    $themeConfig = config("themes.{$theme}");
+    $colors = $themeConfig['colors'];
+@endphp
+<nav x-data="{ open: false }" class="bg-white dark:bg-{{ $colors['card'] }} border-b border-{{ $colors['border'] }} shadow-lg">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
+                    <a href="{{ route('dashboard') }}" class="flex items-center space-x-3">
                         <img src="{{ asset('images/hay-logo.png') }}" alt="Hay Communications" class="h-12 w-auto">
+                        <span class="text-xl font-bold text-{{ $colors['primary'] }}-600 dark:text-{{ $colors['primary'] }}-400">Hay ACS</span>
                     </a>
                 </div>
 
@@ -21,11 +27,17 @@
                     <x-nav-link :href="route('device-types.index')" :active="request()->routeIs('device-types.*') || request()->routeIs('firmware.*')">
                         {{ __('Device Types') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('analytics')" :active="request()->routeIs('analytics')">
+                        {{ __('Analytics') }}
+                    </x-nav-link>
                 </div>
             </div>
 
             <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+            <div class="hidden sm:flex sm:items-center sm:ms-6 space-x-4">
+                <!-- Theme Switcher -->
+                <x-theme-switcher />
+
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
@@ -81,6 +93,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('device-types.index')" :active="request()->routeIs('device-types.*') || request()->routeIs('firmware.*')">
                 {{ __('Device Types') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('analytics')" :active="request()->routeIs('analytics')">
+                {{ __('Analytics') }}
             </x-responsive-nav-link>
         </div>
 

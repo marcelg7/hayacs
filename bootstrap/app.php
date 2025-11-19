@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule): void {
         // Run task timeout check every minute
         $schedule->command('tasks:timeout')->everyMinute();
+
+        // Collect analytics metrics every hour
+        $schedule->command('analytics:collect-metrics')->hourly();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
