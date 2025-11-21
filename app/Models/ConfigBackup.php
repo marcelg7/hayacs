@@ -11,6 +11,9 @@ class ConfigBackup extends Model
         'device_id',
         'name',
         'description',
+        'tags',
+        'notes',
+        'is_starred',
         'backup_data',
         'is_auto',
         'parameter_count',
@@ -18,7 +21,9 @@ class ConfigBackup extends Model
 
     protected $casts = [
         'backup_data' => 'array',
+        'tags' => 'array',
         'is_auto' => 'boolean',
+        'is_starred' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

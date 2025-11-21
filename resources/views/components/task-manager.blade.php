@@ -32,7 +32,7 @@
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         class="absolute top-16 right-0 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[600px] overflow-hidden flex flex-col"
+         class="absolute top-16 right-0 w-[48rem] bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[600px] overflow-hidden flex flex-col"
          @click.away="expanded = false">
 
         <!-- Panel Header -->

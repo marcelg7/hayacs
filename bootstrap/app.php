@@ -20,6 +20,19 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Collect analytics metrics every hour
         $schedule->command('analytics:collect-metrics')->hourly();
+
+        // Create daily backup for all devices at 11 PM
+        $schedule->command('backups:create-daily')
+            ->dailyAt('23:00')
+            ->onOneServer()
+            ->withoutOverlapping();
+
+        // Cleanup old backups (7 day retention, preserves initial backups)
+        // Run at 11:30 PM after daily backups complete
+        $schedule->command('backups:cleanup')
+            ->dailyAt('23:30')
+            ->onOneServer()
+            ->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [

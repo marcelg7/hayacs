@@ -12,7 +12,12 @@
       "Bash(php scripts/get-task.php:*)",
       "Bash(python analyze_ips.py:*)",
       "Bash(php:*)",
-      "WebFetch(domain:whois.arin.net)"
+      "WebFetch(domain:whois.arin.net)",
+      "Bash(mysql:*)",
+      "Bash(crontab:*)",
+      "Bash(sudo crontab:*)",
+      "Bash(git reset:*)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []

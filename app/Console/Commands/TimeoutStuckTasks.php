@@ -21,46 +21,69 @@ class TimeoutStuckTasks extends Command
      *
      * @var string
      */
-    protected $description = 'Automatically fail tasks stuck in "sent" status for too long';
+    protected $description = 'Automatically fail tasks stuck in "sent" status with task-type-specific timeouts';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $minutes = (int) $this->option('minutes');
-        $cutoffTime = Carbon::now()->subMinutes($minutes);
+        $defaultMinutes = (int) $this->option('minutes');
+
+        // Task-type-specific timeouts (in minutes)
+        $taskTypeTimeouts = [
+            'download' => 20,           // Firmware upgrades need much longer
+            'reboot' => 5,              // Reboot takes a few minutes
+            'factory_reset' => 5,       // Factory reset takes time
+            'upload' => 10,             // Log uploads can be large
+            'add_object' => 3,          // Object creation
+            'delete_object' => 3,       // Object deletion
+            'set_parameter_values' => $defaultMinutes,
+            'get_parameter_values' => $defaultMinutes,
+        ];
 
         // Find tasks stuck in "sent" status
-        $stuckTasks = Task::where('status', 'sent')
-            ->where('updated_at', '<=', $cutoffTime)
-            ->get();
+        $stuckTasks = Task::where('status', 'sent')->get();
 
         if ($stuckTasks->isEmpty()) {
             $this->info('No stuck tasks found.');
             return Command::SUCCESS;
         }
 
-        $this->info("Found {$stuckTasks->count()} stuck task(s)...");
+        $timedOutCount = 0;
 
         foreach ($stuckTasks as $task) {
-            $elapsedMinutes = Carbon::parse($task->updated_at)->diffInMinutes(Carbon::now());
+            // Get timeout for this task type, or use default
+            $timeoutMinutes = $taskTypeTimeouts[$task->task_type] ?? $defaultMinutes;
+            $cutoffTime = Carbon::now()->subMinutes($timeoutMinutes);
 
-            // Mark task as failed using the model method
-            $task->markAsFailed("Task timed out after {$elapsedMinutes} minutes. Device did not respond to the command.");
+            // Check if this task has exceeded its timeout
+            if ($task->updated_at <= $cutoffTime) {
+                $elapsedMinutes = Carbon::parse($task->updated_at)->diffInMinutes(Carbon::now());
 
-            Log::warning("Task timeout detected", [
-                'task_id' => $task->id,
-                'device_id' => $task->device_id,
-                'task_type' => $task->task_type,
-                'elapsed_minutes' => $elapsedMinutes,
-                'sent_at' => $task->updated_at,
-            ]);
+                // Mark task as failed using the model method
+                $task->markAsFailed("Task timed out after {$elapsedMinutes} minutes. Device did not respond to the command.");
 
-            $this->warn("Task {$task->id} ({$task->task_type}) timed out after {$elapsedMinutes} minutes");
+                Log::warning("Task timeout detected", [
+                    'task_id' => $task->id,
+                    'device_id' => $task->device_id,
+                    'task_type' => $task->task_type,
+                    'timeout_minutes' => $timeoutMinutes,
+                    'elapsed_minutes' => $elapsedMinutes,
+                    'sent_at' => $task->updated_at,
+                ]);
+
+                $this->warn("Task {$task->id} ({$task->task_type}) timed out after {$elapsedMinutes} minutes (timeout: {$timeoutMinutes}m)");
+                $timedOutCount++;
+            }
         }
 
-        $this->info("Successfully timed out {$stuckTasks->count()} task(s).");
+        if ($timedOutCount > 0) {
+            $this->info("Successfully timed out {$timedOutCount} task(s).");
+        } else {
+            $this->info('No stuck tasks exceeded their timeout thresholds.');
+        }
+
         return Command::SUCCESS;
     }
 }

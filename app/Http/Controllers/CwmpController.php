@@ -193,6 +193,39 @@ class CwmpController extends Controller
 
         $device->save();
 
+        // Create initial auto-backup if not already created and device has parameters
+        // This happens on first TR-069 Inform to secure device data before any changes
+        if (!$device->initial_backup_created && $device->parameters()->count() > 0) {
+            $parameters = $device->parameters()
+                ->get()
+                ->mapWithKeys(function ($param) {
+                    return [$param->name => [
+                        'value' => $param->value,
+                        'type' => $param->type,
+                        'writable' => $param->writable,
+                    ]];
+                })
+                ->toArray();
+
+            $device->configBackups()->create([
+                'name' => 'Initial Auto Backup - ' . now()->format('Y-m-d H:i:s'),
+                'description' => 'Automatically created on first TR-069 connection to preserve device configuration',
+                'backup_data' => $parameters,
+                'is_auto' => true,
+                'parameter_count' => count($parameters),
+            ]);
+
+            $device->update([
+                'initial_backup_created' => true,
+                'last_backup_at' => now(),
+            ]);
+
+            Log::info('Auto-backup created on first Inform', [
+                'device_id' => $device->id,
+                'parameter_count' => count($parameters),
+            ]);
+        }
+
         // Auto-create DeviceType if it doesn't exist for this product_class
         if ($parsed['product_class'] && $parsed['manufacturer']) {
             $deviceType = DeviceType::firstOrCreate(
@@ -226,24 +259,31 @@ class CwmpController extends Controller
         // If DIAGNOSTICS COMPLETE event is present, exclude diagnostic tasks
         // (they will be processed by queueDiagnosticResultRetrieval instead)
         if ($hasDiagnosticsComplete) {
-            $abandonedTasksQuery->whereNotIn('task_type', ['ping_diagnostics', 'traceroute_diagnostics']);
+            $abandonedTasksQuery->whereNotIn('task_type', ['ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics']);
         }
 
         $abandonedTasks = $abandonedTasksQuery->get();
 
         if ($abandonedTasks->isNotEmpty()) {
             foreach ($abandonedTasks as $abandonedTask) {
-                $abandonedTask->markAsFailed(
-                    'Device started new TR-069 session without responding to command. ' .
-                    'This usually indicates the device rejected or failed to process the request.'
-                );
+                // Special handling for set_params tasks
+                // WiFi changes often cause device to disconnect/reconnect, but changes may have succeeded
+                if ($abandonedTask->task_type === 'set_params') {
+                    // Queue a verification task to check if parameters actually changed
+                    $this->queueParameterVerification($device, $abandonedTask, $parsed['parameters']);
+                } else {
+                    $abandonedTask->markAsFailed(
+                        'Device started new TR-069 session without responding to command. ' .
+                        'This usually indicates the device rejected or failed to process the request.'
+                    );
 
-                Log::warning('Abandoned task detected and failed', [
-                    'device_id' => $device->id,
-                    'task_id' => $abandonedTask->id,
-                    'task_type' => $abandonedTask->task_type,
-                    'events' => $parsed['events'],
-                ]);
+                    Log::warning('Abandoned task detected and failed', [
+                        'device_id' => $device->id,
+                        'task_id' => $abandonedTask->id,
+                        'task_type' => $abandonedTask->task_type,
+                        'events' => $parsed['events'],
+                    ]);
+                }
             }
         }
 
@@ -389,21 +429,43 @@ class CwmpController extends Controller
                 $detailedParams = app(\App\Http\Controllers\Api\DeviceController::class)
                     ->buildDetailedParametersFromDiscovery($parsed['parameters'], $dataModel, $device);
 
-                // Create follow-up task for detailed query
-                $detailedTask = Task::create([
-                    'device_id' => $device->id,
-                    'task_type' => 'get_params',
-                    'parameters' => [
-                        'names' => $detailedParams,
-                    ],
-                    'status' => 'pending',
-                ]);
+                // Chunk parameters for devices that can't handle large requests (e.g., Calix 844E)
+                // Split into chunks of 20 parameters to avoid device crashes
+                $chunkSize = 20;
+                $paramChunks = array_chunk($detailedParams, $chunkSize);
 
-                Log::info('Detailed troubleshooting task created', [
+                Log::info('Discovery completed, creating chunked detailed query tasks', [
                     'device_id' => $device->id,
                     'param_count' => count($detailedParams),
-                    'task_id' => $detailedTask->id,
+                    'chunk_count' => count($paramChunks),
+                    'chunk_size' => $chunkSize,
                 ]);
+
+                // Create a get_params task for each chunk
+                $taskIds = [];
+                foreach ($paramChunks as $chunkIndex => $chunk) {
+                    $detailedTask = Task::create([
+                        'device_id' => $device->id,
+                        'task_type' => 'get_params',
+                        'parameters' => [
+                            'names' => $chunk,
+                        ],
+                        'status' => 'pending',
+                    ]);
+                    $taskIds[] = $detailedTask->id;
+
+                    Log::info('Detailed troubleshooting chunk task created', [
+                        'device_id' => $device->id,
+                        'task_id' => $detailedTask->id,
+                        'chunk_index' => $chunkIndex + 1,
+                        'chunk_total' => count($paramChunks),
+                        'param_count' => count($chunk),
+                    ]);
+                }
+
+                // Trigger connection request to ensure first task is picked up quickly
+                // Subsequent chunks will be picked up in following sessions
+                $this->connectionRequestService->sendConnectionRequest($device);
             } else {
                 // Regular get_params - store parameters in device
                 foreach ($parsed['parameters'] as $name => $param) {
@@ -531,9 +593,9 @@ class CwmpController extends Controller
      */
     private function handleSetParameterValuesResponse(array $parsed): string
     {
-        // Find the task that was sent (set_params, ping_diagnostics, or traceroute_diagnostics)
+        // Find the task that was sent (set_params, set_parameter_values, download/upload diagnostics, ping_diagnostics, or traceroute_diagnostics)
         $task = Task::where('status', 'sent')
-            ->whereIn('task_type', ['set_params', 'ping_diagnostics', 'traceroute_diagnostics'])
+            ->whereIn('task_type', ['set_params', 'set_parameter_values', 'ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics'])
             ->orderBy('updated_at', 'desc')
             ->first();
 
@@ -541,7 +603,7 @@ class CwmpController extends Controller
             if ($parsed['status'] === 0) {
                 // For diagnostic tasks, keep them as 'sent' until we get the "8 DIAGNOSTICS COMPLETE" event
                 // and retrieve the actual results
-                if ($task->task_type === 'ping_diagnostics' || $task->task_type === 'traceroute_diagnostics') {
+                if (in_array($task->task_type, ['ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics'])) {
                     Log::info('Diagnostic task acknowledged by device, awaiting completion', [
                         'device_id' => $task->device_id,
                         'task_type' => $task->task_type,
@@ -669,6 +731,15 @@ class CwmpController extends Controller
             ),
             'set_params' => $this->cwmpService->createSetParameterValues(
                 $task->parameters['values'] ?? []
+            ),
+            'set_parameter_values' => $this->cwmpService->createSetParameterValues(
+                $task->parameters ?? []
+            ),
+            'download_diagnostics' => $this->cwmpService->createSetParameterValues(
+                $task->parameters ?? []
+            ),
+            'upload_diagnostics' => $this->cwmpService->createSetParameterValues(
+                $task->parameters ?? []
             ),
             'reboot' => $this->cwmpService->createReboot(
                 $task->parameters['command_key'] ?? 'reboot_' . time()
@@ -824,6 +895,97 @@ class CwmpController extends Controller
             'device_id' => $device->id,
             'diagnostic_type' => $diagnosticTask->task_type,
         ]);
+    }
+
+    /**
+     * Verify if set_params task actually succeeded by checking current parameter values
+     * This handles cases where device disconnects/reconnects after parameter changes (common with WiFi)
+     */
+    private function queueParameterVerification(Device $device, Task $task, array $currentParameters): void
+    {
+        $setValues = $task->parameters['values'] ?? [];
+
+        if (empty($setValues)) {
+            $task->markAsFailed('No parameters to verify');
+            return;
+        }
+
+        // Check if any of the parameters from the Inform match what we tried to set
+        $matchedCount = 0;
+        $totalParams = count($setValues);
+        $parametersToVerify = [];
+
+        foreach ($setValues as $paramName => $paramValue) {
+            // Extract actual value (handle both simple strings and {value, type} objects)
+            $expectedValue = is_array($paramValue) && isset($paramValue['value'])
+                ? $paramValue['value']
+                : $paramValue;
+
+            // Convert boolean values for comparison
+            if (is_bool($expectedValue)) {
+                $expectedValue = $expectedValue ? '1' : '0';
+            }
+
+            // Check if this parameter is in the current Inform
+            $currentValue = $currentParameters[$paramName] ?? null;
+
+            if ($currentValue !== null) {
+                // Normalize values for comparison
+                $currentValueStr = (string) $currentValue;
+                $expectedValueStr = (string) $expectedValue;
+
+                if ($currentValueStr === $expectedValueStr) {
+                    $matchedCount++;
+                } else {
+                    // Parameter exists but doesn't match - need to verify
+                    $parametersToVerify[] = $paramName;
+                }
+            } else {
+                // Parameter not in Inform - need to verify
+                $parametersToVerify[] = $paramName;
+            }
+        }
+
+        // If 80% or more parameters matched in the Inform, consider it successful
+        if ($matchedCount >= ($totalParams * 0.8)) {
+            $task->markAsCompleted([
+                'message' => 'Parameters verified in Inform after device reconnect',
+                'matched' => $matchedCount,
+                'total' => $totalParams,
+            ]);
+
+            Log::info('Set params task verified as successful after reconnect', [
+                'device_id' => $device->id,
+                'task_id' => $task->id,
+                'matched' => $matchedCount,
+                'total' => $totalParams,
+            ]);
+        } elseif (!empty($parametersToVerify)) {
+            // Queue a GetParameterValues to verify the remaining parameters
+            Task::create([
+                'device_id' => $device->id,
+                'task_type' => 'verify_set_params',
+                'description' => 'Verify parameter changes after reconnect',
+                'parameters' => [
+                    'names' => $parametersToVerify,
+                    'original_task_id' => $task->id,
+                    'expected_values' => $setValues,
+                ],
+                'status' => 'pending',
+            ]);
+
+            Log::info('Queued verification task for set_params', [
+                'device_id' => $device->id,
+                'task_id' => $task->id,
+                'parameters_to_verify' => count($parametersToVerify),
+            ]);
+        } else {
+            // None matched - likely failed
+            $task->markAsFailed(
+                'Device reconnected without applying parameter changes. ' .
+                'Verified: ' . $matchedCount . '/' . $totalParams . ' parameters.'
+            );
+        }
     }
 }
 
