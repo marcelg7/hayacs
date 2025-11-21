@@ -1410,7 +1410,18 @@
                                         @if($task->status === 'completed')
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Completed</span>
                                         @elseif($task->status === 'failed')
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Failed</span>
+                                            <div class="inline-flex items-center space-x-1 group relative">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Failed</span>
+                                                <svg class="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                <div class="hidden group-hover:block absolute left-0 top-full mt-1 z-50 w-72 bg-gray-900 text-white text-xs rounded-lg py-2 px-3 shadow-lg">
+                                                    @if($task->error)
+                                                        <p class="font-medium mb-1">{{ $task->error }}</p>
+                                                    @endif
+                                                    <p class="text-gray-300 text-xs">This is normal TR-069 behavior. Some requests fail if the device reconnects, is busy, or doesn't support certain parameters.</p>
+                                                </div>
+                                            </div>
                                         @elseif($task->status === 'cancelled')
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Cancelled</span>
                                         @elseif($task->status === 'pending')
@@ -1672,8 +1683,21 @@
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Completed</span>
                         @elseif($task->status === 'cancelled')
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Cancelled</span>
+                        @elseif($task->status === 'failed')
+                            <div class="inline-flex items-center space-x-1 group relative">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Failed</span>
+                                <svg class="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div class="hidden group-hover:block absolute left-0 top-full mt-1 z-50 w-72 bg-gray-900 text-white text-xs rounded-lg py-2 px-3 shadow-lg">
+                                    @if($task->error)
+                                        <p class="font-medium mb-1">{{ $task->error }}</p>
+                                    @endif
+                                    <p class="text-gray-300 text-xs">This is normal TR-069 behavior. Some requests fail if the device reconnects, is busy, or doesn't support certain parameters.</p>
+                                </div>
+                            </div>
                         @else
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Failed</span>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{{ ucfirst($task->status) }}</span>
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $task->created_at->format('Y-m-d H:i:s') }}</td>
