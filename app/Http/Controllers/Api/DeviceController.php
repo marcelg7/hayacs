@@ -147,7 +147,7 @@ class DeviceController extends Controller
 
         // Get recent completed tasks (last 3)
         $recentCompleted = $device->tasks()
-            ->whereIn('status', ['completed', 'failed'])
+            ->whereIn('status', ['completed', 'failed', 'cancelled'])
             ->orderBy('completed_at', 'desc')
             ->limit(3)
             ->get();
@@ -218,7 +218,7 @@ class DeviceController extends Controller
         }
 
         $task->update([
-            'status' => 'failed',
+            'status' => 'cancelled',
             'error' => 'Cancelled by user',
             'completed_at' => now(),
         ]);

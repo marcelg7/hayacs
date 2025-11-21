@@ -88,6 +88,14 @@ class Task extends Model
     }
 
     /**
+     * Check if task is cancelled
+     */
+    public function isCancelled(): bool
+    {
+        return $this->status === 'cancelled';
+    }
+
+    /**
      * Get elapsed time in seconds
      */
     public function getElapsedSeconds(): int
