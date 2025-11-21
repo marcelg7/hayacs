@@ -60,7 +60,8 @@
 - Other sections have spacing (likely using mt-6 or space-y-6)
 - **Solution:** Add mt-6 class to Recent Tasks section div
 
-## Priority Order
+## Priority Order - ALL COMPLETED! ✅
+
 1. ✅ Fix Connect Now button (AJAX) - COMPLETED (both locations)
 2. ✅ Fix spacing issue - COMPLETED
 3. ✅ Add reboot auto-refresh - COMPLETED (queues uptime refresh after reboot)
@@ -68,8 +69,8 @@
 5. ✅ Fix Connected Devices signal/rate parameters - COMPLETED
 6. ✅ Fix Quick Actions buttons returning JSON - COMPLETED
 7. ✅ Disable Traceroute for SmartRG - COMPLETED (both locations)
-8. 🔍 Test connection requests on SmartRG - NEXT
-9. 🤔 Consider handling invalid ping response times gracefully
+8. ✅ Test connection requests on SmartRG - COMPLETED (admin/admin works!)
+9. ✅ Handle invalid ping response times - COMPLETED (yellow warning box)
 
 ## Implementation Details
 
@@ -133,3 +134,34 @@
 - **Both Locations**:
   1. Main Traceroute button at top of page
   2. Quick Actions Traceroute button
+
+### 8. SmartRG Connection Request Testing (COMPLETED)
+- **Problem**: SmartRG had connection_request_url but no username configured
+- **Testing Results**:
+  - Tested HTTP connection to http://23.155.129.79:30005/
+  - Device responds with HTTP 401 (requires authentication)
+  - Tested multiple auth methods and credentials
+  - **SUCCESS**: Digest auth with admin/admin returns HTTP 200
+- **Key Findings**:
+  - SmartRG uses Digest authentication (not Basic auth)
+  - Credentials: admin/admin (not admin/(empty) as device parameter reported)
+  - Device parameter `ConnectionRequestPassword` was empty, but actual password is "admin"
+  - `ConnectionRequestAuthentication = 1` indicates digest auth enabled
+- **Solution**: Updated SmartRG device (00236a758a89) with admin/admin credentials
+- **Result**: Connection requests now functional, can trigger immediate device check-in
+
+### 9. Invalid Ping Response Times Handling (COMPLETED)
+- **Location**: device.blade.php lines 1688-1745
+- **Problem**: Task 1017 showed MinimumResponseTime: 4294967 ms (near uint32 max), but pings succeeded
+- **Root Cause**: SmartRG firmware bug returns garbage timing data even when pings work
+- **Validation Logic**:
+  - Detects values >= 4,000,000 ms (clearly invalid)
+  - Detects all timing values = 0 when SuccessCount > 0
+  - Sets `$invalidTiming` flag when either condition is true
+- **User Experience**:
+  - Shows yellow warning box instead of displaying garbage numbers
+  - Icon: Warning triangle with exclamation mark
+  - Message: "Invalid Timing Data - Device firmware returned invalid response times, but X ping(s) succeeded. This is a known firmware bug on some devices."
+  - Still displays Success/Failure counts (which are accurate)
+  - Hides the invalid timing fields when detected
+- **Prevents Confusion**: Users see the pings succeeded without being confused by nonsensical 4+ million millisecond response times
