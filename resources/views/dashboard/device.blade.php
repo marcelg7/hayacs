@@ -27,138 +27,11 @@
     },
 
     startTaskTracking(message, taskId) {
-        this.taskLoading = true;
-        this.taskMessage = message;
-        this.taskId = taskId;
-        this.initialTaskId = taskId; // Store initial task ID to filter related tasks
-
-        // Use local variable instead of Alpine reactive property to avoid triggering reactivity
-        let elapsedTime = 0;
-
-        // Show progress card and update message with vanilla JS (avoids Alpine reactivity flashing)
-        const progressCard = document.getElementById('progressCard');
-        const taskMessage = document.getElementById('taskMessage');
-        const taskTimer = document.getElementById('taskTimer');
-        const cancelButton = document.getElementById('cancelButton');
-
-        if (progressCard) progressCard.style.display = 'block';
-        if (taskMessage) taskMessage.textContent = message;
-        if (taskTimer) taskTimer.textContent = '0:00';
-        if (cancelButton) {
-            cancelButton.style.display = 'none';
-            // Set up cancel button click handler
-            cancelButton.onclick = () => {
-                clearInterval(this.timerInterval);
-                this.taskLoading = false;
-                if (progressCard) progressCard.style.display = 'none';
-            };
-        }
-
-        // Start count-up timer
-        this.timerInterval = setInterval(() => {
-            elapsedTime++;
-
-            // Update timer display with vanilla JS
-            if (taskTimer) {
-                const mins = Math.floor(elapsedTime / 60);
-                const secs = elapsedTime % 60;
-                taskTimer.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
-            }
-
-            // Show cancel button after 30 seconds
-            if (elapsedTime === 30 && cancelButton) {
-                cancelButton.style.display = 'block';
-            }
-
-            // Update message with helpful tips based on elapsed time
-            if (elapsedTime === 120 && taskMessage) {
-                taskMessage.textContent = message + ' (This is taking longer than usual - device may be on slow connection)';
-            } else if (elapsedTime === 300 && taskMessage) {
-                taskMessage.textContent = message + ' (Still waiting - you can close this and check back later)';
-            } else if (elapsedTime === 600) {
-                // After 10 minutes, stop polling and show timeout message
-                clearInterval(this.timerInterval);
-                this.taskLoading = false;
-                if (progressCard) progressCard.style.display = 'none';
-                alert('Task timeout (10 minutes). The task may still be running. Check the Tasks tab for status.');
-                return;
-            }
-        }, 1000);
-
-        // Start polling for task completion
-        this.pollTaskStatus();
-    },
-
-    async pollTaskStatus() {
-        if (!this.taskId) return;
-
-        try {
-            const response = await fetch('/api/devices/{{ $device->id }}/tasks', {
-                headers: { 'X-Background-Poll': 'true' }
-            });
-            const data = await response.json();
-
-            // Find our task
-            const task = data.find(t => t.id === this.taskId);
-
-            if (task && (task.status === 'completed' || task.status === 'failed')) {
-                // Initial task is done - check for any remaining pending/sent tasks
-                // This handles chunked get_params tasks created after discovery completes
-                // Only count tasks from THIS refresh session (created after initial task)
-                const pendingTasks = data.filter(t =>
-                    (t.status === 'pending' || t.status === 'sent') &&
-                    t.task_type === 'get_params' &&
-                    t.id > this.initialTaskId
-                );
-
-                if (pendingTasks.length > 0) {
-                    // Still have chunked tasks to process - update message and continue tracking
-                    const completedChunks = data.filter(t =>
-                        t.task_type === 'get_params' &&
-                        (t.status === 'completed' || t.status === 'failed') &&
-                        t.id > this.initialTaskId
-                    ).length;
-                    const totalChunks = completedChunks + pendingTasks.length;
-
-                    this.taskMessage = `Refreshing Troubleshooting Info... (Processing chunk ${completedChunks + 1} of ${totalChunks})`;
-
-                    // Switch to tracking the first pending task
-                    this.taskId = pendingTasks[0].id;
-
-                    // Continue polling
-                    setTimeout(() => this.pollTaskStatus(), 2000);
-                    return;
-                }
-
-                // All tasks done - stop timer and reload
-                clearInterval(this.timerInterval);
-                this.taskLoading = false;
-
-                // Hide progress card with vanilla JS
-                const progressCard = document.getElementById('progressCard');
-                if (progressCard) progressCard.style.display = 'none';
-
-                // Wait a moment to show completion, then reload
-                setTimeout(() => {
-                    window.location.reload();
-                }, 500);
-            } else if (this.elapsedTime >= 600) {
-                // Stop polling after 10 minutes
-                clearInterval(this.timerInterval);
-                this.taskLoading = false;
-
-                // Hide progress card with vanilla JS
-                const progressCard = document.getElementById('progressCard');
-                if (progressCard) progressCard.style.display = 'none';
-            } else {
-                // Keep polling every 5 seconds (reduced frequency to minimize flashing)
-                setTimeout(() => this.pollTaskStatus(), 5000);
-            }
-        } catch (error) {
-            console.error('Error polling task status:', error);
-            // Retry after 2 seconds
-            setTimeout(() => this.pollTaskStatus(), 2000);
-        }
+        // NEW: Just trigger the task manager component to start polling
+        // The task manager component handles all the UI and progress tracking
+        window.dispatchEvent(new CustomEvent('task-started', {
+            detail: { message, taskId }
+        }));
     },
 
     formatTime(seconds) {
@@ -5229,38 +5102,9 @@
 </div>
 
 <!-- Progress Card (Outside Alpine component to avoid reactivity flashing) -->
-<div id="progressCard" style="display: none;" class="fixed top-4 right-4 z-50">
-    <div class="bg-white rounded-lg shadow-2xl p-6 max-w-sm border-2 border-blue-500">
-        <div class="flex flex-col items-center">
-            <!-- Spinner -->
-            <svg class="animate-spin h-16 w-16 text-blue-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-
-            <!-- Message -->
-            <h3 id="taskMessage" class="text-lg font-semibold text-gray-900 dark:text-{{ $colors["text"] }} mb-2" style="min-height: 1.75rem;"></h3>
-
-            <!-- Timer -->
-            <div class="flex items-center text-3xl font-mono text-blue-600 mb-4">
-                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span id="taskTimer" style="min-width: 4rem; display: inline-block;">0:00</span>
-            </div>
-
-            <!-- Status text -->
-            <p class="text-sm text-gray-500 text-center mb-4">
-                Waiting for device to execute task...<br>
-                <span class="text-xs">The page will refresh automatically when complete.</span>
-            </p>
-
-            <!-- Cancel button (shown after 30 seconds) -->
-            <button id="cancelButton" style="display: none;" class="mt-4 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md text-sm">
-                Close (Task continues in background)
-            </button>
-        </div>
-    </div>
-</div>
+<!-- OLD Progress Card - Replaced by Task Manager Component -->
+<!-- <div id="progressCard" style="display: none;" class="fixed top-4 right-4 z-50">
+    ... removed for brevity ...
+</div> -->
 
 @endsection
