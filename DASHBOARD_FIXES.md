@@ -61,14 +61,15 @@
 - **Solution:** Add mt-6 class to Recent Tasks section div
 
 ## Priority Order
-1. ✅ Fix Connect Now button (AJAX) - COMPLETED
+1. ✅ Fix Connect Now button (AJAX) - COMPLETED (both locations)
 2. ✅ Fix spacing issue - COMPLETED
 3. ✅ Add reboot auto-refresh - COMPLETED (queues uptime refresh after reboot)
-4. ✅ Disable Remote GUI for SmartRG - COMPLETED
+4. ✅ SmartRG Remote GUI - COMPLETED (MER access via 192.168.x.x)
 5. ✅ Fix Connected Devices signal/rate parameters - COMPLETED
-6. 🔍 Test connection requests on SmartRG - NEXT
-7. 🤔 Consider handling invalid ping response times gracefully
-8. 🤔 Consider disabling Traceroute for SmartRG
+6. ✅ Fix Quick Actions buttons returning JSON - COMPLETED
+7. ✅ Disable Traceroute for SmartRG - COMPLETED (both locations)
+8. 🔍 Test connection requests on SmartRG - NEXT
+9. 🤔 Consider handling invalid ping response times gracefully
 
 ## Implementation Details
 
@@ -89,6 +90,18 @@
   - Tooltip: "Not supported for SmartRG devices"
 - **Reason**: SmartRG devices don't support InternetGatewayDevice.User/UserInterface.RemoteAccess parameters
 
+### 4. SmartRG Remote GUI with MER Access (COMPLETED)
+- **Location**: device.blade.php lines 498-564
+- **Original Problem**: Parse error from broken conditional @click syntax
+- **New Feature**: Implemented SmartRG MER (Management Entity Remote) access
+- **Solution**:
+  - Fixed parse error by removing conditional @click syntax
+  - For SmartRG devices, queries WAN interfaces for 192.168.x.x IP
+  - Opens HTTP connection to MER interface (example: http://192.168.110.159/)
+  - Button shows "(MER)" label for SmartRG devices
+  - Calix devices continue to use normal TR-069 remote access enablement
+- **Testing**: Verified SmartRG 505n has MER IP 192.168.110.159
+
 ### 5. Connected Devices Signal/Rate Parameters (COMPLETED)
 - **Location**: device.blade.php lines 1138-1185 and 2196-2250
 - **Problem**: SmartRG devices store WiFi signal and rate data differently than Calix devices
@@ -98,3 +111,25 @@
   - Rate: Falls back to `X_CLEARACCESS_COM_WlanTxRate` and `X_CLEARACCESS_COM_WlanRxRate` from Host table (values in kbps: 78000, 58500, 104000)
 - **Implementation**: Code first checks standard AssociatedDevice parameters, then falls back to SmartRG vendor extensions
 - **Testing**: Verified SmartRG 505n has working signal and rate data in Host table parameters
+
+### 6. Quick Actions Buttons Returning JSON (COMPLETED)
+- **Location**: device.blade.php lines 731-891 (Quick Actions section)
+- **Problem**: Query Device, Connect Now, Ping Test, and Trace Route buttons used plain form POST, navigating to JSON response
+- **Solution**: Converted all buttons to AJAX with @submit.prevent:
+  - **Query Device** (line 731): Uses task tracking with loading overlay
+  - **Connect Now** (line 761): Shows success/error alert messages
+  - **Ping Test** (line 819): Uses task tracking with loading overlay
+  - **Trace Route** (line 849): Uses task tracking, disabled for SmartRG
+- **User Experience**: All buttons now stay on the page and provide clear feedback
+
+### 7. Disable Traceroute for SmartRG (COMPLETED)
+- **Locations**: device.blade.php lines 363 and 849
+- **Reason**: SmartRG devices don't support TR-069 Traceroute diagnostics (task 1018 timed out)
+- **Implementation**:
+  - Added SmartRG check at start of async handler (returns early)
+  - Added disabled attribute and tooltip: "Not supported for SmartRG devices"
+  - Visual indicators: 50% opacity, cursor-not-allowed, red prohibition icon
+  - Alert message: "Traceroute is not supported for SmartRG devices"
+- **Both Locations**:
+  1. Main Traceroute button at top of page
+  2. Quick Actions Traceroute button
