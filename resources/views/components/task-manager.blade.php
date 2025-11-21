@@ -251,7 +251,8 @@ function taskManager(deviceId) {
                 const response = await fetch(`/api/devices/${this.deviceId}/tasks/${taskId}`, {
                     method: 'DELETE',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-Background-Poll': 'true'
                     }
                 });
 
