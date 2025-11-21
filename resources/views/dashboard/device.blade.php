@@ -4228,7 +4228,8 @@
                              method: 'POST',
                              headers: {
                                  'Content-Type': 'application/json',
-                                 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                                 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                 'X-Background-Poll': 'true'
                              }
                          });
                          const data = await response.json();
@@ -4257,7 +4258,9 @@
                          }
 
                          try {
-                             const response = await fetch('/api/devices/{{ $device->id }}/wifi-scan-results');
+                             const response = await fetch('/api/devices/{{ $device->id }}/wifi-scan-results', {
+                                 headers: { 'X-Background-Poll': 'true' }
+                             });
                              const data = await response.json();
 
                              this.scanState = data.state || 'Waiting for device...';
