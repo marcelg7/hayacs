@@ -361,6 +361,10 @@
 
             <!-- Trace Route Test -->
             <form @submit.prevent="async (e) => {
+                if ('{{ $device->manufacturer }}' === 'SmartRG') {
+                    return; // Disabled for SmartRG
+                }
+
                 taskLoading = true;
                 taskMessage = 'Running Trace Route...';
 
@@ -384,8 +388,18 @@
                 }
             }">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-warning"] }}-600 hover:bg-{{ $colors["btn-warning"] }}-700">
+                <button type="submit"
+                    @if($device->manufacturer === 'SmartRG')
+                        disabled
+                        title="Not supported for SmartRG devices"
+                    @endif
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-warning"] }}-600 hover:bg-{{ $colors["btn-warning"] }}-700 {{ $device->manufacturer === 'SmartRG' ? 'opacity-50 cursor-not-allowed' : '' }}">
                     Trace Route
+                    @if($device->manufacturer === 'SmartRG')
+                        <svg class="w-4 h-4 ml-1 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 15.636 5.636m12.728 12.728L5.636 5.636"></path>
+                        </svg>
+                    @endif
                 </button>
             </form>
 
@@ -495,7 +509,28 @@
             </form>
 
             <!-- Remote GUI -->
-            <button @click="{{ $device->manufacturer === 'SmartRG' ? '' : "async () => {
+            @php
+                // For SmartRG devices, find the MER WAN interface IP (192.168.x.x)
+                $merIp = null;
+                if ($device->manufacturer === 'SmartRG') {
+                    $wanIpParam = $device->parameters()
+                        ->where('name', 'LIKE', '%WANIPConnection%ExternalIPAddress')
+                        ->where('value', 'LIKE', '192.168.%')
+                        ->first();
+                    $merIp = $wanIpParam ? $wanIpParam->value : null;
+                }
+            @endphp
+            <button @click="async () => {
+                const isSmartRG = '{{ $device->manufacturer }}' === 'SmartRG';
+                const merIp = '{{ $merIp }}';
+
+                if (isSmartRG && merIp) {
+                    // SmartRG MER access - direct to 192.168.x.x IP
+                    const url = 'http://' + merIp + '/';
+                    window.open(url, '_blank');
+                    return;
+                }
+
                 // Show loading overlay immediately
                 taskLoading = true;
                 taskMessage = 'Enabling Remote Access...';
@@ -514,7 +549,7 @@
                         const port = '8443'; // Default HTTPS port for Calix devices
                         const externalIp = result.external_ip || '{{ $externalIp }}';
                         if (externalIp) {
-                            const url = `https://${externalIp}:${port}/`;
+                            const url = 'https://' + externalIp + ':' + port + '/';
                             window.open(url, '_blank');
 
                             // Clear loading indicator after opening window
@@ -532,20 +567,13 @@
                     taskLoading = false;
                     alert('Error enabling remote access: ' + error);
                 }
-            }" }}"
-            @if($device->manufacturer === 'SmartRG')
-                disabled
-                title="Not supported for SmartRG devices"
-            @endif
-            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700 {{ $device->manufacturer === 'SmartRG' ? 'opacity-50 cursor-not-allowed' : '' }}">
+            }" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
                 </svg>
                 Remote GUI
                 @if($device->manufacturer === 'SmartRG')
-                    <svg class="w-4 h-4 ml-1 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
-                    </svg>
+                    <span class="ml-1 text-xs text-gray-300">(MER)</span>
                 @endif
             </button>
         </div>
@@ -700,7 +728,29 @@
                 <div class="border-t border-gray-200 p-6">
                     <div class="grid grid-cols-2 gap-3">
                         <!-- Query Device Info -->
-                        <form action="/api/devices/{{ $device->id }}/query" method="POST">
+                        <form @submit.prevent="async (e) => {
+                            taskLoading = true;
+                            taskMessage = 'Querying Device Info...';
+
+                            try {
+                                const response = await fetch('/api/devices/{{ $device->id }}/query', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    }
+                                });
+                                const result = await response.json();
+                                if (result.task && result.task.id) {
+                                    startTaskTracking('Querying Device Info...', result.task.id);
+                                } else {
+                                    taskLoading = false;
+                                    alert('Query started, but no task ID returned');
+                                }
+                            } catch (error) {
+                                taskLoading = false;
+                                alert('Error querying device: ' + error.message);
+                            }
+                        }">
                             @csrf
                             <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                                 Query Device
@@ -708,7 +758,25 @@
                         </form>
 
                         <!-- Connect Now -->
-                        <form action="/api/devices/{{ $device->id }}/connection-request" method="POST">
+                        <form @submit.prevent="async (e) => {
+                            try {
+                                const response = await fetch('/api/devices/{{ $device->id }}/connection-request', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                        'Accept': 'application/json'
+                                    }
+                                });
+                                const result = await response.json();
+                                if (response.ok) {
+                                    alert('Connection request sent successfully!');
+                                } else {
+                                    alert('Error: ' + (result.error || result.message || 'Failed to send connection request'));
+                                }
+                            } catch (error) {
+                                alert('Error: ' + error.message);
+                            }
+                        }">
                             @csrf
                             <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700">
                                 Connect Now
@@ -748,7 +816,29 @@
                         </form>
 
                         <!-- Ping Test -->
-                        <form action="/api/devices/{{ $device->id }}/ping-test" method="POST">
+                        <form @submit.prevent="async (e) => {
+                            taskLoading = true;
+                            taskMessage = 'Running Ping Test...';
+
+                            try {
+                                const response = await fetch('/api/devices/{{ $device->id }}/ping-test', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    }
+                                });
+                                const result = await response.json();
+                                if (result.task && result.task.id) {
+                                    startTaskTracking('Running Ping Test to 8.8.8.8...', result.task.id);
+                                } else {
+                                    taskLoading = false;
+                                    alert('Ping test started, but no task ID returned');
+                                }
+                            } catch (error) {
+                                taskLoading = false;
+                                alert('Error starting ping test: ' + error.message);
+                            }
+                        }">
                             @csrf
                             <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-info"] }}-600 hover:bg-{{ $colors["btn-info"] }}-700">
                                 Ping Test
@@ -756,10 +846,47 @@
                         </form>
 
                         <!-- Trace Route -->
-                        <form action="/api/devices/{{ $device->id }}/traceroute-test" method="POST">
+                        <form @submit.prevent="async (e) => {
+                            if ('{{ $device->manufacturer }}' === 'SmartRG') {
+                                alert('Traceroute is not supported for SmartRG devices');
+                                return;
+                            }
+
+                            taskLoading = true;
+                            taskMessage = 'Running Trace Route...';
+
+                            try {
+                                const response = await fetch('/api/devices/{{ $device->id }}/traceroute-test', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    }
+                                });
+                                const result = await response.json();
+                                if (result.task && result.task.id) {
+                                    startTaskTracking('Running Trace Route to 8.8.8.8...', result.task.id);
+                                } else {
+                                    taskLoading = false;
+                                    alert('Trace route started, but no task ID returned');
+                                }
+                            } catch (error) {
+                                taskLoading = false;
+                                alert('Error starting trace route: ' + error.message);
+                            }
+                        }">
                             @csrf
-                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-warning"] }}-600 hover:bg-{{ $colors["btn-warning"] }}-700">
+                            <button type="submit"
+                                @if($device->manufacturer === 'SmartRG')
+                                    disabled
+                                    title="Not supported for SmartRG devices"
+                                @endif
+                                class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-warning"] }}-600 hover:bg-{{ $colors["btn-warning"] }}-700 {{ $device->manufacturer === 'SmartRG' ? 'opacity-50 cursor-not-allowed' : '' }}">
                                 Trace Route
+                                @if($device->manufacturer === 'SmartRG')
+                                    <svg class="w-4 h-4 ml-1 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                                    </svg>
+                                @endif
                             </button>
                         </form>
 
