@@ -1689,6 +1689,17 @@
                                     $results = is_array($task->result) ? $task->result : json_decode($task->result, true);
                                     $firstKey = array_key_first($results ?? []);
                                     $prefix = str_starts_with($firstKey, 'Device.IP.') ? 'Device.IP.Diagnostics.IPPingDiagnostics' : 'InternetGatewayDevice.IPPingDiagnostics';
+
+                                    // Get timing values
+                                    $successCount = (int)($results["{$prefix}.SuccessCount"]['value'] ?? 0);
+                                    $avgTime = (int)($results["{$prefix}.AverageResponseTime"]['value'] ?? 0);
+                                    $minTime = (int)($results["{$prefix}.MinimumResponseTime"]['value'] ?? 0);
+                                    $maxTime = (int)($results["{$prefix}.MaximumResponseTime"]['value'] ?? 0);
+
+                                    // Detect invalid timing data (firmware bug - returns garbage values)
+                                    // Invalid if: values >= 4000000ms (near uint32 max) OR all zeros when pings succeeded
+                                    $invalidTiming = ($minTime >= 4000000 || $maxTime >= 4000000 || $avgTime >= 4000000) ||
+                                                    ($successCount > 0 && $minTime == 0 && $maxTime == 0 && $avgTime == 0);
                                 @endphp
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
@@ -1699,18 +1710,34 @@
                                         <span class="text-sm font-medium text-gray-500">Failure Count:</span>
                                         <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.FailureCount"]['value'] ?? 'N/A' }}</span>
                                     </div>
-                                    <div>
-                                        <span class="text-sm font-medium text-gray-500">Average Response Time:</span>
-                                        <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.AverageResponseTime"]['value'] ?? 'N/A' }} ms</span>
-                                    </div>
-                                    <div>
-                                        <span class="text-sm font-medium text-gray-500">Min Response Time:</span>
-                                        <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.MinimumResponseTime"]['value'] ?? 'N/A' }} ms</span>
-                                    </div>
-                                    <div>
-                                        <span class="text-sm font-medium text-gray-500">Max Response Time:</span>
-                                        <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.MaximumResponseTime"]['value'] ?? 'N/A' }} ms</span>
-                                    </div>
+                                    @if($invalidTiming)
+                                        <div class="col-span-2">
+                                            <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                                                <div class="flex items-start">
+                                                    <svg class="w-5 h-5 text-yellow-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                                    </svg>
+                                                    <div>
+                                                        <p class="text-sm font-medium text-yellow-800">Invalid Timing Data</p>
+                                                        <p class="text-xs text-yellow-700 mt-1">Device firmware returned invalid response times, but {{ $successCount }} ping(s) succeeded. This is a known firmware bug on some devices.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-500">Average Response Time:</span>
+                                            <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.AverageResponseTime"]['value'] ?? 'N/A' }} ms</span>
+                                        </div>
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-500">Min Response Time:</span>
+                                            <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.MinimumResponseTime"]['value'] ?? 'N/A' }} ms</span>
+                                        </div>
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-500">Max Response Time:</span>
+                                            <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.MaximumResponseTime"]['value'] ?? 'N/A' }} ms</span>
+                                        </div>
+                                    @endif
                                     <div>
                                         <span class="text-sm font-medium text-gray-500">State:</span>
                                         <span class="ml-2 text-sm text-gray-900">{{ $results["{$prefix}.DiagnosticsState"]['value'] ?? 'N/A' }}</span>
