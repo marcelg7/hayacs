@@ -373,9 +373,9 @@ class CwmpController extends Controller
      */
     private function handleGetParameterValuesResponse(array $parsed): string
     {
-        // Find the task that was sent (get_params, discover_troubleshooting, or get_diagnostic_results)
+        // Find the task that was sent (get_params, discover_troubleshooting, get_diagnostic_results, or verify_set_params)
         $task = Task::where('status', 'sent')
-            ->whereIn('task_type', ['get_params', 'discover_troubleshooting', 'get_diagnostic_results'])
+            ->whereIn('task_type', ['get_params', 'discover_troubleshooting', 'get_diagnostic_results', 'verify_set_params'])
             ->orderBy('updated_at', 'desc')
             ->first();
 
@@ -404,6 +404,9 @@ class CwmpController extends Controller
                 }
                 // Mark the retrieval task as completed
                 $task->markAsCompleted($parsed['parameters']);
+            } elseif ($task->task_type === 'verify_set_params') {
+                // Verification task - check if parameters match expected values
+                $this->processVerificationResults($task, $parsed['parameters']);
             } elseif ($task->task_type === 'discover_troubleshooting') {
                 // Discovery task completed - create detailed query task
                 $dataModel = $task->parameters['data_model'] ?? 'InternetGatewayDevice:1';
@@ -722,7 +725,7 @@ class CwmpController extends Controller
     private function generateRpcForTask(Task $task): string
     {
         return match ($task->task_type) {
-            'get_params', 'discover_troubleshooting', 'get_diagnostic_results' => $this->cwmpService->createGetParameterValues(
+            'get_params', 'discover_troubleshooting', 'get_diagnostic_results', 'verify_set_params' => $this->cwmpService->createGetParameterValues(
                 $task->parameters['names'] ?? []
             ),
             'get_parameter_names' => $this->cwmpService->createGetParameterNames(
@@ -894,6 +897,99 @@ class CwmpController extends Controller
         Log::info('Queued diagnostic result retrieval', [
             'device_id' => $device->id,
             'diagnostic_type' => $diagnosticTask->task_type,
+        ]);
+    }
+
+    /**
+     * Process verification results and update original task status
+     */
+    private function processVerificationResults(Task $verificationTask, array $actualParameters): void
+    {
+        $originalTaskId = $verificationTask->parameters['original_task_id'] ?? null;
+        $expectedValues = $verificationTask->parameters['expected_values'] ?? [];
+
+        if (!$originalTaskId) {
+            $verificationTask->markAsFailed('No original task ID');
+            return;
+        }
+
+        $originalTask = Task::find($originalTaskId);
+        if (!$originalTask) {
+            $verificationTask->markAsFailed('Original task not found');
+            return;
+        }
+
+        // Compare actual values with expected values
+        $matchedCount = 0;
+        $totalParams = count($expectedValues);
+        $mismatches = [];
+
+        foreach ($expectedValues as $paramName => $expectedValue) {
+            // Extract expected value (handle both simple strings and {value, type} objects)
+            $expectedVal = is_array($expectedValue) && isset($expectedValue['value'])
+                ? $expectedValue['value']
+                : $expectedValue;
+
+            // Get actual value
+            $actualParam = $actualParameters[$paramName] ?? null;
+            $actualVal = $actualParam['value'] ?? null;
+
+            // Normalize for comparison
+            $expectedStr = (string) $expectedVal;
+            $actualStr = (string) $actualVal;
+
+            if ($expectedStr === $actualStr) {
+                $matchedCount++;
+            } else {
+                $mismatches[$paramName] = [
+                    'expected' => $expectedStr,
+                    'actual' => $actualStr ?? 'null',
+                ];
+            }
+        }
+
+        // Calculate match percentage
+        $matchPercentage = $totalParams > 0 ? ($matchedCount / $totalParams) * 100 : 0;
+
+        // Mark original task based on results
+        if ($matchPercentage >= 80) {
+            $originalTask->markAsCompleted([
+                'message' => 'Parameters verified after reconnect',
+                'matched' => $matchedCount,
+                'total' => $totalParams,
+                'match_percentage' => round($matchPercentage, 1),
+            ]);
+
+            Log::info('Parameter verification successful', [
+                'device_id' => $originalTask->device_id,
+                'original_task_id' => $originalTaskId,
+                'matched' => $matchedCount,
+                'total' => $totalParams,
+                'percentage' => round($matchPercentage, 1),
+            ]);
+        } else {
+            $originalTask->markAsFailed(
+                'Parameter verification failed. ' .
+                "Matched: {$matchedCount}/{$totalParams} (" . round($matchPercentage, 1) . "%)\n" .
+                'Mismatches: ' . json_encode($mismatches, JSON_PRETTY_PRINT)
+            );
+
+            Log::warning('Parameter verification failed', [
+                'device_id' => $originalTask->device_id,
+                'original_task_id' => $originalTaskId,
+                'matched' => $matchedCount,
+                'total' => $totalParams,
+                'percentage' => round($matchPercentage, 1),
+                'mismatches' => $mismatches,
+            ]);
+        }
+
+        // Mark verification task as completed
+        $verificationTask->markAsCompleted([
+            'matched' => $matchedCount,
+            'total' => $totalParams,
+            'match_percentage' => round($matchPercentage, 1),
+            'original_task_updated' => true,
         ]);
     }
 

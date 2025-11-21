@@ -110,6 +110,7 @@ class Task extends Model
         $descriptions = [
             'get_params' => 'Get Parameters',
             'set_params' => 'Set Parameters',
+            'verify_set_params' => 'Verify Changes',
             'reboot' => 'Reboot Device',
             'factory_reset' => 'Factory Reset',
             'get_param_names' => 'Get Parameter Names',
