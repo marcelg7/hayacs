@@ -142,15 +142,30 @@
 
         <div class="mt-4 flex flex-wrap gap-2" x-show="activeTab !== 'dashboard'" x-cloak>
             <!-- Connect Now -->
-            <form action="/api/devices/{{ $device->id }}/connection-request" method="POST">
-                @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                    Connect Now
-                </button>
-            </form>
+            <button @click="async () => {
+                try {
+                    const response = await fetch('/api/devices/{{ $device->id }}/connection-request', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        alert('✓ Connection request sent successfully!');
+                    } else {
+                        alert('Error: ' + (result.error || result.message || 'Failed to send connection request'));
+                    }
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            }" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                Connect Now
+            </button>
 
             <!-- Query Device Info -->
             <div x-data="{ showModal: false, loading: false, deviceInfo: null }">
@@ -480,7 +495,7 @@
             </form>
 
             <!-- Remote GUI -->
-            <button @click="async () => {
+            <button @click="{{ $device->manufacturer === 'SmartRG' ? '' : "async () => {
                 // Show loading overlay immediately
                 taskLoading = true;
                 taskMessage = 'Enabling Remote Access...';
@@ -517,11 +532,21 @@
                     taskLoading = false;
                     alert('Error enabling remote access: ' + error);
                 }
-            }" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700">
+            }" }}"
+            @if($device->manufacturer === 'SmartRG')
+                disabled
+                title="Not supported for SmartRG devices"
+            @endif
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700 {{ $device->manufacturer === 'SmartRG' ? 'opacity-50 cursor-not-allowed' : '' }}">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
                 </svg>
                 Remote GUI
+                @if($device->manufacturer === 'SmartRG')
+                    <svg class="w-4 h-4 ml-1 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                    </svg>
+                @endif
             </button>
         </div>
     </div>
@@ -579,10 +604,21 @@
                     class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                 Port Forwarding
             </button>
-            <button @click="activeTab = 'wifiscan'"
+            <button @click="{{ $device->manufacturer === 'SmartRG' ? '' : "activeTab = 'wifiscan'" }}"
                     :class="activeTab === 'wifiscan' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                WiFi Scan
+                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm {{ $device->manufacturer === 'SmartRG' ? 'opacity-50 cursor-not-allowed' : '' }}"
+                    @if($device->manufacturer === 'SmartRG')
+                        disabled
+                        title="Not supported for SmartRG 505n, 515ac, 516ac"
+                    @endif>
+                <span class="flex items-center space-x-1">
+                    <span>WiFi Scan</span>
+                    @if($device->manufacturer === 'SmartRG')
+                        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                        </svg>
+                    @endif
+                </span>
             </button>
             <button @click="activeTab = 'speedtest'"
                     :class="activeTab === 'speedtest' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
@@ -609,7 +645,13 @@
                         </div>
                         <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Model</dt>
-                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">{{ $device->product_class ?? '-' }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2">
+                                @if($device->manufacturer === 'SmartRG')
+                                    {{ $device->hardware_version ?? '-' }}
+                                @else
+                                    {{ $device->product_class ?? '-' }}
+                                @endif
+                            </dd>
                         </div>
                         <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Serial Number</dt>
@@ -621,7 +663,13 @@
                         </div>
                         <div class="bg-gray-50 px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Hardware Version</dt>
-                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono">{{ $device->hardware_version ?? '-' }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors["text"] }} sm:mt-0 sm:col-span-2 font-mono">
+                                @if($device->manufacturer === 'SmartRG')
+                                    {{ $device->product_class ?? '-' }}
+                                @else
+                                    {{ $device->hardware_version ?? '-' }}
+                                @endif
+                            </dd>
                         </div>
                         <div class="bg-white px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Uptime</dt>
@@ -1091,31 +1139,50 @@
                                     $dashSignalStrength = null;
                                     $dashSignalClass = '';
                                     $dashSignalIcon = '';
+
+                                    // Check WiFi AssociatedDevice data first
                                     if ($dashWifiData) {
                                         $dashSignalStrength = $dashWifiData['SignalStrength'] ?? null;
-                                        if ($dashSignalStrength !== null) {
-                                            $signal = (int)$dashSignalStrength;
-                                            if ($signal >= -50) {
-                                                $dashSignalClass = 'text-green-600';
-                                                $dashSignalIcon = '▂▃▄▅▆';
-                                            } elseif ($signal >= -60) {
-                                                $dashSignalClass = 'text-green-500';
-                                                $dashSignalIcon = '▂▃▄▅';
-                                            } elseif ($signal >= -70) {
-                                                $dashSignalClass = 'text-yellow-500';
-                                                $dashSignalIcon = '▂▃▄';
-                                            } elseif ($signal >= -80) {
-                                                $dashSignalClass = 'text-orange-500';
-                                                $dashSignalIcon = '▂▃ ⚠️';
-                                            } else {
-                                                $dashSignalClass = 'text-red-500';
-                                                $dashSignalIcon = '▂ ⚠️';
-                                            }
+                                    }
+
+                                    // SmartRG stores signal in Host table as X_CLEARACCESS_COM_WlanRssi
+                                    if ($dashSignalStrength === null && isset($dashHost['X_CLEARACCESS_COM_WlanRssi'])) {
+                                        $rssi = (int)$dashHost['X_CLEARACCESS_COM_WlanRssi'];
+                                        if ($rssi !== 0) { // 0 means not connected via WiFi
+                                            $dashSignalStrength = $rssi;
+                                        }
+                                    }
+
+                                    if ($dashSignalStrength !== null) {
+                                        $signal = (int)$dashSignalStrength;
+                                        if ($signal >= -50) {
+                                            $dashSignalClass = 'text-green-600';
+                                            $dashSignalIcon = '▂▃▄▅▆';
+                                        } elseif ($signal >= -60) {
+                                            $dashSignalClass = 'text-green-500';
+                                            $dashSignalIcon = '▂▃▄▅';
+                                        } elseif ($signal >= -70) {
+                                            $dashSignalClass = 'text-yellow-500';
+                                            $dashSignalIcon = '▂▃▄';
+                                        } elseif ($signal >= -80) {
+                                            $dashSignalClass = 'text-orange-500';
+                                            $dashSignalIcon = '▂▃ ⚠️';
+                                        } else {
+                                            $dashSignalClass = 'text-red-500';
+                                            $dashSignalIcon = '▂ ⚠️';
                                         }
                                     }
 
                                     // Get rates
                                     $dashDownRate = $dashWifiData['LastDataDownlinkRate'] ?? null;
+
+                                    // SmartRG stores rate in Host table as X_CLEARACCESS_COM_WlanTxRate (in kbps)
+                                    if ($dashDownRate === null && isset($dashHost['X_CLEARACCESS_COM_WlanTxRate'])) {
+                                        $txRate = (int)$dashHost['X_CLEARACCESS_COM_WlanTxRate'];
+                                        if ($txRate > 0) {
+                                            $dashDownRate = $txRate; // Already in kbps
+                                        }
+                                    }
 
                                     // Get band for interface display
                                     $dashBand = null;
@@ -1188,7 +1255,7 @@
         </div>
 
         <!-- Recent Tasks Section -->
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
             <div class="px-4 py-5 sm:px-6 bg-gray-50">
                 <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">Recent Tasks</h3>
             </div>
@@ -2130,32 +2197,57 @@
                                     $signalStrength = null;
                                     $signalClass = '';
                                     $signalIcon = '';
+
+                                    // Check WiFi AssociatedDevice data first
                                     if ($wifiData) {
                                         $signalStrength = $wifiData['SignalStrength'] ?? null;
-                                        if ($signalStrength !== null) {
-                                            $signal = (int)$signalStrength;
-                                            if ($signal >= -50) {
-                                                $signalClass = 'text-green-600';
-                                                $signalIcon = '▂▃▄▅▆';
-                                            } elseif ($signal >= -60) {
-                                                $signalClass = 'text-green-500';
-                                                $signalIcon = '▂▃▄▅';
-                                            } elseif ($signal >= -70) {
-                                                $signalClass = 'text-yellow-500';
-                                                $signalIcon = '▂▃▄';
-                                            } elseif ($signal >= -80) {
-                                                $signalClass = 'text-orange-500';
-                                                $signalIcon = '▂▃ ⚠️';
-                                            } else {
-                                                $signalClass = 'text-red-500';
-                                                $signalIcon = '▂ ⚠️';
-                                            }
+                                    }
+
+                                    // SmartRG stores signal in Host table as X_CLEARACCESS_COM_WlanRssi
+                                    if ($signalStrength === null && isset($host['X_CLEARACCESS_COM_WlanRssi'])) {
+                                        $rssi = (int)$host['X_CLEARACCESS_COM_WlanRssi'];
+                                        if ($rssi !== 0) { // 0 means not connected via WiFi
+                                            $signalStrength = $rssi;
+                                        }
+                                    }
+
+                                    if ($signalStrength !== null) {
+                                        $signal = (int)$signalStrength;
+                                        if ($signal >= -50) {
+                                            $signalClass = 'text-green-600';
+                                            $signalIcon = '▂▃▄▅▆';
+                                        } elseif ($signal >= -60) {
+                                            $signalClass = 'text-green-500';
+                                            $signalIcon = '▂▃▄▅';
+                                        } elseif ($signal >= -70) {
+                                            $signalClass = 'text-yellow-500';
+                                            $signalIcon = '▂▃▄';
+                                        } elseif ($signal >= -80) {
+                                            $signalClass = 'text-orange-500';
+                                            $signalIcon = '▂▃ ⚠️';
+                                        } else {
+                                            $signalClass = 'text-red-500';
+                                            $signalIcon = '▂ ⚠️';
                                         }
                                     }
 
                                     // Get rates
                                     $downRate = $wifiData['LastDataDownlinkRate'] ?? null;
                                     $upRate = $wifiData['LastDataUplinkRate'] ?? null;
+
+                                    // SmartRG stores rates in Host table (in kbps)
+                                    if ($downRate === null && isset($host['X_CLEARACCESS_COM_WlanTxRate'])) {
+                                        $txRate = (int)$host['X_CLEARACCESS_COM_WlanTxRate'];
+                                        if ($txRate > 0) {
+                                            $downRate = $txRate; // Already in kbps
+                                        }
+                                    }
+                                    if ($upRate === null && isset($host['X_CLEARACCESS_COM_WlanRxRate'])) {
+                                        $rxRate = (int)$host['X_CLEARACCESS_COM_WlanRxRate'];
+                                        if ($rxRate > 0) {
+                                            $upRate = $rxRate; // Already in kbps
+                                        }
+                                    }
 
                                     // Get band
                                     $band = $getWifiBand($wifiData);
@@ -4312,6 +4404,39 @@
                      return 'Weak';
                  },
 
+                 getFriendlyRadioName(radioPath, frequencyBand) {
+                     if (!radioPath) return 'N/A';
+
+                     // Extract radio number from path
+                     const parts = radioPath.split('Radio.');
+                     let radioNum = '?';
+                     if (parts.length > 1) {
+                         const numPart = parts[1].split('.')[0];
+                         if (numPart) radioNum = numPart;
+                     }
+
+                     // Use frequency band if available
+                     if (frequencyBand) {
+                         return frequencyBand + ' (Radio ' + radioNum + ')';
+                     }
+
+                     // Fallback to just radio number
+                     return 'Radio ' + radioNum;
+                 },
+
+                 async copyToClipboard(text) {
+                     try {
+                         await navigator.clipboard.writeText(text);
+                         // Optional: Show a brief success message
+                         const event = new CustomEvent('toast', {
+                             detail: { message: 'Copied to clipboard!', type: 'success' }
+                         });
+                         window.dispatchEvent(event);
+                     } catch (err) {
+                         console.error('Failed to copy:', err);
+                     }
+                 },
+
                  init() {
                      // Load existing results on init
                      this.refreshResults();
@@ -4403,7 +4528,22 @@
                                         <span x-text="result.BSSID || 'N/A'"></span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <span x-text="result.Radio || 'N/A'"></span>
+                                        <div class="flex items-center space-x-2 group relative">
+                                            <span x-text="getFriendlyRadioName(result.Radio, result.OperatingFrequencyBand)"></span>
+                                            <button
+                                                @click="copyToClipboard(result.Radio)"
+                                                class="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600"
+                                                :title="result.Radio"
+                                                type="button">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                                </svg>
+                                            </button>
+                                            <!-- Tooltip -->
+                                            <div class="hidden group-hover:block absolute left-0 top-full mt-1 z-50 bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
+                                                <span x-text="result.Radio"></span>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         <span x-text="result.Channel || 'N/A'"></span>

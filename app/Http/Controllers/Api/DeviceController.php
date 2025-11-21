@@ -1957,7 +1957,8 @@ class DeviceController extends Controller
         // Create task to trigger the scan
         $task = Task::create([
             'device_id' => $device->id,
-            'task_type' => 'set_parameter_values',
+            'task_type' => 'wifi_scan',
+            'description' => 'WiFi Interference Scan',
             'status' => 'pending',
             'parameters' => [
                 $diagnosticParam => [

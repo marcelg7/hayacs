@@ -259,7 +259,7 @@ class CwmpController extends Controller
         // If DIAGNOSTICS COMPLETE event is present, exclude diagnostic tasks
         // (they will be processed by queueDiagnosticResultRetrieval instead)
         if ($hasDiagnosticsComplete) {
-            $abandonedTasksQuery->whereNotIn('task_type', ['ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics']);
+            $abandonedTasksQuery->whereNotIn('task_type', ['ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics', 'wifi_scan']);
         }
 
         $abandonedTasks = $abandonedTasksQuery->get();
@@ -384,6 +384,15 @@ class CwmpController extends Controller
 
             // Check if this is a diagnostic result retrieval
             if ($task->task_type === 'get_diagnostic_results') {
+                // Store diagnostic parameters in device parameters table
+                foreach ($parsed['parameters'] as $name => $param) {
+                    $device->setParameter(
+                        $name,
+                        $param['value'],
+                        $param['type']
+                    );
+                }
+
                 // Find the original diagnostic task and store results there
                 $diagnosticTaskId = $task->parameters['diagnostic_task_id'] ?? null;
                 if ($diagnosticTaskId) {
@@ -398,7 +407,7 @@ class CwmpController extends Controller
                         Log::info('Diagnostic results stored', [
                             'device_id' => $device->id,
                             'diagnostic_type' => $task->parameters['diagnostic_type'] ?? 'unknown',
-                            'results' => $parsed['parameters'],
+                            'param_count' => count($parsed['parameters']),
                         ]);
                     }
                 }
@@ -651,6 +660,26 @@ class CwmpController extends Controller
         if ($task) {
             $task->markAsCompleted();
             Log::info('Reboot command sent', ['device_id' => $task->device_id]);
+
+            // Queue a task to refresh uptime after reboot completes
+            $device = $task->device;
+            $dataModel = $device->getDataModel();
+            $uptimeParam = $dataModel === 'Device:2'
+                ? 'Device.DeviceInfo.UpTime'
+                : 'InternetGatewayDevice.DeviceInfo.UpTime';
+
+            Task::create([
+                'device_id' => $device->id,
+                'task_type' => 'get_params',
+                'description' => 'Refresh uptime after reboot',
+                'status' => 'pending',
+                'parameters' => [$uptimeParam],
+            ]);
+
+            Log::info('Queued uptime refresh after reboot', [
+                'device_id' => $device->id,
+                'parameter' => $uptimeParam,
+            ]);
         }
 
         // End session after reboot command
@@ -738,6 +767,9 @@ class CwmpController extends Controller
             'set_parameter_values' => $this->cwmpService->createSetParameterValues(
                 $task->parameters ?? []
             ),
+            'wifi_scan' => $this->cwmpService->createSetParameterValues(
+                $task->parameters ?? []
+            ),
             'download_diagnostics' => $this->cwmpService->createSetParameterValues(
                 $task->parameters ?? []
             ),
@@ -822,7 +854,7 @@ class CwmpController extends Controller
         // Find the most recent completed diagnostic task
         $diagnosticTask = $device->tasks()
             ->where('status', 'sent')
-            ->whereIn('task_type', ['ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics'])
+            ->whereIn('task_type', ['ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics', 'wifi_scan'])
             ->orderBy('updated_at', 'desc')
             ->first();
 
@@ -877,6 +909,15 @@ class CwmpController extends Controller
                 "{$prefix}.TotalBytesSent",
                 "{$prefix}.TCPOpenRequestTime",
                 "{$prefix}.TCPOpenResponseTime",
+            ];
+        } elseif ($taskType === 'wifi_scan') {
+            // Get device-specific WiFi diagnostic paths
+            $stateParam = $this->getWiFiDiagnosticParameterPath($device, 'state');
+            $resultPrefix = $this->getWiFiDiagnosticParameterPath($device, 'result');
+
+            $parameters = [
+                $stateParam,
+                $resultPrefix,  // Partial path query to get all scan result entries
             ];
         } else {
             return;
@@ -1082,6 +1123,45 @@ class CwmpController extends Controller
                 'Verified: ' . $matchedCount . '/' . $totalParams . ' parameters.'
             );
         }
+    }
+
+    /**
+     * Get the WiFi diagnostic parameter path for a device based on data model and manufacturer
+     * Supports vendor-specific extensions for Alcatel-Lucent and Calix devices
+     */
+    private function getWiFiDiagnosticParameterPath(Device $device, string $type): string
+    {
+        $dataModel = $device->getDataModel();
+        $isDevice2 = $dataModel === 'Device:2';
+
+        if ($isDevice2) {
+            // Device:2 model - standard TR-181 WiFi diagnostics
+            return $type === 'state'
+                ? 'Device.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState'
+                : 'Device.WiFi.NeighboringWiFiDiagnostic.Result.';
+        }
+
+        // InternetGatewayDevice (TR-098) model - check for vendor-specific extensions
+
+        // Alcatel-Lucent / Nokia devices (e.g., XS-2426X-A)
+        if (in_array($device->manufacturer, ['ALCL', 'Nokia', 'Alcatel-Lucent'])) {
+            return $type === 'state'
+                ? 'InternetGatewayDevice.X_ALU-COM_NeighboringWiFiDiagnostic.DiagnosticsState'
+                : 'InternetGatewayDevice.X_ALU-COM_NeighboringWiFiDiagnostic.Result.';
+        }
+
+        // Calix devices (GigaSpire, GigaCenter, etc.)
+        if ($device->oui === '000631' || stripos($device->manufacturer, 'Calix') !== false) {
+            return $type === 'state'
+                ? 'InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState'
+                : 'InternetGatewayDevice.X_000631_Device.WiFi.NeighboringWiFiDiagnostic.Result.';
+        }
+
+        // Default to standard TR-098 WiFi diagnostics (if device supports it)
+        // Note: Standard TR-098 doesn't have WiFi diagnostics, so this may not work for all devices
+        return $type === 'state'
+            ? 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats'
+            : 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats.';
     }
 }
 
