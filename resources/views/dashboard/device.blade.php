@@ -3,6 +3,9 @@
 @section('title', $device->id . ' - Device Details')
 
 @section('content')
+<!-- Task Manager Component -->
+@include('components.task-manager', ['deviceId' => $device->id])
+
 @php
     $theme = session('theme', 'standard');
     $themeConfig = config("themes.{$theme}");
@@ -1562,7 +1565,59 @@
     </div>
 
     <!-- Tasks Tab -->
-    <div x-show="activeTab === 'tasks'" x-cloak class="bg-white shadow rounded-lg overflow-hidden" x-data="{ expandedTask: null }">
+    <div x-show="activeTab === 'tasks'" x-cloak class="bg-white shadow rounded-lg overflow-hidden" x-data="{
+        expandedTask: null,
+        refreshInterval: null,
+        init() {
+            // Auto-refresh tasks tab every 3 seconds when there are active tasks
+            this.$watch('activeTab', value => {
+                if (value === 'tasks') {
+                    this.startTaskRefresh();
+                } else {
+                    this.stopTaskRefresh();
+                }
+            });
+
+            // Start refresh if tasks tab is active on load
+            if (this.activeTab === 'tasks') {
+                this.startTaskRefresh();
+            }
+
+            // Listen for task manager updates
+            window.addEventListener('task-completed', () => {
+                if (this.activeTab === 'tasks') {
+                    setTimeout(() => window.location.reload(), 1000);
+                }
+            });
+        },
+        startTaskRefresh() {
+            this.stopTaskRefresh();
+            this.refreshInterval = setInterval(async () => {
+                // Check if there are active tasks
+                try {
+                    const response = await fetch('/api/devices/{{ $device->id }}/tasks', {
+                        headers: { 'X-Background-Poll': 'true' }
+                    });
+                    const data = await response.json();
+
+                    // Only reload if there are active or queued tasks
+                    if (data.active || (data.queued && data.queued.length > 0)) {
+                        window.location.reload();
+                    } else {
+                        this.stopTaskRefresh();
+                    }
+                } catch (error) {
+                    console.error('Error checking tasks:', error);
+                }
+            }, 3000);
+        },
+        stopTaskRefresh() {
+            if (this.refreshInterval) {
+                clearInterval(this.refreshInterval);
+                this.refreshInterval = null;
+            }
+        }
+    }" @destroy="stopTaskRefresh()">
         <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
             <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">Device Tasks</h3>
         </div>

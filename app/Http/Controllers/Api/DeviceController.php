@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\BackupTemplate;
+use App\Models\ConfigBackup;
 use App\Models\Device;
 use App\Models\Task;
 use App\Services\ConnectionRequestService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 class DeviceController extends Controller
 {
@@ -35,32 +38,8 @@ class DeviceController extends Controller
     {
         $device = Device::findOrFail($id);
 
-        // Create initial auto-backup if not already created
-        if (!$device->initial_backup_created && $device->parameters()->count() > 0) {
-            $parameters = $device->parameters()
-                ->get()
-                ->mapWithKeys(function ($param) {
-                    return [$param->name => [
-                        'value' => $param->value,
-                        'type' => $param->type,
-                        'writable' => $param->writable,
-                    ]];
-                })
-                ->toArray();
-
-            $device->configBackups()->create([
-                'name' => 'Initial Auto Backup - ' . now()->format('Y-m-d H:i:s'),
-                'description' => 'Automatically created on first access to preserve device configuration',
-                'backup_data' => $parameters,
-                'is_auto' => true,
-                'parameter_count' => count($parameters),
-            ]);
-
-            $device->update([
-                'initial_backup_created' => true,
-                'last_backup_at' => now(),
-            ]);
-        }
+        // Auto-backup is now handled in CwmpController on first TR-069 Inform
+        // to ensure configuration is backed up before any changes can be made
 
         return response()->json($device);
     }
@@ -153,11 +132,51 @@ class DeviceController extends Controller
     public function tasks(string $id): JsonResponse
     {
         $device = Device::findOrFail($id);
-        $tasks = $device->tasks()
-            ->orderBy('created_at', 'desc')
+
+        // Get active task (sent but not completed)
+        $activeTask = $device->tasks()
+            ->where('status', 'sent')
+            ->orderBy('created_at', 'asc')
+            ->first();
+
+        // Get queued tasks (pending, not yet sent)
+        $queuedTasks = $device->tasks()
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'asc')
             ->get();
 
-        return response()->json($tasks);
+        // Get recent completed tasks (last 3)
+        $recentCompleted = $device->tasks()
+            ->whereIn('status', ['completed', 'failed'])
+            ->orderBy('completed_at', 'desc')
+            ->limit(3)
+            ->get();
+
+        // Transform tasks to include computed fields
+        $transformTask = function ($task) {
+            if (!$task) return null;
+
+            return [
+                'id' => $task->id,
+                'task_type' => $task->task_type,
+                'description' => $task->getFriendlyDescription(),
+                'status' => $task->status,
+                'progress' => $task->getProgressDetails(),
+                'elapsed' => $task->getElapsedSeconds(),
+                'estimated_remaining' => $task->getEstimatedTimeRemaining(),
+                'can_cancel' => $task->isCancellable(),
+                'created_at' => $task->created_at,
+                'completed_at' => $task->completed_at,
+                'error' => $task->error,
+            ];
+        };
+
+        return response()->json([
+            'active' => $transformTask($activeTask),
+            'queued' => $queuedTasks->map($transformTask)->values(),
+            'queued_total' => $queuedTasks->count(),
+            'recent_completed' => $recentCompleted->map($transformTask)->values(),
+        ]);
     }
 
     /**
@@ -180,6 +199,34 @@ class DeviceController extends Controller
         ]);
 
         return response()->json($task, 201);
+    }
+
+    /**
+     * Cancel a pending task
+     */
+    public function cancelTask(string $deviceId, string $taskId): JsonResponse
+    {
+        $device = Device::findOrFail($deviceId);
+        $task = Task::where('device_id', $device->id)
+            ->where('id', $taskId)
+            ->firstOrFail();
+
+        if (!$task->isCancellable()) {
+            return response()->json([
+                'error' => 'Task cannot be cancelled (status: ' . $task->status . ')'
+            ], 400);
+        }
+
+        $task->update([
+            'status' => 'failed',
+            'error' => 'Cancelled by user',
+            'completed_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Task cancelled successfully',
+            'task' => $task,
+        ]);
     }
 
     /**
@@ -443,7 +490,27 @@ class DeviceController extends Controller
                 // MAC address
                 $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.BSSID";
 
-                // Note: Vendor-specific parameters (X_000631_*) intentionally excluded
+                // WiFi password - vendor-specific parameters
+                // Different vendors use different parameter names for readable passwords
+                // Only query parameters that we know exist on this device to avoid crashes
+                if ($device) {
+                    // Check Calix parameter (OUI 00:06:31)
+                    $calixParam = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.PreSharedKey.1.X_000631_KeyPassphrase";
+                    if ($device->parameters()->where('name', 'LIKE', "%.X_000631_KeyPassphrase")->exists()) {
+                        $parameters[] = $calixParam;
+                    }
+
+                    // Check Broadcom parameter
+                    $broadcomParam = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.X_BROADCOM_COM_WlanAdapter.WlVirtIntfCfg.1.WlWpaPsk";
+                    if ($device->parameters()->where('name', 'LIKE', "%.X_BROADCOM_COM_WlanAdapter.WlVirtIntfCfg.1.WlWpaPsk")->exists()) {
+                        $parameters[] = $broadcomParam;
+                    }
+                } else {
+                    // No device object - try both (fallback for new devices)
+                    $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.PreSharedKey.1.X_000631_KeyPassphrase";
+                    $parameters[] = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.{$i}.X_BROADCOM_COM_WlanAdapter.WlVirtIntfCfg.1.WlWpaPsk";
+                }
+
                 // Note: Stats parameters excluded to reduce request size
             }
 
@@ -468,6 +535,9 @@ class DeviceController extends Controller
     {
         $device = Device::findOrFail($id);
 
+        // Create safety backup before reboot
+        $this->createPreOperationBackup($device, 'Reboot');
+
         $task = Task::create([
             'device_id' => $device->id,
             'task_type' => 'reboot',
@@ -489,6 +559,9 @@ class DeviceController extends Controller
     public function factoryReset(string $id): JsonResponse
     {
         $device = Device::findOrFail($id);
+
+        // Create safety backup before factory reset (CRITICAL - this cannot be undone!)
+        $this->createPreOperationBackup($device, 'Factory Reset');
 
         $task = Task::create([
             'device_id' => $device->id,
@@ -545,6 +618,11 @@ class DeviceController extends Controller
         $validated = $request->validate([
             'values' => 'required|array',
         ]);
+
+        // Create safety backup before bulk parameter changes (5+ parameters)
+        if (count($validated['values']) >= 5) {
+            $this->createPreOperationBackup($device, 'Bulk Parameter Change');
+        }
 
         $task = Task::create([
             'device_id' => $device->id,
@@ -685,6 +763,9 @@ class DeviceController extends Controller
                 ], 400);
             }
         }
+
+        // Create safety backup before firmware upgrade (CRITICAL - firmware can fail)
+        $this->createPreOperationBackup($device, 'Firmware Upgrade');
 
         $task = Task::create([
             'device_id' => $device->id,
@@ -1170,6 +1251,10 @@ class DeviceController extends Controller
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
+            'tags' => 'nullable|array',
+            'tags.*' => 'string|max:50',
+            'notes' => 'nullable|string',
+            'is_starred' => 'nullable|boolean',
             'is_auto' => 'boolean',
         ]);
 
@@ -1196,6 +1281,9 @@ class DeviceController extends Controller
         $backup = $device->configBackups()->create([
             'name' => $backupName,
             'description' => $validated['description'] ?? null,
+            'tags' => $validated['tags'] ?? [],
+            'notes' => $validated['notes'] ?? null,
+            'is_starred' => $validated['is_starred'] ?? false,
             'backup_data' => $parameters,
             'is_auto' => $validated['is_auto'] ?? false,
             'parameter_count' => $parameterCount,
@@ -1214,13 +1302,88 @@ class DeviceController extends Controller
     }
 
     /**
+     * Create a pre-operation safety backup before critical operations
+     */
+    private function createPreOperationBackup(Device $device, string $operation): ?ConfigBackup
+    {
+        // Get all current parameters
+        $parameters = $device->parameters()
+            ->get()
+            ->mapWithKeys(function ($param) {
+                return [$param->name => [
+                    'value' => $param->value,
+                    'type' => $param->type,
+                    'writable' => $param->writable,
+                ]];
+            })
+            ->toArray();
+
+        $parameterCount = count($parameters);
+
+        if ($parameterCount === 0) {
+            Log::warning('Skipping pre-operation backup - no parameters', [
+                'device_id' => $device->id,
+                'operation' => $operation,
+            ]);
+            return null;
+        }
+
+        // Create the safety backup
+        $backup = $device->configBackups()->create([
+            'name' => "Pre-{$operation} Backup - " . now()->format('Y-m-d H:i:s'),
+            'description' => "Automatic safety backup created before {$operation} operation",
+            'backup_data' => $parameters,
+            'is_auto' => true,
+            'parameter_count' => $parameterCount,
+        ]);
+
+        // Update device backup tracking
+        $device->update([
+            'last_backup_at' => now(),
+        ]);
+
+        Log::info('Pre-operation backup created', [
+            'device_id' => $device->id,
+            'operation' => $operation,
+            'backup_id' => $backup->id,
+            'parameter_count' => $parameterCount,
+        ]);
+
+        return $backup;
+    }
+
+    /**
      * Get all backups for a device
      */
-    public function getBackups(string $id): JsonResponse
+    public function getBackups(Request $request, string $id): JsonResponse
     {
         $device = Device::findOrFail($id);
 
-        $backups = $device->configBackups()
+        $query = $device->configBackups();
+
+        // Filter by tags (if any tag matches)
+        if ($request->has('tags') && is_array($request->tags)) {
+            $query->where(function ($q) use ($request) {
+                foreach ($request->tags as $tag) {
+                    $q->orWhereJsonContains('tags', $tag);
+                }
+            });
+        }
+
+        // Filter by starred
+        if ($request->has('starred')) {
+            $query->where('is_starred', filter_var($request->starred, FILTER_VALIDATE_BOOLEAN));
+        }
+
+        // Filter by date range
+        if ($request->has('date_from')) {
+            $query->where('created_at', '>=', $request->date_from);
+        }
+        if ($request->has('date_to')) {
+            $query->where('created_at', '<=', $request->date_to . ' 23:59:59');
+        }
+
+        $backups = $query
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($backup) {
@@ -1228,6 +1391,9 @@ class DeviceController extends Controller
                     'id' => $backup->id,
                     'name' => $backup->name,
                     'description' => $backup->description,
+                    'tags' => $backup->tags ?? [],
+                    'notes' => $backup->notes,
+                    'is_starred' => $backup->is_starred,
                     'parameter_count' => $backup->parameter_count,
                     'is_auto' => $backup->is_auto,
                     'size' => $backup->size,
@@ -1243,15 +1409,38 @@ class DeviceController extends Controller
     /**
      * Restore a configuration backup
      */
-    public function restoreBackup(string $id, int $backupId): JsonResponse
+    public function restoreBackup(Request $request, string $id, int $backupId): JsonResponse
     {
         $device = Device::findOrFail($id);
         $backup = $device->configBackups()->findOrFail($backupId);
 
+        // Validate selective restore parameters if provided
+        $validated = $request->validate([
+            'parameters' => 'nullable|array',
+            'parameters.*' => 'string',
+            'create_backup' => 'nullable|boolean',
+        ]);
+
+        $selectedParams = $validated['parameters'] ?? null;
+        $createBackup = $validated['create_backup'] ?? true;
+
+        // Create safety backup before configuration restore
+        if ($createBackup) {
+            $this->createPreOperationBackup($device, 'Configuration Restore');
+        }
+
         // Filter parameters to only include writable ones
         $writableParams = collect($backup->backup_data)
-            ->filter(function ($param) {
-                return $param['writable'] ?? false;
+            ->filter(function ($param, $name) use ($selectedParams) {
+                // Must be writable
+                if (!($param['writable'] ?? false)) {
+                    return false;
+                }
+                // If selective restore, must be in selected list
+                if ($selectedParams !== null && !in_array($name, $selectedParams)) {
+                    return false;
+                }
+                return true;
             })
             ->mapWithKeys(function ($param, $name) {
                 return [$name => [
@@ -1263,7 +1452,7 @@ class DeviceController extends Controller
 
         if (empty($writableParams)) {
             return response()->json([
-                'error' => 'No writable parameters found in backup',
+                'error' => 'No writable parameters found in backup' . ($selectedParams ? ' matching selection' : ''),
             ], 400);
         }
 
@@ -1278,10 +1467,254 @@ class DeviceController extends Controller
         // Trigger connection request
         $this->connectionRequestService->sendConnectionRequest($device);
 
+        $restoreType = $selectedParams ? 'Selective restore' : 'Full restore';
+
         return response()->json([
             'task' => $task,
-            'message' => 'Configuration restore initiated',
+            'message' => $restoreType . ' initiated',
             'writable_params_count' => count($writableParams),
+            'total_params_in_backup' => count($backup->backup_data),
+        ]);
+    }
+
+    /**
+     * Compare two configuration backups
+     */
+    public function compareBackups(string $id, int $backup1Id, int $backup2Id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+        $backup1 = $device->configBackups()->findOrFail($backup1Id);
+        $backup2 = $device->configBackups()->findOrFail($backup2Id);
+
+        $data1 = $backup1->backup_data ?? [];
+        $data2 = $backup2->backup_data ?? [];
+
+        // Find added parameters (in backup2 but not in backup1)
+        $added = [];
+        foreach ($data2 as $name => $param) {
+            if (!isset($data1[$name])) {
+                $added[$name] = [
+                    'value' => $param['value'] ?? '',
+                    'type' => $param['type'] ?? 'xsd:string',
+                    'writable' => $param['writable'] ?? false,
+                ];
+            }
+        }
+
+        // Find removed parameters (in backup1 but not in backup2)
+        $removed = [];
+        foreach ($data1 as $name => $param) {
+            if (!isset($data2[$name])) {
+                $removed[$name] = [
+                    'value' => $param['value'] ?? '',
+                    'type' => $param['type'] ?? 'xsd:string',
+                    'writable' => $param['writable'] ?? false,
+                ];
+            }
+        }
+
+        // Find modified parameters (different values)
+        $modified = [];
+        foreach ($data1 as $name => $param1) {
+            if (isset($data2[$name])) {
+                $param2 = $data2[$name];
+                $value1 = $param1['value'] ?? '';
+                $value2 = $param2['value'] ?? '';
+
+                if ($value1 !== $value2) {
+                    $modified[$name] = [
+                        'old_value' => $value1,
+                        'new_value' => $value2,
+                        'type' => $param1['type'] ?? 'xsd:string',
+                        'writable' => $param1['writable'] ?? false,
+                    ];
+                }
+            }
+        }
+
+        // Find unchanged parameters
+        $unchanged = [];
+        foreach ($data1 as $name => $param1) {
+            if (isset($data2[$name])) {
+                $param2 = $data2[$name];
+                $value1 = $param1['value'] ?? '';
+                $value2 = $param2['value'] ?? '';
+
+                if ($value1 === $value2) {
+                    $unchanged[] = $name;
+                }
+            }
+        }
+
+        return response()->json([
+            'backup1' => [
+                'id' => $backup1->id,
+                'name' => $backup1->name,
+                'created_at' => $backup1->created_at->format('Y-m-d H:i:s'),
+                'parameter_count' => count($data1),
+            ],
+            'backup2' => [
+                'id' => $backup2->id,
+                'name' => $backup2->name,
+                'created_at' => $backup2->created_at->format('Y-m-d H:i:s'),
+                'parameter_count' => count($data2),
+            ],
+            'comparison' => [
+                'added' => $added,
+                'removed' => $removed,
+                'modified' => $modified,
+                'unchanged_count' => count($unchanged),
+            ],
+            'summary' => [
+                'added_count' => count($added),
+                'removed_count' => count($removed),
+                'modified_count' => count($modified),
+                'unchanged_count' => count($unchanged),
+            ],
+        ]);
+    }
+
+    /**
+     * Download a backup as JSON file
+     */
+    public function downloadBackup(string $id, int $backupId)
+    {
+        $device = Device::findOrFail($id);
+        $backup = $device->configBackups()->findOrFail($backupId);
+
+        $exportData = [
+            'hayacs_backup_version' => '1.0',
+            'exported_at' => now()->toIso8601String(),
+            'device_id' => $device->id,
+            'device_manufacturer' => $device->manufacturer,
+            'device_model' => $device->model_name,
+            'backup' => [
+                'id' => $backup->id,
+                'name' => $backup->name,
+                'description' => $backup->description,
+                'created_at' => $backup->created_at->toIso8601String(),
+                'is_auto' => $backup->is_auto,
+                'parameter_count' => $backup->parameter_count,
+                'backup_data' => $backup->backup_data,
+            ],
+        ];
+
+        $filename = 'backup-' . $device->id . '-' . $backup->id . '-' . now()->format('Y-m-d-His') . '.json';
+
+        return response()->json($exportData, 200, [
+            'Content-Type' => 'application/json',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ], JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * Import a backup from JSON file
+     */
+    public function importBackup(Request $request, string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $validated = $request->validate([
+            'backup_file' => 'required|file|mimes:json,txt|max:10240', // Max 10MB
+            'name' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            $fileContent = file_get_contents($validated['backup_file']->getRealPath());
+            $importData = json_decode($fileContent, true);
+
+            if (!$importData) {
+                return response()->json([
+                    'error' => 'Invalid JSON file',
+                ], 400);
+            }
+
+            // Validate backup format
+            if (!isset($importData['hayacs_backup_version']) || !isset($importData['backup']['backup_data'])) {
+                return response()->json([
+                    'error' => 'Invalid backup file format. This does not appear to be a HayACS backup file.',
+                ], 400);
+            }
+
+            $backupData = $importData['backup'];
+            $parameterData = $backupData['backup_data'];
+
+            if (empty($parameterData)) {
+                return response()->json([
+                    'error' => 'Backup file contains no parameter data',
+                ], 400);
+            }
+
+            // Create the backup
+            $backup = $device->configBackups()->create([
+                'name' => $validated['name'] ?? ($backupData['name'] . ' (Imported)'),
+                'description' => 'Imported from backup file on ' . now()->format('Y-m-d H:i:s') .
+                    ($backupData['description'] ? "\nOriginal: " . $backupData['description'] : ''),
+                'backup_data' => $parameterData,
+                'is_auto' => false,
+                'parameter_count' => count($parameterData),
+            ]);
+
+            // Update device backup tracking
+            $device->update([
+                'last_backup_at' => now(),
+            ]);
+
+            Log::info('Backup imported from file', [
+                'device_id' => $device->id,
+                'backup_id' => $backup->id,
+                'parameter_count' => count($parameterData),
+                'original_backup_id' => $backupData['id'] ?? null,
+            ]);
+
+            return response()->json([
+                'message' => 'Backup imported successfully',
+                'backup' => [
+                    'id' => $backup->id,
+                    'name' => $backup->name,
+                    'parameter_count' => $backup->parameter_count,
+                    'created_at' => $backup->created_at->format('Y-m-d H:i:s'),
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Backup import failed', [
+                'device_id' => $device->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to import backup: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Update backup metadata (tags, notes, starred)
+     */
+    public function updateBackupMetadata(Request $request, string $id, int $backupId): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+        $backup = $device->configBackups()->findOrFail($backupId);
+
+        $validated = $request->validate([
+            'tags' => 'nullable|array',
+            'tags.*' => 'string|max:50',
+            'notes' => 'nullable|string',
+            'is_starred' => 'nullable|boolean',
+        ]);
+
+        $backup->update($validated);
+
+        return response()->json([
+            'message' => 'Backup metadata updated successfully',
+            'backup' => [
+                'id' => $backup->id,
+                'name' => $backup->name,
+                'tags' => $backup->tags,
+                'notes' => $backup->notes,
+                'is_starred' => $backup->is_starred,
+            ],
         ]);
     }
 
@@ -1644,8 +2077,9 @@ class DeviceController extends Controller
         ]);
 
         $testType = $validated['test_type'];
-        $downloadUrl = $validated['download_url'] ?? 'http://ipv4.download.thinkbroadband.com/10MB.zip';
-        $uploadUrl = $validated['upload_url'] ?? 'http://tr143.hay.net/upload';
+        // Use USS's speedtest server (verified working in traces)
+        $downloadUrl = $validated['download_url'] ?? 'http://speedtest.nisc-uss.com/2000mb.test';
+        $uploadUrl = $validated['upload_url'] ?? 'http://speedtest.nisc-uss.com/upload';
 
         $dataModel = $device->getDataModel();
         $isDevice2 = $dataModel === 'Device:2';
@@ -1658,6 +2092,22 @@ class DeviceController extends Controller
                 ? 'Device.IP.Diagnostics.DownloadDiagnostics'
                 : 'InternetGatewayDevice.DownloadDiagnostics';
 
+            // USS pattern: First set NumberOfConnections separately
+            $configTask = Task::create([
+                'device_id' => $device->id,
+                'task_type' => 'set_parameter_values',
+                'status' => 'pending',
+                'parameters' => [
+                    "{$downloadPrefix}.NumberOfConnections" => [
+                        'value' => '2',
+                        'type' => 'xsd:unsignedInt',
+                    ],
+                ],
+            ]);
+
+            $tasks[] = $configTask;
+
+            // Then set DiagnosticsState + URL to trigger the test
             $downloadParams = [
                 "{$downloadPrefix}.DiagnosticsState" => [
                     'value' => 'Requested',
@@ -1685,6 +2135,37 @@ class DeviceController extends Controller
                 ? 'Device.IP.Diagnostics.UploadDiagnostics'
                 : 'InternetGatewayDevice.UploadDiagnostics';
 
+            // USS pattern: First set NumberOfConnections separately
+            $configTask1 = Task::create([
+                'device_id' => $device->id,
+                'task_type' => 'set_parameter_values',
+                'status' => 'pending',
+                'parameters' => [
+                    "{$uploadPrefix}.NumberOfConnections" => [
+                        'value' => '10',
+                        'type' => 'xsd:unsignedInt',
+                    ],
+                ],
+            ]);
+
+            $tasks[] = $configTask1;
+
+            // Then set TimeBasedTestDuration
+            $configTask2 = Task::create([
+                'device_id' => $device->id,
+                'task_type' => 'set_parameter_values',
+                'status' => 'pending',
+                'parameters' => [
+                    "{$uploadPrefix}.TimeBasedTestDuration" => [
+                        'value' => '12',
+                        'type' => 'xsd:unsignedInt',
+                    ],
+                ],
+            ]);
+
+            $tasks[] = $configTask2;
+
+            // Finally set DiagnosticsState + URL + TestFileLength to trigger the test
             $uploadParams = [
                 "{$uploadPrefix}.DiagnosticsState" => [
                     'value' => 'Requested',
@@ -1693,6 +2174,10 @@ class DeviceController extends Controller
                 "{$uploadPrefix}.UploadURL" => [
                     'value' => $uploadUrl,
                     'type' => 'xsd:string',
+                ],
+                "{$uploadPrefix}.TestFileLength" => [
+                    'value' => '1858291200',  // ~1.7GB (USS default from trace)
+                    'type' => 'xsd:unsignedInt',
                 ],
             ];
 
@@ -1832,6 +2317,326 @@ class DeviceController extends Controller
         } catch (\Exception $e) {
             return null;
         }
+    }
+
+    // ==================== BACKUP TEMPLATES ====================
+
+    /**
+     * Get all backup templates (optionally filtered)
+     */
+    public function getTemplates(Request $request): JsonResponse
+    {
+        $query = BackupTemplate::with('sourceDevice:id,serial_number,model');
+
+        // Filter by category
+        if ($request->has('category') && $request->category !== 'all') {
+            $query->where('category', $request->category);
+        }
+
+        // Filter by tags
+        if ($request->has('tags') && is_array($request->tags)) {
+            $query->where(function ($q) use ($request) {
+                foreach ($request->tags as $tag) {
+                    $q->orWhereJsonContains('tags', $tag);
+                }
+            });
+        }
+
+        // Filter by device model
+        if ($request->has('device_model')) {
+            $query->where(function ($q) use ($request) {
+                $q->whereNull('device_model_filter')
+                  ->orWhere('device_model_filter', $request->device_model);
+            });
+        }
+
+        $templates = $query->orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'templates' => $templates->map(function ($template) {
+                return [
+                    'id' => $template->id,
+                    'name' => $template->name,
+                    'description' => $template->description,
+                    'category' => $template->category,
+                    'tags' => $template->tags,
+                    'parameter_count' => $template->parameter_count,
+                    'size' => $template->size,
+                    'device_model_filter' => $template->device_model_filter,
+                    'source_device' => $template->sourceDevice ? [
+                        'id' => $template->sourceDevice->id,
+                        'serial' => $template->sourceDevice->serial_number,
+                        'model' => $template->sourceDevice->model,
+                    ] : null,
+                    'created_at' => $template->created_at->toIso8601String(),
+                ];
+            }),
+        ]);
+    }
+
+    /**
+     * Get a specific template
+     */
+    public function getTemplate(int $templateId): JsonResponse
+    {
+        $template = BackupTemplate::with('sourceDevice')->findOrFail($templateId);
+
+        return response()->json([
+            'template' => [
+                'id' => $template->id,
+                'name' => $template->name,
+                'description' => $template->description,
+                'category' => $template->category,
+                'tags' => $template->tags,
+                'template_data' => $template->template_data,
+                'parameter_patterns' => $template->parameter_patterns,
+                'device_model_filter' => $template->device_model_filter,
+                'parameter_count' => $template->parameter_count,
+                'size' => $template->size,
+                'source_device' => $template->sourceDevice,
+                'created_at' => $template->created_at->toIso8601String(),
+            ],
+        ]);
+    }
+
+    /**
+     * Create a new template from a backup or device config
+     */
+    public function createTemplate(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'category' => 'required|string|in:wifi,port_forwarding,general,security,diagnostics',
+            'tags' => 'nullable|array',
+            'tags.*' => 'string|max:50',
+            'source_type' => 'required|in:backup,device',
+            'source_id' => 'required',
+            'parameter_patterns' => 'nullable|array',
+            'parameter_patterns.*' => 'string',
+            'device_model_filter' => 'nullable|string|max:255',
+            'strip_device_specific' => 'boolean',
+        ]);
+
+        $templateData = [];
+        $sourceDeviceId = null;
+
+        if ($validated['source_type'] === 'backup') {
+            // Create template from existing backup
+            $backup = ConfigBackup::findOrFail($validated['source_id']);
+            $templateData = $backup->backup_data;
+            $sourceDeviceId = $backup->device_id;
+        } elseif ($validated['source_type'] === 'device') {
+            // Create template from current device parameters
+            $device = Device::findOrFail($validated['source_id']);
+            $parameters = $device->parameters()->get()->mapWithKeys(function ($param) {
+                return [$param->name => $param->value];
+            })->toArray();
+            $templateData = $parameters;
+            $sourceDeviceId = $device->id;
+        }
+
+        // Filter parameters based on patterns if provided
+        if (!empty($validated['parameter_patterns'])) {
+            $filteredData = [];
+            foreach ($validated['parameter_patterns'] as $pattern) {
+                $regex = '/^' . str_replace(['*', '.'], ['.*', '\\.'], $pattern) . '$/';
+                foreach ($templateData as $key => $value) {
+                    if (preg_match($regex, $key)) {
+                        $filteredData[$key] = $value;
+                    }
+                }
+            }
+            $templateData = $filteredData;
+        }
+
+        // Strip device-specific values if requested
+        if ($validated['strip_device_specific'] ?? true) {
+            $templateData = $this->stripDeviceSpecificValues($templateData);
+        }
+
+        $template = BackupTemplate::create([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'category' => $validated['category'],
+            'tags' => $validated['tags'] ?? [],
+            'template_data' => $templateData,
+            'parameter_patterns' => $validated['parameter_patterns'] ?? null,
+            'device_model_filter' => $validated['device_model_filter'] ?? null,
+            'created_by_device_id' => $sourceDeviceId,
+        ]);
+
+        return response()->json([
+            'message' => 'Template created successfully',
+            'template' => [
+                'id' => $template->id,
+                'name' => $template->name,
+                'parameter_count' => $template->parameter_count,
+            ],
+        ], 201);
+    }
+
+    /**
+     * Update a template
+     */
+    public function updateTemplate(Request $request, int $templateId): JsonResponse
+    {
+        $template = BackupTemplate::findOrFail($templateId);
+
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'category' => 'nullable|string|in:wifi,port_forwarding,general,security,diagnostics',
+            'tags' => 'nullable|array',
+            'tags.*' => 'string|max:50',
+            'template_data' => 'nullable|array',
+            'parameter_patterns' => 'nullable|array',
+            'device_model_filter' => 'nullable|string|max:255',
+        ]);
+
+        $template->update($validated);
+
+        return response()->json([
+            'message' => 'Template updated successfully',
+            'template' => [
+                'id' => $template->id,
+                'name' => $template->name,
+            ],
+        ]);
+    }
+
+    /**
+     * Delete a template
+     */
+    public function deleteTemplate(int $templateId): JsonResponse
+    {
+        $template = BackupTemplate::findOrFail($templateId);
+        $template->delete();
+
+        return response()->json([
+            'message' => 'Template deleted successfully',
+        ]);
+    }
+
+    /**
+     * Apply a template to one or more devices
+     */
+    public function applyTemplate(Request $request, int $templateId): JsonResponse
+    {
+        $template = BackupTemplate::findOrFail($templateId);
+
+        $validated = $request->validate([
+            'device_ids' => 'required|array|min:1',
+            'device_ids.*' => 'string|exists:devices,id',
+            'merge_strategy' => 'nullable|in:replace,merge',
+            'create_backup' => 'boolean',
+        ]);
+
+        $mergeStrategy = $validated['merge_strategy'] ?? 'merge';
+        $createBackup = $validated['create_backup'] ?? true;
+        $results = [];
+
+        foreach ($validated['device_ids'] as $deviceId) {
+            try {
+                $device = Device::findOrFail($deviceId);
+
+                // Check device model compatibility
+                if ($template->device_model_filter && $device->model !== $template->device_model_filter) {
+                    $results[] = [
+                        'device_id' => $deviceId,
+                        'success' => false,
+                        'error' => 'Device model mismatch',
+                    ];
+                    continue;
+                }
+
+                // Create pre-operation backup if requested
+                if ($createBackup) {
+                    $this->createPreOperationBackup($device, 'Template Application');
+                }
+
+                // Apply template parameters
+                $parametersToSet = $template->template_data;
+
+                // If merge strategy, only update parameters that exist in template
+                // If replace strategy, we'd need to handle differently (not implemented for safety)
+
+                $tasks = [];
+                foreach ($parametersToSet as $paramName => $paramValue) {
+                    // Create set_parameter_values task
+                    $task = Task::create([
+                        'device_id' => $device->id,
+                        'task_type' => 'set_parameter_values',
+                        'status' => 'pending',
+                        'parameters' => [$paramName => $paramValue],
+                    ]);
+                    $tasks[] = $task->id;
+                }
+
+                $results[] = [
+                    'device_id' => $deviceId,
+                    'success' => true,
+                    'tasks_created' => count($tasks),
+                    'task_ids' => $tasks,
+                ];
+
+                Log::info('Template applied to device', [
+                    'template_id' => $template->id,
+                    'template_name' => $template->name,
+                    'device_id' => $device->id,
+                    'parameters_set' => count($parametersToSet),
+                ]);
+            } catch (\Exception $e) {
+                $results[] = [
+                    'device_id' => $deviceId,
+                    'success' => false,
+                    'error' => $e->getMessage(),
+                ];
+            }
+        }
+
+        $successCount = count(array_filter($results, fn($r) => $r['success']));
+        $failCount = count($results) - $successCount;
+
+        return response()->json([
+            'message' => "Template applied to {$successCount} device(s). {$failCount} failed.",
+            'results' => $results,
+        ]);
+    }
+
+    /**
+     * Strip device-specific values from template data
+     */
+    private function stripDeviceSpecificValues(array $data): array
+    {
+        // List of parameters that should be stripped (device-specific identifiers)
+        $stripPatterns = [
+            '/SerialNumber$/i',
+            '/MACAddress$/i',
+            '/IPAddress$/i',
+            '/ExternalIPAddress$/i',
+            '/ConnectionRequestURL$/i',
+            '/UUID$/i',
+            '/HardwareVersion$/i',
+            '/SoftwareVersion$/i',
+            '/ProvisioningCode$/i',
+        ];
+
+        $filtered = [];
+        foreach ($data as $key => $value) {
+            $shouldStrip = false;
+            foreach ($stripPatterns as $pattern) {
+                if (preg_match($pattern, $key)) {
+                    $shouldStrip = true;
+                    break;
+                }
+            }
+            if (!$shouldStrip) {
+                $filtered[$key] = $value;
+            }
+        }
+
+        return $filtered;
     }
 
     /**

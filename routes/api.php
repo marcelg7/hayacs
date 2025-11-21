@@ -34,6 +34,7 @@ Route::post('/devices/{id}/get-all-parameters', [DeviceController::class, 'getAl
 // Device Tasks
 Route::get('/devices/{id}/tasks', [DeviceController::class, 'tasks']);
 Route::post('/devices/{id}/tasks', [DeviceController::class, 'createTask']);
+Route::delete('/devices/{id}/tasks/{taskId}', [DeviceController::class, 'cancelTask']);
 
 // Device Actions
 Route::post('/devices/{id}/query', [DeviceController::class, 'query']);
@@ -57,6 +58,10 @@ Route::post('/devices/{id}/wifi-radio', [DeviceController::class, 'updateWifiRad
 Route::get('/devices/{id}/backups', [DeviceController::class, 'getBackups']);
 Route::post('/devices/{id}/backups', [DeviceController::class, 'createBackup']);
 Route::post('/devices/{id}/backups/{backupId}/restore', [DeviceController::class, 'restoreBackup']);
+Route::patch('/devices/{id}/backups/{backupId}', [DeviceController::class, 'updateBackupMetadata']);
+Route::get('/devices/{id}/backups/{backup1Id}/compare/{backup2Id}', [DeviceController::class, 'compareBackups']);
+Route::get('/devices/{id}/backups/{backupId}/download', [DeviceController::class, 'downloadBackup']);
+Route::post('/devices/{id}/backups/import', [DeviceController::class, 'importBackup']);
 
 // Port Management
 Route::get('/devices/{id}/port-mappings', [DeviceController::class, 'getPortMappings']);
@@ -71,6 +76,14 @@ Route::get('/devices/{id}/wifi-scan-results', [DeviceController::class, 'getWiFi
 Route::post('/devices/{id}/speedtest', [DeviceController::class, 'startSpeedTest']);
 Route::get('/devices/{id}/speedtest/status', [DeviceController::class, 'getSpeedTestStatus']);
 Route::get('/devices/{id}/speedtest/history', [DeviceController::class, 'getSpeedTestHistory']);
+
+// Backup Templates
+Route::get('/templates', [DeviceController::class, 'getTemplates']);
+Route::get('/templates/{templateId}', [DeviceController::class, 'getTemplate']);
+Route::post('/templates', [DeviceController::class, 'createTemplate']);
+Route::patch('/templates/{templateId}', [DeviceController::class, 'updateTemplate']);
+Route::delete('/templates/{templateId}', [DeviceController::class, 'deleteTemplate']);
+Route::post('/templates/{templateId}/apply', [DeviceController::class, 'applyTemplate']);
 
 // Analytics
 use App\Http\Controllers\AnalyticsController;
