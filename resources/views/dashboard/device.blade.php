@@ -14,7 +14,6 @@
     taskLoading: false,
     taskMessage: '',
     taskId: null,
-    elapsedTime: 0,
     timerInterval: null,
 
     init() {
@@ -28,21 +27,56 @@
         this.taskLoading = true;
         this.taskMessage = message;
         this.taskId = taskId;
-        this.elapsedTime = 0;
+        this.initialTaskId = taskId; // Store initial task ID to filter related tasks
+
+        // Use local variable instead of Alpine reactive property to avoid triggering reactivity
+        let elapsedTime = 0;
+
+        // Show progress card and update message with vanilla JS (avoids Alpine reactivity flashing)
+        const progressCard = document.getElementById('progressCard');
+        const taskMessage = document.getElementById('taskMessage');
+        const taskTimer = document.getElementById('taskTimer');
+        const cancelButton = document.getElementById('cancelButton');
+
+        if (progressCard) progressCard.style.display = 'block';
+        if (taskMessage) taskMessage.textContent = message;
+        if (taskTimer) taskTimer.textContent = '0:00';
+        if (cancelButton) {
+            cancelButton.style.display = 'none';
+            // Set up cancel button click handler
+            cancelButton.onclick = () => {
+                clearInterval(this.timerInterval);
+                this.taskLoading = false;
+                if (progressCard) progressCard.style.display = 'none';
+            };
+        }
 
         // Start count-up timer
         this.timerInterval = setInterval(() => {
-            this.elapsedTime++;
+            elapsedTime++;
+
+            // Update timer display with vanilla JS
+            if (taskTimer) {
+                const mins = Math.floor(elapsedTime / 60);
+                const secs = elapsedTime % 60;
+                taskTimer.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+            }
+
+            // Show cancel button after 30 seconds
+            if (elapsedTime === 30 && cancelButton) {
+                cancelButton.style.display = 'block';
+            }
 
             // Update message with helpful tips based on elapsed time
-            if (this.elapsedTime === 120) {
-                this.taskMessage = message + ' (This is taking longer than usual - device may be on slow connection)';
-            } else if (this.elapsedTime === 300) {
-                this.taskMessage = message + ' (Still waiting - you can close this and check back later)';
-            } else if (this.elapsedTime === 600) {
+            if (elapsedTime === 120 && taskMessage) {
+                taskMessage.textContent = message + ' (This is taking longer than usual - device may be on slow connection)';
+            } else if (elapsedTime === 300 && taskMessage) {
+                taskMessage.textContent = message + ' (Still waiting - you can close this and check back later)';
+            } else if (elapsedTime === 600) {
                 // After 10 minutes, stop polling and show timeout message
                 clearInterval(this.timerInterval);
                 this.taskLoading = false;
+                if (progressCard) progressCard.style.display = 'none';
                 alert('Task timeout (10 minutes). The task may still be running. Check the Tasks tab for status.');
                 return;
             }
@@ -56,16 +90,50 @@
         if (!this.taskId) return;
 
         try {
-            const response = await fetch('/api/devices/{{ $device->id }}/tasks');
+            const response = await fetch('/api/devices/{{ $device->id }}/tasks', {
+                headers: { 'X-Background-Poll': 'true' }
+            });
             const data = await response.json();
 
             // Find our task
             const task = data.find(t => t.id === this.taskId);
 
             if (task && (task.status === 'completed' || task.status === 'failed')) {
-                // Task is done - stop timer and reload
+                // Initial task is done - check for any remaining pending/sent tasks
+                // This handles chunked get_params tasks created after discovery completes
+                // Only count tasks from THIS refresh session (created after initial task)
+                const pendingTasks = data.filter(t =>
+                    (t.status === 'pending' || t.status === 'sent') &&
+                    t.task_type === 'get_params' &&
+                    t.id > this.initialTaskId
+                );
+
+                if (pendingTasks.length > 0) {
+                    // Still have chunked tasks to process - update message and continue tracking
+                    const completedChunks = data.filter(t =>
+                        t.task_type === 'get_params' &&
+                        (t.status === 'completed' || t.status === 'failed') &&
+                        t.id > this.initialTaskId
+                    ).length;
+                    const totalChunks = completedChunks + pendingTasks.length;
+
+                    this.taskMessage = `Refreshing Troubleshooting Info... (Processing chunk ${completedChunks + 1} of ${totalChunks})`;
+
+                    // Switch to tracking the first pending task
+                    this.taskId = pendingTasks[0].id;
+
+                    // Continue polling
+                    setTimeout(() => this.pollTaskStatus(), 2000);
+                    return;
+                }
+
+                // All tasks done - stop timer and reload
                 clearInterval(this.timerInterval);
                 this.taskLoading = false;
+
+                // Hide progress card with vanilla JS
+                const progressCard = document.getElementById('progressCard');
+                if (progressCard) progressCard.style.display = 'none';
 
                 // Wait a moment to show completion, then reload
                 setTimeout(() => {
@@ -75,9 +143,13 @@
                 // Stop polling after 10 minutes
                 clearInterval(this.timerInterval);
                 this.taskLoading = false;
+
+                // Hide progress card with vanilla JS
+                const progressCard = document.getElementById('progressCard');
+                if (progressCard) progressCard.style.display = 'none';
             } else {
-                // Keep polling every 2 seconds
-                setTimeout(() => this.pollTaskStatus(), 2000);
+                // Keep polling every 5 seconds (reduced frequency to minimize flashing)
+                setTimeout(() => this.pollTaskStatus(), 5000);
             }
         } catch (error) {
             console.error('Error polling task status:', error);
@@ -92,43 +164,6 @@
         return mins + ':' + (secs < 10 ? '0' : '') + secs;
     }
 }">
-    <!-- Loading Overlay -->
-    <div x-show="taskLoading" x-cloak class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center">
-        <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
-            <div class="flex flex-col items-center">
-                <!-- Spinner -->
-                <svg class="animate-spin h-16 w-16 text-blue-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-
-                <!-- Message -->
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-{{ $colors["text"] }} mb-2" x-text="taskMessage"></h3>
-
-                <!-- Timer -->
-                <div class="flex items-center text-3xl font-mono text-blue-600 mb-4">
-                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <span x-text="formatTime(elapsedTime)"></span>
-                </div>
-
-                <!-- Status text -->
-                <p class="text-sm text-gray-500 text-center mb-4">
-                    Waiting for device to execute task...<br>
-                    <span class="text-xs">The page will refresh automatically when complete.</span>
-                </p>
-
-                <!-- Cancel button (show after 30 seconds) -->
-                <button x-show="elapsedTime > 30"
-                        @click="clearInterval(timerInterval); taskLoading = false;"
-                        class="mt-4 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md text-sm">
-                    Close (Task continues in background)
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Failed Tasks Alert removed - now shown as badge beside device ID -->
 
     <!-- Header -->
@@ -308,7 +343,31 @@
             </div>
 
             <!-- Reboot Device -->
-            <form action="/api/devices/{{ $device->id }}/reboot" method="POST" onsubmit="return confirm('Are you sure you want to reboot this device?');">
+            <form @submit.prevent="async (e) => {
+                if (!confirm('Are you sure you want to reboot this device?')) return;
+
+                taskLoading = true;
+                taskMessage = 'Initiating Reboot...';
+
+                try {
+                    const response = await fetch('/api/devices/{{ $device->id }}/reboot', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+                    const result = await response.json();
+                    if (result.task && result.task.id) {
+                        startTaskTracking('Rebooting Device...', result.task.id);
+                    } else {
+                        taskLoading = false;
+                        alert('Error: ' + (result.error || result.message || 'Unknown error'));
+                    }
+                } catch (error) {
+                    taskLoading = false;
+                    alert('Error initiating reboot: ' + error.message);
+                }
+            }">
                 @csrf
                 <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700">
                     Reboot
@@ -316,7 +375,31 @@
             </form>
 
             <!-- Factory Reset -->
-            <form action="/api/devices/{{ $device->id }}/factory-reset" method="POST" onsubmit="return confirm('⚠️ WARNING: This will erase ALL device settings and data!\n\nAre you absolutely sure you want to factory reset this device?');">
+            <form @submit.prevent="async (e) => {
+                if (!confirm('⚠️ WARNING: This will erase ALL device settings and data!\n\nAre you absolutely sure you want to factory reset this device?')) return;
+
+                taskLoading = true;
+                taskMessage = 'Initiating Factory Reset...';
+
+                try {
+                    const response = await fetch('/api/devices/{{ $device->id }}/factory-reset', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+                    const result = await response.json();
+                    if (result.task && result.task.id) {
+                        startTaskTracking('Factory Resetting Device...', result.task.id);
+                    } else {
+                        taskLoading = false;
+                        alert('Error: ' + (result.error || result.message || 'Unknown error'));
+                    }
+                } catch (error) {
+                    taskLoading = false;
+                    alert('Error initiating factory reset: ' + error.message);
+                }
+            }">
                 @csrf
                 <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-danger"] }}-600 hover:bg-{{ $colors["btn-danger"] }}-700">
                     Factory Reset
@@ -324,7 +407,31 @@
             </form>
 
             <!-- Upgrade Firmware -->
-            <form action="/api/devices/{{ $device->id }}/firmware-upgrade" method="POST" onsubmit="return confirm('Are you sure you want to upgrade the firmware on this device?');">
+            <form @submit.prevent="async (e) => {
+                if (!confirm('Are you sure you want to upgrade the firmware on this device?')) return;
+
+                taskLoading = true;
+                taskMessage = 'Initiating Firmware Upgrade...';
+
+                try {
+                    const response = await fetch('/api/devices/{{ $device->id }}/firmware-upgrade', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+                    const result = await response.json();
+                    if (result.task && result.task.id) {
+                        startTaskTracking('Upgrading Firmware...', result.task.id);
+                    } else {
+                        taskLoading = false;
+                        alert('Error: ' + (result.error || result.message || 'Unknown error'));
+                    }
+                } catch (error) {
+                    taskLoading = false;
+                    alert('Error initiating firmware upgrade: ' + error.message);
+                }
+            }">
                 @csrf
                 <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700">
                     Upgrade Firmware
@@ -512,21 +619,20 @@
                     const result = await response.json();
 
                     if (result.enable_task && result.enable_task.id) {
-                        // Start tracking the enable task
-                        startTaskTracking('Enabling Remote Access...', result.enable_task.id);
+                        // Open the GUI immediately
+                        const port = '8443'; // Default HTTPS port for Calix devices
+                        const externalIp = result.external_ip || '{{ $externalIp }}';
+                        if (externalIp) {
+                            const url = `https://${externalIp}:${port}/`;
+                            window.open(url, '_blank');
 
-                        // After task completes, open the GUI
-                        // We'll need to wait for the page to reload, then construct the URL
-                        setTimeout(() => {
-                            const port = '8443'; // Default HTTPS port for Calix devices
-                            const externalIp = result.external_ip || '{{ $externalIp }}';
-                            if (externalIp) {
-                                const url = `https://${externalIp}:${port}/`;
-                                window.open(url, '_blank');
-                            } else {
-                                alert('Could not determine external IP address');
-                            }
-                        }, 3000);
+                            // Clear loading indicator after opening window
+                            taskLoading = false;
+                            taskMessage = '';
+                        } else {
+                            taskLoading = false;
+                            alert('Could not determine external IP address');
+                        }
                     } else {
                         taskLoading = false;
                         alert('Failed to enable remote access');
@@ -587,6 +693,11 @@
                     class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                 Config Backups
             </button>
+            <button @click="activeTab = 'templates'"
+                    :class="activeTab === 'templates' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                Templates
+            </button>
             <button @click="activeTab = 'ports'"
                     :class="activeTab === 'ports' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                     class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
@@ -596,6 +707,11 @@
                     :class="activeTab === 'wifiscan' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                     class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                 WiFi Scan
+            </button>
+            <button @click="activeTab = 'speedtest'"
+                    :class="activeTab === 'speedtest' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                Speed Test
             </button>
         </nav>
     </div>
@@ -676,7 +792,31 @@
                         </form>
 
                         <!-- Reboot -->
-                        <form action="/api/devices/{{ $device->id }}/reboot" method="POST" onsubmit="return confirm('Are you sure you want to reboot this device?');">
+                        <form @submit.prevent="async (e) => {
+                            if (!confirm('Are you sure you want to reboot this device?')) return;
+
+                            taskLoading = true;
+                            taskMessage = 'Initiating Reboot...';
+
+                            try {
+                                const response = await fetch('/api/devices/{{ $device->id }}/reboot', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    }
+                                });
+                                const result = await response.json();
+                                if (result.task && result.task.id) {
+                                    startTaskTracking('Rebooting Device...', result.task.id);
+                                } else {
+                                    taskLoading = false;
+                                    alert('Error: ' + (result.error || result.message || 'Unknown error'));
+                                }
+                            } catch (error) {
+                                taskLoading = false;
+                                alert('Error initiating reboot: ' + error.message);
+                            }
+                        }">
                             @csrf
                             <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700">
                                 Reboot
@@ -700,7 +840,31 @@
                         </form>
 
                         <!-- Firmware Upgrade -->
-                        <form action="/api/devices/{{ $device->id }}/firmware-upgrade" method="POST" onsubmit="return confirm('Are you sure you want to upgrade the firmware?');">
+                        <form @submit.prevent="async (e) => {
+                            if (!confirm('Are you sure you want to upgrade the firmware?')) return;
+
+                            taskLoading = true;
+                            taskMessage = 'Initiating Firmware Upgrade...';
+
+                            try {
+                                const response = await fetch('/api/devices/{{ $device->id }}/firmware-upgrade', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    }
+                                });
+                                const result = await response.json();
+                                if (result.task && result.task.id) {
+                                    startTaskTracking('Upgrading Firmware...', result.task.id);
+                                } else {
+                                    taskLoading = false;
+                                    alert('Error: ' + (result.error || result.message || 'Unknown error'));
+                                }
+                            } catch (error) {
+                                taskLoading = false;
+                                alert('Error initiating firmware upgrade: ' + error.message);
+                            }
+                        }">
                             @csrf
                             <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700">
                                 Upgrade Firmware
@@ -708,7 +872,31 @@
                         </form>
 
                         <!-- Factory Reset -->
-                        <form action="/api/devices/{{ $device->id }}/factory-reset" method="POST" onsubmit="return confirm('⚠️ WARNING: This will erase ALL device settings!\n\nAre you sure?');">
+                        <form @submit.prevent="async (e) => {
+                            if (!confirm('⚠️ WARNING: This will erase ALL device settings!\n\nAre you sure?')) return;
+
+                            taskLoading = true;
+                            taskMessage = 'Initiating Factory Reset...';
+
+                            try {
+                                const response = await fetch('/api/devices/{{ $device->id }}/factory-reset', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    }
+                                });
+                                const result = await response.json();
+                                if (result.task && result.task.id) {
+                                    startTaskTracking('Factory Resetting Device...', result.task.id);
+                                } else {
+                                    taskLoading = false;
+                                    alert('Error: ' + (result.error || result.message || 'Unknown error'));
+                                }
+                            } catch (error) {
+                                taskLoading = false;
+                                alert('Error initiating factory reset: ' + error.message);
+                            }
+                        }">
                             @csrf
                             <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-danger"] }}-600 hover:bg-{{ $colors["btn-danger"] }}-700">
                                 Factory Reset
@@ -2742,6 +2930,46 @@
         loading: true,
         selectedBackup: null,
         showRestoreConfirm: false,
+        selectedForComparison: [],
+        showComparisonModal: false,
+        comparisonData: null,
+        showImportModal: false,
+        importFile: null,
+        importName: '',
+        showEditMetadataModal: false,
+        editingBackup: null,
+        editTags: [],
+        editNotes: '',
+        newTag: '',
+        filterTags: [],
+        filterStarred: null,
+        filterDateFrom: '',
+        filterDateTo: '',
+        showSelectiveRestoreModal: false,
+        selectiveRestoreBackup: null,
+        selectedParameters: [],
+        parameterSearchQuery: '',
+
+        // Categorize backups by retention type
+        get initialBackups() {
+            return this.backups.filter(b =>
+                b.description && b.description.includes('first TR-069 connection')
+            );
+        },
+
+        get userBackups() {
+            return this.backups.filter(b =>
+                !b.is_auto &&
+                (!b.description || !b.description.includes('first TR-069 connection'))
+            );
+        },
+
+        get autoBackups() {
+            return this.backups.filter(b =>
+                b.is_auto &&
+                (!b.description || !b.description.includes('first TR-069 connection'))
+            );
+        },
 
         async loadBackups() {
             this.loading = true;
@@ -2826,6 +3054,327 @@
             }
         },
 
+        openSelectiveRestore(backup) {
+            this.selectiveRestoreBackup = backup;
+            this.selectedParameters = [];
+            this.parameterSearchQuery = '';
+            this.showSelectiveRestoreModal = true;
+        },
+
+        get filteredBackupParameters() {
+            if (!this.selectiveRestoreBackup || !this.selectiveRestoreBackup.backup_data) return [];
+
+            const query = this.parameterSearchQuery.toLowerCase();
+            return Object.entries(this.selectiveRestoreBackup.backup_data)
+                .filter(([name, data]) => {
+                    // Filter by search query
+                    if (query && !name.toLowerCase().includes(query)) {
+                        return false;
+                    }
+                    // Only show writable parameters
+                    return data.writable ?? false;
+                })
+                .map(([name, data]) => ({ name, ...data }))
+                .sort((a, b) => a.name.localeCompare(b.name));
+        },
+
+        toggleParameter(paramName) {
+            const index = this.selectedParameters.indexOf(paramName);
+            if (index > -1) {
+                this.selectedParameters.splice(index, 1);
+            } else {
+                this.selectedParameters.push(paramName);
+            }
+        },
+
+        selectAllParameters() {
+            this.selectedParameters = this.filteredBackupParameters.map(p => p.name);
+        },
+
+        deselectAllParameters() {
+            this.selectedParameters = [];
+        },
+
+        async executeSelectiveRestore() {
+            if (!this.selectiveRestoreBackup || this.selectedParameters.length === 0) return;
+
+            this.showSelectiveRestoreModal = false;
+            taskLoading = true;
+            taskMessage = 'Restoring Selected Parameters...';
+
+            try {
+                const response = await fetch(`/api/devices/{{ $device->id }}/backups/${this.selectiveRestoreBackup.id}/restore`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        parameters: this.selectedParameters,
+                        create_backup: true
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok && data.task) {
+                    startTaskTracking('Restoring Selected Parameters...', data.task.id);
+                } else {
+                    taskLoading = false;
+                    alert('Error restoring backup: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                taskLoading = false;
+                console.error('Error restoring backup:', error);
+                alert('Error restoring backup: ' + error.message);
+            }
+        },
+
+        toggleCompareSelection(backup) {
+            const index = this.selectedForComparison.findIndex(b => b.id === backup.id);
+            if (index > -1) {
+                this.selectedForComparison.splice(index, 1);
+            } else {
+                if (this.selectedForComparison.length < 2) {
+                    this.selectedForComparison.push(backup);
+                } else {
+                    alert('You can only compare 2 backups at a time');
+                }
+            }
+        },
+
+        isSelectedForComparison(backup) {
+            return this.selectedForComparison.some(b => b.id === backup.id);
+        },
+
+        async compareBackups() {
+            if (this.selectedForComparison.length !== 2) return;
+
+            const backup1Id = this.selectedForComparison[0].id;
+            const backup2Id = this.selectedForComparison[1].id;
+
+            try {
+                const response = await fetch(`/api/devices/{{ $device->id }}/backups/${backup1Id}/compare/${backup2Id}`);
+                const data = await response.json();
+                if (response.ok) {
+                    this.comparisonData = data;
+                    this.showComparisonModal = true;
+                } else {
+                    alert('Error comparing backups: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error comparing backups:', error);
+                alert('Error comparing backups: ' + error.message);
+            }
+        },
+
+        clearCompareSelection() {
+            this.selectedForComparison = [];
+        },
+
+        closeComparisonModal() {
+            this.showComparisonModal = false;
+            this.comparisonData = null;
+        },
+
+        openImportModal() {
+            this.showImportModal = true;
+            this.importFile = null;
+            this.importName = '';
+        },
+
+        closeImportModal() {
+            this.showImportModal = false;
+            this.importFile = null;
+            this.importName = '';
+        },
+
+        async importBackup() {
+            if (!this.importFile) {
+                alert('Please select a backup file to import');
+                return;
+            }
+
+            this.loading = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('backup_file', this.importFile);
+                if (this.importName) {
+                    formData.append('name', this.importName);
+                }
+
+                const response = await fetch('/api/devices/{{ $device->id }}/backups/import', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert(data.message);
+                    this.closeImportModal();
+                    await this.loadBackups();
+                } else {
+                    alert('Error importing backup: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error importing backup:', error);
+                alert('Error importing backup: ' + error.message);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        downloadBackup(backupId) {
+            window.location.href = `/api/devices/{{ $device->id }}/backups/${backupId}/download`;
+        },
+
+        async toggleStar(backup) {
+            try {
+                const response = await fetch(`/api/devices/{{ $device->id }}/backups/${backup.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        is_starred: !backup.is_starred
+                    })
+                });
+
+                if (response.ok) {
+                    backup.is_starred = !backup.is_starred;
+                } else {
+                    alert('Error updating star status');
+                }
+            } catch (error) {
+                console.error('Error toggling star:', error);
+            }
+        },
+
+        openEditMetadata(backup) {
+            this.editingBackup = backup;
+            this.editTags = [...(backup.tags || [])];
+            this.editNotes = backup.notes || '';
+            this.newTag = '';
+            this.showEditMetadataModal = true;
+        },
+
+        closeEditMetadataModal() {
+            this.showEditMetadataModal = false;
+            this.editingBackup = null;
+            this.editTags = [];
+            this.editNotes = '';
+            this.newTag = '';
+        },
+
+        addTag() {
+            const tag = this.newTag.trim();
+            if (tag && !this.editTags.includes(tag)) {
+                this.editTags.push(tag);
+                this.newTag = '';
+            }
+        },
+
+        removeEditTag(tag) {
+            this.editTags = this.editTags.filter(t => t !== tag);
+        },
+
+        async saveMetadata() {
+            if (!this.editingBackup) return;
+
+            try {
+                const response = await fetch(`/api/devices/{{ $device->id }}/backups/${this.editingBackup.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        tags: this.editTags,
+                        notes: this.editNotes
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    this.editingBackup.tags = this.editTags;
+                    this.editingBackup.notes = this.editNotes;
+                    this.closeEditMetadataModal();
+                } else {
+                    alert('Error saving metadata: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error saving metadata:', error);
+                alert('Error saving metadata: ' + error.message);
+            }
+        },
+
+        async applyFilters() {
+            this.loading = true;
+            try {
+                const params = new URLSearchParams();
+
+                if (this.filterTags.length > 0) {
+                    this.filterTags.forEach(tag => params.append('tags[]', tag));
+                }
+
+                if (this.filterStarred !== null) {
+                    params.append('starred', this.filterStarred);
+                }
+
+                if (this.filterDateFrom) {
+                    params.append('date_from', this.filterDateFrom);
+                }
+
+                if (this.filterDateTo) {
+                    params.append('date_to', this.filterDateTo);
+                }
+
+                const queryString = params.toString();
+                const url = `/api/devices/{{ $device->id }}/backups${queryString ? '?' + queryString : ''}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+                this.backups = data.backups;
+            } catch (error) {
+                console.error('Error loading filtered backups:', error);
+                alert('Error loading backups: ' + error.message);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        clearFilters() {
+            this.filterTags = [];
+            this.filterStarred = null;
+            this.filterDateFrom = '';
+            this.filterDateTo = '';
+            this.loadBackups();
+        },
+
+        toggleFilterTag(tag) {
+            const index = this.filterTags.indexOf(tag);
+            if (index > -1) {
+                this.filterTags.splice(index, 1);
+            } else {
+                this.filterTags.push(tag);
+            }
+            this.applyFilters();
+        },
+
+        get allUniqueTags() {
+            const tags = new Set();
+            this.backups.forEach(backup => {
+                if (backup.tags) {
+                    backup.tags.forEach(tag => tags.add(tag));
+                }
+            });
+            return Array.from(tags).sort();
+        },
+
         init() {
             this.loadBackups();
         }
@@ -2836,12 +3385,90 @@
                     <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors["text"] }}">Configuration Backups</h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">Backup and restore device configuration</p>
                 </div>
-                <button @click="createBackup()" :disabled="loading"
-                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                <div class="flex space-x-3">
+                    <button x-show="selectedForComparison.length > 0" @click="clearCompareSelection()"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Clear Selection
+                    </button>
+                    <button x-show="selectedForComparison.length === 2" @click="compareBackups()"
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        Compare Selected (2)
+                    </button>
+                    <button @click="openImportModal()" :disabled="loading"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                        Import Backup
+                    </button>
+                    <button @click="createBackup()" :disabled="loading"
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Create Backup
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="px-4 py-3 bg-gray-100 border-t border-gray-200 flex flex-wrap items-center gap-3">
+                <div class="flex items-center space-x-2">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
                     </svg>
-                    Create Backup
+                    <span class="text-sm font-medium text-gray-700">Filters:</span>
+                </div>
+
+                <!-- Starred Filter -->
+                <button @click="filterStarred = filterStarred === true ? null : true; applyFilters()"
+                        :class="filterStarred === true ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'bg-white text-gray-700 border-gray-300'"
+                        class="inline-flex items-center px-3 py-1.5 border rounded-md text-sm">
+                    <svg class="w-4 h-4 mr-1.5" :class="filterStarred === true ? 'fill-yellow-500' : 'fill-none'" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                    </svg>
+                    Starred Only
+                </button>
+
+                <!-- Tag Filters -->
+                <template x-if="allUniqueTags.length > 0">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-600">Tags:</span>
+                        <template x-for="tag in allUniqueTags" :key="tag">
+                            <button @click="toggleFilterTag(tag)"
+                                    :class="filterTags.includes(tag) ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-white text-gray-700 border-gray-300'"
+                                    class="inline-flex items-center px-2.5 py-1 border rounded-full text-xs font-medium"
+                                    x-text="tag">
+                            </button>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- Date Range Filter -->
+                <div class="flex items-center space-x-2">
+                    <input type="date" x-model="filterDateFrom" @change="applyFilters()"
+                           class="block w-36 px-2 py-1.5 text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="From">
+                    <span class="text-gray-500">to</span>
+                    <input type="date" x-model="filterDateTo" @change="applyFilters()"
+                           class="block w-36 px-2 py-1.5 text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="To">
+                </div>
+
+                <!-- Clear Filters -->
+                <button x-show="filterTags.length > 0 || filterStarred !== null || filterDateFrom || filterDateTo"
+                        @click="clearFilters()"
+                        class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Clear All
                 </button>
             </div>
 
@@ -2864,52 +3491,450 @@
                     <p class="mt-1 text-sm text-gray-500">Create your first backup to preserve the current device configuration.</p>
                 </div>
 
-                <!-- Backups List -->
-                <div x-show="!loading && backups.length > 0" class="divide-y divide-gray-200">
-                    <template x-for="backup in backups" :key="backup.id">
-                        <div class="px-6 py-4 hover:bg-gray-50">
+                <!-- Backups List - Grouped by Retention Type -->
+                <div x-show="!loading && backups.length > 0">
+                    <!-- Initial Backups (Protected) -->
+                    <div x-show="initialBackups.length > 0" class="border-b border-gray-200">
+                        <div class="px-6 py-3 bg-green-50">
                             <div class="flex items-center justify-between">
-                                <div class="flex-1">
-                                    <div class="flex items-center">
-                                        <h4 class="text-sm font-medium text-gray-900 dark:text-{{ $colors["text"] }}" x-text="backup.name"></h4>
-                                        <span x-show="backup.is_auto" class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                            Auto
-                                        </span>
-                                    </div>
-                                    <p x-show="backup.description" class="mt-1 text-sm text-gray-500" x-text="backup.description"></p>
-                                    <div class="mt-2 flex items-center text-xs text-gray-500 space-x-4">
-                                        <span class="flex items-center">
-                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                            </svg>
-                                            <span x-text="backup.created_at"></span>
-                                        </span>
-                                        <span class="flex items-center">
-                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
-                                            </svg>
-                                            <span x-text="backup.parameter_count + ' parameters'"></span>
-                                        </span>
-                                        <span class="flex items-center">
-                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg>
-                                            <span x-text="backup.size"></span>
-                                        </span>
-                                    </div>
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                    </svg>
+                                    <h4 class="text-sm font-semibold text-green-900">Initial Backup</h4>
+                                    <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Protected - Never Deleted
+                                    </span>
                                 </div>
-                                <div class="ml-4">
-                                    <button @click="confirmRestore(backup)"
-                                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                        </svg>
-                                        Restore
-                                    </button>
-                                </div>
+                                <span class="text-xs text-green-700" x-text="initialBackups.length + ' backup' + (initialBackups.length !== 1 ? 's' : '')"></span>
                             </div>
                         </div>
+                        <template x-for="backup in initialBackups" :key="backup.id">
+                            <div class="px-6 py-4 hover:bg-gray-50 border-b border-gray-100">
+                                <div class="flex items-center justify-between">
+                                    <input type="checkbox" @click="toggleCompareSelection(backup)" :checked="isSelectedForComparison(backup)"
+                                           class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded mr-4 flex-shrink-0">
+                                    <div class="flex-1">
+                                        <h5 class="text-sm font-medium text-gray-900" x-text="backup.name"></h5>
+                                        <p class="mt-1 text-sm text-gray-500" x-text="backup.description"></p>
+                                        <div class="mt-2 flex items-center text-xs text-gray-500 space-x-4">
+                                            <span class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                <span x-text="backup.created_at"></span>
+                                            </span>
+                                            <span class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                                                </svg>
+                                                <span x-text="backup.parameter_count + ' parameters'"></span>
+                                            </span>
+                                            <span class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                </svg>
+                                                <span x-text="backup.size"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4 flex space-x-2">
+                                        <button @click="downloadBackup(backup.id)"
+                                                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                            </svg>
+                                            Download
+                                        </button>
+                                        <button @click="openSelectiveRestore(backup)"
+                                                class="inline-flex items-center px-3 py-2 border border-purple-300 shadow-sm text-sm font-medium rounded-md text-purple-700 bg-white hover:bg-purple-50">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                            </svg>
+                                            Selective
+                                        </button>
+                                        <button @click="confirmRestore(backup)"
+                                                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                            Restore All
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- User Created Backups (90 Day Retention) -->
+                    <div x-show="userBackups.length > 0" class="border-b border-gray-200">
+                        <div class="px-6 py-3 bg-blue-50">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                    <h4 class="text-sm font-semibold text-blue-900">User Created Backups</h4>
+                                    <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        90 Day Retention
+                                    </span>
+                                </div>
+                                <span class="text-xs text-blue-700" x-text="userBackups.length + ' backup' + (userBackups.length !== 1 ? 's' : '')"></span>
+                            </div>
+                        </div>
+                        <template x-for="backup in userBackups" :key="backup.id">
+                            <div class="px-6 py-4 hover:bg-gray-50 border-b border-gray-100">
+                                <div class="flex items-center justify-between">
+                                    <input type="checkbox" @click="toggleCompareSelection(backup)" :checked="isSelectedForComparison(backup)"
+                                           class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded mr-4 flex-shrink-0">
+                                    <div class="flex-1">
+                                        <h5 class="text-sm font-medium text-gray-900" x-text="backup.name"></h5>
+                                        <p x-show="backup.description" class="mt-1 text-sm text-gray-500" x-text="backup.description"></p>
+                                        <div class="mt-2 flex items-center text-xs text-gray-500 space-x-4">
+                                            <span class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                <span x-text="backup.created_at"></span>
+                                            </span>
+                                            <span class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                                                </svg>
+                                                <span x-text="backup.parameter_count + ' parameters'"></span>
+                                            </span>
+                                            <span class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                </svg>
+                                                <span x-text="backup.size"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4 flex space-x-2">
+                                        <button @click="downloadBackup(backup.id)"
+                                                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                            </svg>
+                                            Download
+                                        </button>
+                                        <button @click="openSelectiveRestore(backup)"
+                                                class="inline-flex items-center px-3 py-2 border border-purple-300 shadow-sm text-sm font-medium rounded-md text-purple-700 bg-white hover:bg-purple-50">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                            </svg>
+                                            Selective
+                                        </button>
+                                        <button @click="confirmRestore(backup)"
+                                                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                            Restore All
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Automated Backups (7 Day Retention) -->
+                    <div x-show="autoBackups.length > 0">
+                        <div class="px-6 py-3 bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <h4 class="text-sm font-semibold text-gray-900">Automated Daily Backups</h4>
+                                    <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        7 Day Retention
+                                    </span>
+                                </div>
+                                <span class="text-xs text-gray-700" x-text="autoBackups.length + ' backup' + (autoBackups.length !== 1 ? 's' : '')"></span>
+                            </div>
+                        </div>
+                        <template x-for="backup in autoBackups" :key="backup.id">
+                            <div class="px-6 py-4 hover:bg-gray-50 border-b border-gray-100">
+                                <div class="flex items-center justify-between">
+                                    <input type="checkbox" @click="toggleCompareSelection(backup)" :checked="isSelectedForComparison(backup)"
+                                           class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded mr-4 flex-shrink-0">
+                                    <div class="flex-1">
+                                        <h5 class="text-sm font-medium text-gray-900" x-text="backup.name"></h5>
+                                        <p x-show="backup.description" class="mt-1 text-sm text-gray-500" x-text="backup.description"></p>
+                                        <div class="mt-2 flex items-center text-xs text-gray-500 space-x-4">
+                                            <span class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                <span x-text="backup.created_at"></span>
+                                            </span>
+                                            <span class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                                                </svg>
+                                                <span x-text="backup.parameter_count + ' parameters'"></span>
+                                            </span>
+                                            <span class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                </svg>
+                                                <span x-text="backup.size"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4 flex space-x-2">
+                                        <button @click="downloadBackup(backup.id)"
+                                                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                            </svg>
+                                            Download
+                                        </button>
+                                        <button @click="openSelectiveRestore(backup)"
+                                                class="inline-flex items-center px-3 py-2 border border-purple-300 shadow-sm text-sm font-medium rounded-md text-purple-700 bg-white hover:bg-purple-50">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                            </svg>
+                                            Selective
+                                        </button>
+                                        <button @click="confirmRestore(backup)"
+                                                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                            Restore All
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import Backup Modal -->
+        <div x-show="showImportModal" x-cloak class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center">
+            <div class="bg-white rounded-lg shadow-xl p-6 max-w-lg w-full mx-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Import Backup</h3>
+                    <button @click="closeImportModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-sm text-gray-500 mb-4">
+                    Upload a previously exported backup file to restore it to this device.
+                </p>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Backup File (JSON)
+                        </label>
+                        <input type="file" accept=".json,application/json"
+                               @change="importFile = $event.target.files[0]"
+                               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Backup Name (Optional)
+                        </label>
+                        <input type="text" x-model="importName" placeholder="Leave empty to use original name"
+                               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                    </div>
+                </div>
+                <div class="mt-6 flex space-x-3">
+                    <button @click="closeImportModal()"
+                            class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button @click="importBackup()" :disabled="!importFile || loading"
+                            class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Import
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selective Restore Modal -->
+        <div x-show="showSelectiveRestoreModal" x-cloak class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                <!-- Modal Header -->
+                <div class="px-6 py-4 bg-purple-50 border-b border-purple-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-medium text-purple-900">Selective Restore</h3>
+                            <p class="text-sm text-purple-700 mt-1" x-show="selectiveRestoreBackup">
+                                Choose specific parameters to restore from: <span x-text="selectiveRestoreBackup?.name"></span>
+                            </p>
+                        </div>
+                        <button @click="showSelectiveRestoreModal = false" class="text-purple-400 hover:text-purple-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search and Controls -->
+                <div class="px-6 py-3 bg-gray-50 border-b border-gray-200">
+                    <div class="flex items-center gap-3">
+                        <!-- Search Box -->
+                        <div class="flex-1">
+                            <input type="text" x-model="parameterSearchQuery" placeholder="Search parameters..."
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm">
+                        </div>
+                        <!-- Select/Deselect All -->
+                        <button @click="selectAllParameters()"
+                                class="px-3 py-2 text-sm font-medium text-purple-700 bg-purple-100 rounded-md hover:bg-purple-200">
+                            Select All
+                        </button>
+                        <button @click="deselectAllParameters()"
+                                class="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                            Deselect All
+                        </button>
+                        <!-- Counter -->
+                        <div class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md">
+                            <span x-text="selectedParameters.length"></span> / <span x-text="filteredBackupParameters.length"></span> selected
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Parameters List -->
+                <div class="flex-1 overflow-y-auto px-6 py-4">
+                    <template x-if="filteredBackupParameters.length === 0">
+                        <div class="text-center py-12">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">No writable parameters found</h3>
+                            <p class="mt-1 text-sm text-gray-500">Try adjusting your search query</p>
+                        </div>
                     </template>
+
+                    <div class="space-y-2">
+                        <template x-for="param in filteredBackupParameters" :key="param.name">
+                            <label class="flex items-start p-3 bg-white border border-gray-200 rounded-md hover:bg-purple-50 hover:border-purple-300 cursor-pointer transition-colors">
+                                <input type="checkbox"
+                                       :checked="selectedParameters.includes(param.name)"
+                                       @change="toggleParameter(param.name)"
+                                       class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded mt-1">
+                                <div class="ml-3 flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm font-mono text-gray-900 break-all" x-text="param.name"></span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700"
+                                              x-text="param.type || 'string'"></span>
+                                    </div>
+                                    <div class="mt-1 text-sm text-gray-600 font-mono">
+                                        Value: <span x-text="param.value || '(empty)'"></span>
+                                    </div>
+                                </div>
+                            </label>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                    <div class="text-sm text-gray-600">
+                        <svg class="inline h-5 w-5 text-blue-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        A safety backup will be created automatically before restore
+                    </div>
+                    <div class="flex gap-3">
+                        <button @click="showSelectiveRestoreModal = false"
+                                class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button @click="executeSelectiveRestore()"
+                                :disabled="selectedParameters.length === 0"
+                                class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                            Restore <span x-text="selectedParameters.length"></span> Parameter<span x-show="selectedParameters.length !== 1">s</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Metadata Modal -->
+        <div x-show="showEditMetadataModal" x-cloak class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                <!-- Modal Header -->
+                <div class="px-6 py-4 bg-blue-50 border-b border-blue-200 flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-blue-900">Edit Backup Metadata</h3>
+                    <button @click="closeEditMetadataModal()" class="text-blue-400 hover:text-blue-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="flex-1 overflow-y-auto px-6 py-4">
+                    <div x-show="editingBackup" class="space-y-6">
+                        <!-- Backup Info -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="text-sm font-medium text-gray-900" x-text="editingBackup?.name"></div>
+                            <div class="text-xs text-gray-500 mt-1" x-text="editingBackup?.created_at"></div>
+                        </div>
+
+                        <!-- Tags -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Tags
+                            </label>
+                            <div class="flex flex-wrap gap-2 mb-3">
+                                <template x-for="tag in editTags" :key="tag">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                        <span x-text="tag"></span>
+                                        <button @click="removeEditTag(tag)" class="ml-2 hover:text-blue-900">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    </span>
+                                </template>
+                                <span x-show="editTags.length === 0" class="text-sm text-gray-400 italic">No tags</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <input type="text" x-model="newTag" @keyup.enter="addTag()"
+                                       placeholder="Add a tag..."
+                                       class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                <button @click="addTag()" :disabled="!newTag.trim()"
+                                        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    Add
+                                </button>
+                            </div>
+                            <p class="mt-2 text-xs text-gray-500">Press Enter or click Add to create a new tag</p>
+                        </div>
+
+                        <!-- Notes -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Notes
+                            </label>
+                            <textarea x-model="editNotes" rows="6"
+                                      placeholder="Add notes about this backup..."
+                                      class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"></textarea>
+                            <p class="mt-2 text-xs text-gray-500">Add any relevant notes or comments about this backup</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                    <button @click="closeEditMetadataModal()"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button @click="saveMetadata()"
+                            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        Save Changes
+                    </button>
                 </div>
             </div>
         </div>
@@ -2939,6 +3964,154 @@
                     <button @click="restoreBackup()"
                             class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700">
                         Restore
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison Modal -->
+        <div x-show="showComparisonModal" x-cloak class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                <!-- Modal Header -->
+                <div class="px-6 py-4 bg-purple-50 border-b border-purple-200 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-medium text-purple-900">Backup Comparison</h3>
+                        <p class="mt-1 text-sm text-purple-700">Comparing configuration differences between two backups</p>
+                    </div>
+                    <button @click="closeComparisonModal()" class="text-purple-400 hover:text-purple-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Backup Info Header -->
+                <div x-show="comparisonData" class="px-6 py-4 bg-gray-50 border-b border-gray-200 grid grid-cols-2 gap-4">
+                    <div class="bg-blue-50 p-3 rounded-lg">
+                        <div class="text-xs font-semibold text-blue-900 uppercase tracking-wide mb-1">Backup 1 (Older)</div>
+                        <div class="text-sm font-medium text-gray-900" x-text="comparisonData?.backup1.name"></div>
+                        <div class="text-xs text-gray-600 mt-1" x-text="comparisonData?.backup1.created_at"></div>
+                        <div class="text-xs text-gray-500 mt-1" x-text="comparisonData?.backup1.parameter_count + ' parameters'"></div>
+                    </div>
+                    <div class="bg-green-50 p-3 rounded-lg">
+                        <div class="text-xs font-semibold text-green-900 uppercase tracking-wide mb-1">Backup 2 (Newer)</div>
+                        <div class="text-sm font-medium text-gray-900" x-text="comparisonData?.backup2.name"></div>
+                        <div class="text-xs text-gray-600 mt-1" x-text="comparisonData?.backup2.created_at"></div>
+                        <div class="text-xs text-gray-500 mt-1" x-text="comparisonData?.backup2.parameter_count + ' parameters'"></div>
+                    </div>
+                </div>
+
+                <!-- Summary Stats -->
+                <div x-show="comparisonData" class="px-6 py-3 bg-white border-b border-gray-200">
+                    <div class="flex items-center space-x-6 text-sm">
+                        <div class="flex items-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <span x-text="comparisonData?.summary.added_count"></span> Added
+                            </span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <span x-text="comparisonData?.summary.removed_count"></span> Removed
+                            </span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                <span x-text="comparisonData?.summary.modified_count"></span> Modified
+                            </span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <span x-text="comparisonData?.summary.unchanged_count"></span> Unchanged
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Changes Content (Scrollable) -->
+                <div class="flex-1 overflow-y-auto px-6 py-4">
+                    <template x-if="comparisonData">
+                        <div class="space-y-6">
+                            <!-- Modified Parameters -->
+                            <div x-show="Object.keys(comparisonData.comparison.modified).length > 0">
+                                <h4 class="text-sm font-semibold text-yellow-900 mb-3 flex items-center">
+                                    <svg class="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    Modified Parameters (<span x-text="Object.keys(comparisonData.comparison.modified).length"></span>)
+                                </h4>
+                                <div class="space-y-2">
+                                    <template x-for="[name, param] in Object.entries(comparisonData.comparison.modified)" :key="name">
+                                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                            <div class="text-xs font-mono text-gray-700 mb-2" x-text="name"></div>
+                                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                                <div class="bg-red-50 border border-red-200 rounded px-3 py-2">
+                                                    <div class="text-xs font-semibold text-red-900 uppercase mb-1">Old Value</div>
+                                                    <div class="text-xs font-mono text-gray-800 break-all" x-text="param.old_value"></div>
+                                                </div>
+                                                <div class="bg-green-50 border border-green-200 rounded px-3 py-2">
+                                                    <div class="text-xs font-semibold text-green-900 uppercase mb-1">New Value</div>
+                                                    <div class="text-xs font-mono text-gray-800 break-all" x-text="param.new_value"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Added Parameters -->
+                            <div x-show="Object.keys(comparisonData.comparison.added).length > 0">
+                                <h4 class="text-sm font-semibold text-green-900 mb-3 flex items-center">
+                                    <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Added Parameters (<span x-text="Object.keys(comparisonData.comparison.added).length"></span>)
+                                </h4>
+                                <div class="space-y-2">
+                                    <template x-for="[name, param] in Object.entries(comparisonData.comparison.added)" :key="name">
+                                        <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                                            <div class="text-xs font-mono text-gray-700 mb-1" x-text="name"></div>
+                                            <div class="text-xs font-mono text-gray-800 break-all" x-text="param.value"></div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Removed Parameters -->
+                            <div x-show="Object.keys(comparisonData.comparison.removed).length > 0">
+                                <h4 class="text-sm font-semibold text-red-900 mb-3 flex items-center">
+                                    <svg class="w-5 h-5 mr-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                    </svg>
+                                    Removed Parameters (<span x-text="Object.keys(comparisonData.comparison.removed).length"></span>)
+                                </h4>
+                                <div class="space-y-2">
+                                    <template x-for="[name, param] in Object.entries(comparisonData.comparison.removed)" :key="name">
+                                        <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                                            <div class="text-xs font-mono text-gray-700 mb-1" x-text="name"></div>
+                                            <div class="text-xs font-mono text-gray-800 break-all" x-text="param.value"></div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- No Changes Message -->
+                            <div x-show="comparisonData.summary.added_count === 0 && comparisonData.summary.removed_count === 0 && comparisonData.summary.modified_count === 0"
+                                 class="text-center py-12">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">No Differences Found</h3>
+                                <p class="mt-1 text-sm text-gray-500">These backups are identical</p>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
+                    <button @click="closeComparisonModal()"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Close
                     </button>
                 </div>
             </div>
@@ -3379,5 +4552,660 @@
             </div>
         </div>
     </div>
+
+    <!-- Speed Test Results Tab -->
+    <div x-show="activeTab === 'speedtest'" x-cloak class="space-y-6">
+        @php
+            // Get latest completed speed test results
+            $latestDownload = $device->tasks()
+                ->where('task_type', 'download_diagnostics')
+                ->where('status', 'completed')
+                ->whereNotNull('result')
+                ->latest()
+                ->first();
+
+            $latestUpload = $device->tasks()
+                ->where('task_type', 'upload_diagnostics')
+                ->where('status', 'completed')
+                ->whereNotNull('result')
+                ->latest()
+                ->first();
+
+            // Helper function to calculate speed
+            $calculateSpeed = function($bytes, $bomTime, $eomTime) {
+                try {
+                    $start = new \Carbon\Carbon($bomTime);
+                    $end = new \Carbon\Carbon($eomTime);
+                    $duration = $end->diffInSeconds($start);
+
+                    if ($duration <= 0) return null;
+
+                    $bytesPerSecond = (int)$bytes / $duration;
+                    $mbps = ($bytesPerSecond * 8) / 1000000; // Convert to Mbps
+
+                    return round($mbps, 2);
+                } catch (\Exception $e) {
+                    return null;
+                }
+            };
+        @endphp
+
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="px-4 py-5 sm:px-6 bg-gray-50">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">TR-143 Speed Test Results</h3>
+                <p class="mt-1 text-sm text-gray-500">Latest download and upload diagnostic test results</p>
+            </div>
+
+            <div class="px-4 py-5 sm:p-6 space-y-6">
+                @if($latestDownload || $latestUpload)
+                    <!-- Download Test Results -->
+                    @if($latestDownload && isset($latestDownload->result['InternetGatewayDevice.DownloadDiagnostics.DiagnosticsState']) || isset($latestDownload->result['Device.IP.Diagnostics.DownloadDiagnostics.DiagnosticsState']))
+                        @php
+                            $prefix = isset($latestDownload->result['InternetGatewayDevice.DownloadDiagnostics.DiagnosticsState'])
+                                ? 'InternetGatewayDevice.DownloadDiagnostics'
+                                : 'Device.IP.Diagnostics.DownloadDiagnostics';
+
+                            $dlState = $latestDownload->result["{$prefix}.DiagnosticsState"]['value'] ?? 'Unknown';
+                            $dlBytes = $latestDownload->result["{$prefix}.TestBytesReceived"]['value'] ?? 0;
+                            $dlBOM = $latestDownload->result["{$prefix}.BOMTime"]['value'] ?? null;
+                            $dlEOM = $latestDownload->result["{$prefix}.EOMTime"]['value'] ?? null;
+                            $dlSpeed = $calculateSpeed($dlBytes, $dlBOM, $dlEOM);
+                        @endphp
+
+                        <div class="border rounded-lg p-4 bg-blue-50">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-md font-semibold text-blue-900 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                                    </svg>
+                                    Download Test
+                                </h4>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    {{ $dlState }}
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <p class="text-sm text-blue-700 font-medium">Download Speed</p>
+                                    @if($dlSpeed)
+                                        <p class="text-2xl font-bold text-blue-900">{{ $dlSpeed }} <span class="text-sm font-normal">Mbps</span></p>
+                                    @else
+                                        <p class="text-sm text-gray-500">Unable to calculate</p>
+                                    @endif
+                                </div>
+                                <div>
+                                    <p class="text-sm text-blue-700 font-medium">Data Received</p>
+                                    <p class="text-lg font-semibold text-blue-900">{{ round($dlBytes / 1048576, 2) }} MB</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-blue-700 font-medium">Test Date</p>
+                                    <p class="text-sm text-blue-900">{{ $latestDownload->updated_at->format('M d, Y H:i:s') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Upload Test Results -->
+                    @if($latestUpload && isset($latestUpload->result['InternetGatewayDevice.UploadDiagnostics.DiagnosticsState']) || isset($latestUpload->result['Device.IP.Diagnostics.UploadDiagnostics.DiagnosticsState']))
+                        @php
+                            $prefix = isset($latestUpload->result['InternetGatewayDevice.UploadDiagnostics.DiagnosticsState'])
+                                ? 'InternetGatewayDevice.UploadDiagnostics'
+                                : 'Device.IP.Diagnostics.UploadDiagnostics';
+
+                            $ulState = $latestUpload->result["{$prefix}.DiagnosticsState"]['value'] ?? 'Unknown';
+                            $ulBytes = $latestUpload->result["{$prefix}.TestBytesSent"]['value'] ?? 0;
+                            $ulBOM = $latestUpload->result["{$prefix}.BOMTime"]['value'] ?? null;
+                            $ulEOM = $latestUpload->result["{$prefix}.EOMTime"]['value'] ?? null;
+                            $ulSpeed = $calculateSpeed($ulBytes, $ulBOM, $ulEOM);
+                        @endphp
+
+                        <div class="border rounded-lg p-4 bg-green-50">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-md font-semibold text-green-900 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                    </svg>
+                                    Upload Test
+                                </h4>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    {{ $ulState }}
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <p class="text-sm text-green-700 font-medium">Upload Speed</p>
+                                    @if($ulSpeed)
+                                        <p class="text-2xl font-bold text-green-900">{{ $ulSpeed }} <span class="text-sm font-normal">Mbps</span></p>
+                                    @else
+                                        <p class="text-sm text-gray-500">Unable to calculate</p>
+                                    @endif
+                                </div>
+                                <div>
+                                    <p class="text-sm text-green-700 font-medium">Data Sent</p>
+                                    <p class="text-lg font-semibold text-green-900">{{ round($ulBytes / 1048576, 2) }} MB</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-green-700 font-medium">Test Date</p>
+                                    <p class="text-sm text-green-900">{{ $latestUpload->updated_at->format('M d, Y H:i:s') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @else
+                    <!-- No Results -->
+                    <div class="text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No speed test results</h3>
+                        <p class="mt-1 text-sm text-gray-500">Run a speed test from the Dashboard tab to see results here</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates Tab -->
+    <div x-show="activeTab === 'templates'" x-cloak x-data="{
+        templates: [],
+        loading: true,
+        selectedCategory: 'all',
+        showCreateModal: false,
+        showApplyModal: false,
+        showEditModal: false,
+        selectedTemplate: null,
+        createForm: {
+            name: '',
+            description: '',
+            category: 'general',
+            source_type: 'backup',
+            source_id: null,
+            tags: [],
+            parameter_patterns: [],
+            device_model_filter: '',
+            strip_device_specific: true
+        },
+        applyForm: {
+            device_ids: [],
+            merge_strategy: 'merge',
+            create_backup: true
+        },
+        newTag: '',
+        newPattern: '',
+
+        async init() {
+            await this.loadTemplates();
+        },
+
+        async loadTemplates() {
+            this.loading = true;
+            try {
+                const params = new URLSearchParams();
+                if (this.selectedCategory !== 'all') {
+                    params.append('category', this.selectedCategory);
+                }
+
+                const response = await fetch('/api/templates?' + params);
+                const data = await response.json();
+                this.templates = data.templates;
+            } catch (error) {
+                console.error('Error loading templates:', error);
+                window.showToast('Failed to load templates', 'error');
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        openCreateModal(sourceType = 'device') {
+            this.createForm = {
+                name: '',
+                description: '',
+                category: 'general',
+                source_type: sourceType,
+                source_id: sourceType === 'device' ? device.id : null,
+                tags: [],
+                parameter_patterns: [],
+                device_model_filter: '',
+                strip_device_specific: true
+            };
+            this.showCreateModal = true;
+        },
+
+        async createTemplate() {
+            try {
+                const response = await fetch('/api/templates', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                    },
+                    body: JSON.stringify(this.createForm)
+                });
+
+                if (!response.ok) throw new Error('Failed to create template');
+
+                const data = await response.json();
+                window.showToast(data.message, 'success');
+                this.showCreateModal = false;
+                await this.loadTemplates();
+            } catch (error) {
+                console.error('Error creating template:', error);
+                window.showToast('Failed to create template', 'error');
+            }
+        },
+
+        openApplyModal(template) {
+            this.selectedTemplate = template;
+            this.applyForm = {
+                device_ids: [device.id],
+                merge_strategy: 'merge',
+                create_backup: true
+            };
+            this.showApplyModal = true;
+        },
+
+        async applyTemplate() {
+            try {
+                const response = await fetch(`/api/templates/${this.selectedTemplate.id}/apply`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                    },
+                    body: JSON.stringify(this.applyForm)
+                });
+
+                if (!response.ok) throw new Error('Failed to apply template');
+
+                const data = await response.json();
+                window.showToast(data.message, 'success');
+                this.showApplyModal = false;
+            } catch (error) {
+                console.error('Error applying template:', error);
+                window.showToast('Failed to apply template', 'error');
+            }
+        },
+
+        async deleteTemplate(templateId) {
+            if (!confirm('Are you sure you want to delete this template?')) return;
+
+            try {
+                const response = await fetch(`/api/templates/${templateId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to delete template');
+
+                const data = await response.json();
+                window.showToast(data.message, 'success');
+                await this.loadTemplates();
+            } catch (error) {
+                console.error('Error deleting template:', error);
+                window.showToast('Failed to delete template', 'error');
+            }
+        },
+
+        addTag() {
+            const tag = this.newTag.trim();
+            if (tag && !this.createForm.tags.includes(tag)) {
+                this.createForm.tags.push(tag);
+                this.newTag = '';
+            }
+        },
+
+        removeTag(tag) {
+            this.createForm.tags = this.createForm.tags.filter(t => t !== tag);
+        },
+
+        addPattern() {
+            const pattern = this.newPattern.trim();
+            if (pattern && !this.createForm.parameter_patterns.includes(pattern)) {
+                this.createForm.parameter_patterns.push(pattern);
+                this.newPattern = '';
+            }
+        },
+
+        removePattern(pattern) {
+            this.createForm.parameter_patterns = this.createForm.parameter_patterns.filter(p => p !== pattern);
+        },
+
+        get categoryTemplates() {
+            if (this.selectedCategory === 'all') return this.templates;
+            return this.templates.filter(t => t.category === this.selectedCategory);
+        }
+    }" class="space-y-6">
+        <!-- Header -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900">Configuration Templates</h3>
+                        <p class="text-sm text-gray-500 mt-1">Reusable configuration templates for deploying settings across multiple devices</p>
+                    </div>
+                    <button @click="openCreateModal('device')"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Create Template
+                    </button>
+                </div>
+            </div>
+
+            <!-- Category Filters -->
+            <div class="px-6 py-3 bg-gray-50 border-b border-gray-200">
+                <div class="flex flex-wrap gap-2">
+                    <button @click="selectedCategory = 'all'; loadTemplates()"
+                            :class="selectedCategory === 'all' ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-white text-gray-700 border-gray-300'"
+                            class="px-3 py-1.5 text-sm font-medium rounded-md border hover:bg-gray-50">
+                        All Templates
+                    </button>
+                    <button @click="selectedCategory = 'wifi'; loadTemplates()"
+                            :class="selectedCategory === 'wifi' ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-white text-gray-700 border-gray-300'"
+                            class="px-3 py-1.5 text-sm font-medium rounded-md border hover:bg-gray-50">
+                        WiFi
+                    </button>
+                    <button @click="selectedCategory = 'port_forwarding'; loadTemplates()"
+                            :class="selectedCategory === 'port_forwarding' ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-white text-gray-700 border-gray-300'"
+                            class="px-3 py-1.5 text-sm font-medium rounded-md border hover:bg-gray-50">
+                        Port Forwarding
+                    </button>
+                    <button @click="selectedCategory = 'security'; loadTemplates()"
+                            :class="selectedCategory === 'security' ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-white text-gray-700 border-gray-300'"
+                            class="px-3 py-1.5 text-sm font-medium rounded-md border hover:bg-gray-50">
+                        Security
+                    </button>
+                    <button @click="selectedCategory = 'diagnostics'; loadTemplates()"
+                            :class="selectedCategory === 'diagnostics' ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-white text-gray-700 border-gray-300'"
+                            class="px-3 py-1.5 text-sm font-medium rounded-md border hover:bg-gray-50">
+                        Diagnostics
+                    </button>
+                    <button @click="selectedCategory = 'general'; loadTemplates()"
+                            :class="selectedCategory === 'general' ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-white text-gray-700 border-gray-300'"
+                            class="px-3 py-1.5 text-sm font-medium rounded-md border hover:bg-gray-50">
+                        General
+                    </button>
+                </div>
+            </div>
+
+            <!-- Templates List -->
+            <div class="divide-y divide-gray-200">
+                <template x-if="loading">
+                    <div class="px-6 py-12 text-center">
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <p class="mt-2 text-sm text-gray-500">Loading templates...</p>
+                    </div>
+                </template>
+
+                <template x-if="!loading && categoryTemplates.length === 0">
+                    <div class="px-6 py-12 text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No templates found</h3>
+                        <p class="mt-1 text-sm text-gray-500">Create a template to reuse configurations across devices</p>
+                    </div>
+                </template>
+
+                <template x-for="template in categoryTemplates" :key="template.id">
+                    <div class="px-6 py-4 hover:bg-gray-50">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-3">
+                                    <h4 class="text-base font-semibold text-gray-900" x-text="template.name"></h4>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                          x-text="template.category.replace('_', ' ')"></span>
+                                </div>
+                                <p class="mt-1 text-sm text-gray-600" x-text="template.description"></p>
+
+                                <div class="mt-2 flex items-center gap-4 text-sm text-gray-500">
+                                    <span x-text="`${template.parameter_count} parameters`"></span>
+                                    <span x-text="template.size"></span>
+                                    <span x-show="template.source_device" x-text="`From: ${template.source_device?.serial || ''}`"></span>
+                                    <span x-text="`Created: ${new Date(template.created_at).toLocaleDateString()}`"></span>
+                                </div>
+
+                                <div x-show="template.tags && template.tags.length > 0" class="mt-2 flex flex-wrap gap-1.5">
+                                    <template x-for="tag in template.tags">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700"
+                                              x-text="tag"></span>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="ml-4 flex-shrink-0 flex items-center gap-2">
+                                <button @click="openApplyModal(template)"
+                                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    Apply to Device
+                                </button>
+                                <button @click="deleteTemplate(template.id)"
+                                        class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Create Template Modal -->
+        <div x-show="showCreateModal"
+             x-cloak
+             class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50"
+             @click.self="showCreateModal = false">
+            <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto m-4">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-medium text-gray-900">Create Configuration Template</h3>
+                        <button @click="showCreateModal = false" class="text-gray-400 hover:text-gray-500">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 space-y-4">
+                    <!-- Template Name -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Template Name *</label>
+                        <input type="text" x-model="createForm.name"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="e.g., Standard WiFi Configuration">
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea x-model="createForm.description" rows="3"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="Describe what this template configures..."></textarea>
+                    </div>
+
+                    <!-- Category -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                        <select x-model="createForm.category"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="general">General</option>
+                            <option value="wifi">WiFi</option>
+                            <option value="port_forwarding">Port Forwarding</option>
+                            <option value="security">Security</option>
+                            <option value="diagnostics">Diagnostics</option>
+                        </select>
+                    </div>
+
+                    <!-- Parameter Patterns -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Parameter Patterns (Optional)</label>
+                        <p class="text-xs text-gray-500 mb-2">Specify parameter patterns to include. Use * as wildcard. Leave empty to include all.</p>
+                        <div class="flex gap-2 mb-2">
+                            <input type="text" x-model="newPattern" @keyup.enter="addPattern()"
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="e.g., InternetGatewayDevice.LANDevice.*.WLANConfiguration.*">
+                            <button @click="addPattern()"
+                                    class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">
+                                Add
+                            </button>
+                        </div>
+                        <div x-show="createForm.parameter_patterns.length > 0" class="flex flex-wrap gap-2">
+                            <template x-for="pattern in createForm.parameter_patterns">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                                    <span x-text="pattern" class="mr-2"></span>
+                                    <button @click="removePattern(pattern)" class="hover:text-blue-900">×</button>
+                                </span>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Tags -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                        <div class="flex gap-2 mb-2">
+                            <input type="text" x-model="newTag" @keyup.enter="addTag()"
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="Add a tag...">
+                            <button @click="addTag()"
+                                    class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">
+                                Add
+                            </button>
+                        </div>
+                        <div x-show="createForm.tags.length > 0" class="flex flex-wrap gap-2">
+                            <template x-for="tag in createForm.tags">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-700">
+                                    <span x-text="tag" class="mr-2"></span>
+                                    <button @click="removeTag(tag)" class="hover:text-gray-900">×</button>
+                                </span>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Device Model Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Device Model Filter (Optional)</label>
+                        <input type="text" x-model="createForm.device_model_filter"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="Leave empty to apply to all models">
+                    </div>
+
+                    <!-- Strip Device-Specific Values -->
+                    <div class="flex items-center">
+                        <input type="checkbox" x-model="createForm.strip_device_specific"
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label class="ml-2 block text-sm text-gray-700">
+                            Strip device-specific values (MAC addresses, serial numbers, etc.)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+                    <button @click="showCreateModal = false"
+                            class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button @click="createTemplate()"
+                            :disabled="!createForm.name || !createForm.category"
+                            class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                        Create Template
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Apply Template Modal -->
+        <div x-show="showApplyModal"
+             x-cloak
+             class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50"
+             @click.self="showApplyModal = false">
+            <div class="bg-white rounded-lg shadow-xl max-w-xl w-full m-4">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-medium text-gray-900">Apply Template</h3>
+                        <button @click="showApplyModal = false" class="text-gray-400 hover:text-gray-500">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 space-y-4">
+                    <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                        <div class="flex">
+                            <svg class="h-5 w-5 text-blue-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-blue-800">Applying template: <span x-text="selectedTemplate?.name"></span></p>
+                                <p class="text-sm text-blue-700 mt-1" x-text="`This will apply ${selectedTemplate?.parameter_count || 0} parameters to this device`"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Create Backup Option -->
+                    <div class="flex items-center">
+                        <input type="checkbox" x-model="applyForm.create_backup"
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label class="ml-2 block text-sm text-gray-700">
+                            Create backup before applying template (recommended)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+                    <button @click="showApplyModal = false"
+                            class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button @click="applyTemplate()"
+                            class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                        Apply Template
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Progress Card (Outside Alpine component to avoid reactivity flashing) -->
+<div id="progressCard" style="display: none;" class="fixed top-4 right-4 z-50">
+    <div class="bg-white rounded-lg shadow-2xl p-6 max-w-sm border-2 border-blue-500">
+        <div class="flex flex-col items-center">
+            <!-- Spinner -->
+            <svg class="animate-spin h-16 w-16 text-blue-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+
+            <!-- Message -->
+            <h3 id="taskMessage" class="text-lg font-semibold text-gray-900 dark:text-{{ $colors["text"] }} mb-2" style="min-height: 1.75rem;"></h3>
+
+            <!-- Timer -->
+            <div class="flex items-center text-3xl font-mono text-blue-600 mb-4">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span id="taskTimer" style="min-width: 4rem; display: inline-block;">0:00</span>
+            </div>
+
+            <!-- Status text -->
+            <p class="text-sm text-gray-500 text-center mb-4">
+                Waiting for device to execute task...<br>
+                <span class="text-xs">The page will refresh automatically when complete.</span>
+            </p>
+
+            <!-- Cancel button (shown after 30 seconds) -->
+            <button id="cancelButton" style="display: none;" class="mt-4 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md text-sm">
+                Close (Task continues in background)
+            </button>
+        </div>
+    </div>
+</div>
+
 @endsection

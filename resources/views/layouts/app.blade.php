@@ -107,12 +107,23 @@
                 window.dispatchEvent(new CustomEvent('stop-loading'));
             };
 
-            // Auto-attach to all fetch requests
+            // Auto-attach to all fetch requests (except background polling)
             const originalFetch = window.fetch;
             window.fetch = function(...args) {
-                startLoading();
+                // Check if this is a background poll (second argument contains headers)
+                const options = args[1] || {};
+                const skipLoading = options.headers && options.headers['X-Background-Poll'];
+
+                if (!skipLoading) {
+                    startLoading();
+                }
+
                 return originalFetch.apply(this, args)
-                    .finally(() => stopLoading());
+                    .finally(() => {
+                        if (!skipLoading) {
+                            stopLoading();
+                        }
+                    });
             };
         </script>
     </body>
