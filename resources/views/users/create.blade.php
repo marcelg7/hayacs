@@ -21,6 +21,24 @@
         </div>
     </div>
 
+    <!-- Info Box -->
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">Secure Password Setup</h3>
+                <p class="mt-1 text-sm text-blue-700 dark:text-blue-300">
+                    The new user will receive an email with a secure link to set their own password.
+                    Passwords must be at least 12 characters with mixed case, numbers, symbols, and cannot be previously compromised.
+                </p>
+            </div>
+        </div>
+    </div>
+
     <!-- Create User Form -->
     <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
         <form action="{{ route('users.store') }}" method="POST" class="space-y-6 p-6">
@@ -41,6 +59,7 @@
                 <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
                 <input type="email" name="email" id="email" value="{{ old('email') }}" required
                     class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">A welcome email with password setup instructions will be sent to this address.</p>
                 @error('email')
                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror
@@ -66,39 +85,13 @@
                 </p>
             </div>
 
-            <!-- Password -->
-            <div>
-                <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-                <input type="password" name="password" id="password" required
-                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                @error('password')
-                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Password Confirmation -->
-            <div>
-                <label for="password_confirmation" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm Password</label>
-                <input type="password" name="password_confirmation" id="password_confirmation" required
-                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-            </div>
-
-            <!-- Must Change Password -->
-            <div class="flex items-center">
-                <input type="checkbox" name="must_change_password" id="must_change_password" value="1" {{ old('must_change_password') ? 'checked' : '' }}
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded">
-                <label for="must_change_password" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                    Force user to change password on first login
-                </label>
-            </div>
-
             <!-- Submit Button -->
             <div class="flex justify-end space-x-3">
                 <a href="{{ route('users.index') }}" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
                     Cancel
                 </a>
                 <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    Create User
+                    Create User & Send Invitation
                 </button>
             </div>
         </form>

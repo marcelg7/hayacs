@@ -186,6 +186,33 @@ function taskManager(deviceId) {
                 });
                 const data = await response.json();
 
+                // Detect newly completed tasks and dispatch events for auto-refresh
+                // Check if a previously active task completed
+                if (this.tasks.active && (!data.active || data.active.id !== this.tasks.active.id)) {
+                    // Previous active task completed - dispatch relevant events
+                    const prevTask = this.tasks.active;
+                    this.checkAndDispatchTaskEvents(prevTask);
+                }
+
+                // Also check recent_completed for new tasks we haven't seen
+                if (data.recent_completed && data.recent_completed.length > 0) {
+                    for (const task of data.recent_completed) {
+                        // Only process if we haven't already dispatched for this task
+                        if (!this.dispatchedTasks) {
+                            this.dispatchedTasks = new Set();
+                        }
+                        if (!this.dispatchedTasks.has(task.id)) {
+                            // Check if it's a recently completed task (within last 10 seconds)
+                            const isRecent = task.elapsed <= 10 ||
+                                (task.completed_at && (Date.now() - new Date(task.completed_at).getTime()) < 10000);
+                            if (isRecent && task.status === 'completed') {
+                                this.checkAndDispatchTaskEvents(task);
+                                this.dispatchedTasks.add(task.id);
+                            }
+                        }
+                    }
+                }
+
                 // Auto-dismiss newly completed tasks after 10 seconds
                 if (data.active && this.tasks.active && this.tasks.active.id !== data.active.id) {
                     // Previous active task completed
@@ -232,9 +259,75 @@ function taskManager(deviceId) {
             return this.tasks.active || (this.tasks.queued && this.tasks.queued.length > 0);
         },
 
+        checkAndDispatchTaskEvents(task) {
+            if (!task || !task.description) return;
+
+            // Check for port mapping task completion
+            const isPortMappingTask =
+                task.description.includes('port mapping') ||
+                task.description.includes('port forward') ||
+                task.description.includes('Port Mapping') ||
+                task.description.includes('Port Forward') ||
+                task.description.includes('Configure port') ||
+                task.description.includes('Create port') ||
+                task.description.includes('Delete port');
+
+            if (isPortMappingTask) {
+                console.log('Dispatching port-mappings-changed event for task:', task.id, task.description);
+                window.dispatchEvent(new CustomEvent('port-mappings-changed', {
+                    detail: { taskId: task.id, description: task.description }
+                }));
+            }
+
+            // Check for speed test completion
+            const isSpeedTestTask =
+                task.description.includes('Speed test') ||
+                task.description.includes('speed test');
+
+            if (isSpeedTestTask) {
+                console.log('Dispatching speedtest-completed event for task:', task.id, task.description);
+                window.dispatchEvent(new CustomEvent('speedtest-completed', {
+                    detail: { taskId: task.id, description: task.description }
+                }));
+            }
+
+            // Check for ping/traceroute completion - switch to Tasks tab to show results
+            const isDiagnosticsTask =
+                task.description.includes('Ping test') ||
+                task.description.includes('ping test') ||
+                task.description.includes('Traceroute') ||
+                task.description.includes('traceroute');
+
+            if (isDiagnosticsTask) {
+                console.log('Dispatching diagnostics-completed event for task:', task.id, task.description);
+                window.dispatchEvent(new CustomEvent('diagnostics-completed', {
+                    detail: { taskId: task.id, description: task.description }
+                }));
+            }
+
+            // Check for query/get params completion - refresh page to show updated data
+            const isQueryTask =
+                task.description.includes('Get Parameters') ||
+                task.description.includes('get parameters') ||
+                task.description.includes('Querying');
+
+            if (isQueryTask) {
+                console.log('Dispatching query-completed event for task:', task.id, task.description);
+                window.dispatchEvent(new CustomEvent('query-completed', {
+                    detail: { taskId: task.id, description: task.description }
+                }));
+            }
+        },
+
         getTaskSummary() {
             const total = (this.tasks.active ? 1 : 0) + this.tasks.queued_total;
-            const elapsed = this.tasks.active ? this.tasks.active.elapsed : 0;
+            // Show elapsed time from active task, or from first queued task if no active task
+            let elapsed = 0;
+            if (this.tasks.active) {
+                elapsed = this.tasks.active.elapsed;
+            } else if (this.tasks.queued && this.tasks.queued.length > 0) {
+                elapsed = this.tasks.queued[0].elapsed;
+            }
             return `${total} ${total === 1 ? 'task' : 'tasks'}  •  ${this.formatTime(elapsed)}`;
         },
 

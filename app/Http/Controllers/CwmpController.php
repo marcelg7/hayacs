@@ -6,6 +6,7 @@ use App\Models\Device;
 use App\Models\DeviceType;
 use App\Models\CwmpSession;
 use App\Models\Task;
+use App\Services\ConnectionRequestService;
 use App\Services\CwmpService;
 use App\Services\ProvisioningService;
 use Illuminate\Http\Request;
@@ -16,7 +17,8 @@ class CwmpController extends Controller
 {
     public function __construct(
         private CwmpService $cwmpService,
-        private ProvisioningService $provisioningService
+        private ProvisioningService $provisioningService,
+        private ConnectionRequestService $connectionRequestService
     ) {}
 
     /**
@@ -330,7 +332,10 @@ class CwmpController extends Controller
 
         // Check for tasks that were sent but never responded to
         // This can happen when a device starts a new session without sending responses
-        $abandonedTasksQuery = $device->tasks()->where('status', 'sent');
+        // Only check tasks that were sent more than 10 seconds ago - give recent tasks time to complete
+        $abandonedTasksQuery = $device->tasks()
+            ->where('status', 'sent')
+            ->where('sent_at', '<', now()->subSeconds(10));
 
         // If DIAGNOSTICS COMPLETE event is present, exclude diagnostic tasks
         // (they will be processed by queueDiagnosticResultRetrieval instead)
@@ -739,7 +744,8 @@ class CwmpController extends Controller
                     $task->markAsCompleted(['status' => $parsed['status']]);
                     Log::info('SetParameterValues completed', ['device_id' => $task->device_id]);
 
-                    // If this was a port mapping configuration, automatically fetch updated port mappings
+                    // If this was a port mapping configuration, save the parameters to database
+                    // The UI will reload from database - no need to fetch from device again
                     if ($task->description === 'Configure port mapping' ||
                         (is_array($task->parameters) &&
                          collect($task->parameters)->keys()->first() &&
@@ -747,29 +753,24 @@ class CwmpController extends Controller
 
                         $device = $task->device;
 
-                        // Determine the correct PortMapping path for this device
-                        $portMappingPath = $this->findPortMappingPath($device);
+                        // Store the port mapping parameters that were just set
+                        foreach ($task->parameters as $name => $paramData) {
+                            $value = is_array($paramData) ? ($paramData['value'] ?? '') : $paramData;
+                            $type = is_array($paramData) ? ($paramData['type'] ?? 'xsd:string') : 'xsd:string';
 
-                        if ($portMappingPath) {
-                            // Create task to fetch ALL port mappings (trailing dot = get tree)
-                            $refreshTask = Task::create([
-                                'device_id' => $device->id,
-                                'task_type' => 'get_parameter_values',
-                                'description' => 'Fetch updated port mappings',
-                                'status' => 'pending',
-                                'parameters' => [$portMappingPath . '.'],
-                                'progress_info' => [
-                                    'wait_for_next_session' => true,
-                                    'auto_refresh_after_port_forward' => true,
-                                ],
-                            ]);
-
-                            Log::info('Auto-queued port mapping refresh after configuration', [
-                                'device_id' => $device->id,
-                                'task_id' => $refreshTask->id,
-                                'path' => $portMappingPath,
-                            ]);
+                            $device->parameters()->updateOrCreate(
+                                ['name' => $name],
+                                [
+                                    'value' => is_bool($value) ? ($value ? '1' : '0') : (string) $value,
+                                    'type' => $type,
+                                ]
+                            );
                         }
+
+                        Log::info('Port mapping parameters saved to database', [
+                            'device_id' => $device->id,
+                            'parameter_count' => count($task->parameters),
+                        ]);
                     }
                 }
             } else {
@@ -953,8 +954,12 @@ class CwmpController extends Controller
                         'instance_number' => $instanceNumber,
                     ]);
 
-                    // Follow-up task will be picked up on device's next connection
-                    // The wait_for_next_session flag ensures it's not sent immediately
+                    // Send connection request to wake up device for the follow-up task
+                    // Delay slightly so the task ages past the wait_for_next_session window (3 seconds)
+                    // This ensures the device connects AFTER the task is old enough to be sent
+                    // Using sleep(4) to give a 1-second buffer beyond the 3-second window
+                    sleep(4);
+                    $this->connectionRequestService->sendConnectionRequest($device);
                 }
             } else {
                 // Failed
@@ -998,10 +1003,30 @@ class CwmpController extends Controller
             if ($status === 0) {
                 $task->markAsCompleted(['status' => $status]);
 
+                $objectName = $task->parameters['object_name'] ?? '';
+
                 Log::info('DeleteObject succeeded', [
                     'device_id' => $task->device_id,
-                    'object_name' => $task->parameters['object_name'] ?? '',
+                    'object_name' => $objectName,
                 ]);
+
+                // Clean up parameters from database for the deleted object
+                // The object_name should end with a trailing dot (e.g., "...PortMapping.1.")
+                // We delete all parameters that start with this path
+                if (!empty($objectName) && $task->device) {
+                    // Remove trailing dot if present for the LIKE query
+                    $basePath = rtrim($objectName, '.');
+
+                    $deletedCount = $task->device->parameters()
+                        ->where('name', 'LIKE', $basePath . '.%')
+                        ->delete();
+
+                    Log::info('Cleaned up parameters for deleted object', [
+                        'device_id' => $task->device_id,
+                        'object_path' => $basePath,
+                        'parameters_deleted' => $deletedCount,
+                    ]);
+                }
             } else {
                 $task->markAsFailed(
                     'DeleteObject failed with status: ' . $status
@@ -1490,11 +1515,11 @@ class CwmpController extends Controller
             if (is_array($task->progress_info) &&
                 ($task->progress_info['wait_for_next_session'] ?? false)) {
 
-                // Only skip if task was created very recently (within 90 seconds)
-                // This ensures sufficient time has passed for a true "next session"
-                // SmartRG devices can reconnect quickly (30-60s), so we need a longer window
+                // Only skip if task was created within the last 3 seconds
+                // This prevents sending the task in the same CWMP session that created it
+                // A typical CWMP session (Inform -> InformResponse -> EmptyPost -> RPC) takes 1-2 seconds
                 $createdSeconds = $task->created_at->diffInSeconds(now());
-                if ($createdSeconds < 90) {
+                if ($createdSeconds < 3) {
                     Log::info('Skipping task marked to wait for next session', [
                         'task_id' => $task->id,
                         'task_type' => $task->task_type,

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Notifications\WelcomeNewUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
@@ -36,23 +38,24 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Password::defaults()],
             'role' => ['required', Rule::in(['admin', 'user', 'support'])],
-            'must_change_password' => ['sometimes', 'boolean'],
         ]);
 
+        // Create user with a random temporary password (they'll set their own via email)
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
+            'password' => Hash::make(Str::random(32)), // Random placeholder password
             'role' => $validated['role'],
-            'must_change_password' => $validated['must_change_password'] ?? false,
-            'email_verified_at' => now(),
+            'must_change_password' => true, // Ensures they can't log in until password is set
         ]);
+
+        // Send welcome email with password setup link
+        $user->notify(new WelcomeNewUser());
 
         return redirect()
             ->route('users.index')
-            ->with('success', "User {$user->name} created successfully.");
+            ->with('success', "User {$user->name} created successfully. A welcome email has been sent to {$user->email} with instructions to set their password.");
     }
 
     /**
@@ -73,17 +76,16 @@ class UserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'role' => ['required', Rule::in(['admin', 'user', 'support'])],
             'password' => ['nullable', 'confirmed', Password::defaults()],
-            'must_change_password' => ['sometimes', 'boolean'],
         ]);
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
         $user->role = $validated['role'];
-        $user->must_change_password = $validated['must_change_password'] ?? $user->must_change_password;
 
         // Only update password if provided
         if (!empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
+            $user->must_change_password = false;
         }
 
         $user->save();
@@ -111,5 +113,24 @@ class UserController extends Controller
         return redirect()
             ->route('users.index')
             ->with('success', "User {$name} deleted successfully.");
+    }
+
+    /**
+     * Resend the welcome email to a user
+     */
+    public function resendWelcome(User $user)
+    {
+        // Only resend if user hasn't set their password yet
+        if (!$user->must_change_password) {
+            return redirect()
+                ->route('users.index')
+                ->with('error', "User {$user->name} has already set their password.");
+        }
+
+        $user->notify(new WelcomeNewUser());
+
+        return redirect()
+            ->route('users.index')
+            ->with('success', "Welcome email resent to {$user->email}.");
     }
 }

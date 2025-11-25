@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BackupTemplate;
 use App\Models\ConfigBackup;
 use App\Models\Device;
+use App\Models\SpeedTestResult;
 use App\Models\Task;
 use App\Services\ConnectionRequestService;
 use Illuminate\Http\Request;
@@ -1906,6 +1907,131 @@ class DeviceController extends Controller
     }
 
     /**
+     * Refresh port mappings from device
+     * Creates tasks to:
+     * 1. First get PortMappingNumberOfEntries to know how many exist
+     * 2. Then use GetParameterNames to discover all PortMapping entries
+     * 3. Finally retrieve their values
+     */
+    public function refreshPortMappings(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        // Detect manufacturer for device-specific handling
+        $isSmartRG = strtolower($device->manufacturer) === 'smartrg' ||
+            strtoupper(substr($device->oui ?? '', 0, 6)) === '3C9066' ||
+            strtoupper($device->oui) === 'E82C6D';
+
+        $isCalix = strtolower($device->manufacturer) === 'calix' ||
+            strtoupper($device->oui) === 'D0768F';
+
+        // Build list of WAN paths to check for SmartRG (they can have multiple WAN interfaces)
+        $wanPaths = [];
+
+        if ($isSmartRG) {
+            // SmartRG: Check ALL WAN interfaces that have NAT enabled
+            // Port forwards could be on any of them
+            $natParams = $device->parameters()
+                ->where('name', 'LIKE', '%WANIPConnection%.NATEnabled')
+                ->where('value', '1')
+                ->get();
+
+            foreach ($natParams as $natParam) {
+                if (preg_match('/(InternetGatewayDevice\.WANDevice\.\d+\.WANConnectionDevice\.\d+\.WANIPConnection\.\d+)\.NATEnabled/', $natParam->name, $matches)) {
+                    $wanPaths[] = $matches[1];
+                }
+            }
+
+            // If no NAT-enabled interfaces found, check connected ones
+            if (empty($wanPaths)) {
+                $activeWan = $this->findActiveWanConnection($device);
+                if ($activeWan) {
+                    $wanPaths[] = "InternetGatewayDevice.WANDevice.{$activeWan['wanDevice']}.WANConnectionDevice.{$activeWan['wanConnDevice']}.WANIPConnection.{$activeWan['wanConn']}";
+                }
+            }
+
+            // Fallback to common SmartRG paths
+            if (empty($wanPaths)) {
+                $wanPaths = [
+                    'InternetGatewayDevice.WANDevice.2.WANConnectionDevice.2.WANIPConnection.1',
+                ];
+            }
+        } elseif ($isCalix) {
+            $wanPaths = ['InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2'];
+        } else {
+            $wanPaths = ['InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1'];
+        }
+
+        // Clear existing port mapping parameters from database before refreshing
+        // This ensures we get a clean slate and don't show stale data from deleted mappings
+        if ($isSmartRG) {
+            // For SmartRG, delete ALL port mapping parameters across all WAN interfaces
+            $deletedCount = $device->parameters()
+                ->where('name', 'LIKE', '%WANIPConnection%.PortMapping.%')
+                ->where('name', 'NOT LIKE', '%NumberOfEntries')
+                ->delete();
+        } else {
+            // For other devices, delete port mapping parameters for the specific WAN paths
+            $deletedCount = 0;
+            foreach ($wanPaths as $wanPath) {
+                $deletedCount += $device->parameters()
+                    ->where('name', 'LIKE', $wanPath . '.PortMapping.%')
+                    ->where('name', 'NOT LIKE', '%NumberOfEntries')
+                    ->delete();
+            }
+        }
+
+        Log::info('Cleared existing port mapping parameters before refresh', [
+            'device_id' => $device->id,
+            'parameters_deleted' => $deletedCount,
+        ]);
+
+        // Build parameter names to query
+        $paramsToGet = [];
+        foreach ($wanPaths as $wanPath) {
+            $paramsToGet[] = $wanPath . '.PortMappingNumberOfEntries';
+        }
+
+        // Task 1: Get the current PortMappingNumberOfEntries from all WAN interfaces
+        $countTask = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'get_params',
+            'status' => 'pending',
+            'parameters' => [
+                'names' => $paramsToGet,
+            ],
+        ]);
+
+        // Task 2: Use GetParameterNames to discover all port mapping entries
+        // We'll query each WAN path's PortMapping subtree
+        foreach ($wanPaths as $index => $wanPath) {
+            Task::create([
+                'device_id' => $device->id,
+                'task_type' => 'get_parameter_names',
+                'status' => 'pending',
+                'parameters' => [
+                    'path' => $wanPath . '.PortMapping.',
+                    'next_level' => false, // Get all sub-parameters recursively
+                ],
+            ]);
+        }
+
+        // Send connection request to trigger immediate processing
+        $this->connectionRequestService->sendConnectionRequest($device);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Port mapping refresh tasks created - checking ' . count($wanPaths) . ' WAN interface(s)',
+            'task' => [
+                'id' => $countTask->id,
+                'status' => $countTask->status,
+            ],
+            'wan_paths' => $wanPaths,
+            'cleared_parameters' => $deletedCount,
+        ]);
+    }
+
+    /**
      * Add a new port mapping
      */
     public function addPortMapping(Request $request, string $id): JsonResponse
@@ -1983,75 +2109,89 @@ class DeviceController extends Controller
             $instance++;
         }
 
-        // Build parameters for the new port mapping
-        // Use {instance} placeholder for SmartRG (will be replaced after AddObject returns the instance number)
-        $instancePlaceholder = $isSmartRG ? '{instance}' : $instance;
+        // Handle "Both" protocol by creating two separate port mappings (TCP and UDP)
+        $protocols = $validated['protocol'] === 'Both' ? ['TCP', 'UDP'] : [$validated['protocol']];
+        $tasks = [];
 
-        $parameters = [
-            "{$portMappingPrefix}.{$instancePlaceholder}.PortMappingEnabled" => [
-                'value' => true,
-                'type' => 'xsd:boolean',
-            ],
-            "{$portMappingPrefix}.{$instancePlaceholder}.PortMappingDescription" => [
-                'value' => $validated['description'],
-                'type' => 'xsd:string',
-            ],
-            "{$portMappingPrefix}.{$instancePlaceholder}.PortMappingProtocol" => [
-                'value' => $validated['protocol'],
-                'type' => 'xsd:string',
-            ],
-            "{$portMappingPrefix}.{$instancePlaceholder}.ExternalPort" => [
-                'value' => $validated['external_port'],
-                'type' => 'xsd:unsignedInt',
-            ],
-            "{$portMappingPrefix}.{$instancePlaceholder}.InternalPort" => [
-                'value' => $validated['internal_port'],
-                'type' => 'xsd:unsignedInt',
-            ],
-            "{$portMappingPrefix}.{$instancePlaceholder}.InternalClient" => [
-                'value' => $validated['internal_client'],
-                'type' => 'xsd:string',
-            ],
-        ];
+        foreach ($protocols as $protocol) {
+            // Build parameters for the new port mapping
+            // Use {instance} placeholder for SmartRG (will be replaced after AddObject returns the instance number)
+            $instancePlaceholder = $isSmartRG ? '{instance}' : $instance;
 
-        // Add ExternalPortEndRange only for non-SmartRG devices (SmartRG doesn't support it)
-        if (!$isSmartRG) {
-            $parameters["{$portMappingPrefix}.{$instancePlaceholder}.ExternalPortEndRange"] = [
-                'value' => $validated['external_port'],
-                'type' => 'xsd:unsignedInt',
-            ];
-        }
-
-        // SmartRG requires AddObject first to create the instance, then SetParameterValues
-        if ($isSmartRG) {
-            $task = Task::create([
-                'device_id' => $device->id,
-                'task_type' => 'add_object',
-                'description' => 'Create port mapping instance',
-                'status' => 'pending',
-                'parameters' => [
-                    'object_name' => "{$portMappingPrefix}.",
-                    'follow_up_parameters' => $parameters,
+            $parameters = [
+                "{$portMappingPrefix}.{$instancePlaceholder}.PortMappingEnabled" => [
+                    'value' => true,
+                    'type' => 'xsd:boolean',
                 ],
-            ]);
-        } else {
-            // Other devices - directly set parameters
-            $task = Task::create([
-                'device_id' => $device->id,
-                'task_type' => 'set_parameter_values',
-                'description' => 'Add port mapping',
-                'status' => 'pending',
-                'parameters' => $parameters,
-            ]);
+                "{$portMappingPrefix}.{$instancePlaceholder}.PortMappingDescription" => [
+                    'value' => $validated['description'] . ($validated['protocol'] === 'Both' ? " ({$protocol})" : ''),
+                    'type' => 'xsd:string',
+                ],
+                "{$portMappingPrefix}.{$instancePlaceholder}.PortMappingProtocol" => [
+                    'value' => $protocol,
+                    'type' => 'xsd:string',
+                ],
+                "{$portMappingPrefix}.{$instancePlaceholder}.ExternalPort" => [
+                    'value' => $validated['external_port'],
+                    'type' => 'xsd:unsignedInt',
+                ],
+                "{$portMappingPrefix}.{$instancePlaceholder}.InternalPort" => [
+                    'value' => $validated['internal_port'],
+                    'type' => 'xsd:unsignedInt',
+                ],
+                "{$portMappingPrefix}.{$instancePlaceholder}.InternalClient" => [
+                    'value' => $validated['internal_client'],
+                    'type' => 'xsd:string',
+                ],
+            ];
+
+            // Add ExternalPortEndRange only for non-SmartRG devices (SmartRG doesn't support it)
+            if (!$isSmartRG) {
+                $parameters["{$portMappingPrefix}.{$instancePlaceholder}.ExternalPortEndRange"] = [
+                    'value' => $validated['external_port'],
+                    'type' => 'xsd:unsignedInt',
+                ];
+            }
+
+            // SmartRG requires AddObject first to create the instance, then SetParameterValues
+            if ($isSmartRG) {
+                $task = Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'add_object',
+                    'description' => "Create port mapping instance ({$protocol})",
+                    'status' => 'pending',
+                    'parameters' => [
+                        'object_name' => "{$portMappingPrefix}.",
+                        'follow_up_parameters' => $parameters,
+                    ],
+                ]);
+            } else {
+                // Other devices - directly set parameters
+                $task = Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'set_parameter_values',
+                    'description' => "Add port mapping ({$protocol})",
+                    'status' => 'pending',
+                    'parameters' => $parameters,
+                ]);
+            }
+
+            $tasks[] = $task;
+
+            // Increment instance for non-SmartRG devices when creating both TCP and UDP
+            if (!$isSmartRG) {
+                $instance++;
+            }
         }
 
         // Trigger connection request
         $this->connectionRequestService->sendConnectionRequest($device);
 
         return response()->json([
-            'task' => $task,
-            'message' => 'Port mapping creation initiated',
-            'instance' => $isSmartRG ? 'pending' : $instance,
+            'task' => $tasks[0], // Return first task for backwards compatibility
+            'tasks' => $tasks,
+            'message' => count($tasks) > 1 ? 'Port mapping creation initiated (TCP and UDP)' : 'Port mapping creation initiated',
+            'instance' => $isSmartRG ? 'pending' : ($instance - count($tasks) + 1),
         ]);
     }
 
@@ -2114,6 +2254,7 @@ class DeviceController extends Controller
         $task = Task::create([
             'device_id' => $device->id,
             'task_type' => 'delete_object',
+            'description' => 'Delete port mapping',
             'status' => 'pending',
             'parameters' => [
                 'object_name' => $objectName,
@@ -2391,6 +2532,7 @@ class DeviceController extends Controller
                 $downloadTask = Task::create([
                     'device_id' => $device->id,
                     'task_type' => 'download_diagnostics',
+                    'description' => 'Speed test (download)',
                     'status' => 'pending',
                     'parameters' => [
                         "{$downloadPrefix}.DiagnosticsState" => [
@@ -2435,6 +2577,7 @@ class DeviceController extends Controller
                 $downloadTask = Task::create([
                     'device_id' => $device->id,
                     'task_type' => 'download_diagnostics',
+                    'description' => 'Speed test (download)',
                     'status' => 'pending',
                     'parameters' => $downloadParams,
                 ]);
@@ -2495,6 +2638,7 @@ class DeviceController extends Controller
                 $uploadTask = Task::create([
                     'device_id' => $device->id,
                     'task_type' => 'upload_diagnostics',
+                    'description' => 'Speed test (upload)',
                     'status' => 'pending',
                     'parameters' => [
                         "{$uploadPrefix}.DiagnosticsState" => [
@@ -2563,6 +2707,7 @@ class DeviceController extends Controller
                 $uploadTask = Task::create([
                     'device_id' => $device->id,
                     'task_type' => 'upload_diagnostics',
+                    'description' => 'Speed test (upload)',
                     'status' => 'pending',
                     'parameters' => $uploadParams,
                 ]);
@@ -2617,28 +2762,133 @@ class DeviceController extends Controller
                 return [$field => $param->value];
             });
 
+        // Calculate speeds in bps for UI display
+        $downloadSpeedBps = null;
+        if (isset($downloadParams['TestBytesReceived'], $downloadParams['BOMTime'], $downloadParams['EOMTime'])) {
+            $kbps = $this->calculateSpeed($downloadParams['TestBytesReceived'], $downloadParams['BOMTime'], $downloadParams['EOMTime']);
+            $downloadSpeedBps = $kbps ? $kbps * 1000 : null; // Convert kbps to bps
+        }
+
+        $uploadSpeedBps = null;
+        if (isset($uploadParams['TotalBytesSent'], $uploadParams['BOMTime'], $uploadParams['EOMTime'])) {
+            $kbps = $this->calculateSpeed($uploadParams['TotalBytesSent'], $uploadParams['BOMTime'], $uploadParams['EOMTime']);
+            $uploadSpeedBps = $kbps ? $kbps * 1000 : null; // Convert kbps to bps
+        }
+
+        // Determine overall state for UI
+        $downloadState = $downloadParams['DiagnosticsState'] ?? null;
+        $uploadState = $uploadParams['DiagnosticsState'] ?? null;
+
+        // Check for pending tasks to determine if test is in progress
+        $pendingTasks = $device->tasks()
+            ->whereIn('task_type', ['download_diagnostics', 'upload_diagnostics'])
+            ->whereIn('status', ['pending', 'sent'])
+            ->exists();
+
+        $state = null;
+        if ($pendingTasks) {
+            $state = 'InProgress';
+        } elseif ($downloadState === 'Completed' && $uploadState === 'Completed') {
+            $state = 'Complete';
+        } elseif ($downloadState === 'Completed' && $uploadState !== 'Completed') {
+            $state = 'InProgress'; // Download done, upload in progress
+        } elseif ($downloadState === 'Error' || $uploadState === 'Error') {
+            $state = 'Error';
+        } elseif ($downloadState === 'Requested' || $uploadState === 'Requested') {
+            $state = 'Requested';
+        } elseif ($downloadState === 'Completed' || $uploadState === 'Completed') {
+            $state = 'Complete'; // At least one test completed
+        }
+
+        // Save results to history when test completes (both download and upload done)
+        $testCompletedAt = null;
+        if ($state === 'Complete' && ($downloadSpeedBps || $uploadSpeedBps)) {
+            // Check if we already saved this result by looking at the EOM time
+            $downloadEndTime = isset($downloadParams['EOMTime']) ? \Carbon\Carbon::parse($downloadParams['EOMTime']) : null;
+            $uploadEndTime = isset($uploadParams['EOMTime']) ? \Carbon\Carbon::parse($uploadParams['EOMTime']) : null;
+            $testCompletedAt = $uploadEndTime ?? $downloadEndTime;
+
+            if ($testCompletedAt) {
+                // Only save if we don't already have a result with this exact timestamp
+                $existingResult = SpeedTestResult::where('device_id', $device->id)
+                    ->where(function ($q) use ($downloadEndTime, $uploadEndTime) {
+                        if ($downloadEndTime) {
+                            $q->where('download_end_time', $downloadEndTime);
+                        }
+                        if ($uploadEndTime) {
+                            $q->orWhere('upload_end_time', $uploadEndTime);
+                        }
+                    })
+                    ->first();
+
+                if (!$existingResult) {
+                    $downloadStartTime = isset($downloadParams['BOMTime']) ? \Carbon\Carbon::parse($downloadParams['BOMTime']) : null;
+                    $uploadStartTime = isset($uploadParams['BOMTime']) ? \Carbon\Carbon::parse($uploadParams['BOMTime']) : null;
+
+                    SpeedTestResult::create([
+                        'device_id' => $device->id,
+                        'download_speed_mbps' => $downloadSpeedBps ? round($downloadSpeedBps / 1000000, 2) : null,
+                        'upload_speed_mbps' => $uploadSpeedBps ? round($uploadSpeedBps / 1000000, 2) : null,
+                        'download_bytes' => $downloadParams['TestBytesReceived'] ?? null,
+                        'upload_bytes' => $uploadParams['TotalBytesSent'] ?? null,
+                        'download_duration_ms' => ($downloadStartTime && $downloadEndTime)
+                            ? $downloadEndTime->diffInMilliseconds($downloadStartTime) : null,
+                        'upload_duration_ms' => ($uploadStartTime && $uploadEndTime)
+                            ? $uploadEndTime->diffInMilliseconds($uploadStartTime) : null,
+                        'download_state' => $downloadState,
+                        'upload_state' => $uploadState,
+                        'download_start_time' => $downloadStartTime,
+                        'download_end_time' => $downloadEndTime,
+                        'upload_start_time' => $uploadStartTime,
+                        'upload_end_time' => $uploadEndTime,
+                        'test_type' => 'both',
+                    ]);
+                }
+            }
+        }
+
+        // Get the completion time for display
+        // Note: SmartRG devices report EOMTime with 'Z' suffix but the time is actually local time, not UTC
+        // We treat it as local time by stripping the timezone and using app timezone
+        $completedAt = null;
+        if ($state === 'Complete') {
+            $downloadEndTime = isset($downloadParams['EOMTime']) ? $downloadParams['EOMTime'] : null;
+            $uploadEndTime = isset($uploadParams['EOMTime']) ? $uploadParams['EOMTime'] : null;
+            $endTimeStr = $uploadEndTime ?? $downloadEndTime;
+            if ($endTimeStr) {
+                // Strip timezone indicator and parse as local time
+                $timeWithoutTz = preg_replace('/[Z+-]\d{2}:\d{2}$/', '', $endTimeStr);
+                $timeWithoutTz = rtrim($timeWithoutTz, 'Z');
+                $endTime = \Carbon\Carbon::parse($timeWithoutTz, config('app.timezone'));
+                $completedAt = $endTime->toIso8601String();
+            }
+        }
+
         return response()->json([
+            'state' => $state,
+            'completed_at' => $completedAt,
+            'results' => [
+                'download' => $downloadSpeedBps,
+                'upload' => $uploadSpeedBps,
+            ],
+            // Also include detailed info for debugging/display
             'download' => [
-                'state' => $downloadParams['DiagnosticsState'] ?? null,
+                'state' => $downloadState,
                 'rom_time' => $downloadParams['ROMTime'] ?? null,
                 'bom_time' => $downloadParams['BOMTime'] ?? null,
                 'eom_time' => $downloadParams['EOMTime'] ?? null,
                 'test_bytes_received' => $downloadParams['TestBytesReceived'] ?? null,
                 'total_bytes_received' => $downloadParams['TotalBytesReceived'] ?? null,
-                'download_speed_kbps' => isset($downloadParams['TestBytesReceived'], $downloadParams['BOMTime'], $downloadParams['EOMTime'])
-                    ? $this->calculateSpeed($downloadParams['TestBytesReceived'], $downloadParams['BOMTime'], $downloadParams['EOMTime'])
-                    : null,
+                'speed_bps' => $downloadSpeedBps,
             ],
             'upload' => [
-                'state' => $uploadParams['DiagnosticsState'] ?? null,
+                'state' => $uploadState,
                 'rom_time' => $uploadParams['ROMTime'] ?? null,
                 'bom_time' => $uploadParams['BOMTime'] ?? null,
                 'eom_time' => $uploadParams['EOMTime'] ?? null,
                 'test_bytes_sent' => $uploadParams['TestBytesSent'] ?? null,
                 'total_bytes_sent' => $uploadParams['TotalBytesSent'] ?? null,
-                'upload_speed_kbps' => isset($uploadParams['TotalBytesSent'], $uploadParams['BOMTime'], $uploadParams['EOMTime'])
-                    ? $this->calculateSpeed($uploadParams['TotalBytesSent'], $uploadParams['BOMTime'], $uploadParams['EOMTime'])
-                    : null,
+                'speed_bps' => $uploadSpeedBps,
             ],
         ]);
     }
@@ -2657,14 +2907,16 @@ class DeviceController extends Controller
             ->map(function ($result) {
                 return [
                     'id' => $result->id,
-                    'download_mbps' => $result->download_speed_mbps,
-                    'upload_mbps' => $result->upload_speed_mbps,
-                    'latency_ms' => $result->latency_ms,
-                    'jitter_ms' => $result->jitter_ms,
-                    'packet_loss_percent' => $result->packet_loss_percent,
-                    'test_duration_seconds' => $result->test_duration_seconds,
-                    'diagnostics_state' => $result->diagnostics_state,
-                    'rom_time' => $result->rom_time ? $result->rom_time->toIso8601String() : null,
+                    'download_mbps' => (float) $result->download_speed_mbps,
+                    'upload_mbps' => (float) $result->upload_speed_mbps,
+                    'download_bytes' => $result->download_bytes,
+                    'upload_bytes' => $result->upload_bytes,
+                    'download_duration_ms' => $result->download_duration_ms,
+                    'upload_duration_ms' => $result->upload_duration_ms,
+                    'test_type' => $result->test_type,
+                    'completed_at' => $result->upload_end_time
+                        ? $result->upload_end_time->toIso8601String()
+                        : ($result->download_end_time ? $result->download_end_time->toIso8601String() : null),
                     'created_at' => $result->created_at->toIso8601String(),
                 ];
             });

@@ -1,13 +1,18 @@
 # CLAUDE.md - Project Context & Current State
 
-**Last Updated**: November 18, 2025
-**Current Focus**: Production deployment preparation - 12,798 devices planned
+**Last Updated**: November 25, 2025
+**Current Focus**: Port forwarding testing across device models, preparing for production go-live
 
 ## Current Status
 
 ### What's Working ✅
 - **Core TR-069 CWMP**: Full implementation with TR-098 and TR-181 support
 - **Device Management**: 9 devices currently connected (12,798 planned)
+- **User Authentication**: Laravel Breeze with Blade templates and dark mode
+- **Role-Based Access Control**: Admin, User, and Support roles with middleware protection
+- **User Management**: Full CRUD interface for admins to manage users
+- **Password Enforcement**: Mandatory password change on first login
+- **API Authentication**: Laravel Sanctum for SPA-style API authentication
 - **Smart Parameter Discovery**: "Get Everything" feature with automatic chunking
 - **Parameter Search**: Live search with 300ms debounce across 5,000+ parameters
 - **CSV Export**: Streaming export with search filter support
@@ -16,8 +21,9 @@
 - **WiFi Scanning**: Interference detection and channel analysis
 - **Enhanced Refresh**: Device refresh surpassing USS capabilities
 - **Firmware Management**: Upload and deploy firmware updates
-- **Dashboard**: Real-time device overview and statistics
+- **Dashboard**: Real-time device overview and statistics with proper authentication
 - **Task Queue**: Asynchronous device operations with status tracking
+- **Theme Switcher**: Dark/light mode toggle in navigation
 
 ### Beacon G6 Debugging - RESOLVED ✅
 
@@ -269,9 +275,29 @@ DB_USERNAME=hayacs_user
 cd /var/www/hayacs
 git pull origin master
 composer install --no-dev --optimize-autoloader
+npm run build  # Rebuild Vite assets
 php artisan config:cache
 php artisan route:cache
-php artisan migrate --force
+php artisan view:cache
+php artisan migrate --force  # Run migrations (includes role column, authentication tables)
+```
+
+### Post-Deployment Verification
+```bash
+# Verify routes are accessible
+php artisan route:list
+
+# Check user authentication is working
+php artisan tinker --execute="
+echo 'Users: ' . App\Models\User::count() . PHP_EOL;
+echo 'Admin users: ' . App\Models\User::where('role', 'admin')->count() . PHP_EOL;
+"
+
+# Test login page accessibility
+curl -I https://hayacs.hay.net/login
+
+# Verify assets are built
+ls -la public/build/manifest.json
 ```
 
 ### Clear Caches
@@ -311,6 +337,85 @@ curl -v -X POST http://hayacs.hay.net/cwmp \
 php artisan route:list | grep cwmp
 ```
 
+## Authentication & Authorization
+
+### Authentication System
+**Stack**: Laravel Breeze with Blade templates
+- **Template Engine**: Blade (not Inertia/React)
+- **Styling**: Tailwind CSS with dark mode support
+- **Features**: Login, logout, password reset, email verification
+
+### Role-Based Access Control (RBAC)
+**Roles**:
+- **Admin**: Full system access including user management, device types, firmware management
+- **Support**: Device management and troubleshooting capabilities
+- **User**: Basic device viewing and analytics access
+
+**Implementation**:
+```php
+// User model helper methods
+$user->isAdmin()           // Returns true if role is 'admin'
+$user->isSupport()         // Returns true if role is 'support'
+$user->isAdminOrSupport()  // Returns true if role is 'admin' or 'support'
+```
+
+**Middleware Protection**:
+- `admin` - Restricts route to admin users only
+- `admin.support` - Restricts route to admin or support users
+- Applied to route groups in `routes/web.php`
+
+### Password Enforcement
+**First Login Flow**:
+1. Admin creates user with temporary password
+2. `must_change_password` flag set to true
+3. User forced to `/change-password` route on first login
+4. Cannot access system until password changed
+5. `EnsurePasswordChanged` middleware enforces this
+
+**Password Requirements**:
+- Minimum 8 characters
+- Confirmation required
+- Laravel's default password validation rules
+
+### API Authentication
+**Stack**: Laravel Sanctum for SPA authentication
+- Protected with `auth:sanctum` middleware
+- All API routes require authentication
+- Token-based authentication for API clients
+
+### Admin User Credentials
+**Default Admin Account**:
+- **Email**: marcel@haymail.ca
+- **Role**: admin
+- **Initial Setup**: Created via database seeder
+- **Temporary Password**: Set by admin, requires change on first login
+
+**Creating Admin Users**:
+```bash
+php artisan tinker
+$user = App\Models\User::where('email', 'user@example.com')->first();
+$user->password = bcrypt('TempPassword123!');
+$user->role = 'admin';
+$user->must_change_password = true;
+$user->save();
+```
+
+### User Management Interface
+**Location**: `/users` (Admin only)
+
+**Features**:
+- **List Users**: Paginated table with role badges and status indicators
+- **Create User**: Form with name, email, role, password, and enforcement option
+- **Edit User**: Update user details, optionally change password
+- **Delete User**: Remove users (cannot delete yourself)
+- **Role Descriptions**: Inline help text explaining each role's permissions
+
+**Security**:
+- Self-deletion prevention
+- Password confirmation on creation
+- Optional password enforcement toggle
+- Role-based visibility in navigation
+
 ## Architecture Notes
 
 ### TR-069 Flow
@@ -321,13 +426,30 @@ php artisan route:list | grep cwmp
 5. Device/Parameter models store data
 6. Response sent back to device
 
+### Web Authentication Flow
+1. User navigates to protected route
+2. `auth` middleware checks authentication
+3. If authenticated, `EnsurePasswordChanged` middleware checks `must_change_password`
+4. If password change required, redirect to `/change-password`
+5. Role-based middleware (`admin`, `admin.support`) checks permissions
+6. Route handler processes request
+
 ### Key Classes
+**TR-069**:
 - `app/Http/Controllers/CwmpController.php` - Main TR-069 endpoint
 - `app/Services/CwmpService.php` - SOAP/XML handling
 - `app/Http/Middleware/CwmpBasicAuth.php` - Device authentication
 - `app/Models/Device.php` - Device model
 - `app/Models/Parameter.php` - Parameter storage
 - `app/Models/Task.php` - Task queue
+
+**Authentication**:
+- `app/Models/User.php` - User model with role helpers
+- `app/Http/Controllers/UserController.php` - User CRUD operations
+- `app/Http/Controllers/PasswordChangeController.php` - Password enforcement
+- `app/Http/Middleware/EnsureUserIsAdmin.php` - Admin-only middleware
+- `app/Http/Middleware/EnsureUserIsAdminOrSupport.php` - Support-level middleware
+- `app/Http/Middleware/EnsurePasswordChanged.php` - Password change enforcement
 
 ## Recent Feature Additions
 
@@ -361,6 +483,9 @@ php artisan route:list | grep cwmp
 - Full NAT/port mapping CRUD operations
 - Direct TR-069 parameter manipulation
 - List, create, edit, delete mappings
+- **Auto-refresh UI**: Port mappings table auto-refreshes when tasks complete
+- **Database cleanup**: Deleted port mappings are automatically removed from local database
+- **SmartRG optimizations**: Handles "one task per session" device limitation (see below)
 
 ### Configuration Backup/Restore
 - **Manual Backups**: Create snapshots on demand
@@ -413,6 +538,178 @@ php artisan route:list | grep cwmp
 2. **IP Restrictions**: Dashboard only accessible from whitelisted IP ranges
 3. **Connection Request**: Fully implemented (HTTP with digest auth, UDP for STUN devices, "Connect Now" button in UI)
 4. **Parameter Retrieval**: ~9% of parameters may fail retrieval (device-specific, normal behavior)
+
+## Device-Specific Behaviors
+
+### SmartRG/Sagemcom "One Task Per Session" Limitation
+SmartRG devices (SR505N, SR515ac, SR516ac) only process ONE TR-069 RPC per CWMP session. If multiple commands are sent in the same session, only the first is executed.
+
+**Impact**: Port forwarding "Add" requires two operations:
+1. `AddObject` - Creates the port mapping instance
+2. `SetParameterValues` - Configures the port mapping details
+
+**Solution Implemented**:
+- Follow-up tasks are created with `wait_for_next_session = true` flag
+- Tasks created within 3 seconds are skipped (prevents same-session execution)
+- A 4-second delay is added before sending connection request after AddObject
+- This ensures the device connects AFTER the task is old enough to be sent
+
+**Flow**:
+1. User clicks "Add Port Forward"
+2. `AddObject` task created and sent immediately
+3. Device responds with new instance number
+4. `SetParameterValues` task created with `wait_for_next_session = true`
+5. System waits 4 seconds, then sends connection request
+6. Device connects ~2 seconds later (task is now ~6 seconds old)
+7. `SetParameterValues` passes the 3-second check and executes
+8. Total time: ~8 seconds (vs waiting for periodic inform ~10 minutes)
+
+**Key Files**:
+- `CwmpController.php:handleAddObjectResponse()` - Creates follow-up task, delays connection request
+- `CwmpController.php:getNextPendingTask()` - Checks `wait_for_next_session` flag and task age
+- `DeviceController.php:addPortMapping()` - Creates initial AddObject task
+
+**Abandoned Task Detection**:
+- Tasks in 'sent' status are marked as abandoned if device starts a new session without responding
+- 10-second grace period prevents false positives during normal session flow
+- Abandoned tasks show: "Device started new TR-069 session without responding to command"
+
+## Troubleshooting
+
+### Common Issues Encountered
+
+#### 1. 500 Internal Server Error - Config File Permissions
+**Symptoms**: Site returns 500 error, Apache logs show "Failed opening required config file"
+
+**Root Cause**: Config files in `/var/www/hayacs/config/` have restrictive permissions (600) that prevent Apache from reading them
+
+**Solution**:
+```bash
+# Fix config file permissions
+chmod 644 /var/www/hayacs/config/*.php
+
+# Rebuild config cache
+php artisan config:cache
+```
+
+**Prevention**: Ensure all config files have 644 permissions after deployment
+
+---
+
+#### 2. Route Not Defined Errors
+**Symptoms**: `RouteNotFoundException` when accessing certain pages
+
+**Root Cause**: Routes not registered in `routes/web.php` or route names don't match view references
+
+**Solution**:
+```bash
+# Clear route cache
+php artisan route:clear
+
+# Rebuild route cache
+php artisan route:cache
+
+# Verify routes exist
+php artisan route:list | grep [route-name]
+```
+
+**Check**:
+- Route is defined in `routes/web.php`
+- Route name matches what's used in views: `route('route.name')`
+- Middleware is properly configured for the route
+
+---
+
+#### 3. Undefined Variable $slot - Layout Compatibility
+**Symptoms**: `ErrorException - Undefined variable $slot` in layouts/app.blade.php
+
+**Root Cause**: Laravel Breeze uses component syntax (`{{ $slot }}`), existing views use inheritance syntax (`@extends`, `@yield`)
+
+**Solution**: Modify `resources/views/layouts/app.blade.php` to support both:
+```php
+<main>
+    @isset($slot)
+        {{ $slot }}
+    @else
+        @yield('content')
+    @endisset
+</main>
+```
+
+**Explanation**:
+- Component syntax: Used by Breeze (x-guest-layout, x-app-layout)
+- Inheritance syntax: Used by dashboard views (@extends('layouts.app'))
+- The `@isset($slot)` check supports both patterns
+
+---
+
+#### 4. Layout Styling Issues After Breeze Installation
+**Symptoms**: Content full-width, buttons unstyled, theme switcher missing
+
+**Root Cause**: Laravel Breeze installation overwrites `app.blade.php` with minimal template
+
+**Solution**:
+```bash
+# Rebuild Vite assets
+npm run build
+
+# Or for development
+npm run dev
+```
+
+**Restore in app.blade.php**:
+1. Add container classes: `max-w-7xl mx-auto sm:px-6 lg:px-8`
+2. Add vertical spacing: `py-12`
+3. Re-add theme switcher component: `<x-theme-switcher />`
+
+---
+
+#### 5. Login Password Not Working
+**Symptoms**: Cannot login with expected credentials
+
+**Solution**: Reset password via Tinker:
+```bash
+php artisan tinker --execute="
+\$user = App\Models\User::where('email', 'user@example.com')->first();
+\$user->password = bcrypt('NewPassword123!');
+\$user->must_change_password = true;
+\$user->save();
+"
+```
+
+**Verification**:
+```bash
+php artisan tinker --execute="
+\$user = App\Models\User::where('email', 'user@example.com')->first();
+echo 'User: ' . \$user->name . PHP_EOL;
+echo 'Role: ' . \$user->role . PHP_EOL;
+echo 'Must change: ' . (\$user->must_change_password ? 'Yes' : 'No') . PHP_EOL;
+"
+```
+
+---
+
+#### 6. Assets Not Loading or Styling Broken
+**Symptoms**: Styles not applied, JavaScript not working, 404 errors for assets
+
+**Solution**:
+```bash
+# Clear all caches
+php artisan cache:clear
+php artisan view:clear
+php artisan config:clear
+
+# Rebuild assets
+npm run build
+
+# For production, ensure public/build directory exists
+ls -la public/build/
+```
+
+**Check**:
+- Vite manifest exists: `public/build/manifest.json`
+- APP_ENV is set correctly in `.env`
+- Vite directives in layout: `@vite(['resources/css/app.css', 'resources/js/app.js'])`
 
 ## Testing
 
@@ -483,4 +780,71 @@ The project can be run locally using Laravel Herd on Windows. The local environm
 
 ---
 
-**For Claude Code**: This ACS is production-ready with all major features implemented. Current focus is testing at scale and preparing for phased rollout of 12,798 devices. The "Get Everything" feature, smart search, CSV export, and backup/restore have all been tested and are working reliably across multiple device types and manufacturers.
+## Recent Updates (November 25, 2025)
+
+### Authentication & User Management ✅
+- **Laravel Breeze Installation**: Complete authentication scaffolding with Blade templates
+- **Role-Based Access Control**: Three-tier role system (Admin, Support, User)
+- **User Management Interface**: Full CRUD for admins at `/users`
+- **Password Enforcement**: Mandatory password change on first login
+- **API Authentication**: Laravel Sanctum for API token management
+- **Middleware Protection**: Custom middleware for role-based route protection
+- **Layout Compatibility**: Support for both component and inheritance Blade syntax
+- **Theme Support**: Dark/light mode switcher integrated into navigation
+
+### Database Migrations
+- `2025_11_24_171758_add_role_to_users_table.php` - Adds role column (admin, user, support)
+- Breeze authentication tables (users, password_resets, sessions, etc.)
+
+### Files Modified
+**Controllers**:
+- `app/Http/Controllers/UserController.php` - User CRUD operations
+- `app/Http/Controllers/PasswordChangeController.php` - Password enforcement
+
+**Models**:
+- `app/Models/User.php` - Added role helpers and Sanctum support
+
+**Middleware**:
+- `app/Http/Middleware/EnsureUserIsAdmin.php` - Admin-only routes
+- `app/Http/Middleware/EnsureUserIsAdminOrSupport.php` - Support-level routes
+- `app/Http/Middleware/EnsurePasswordChanged.php` - Password enforcement
+
+**Routes**:
+- `routes/web.php` - Protected with auth middleware, role-based route groups
+- `routes/api.php` - Protected with auth:sanctum middleware
+
+**Views**:
+- `resources/views/users/` - Index, create, edit views
+- `resources/views/layouts/navigation.blade.php` - Admin-only links, theme switcher
+- `resources/views/layouts/app.blade.php` - Dual syntax support
+
+**Config**:
+- `bootstrap/app.php` - Middleware registration, Sanctum configuration
+
+---
+
+**For Claude Code**: This ACS is production-ready with all major features implemented, including full authentication and user management. Current focus is preparing for phased rollout of 12,798 devices. All core features tested and working:
+- TR-069 CWMP with multi-vendor support (Calix, SmartRG, Nokia)
+- User authentication with role-based access control
+- "Get Everything" smart parameter discovery
+- Live parameter search and CSV export
+- Configuration backup/restore
+- Port forwarding management (full CRUD with auto-refresh)
+- WiFi interference scanning
+- Task queue with real-time status tracking
+
+**Next Steps**: Test port forwarding on remaining device models (SR505n, SR515ac, Calix, Nokia), user feedback system, global search, device view consolidation.
+
+---
+
+## Port Forwarding Testing Status (November 25, 2025)
+
+| Device Model | Add | Delete | Auto-Refresh | Notes |
+|--------------|-----|--------|--------------|-------|
+| SR516ac | ✅ | ✅ | ✅ | ~8 seconds for add, instant delete |
+| SR505n | 🔄 | 🔄 | 🔄 | Testing in progress |
+| SR515ac | 🔄 | 🔄 | 🔄 | Testing in progress |
+| Calix (TR-181) | ⏳ | ⏳ | ⏳ | Pending testing |
+| Nokia Beacon G6 | ⏳ | ⏳ | ⏳ | Pending testing |
+
+Legend: ✅ Working | 🔄 Testing | ⏳ Pending | ❌ Issue

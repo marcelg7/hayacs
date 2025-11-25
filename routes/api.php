@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\DeviceController;
+use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\AnalyticsController;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,9 @@ use Illuminate\Support\Facades\Route;
 
 // All API routes require authentication
 Route::middleware(['auth:sanctum'])->group(function () {
+    // Global Search
+    Route::get('/search', [SearchController::class, 'search']);
+
     // Statistics
     Route::get('/stats', [StatsController::class, 'index']);
 
@@ -70,6 +74,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/devices/{id}/port-mappings', [DeviceController::class, 'getPortMappings']);
     Route::post('/devices/{id}/port-mappings', [DeviceController::class, 'addPortMapping']);
     Route::delete('/devices/{id}/port-mappings', [DeviceController::class, 'deletePortMapping']);
+    Route::post('/devices/{id}/port-mappings/refresh', [DeviceController::class, 'refreshPortMappings']);
     Route::get('/devices/{id}/connected-devices', [DeviceController::class, 'getConnectedDevices']);
 
     // WiFi Interference Scan

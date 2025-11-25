@@ -17,7 +17,13 @@
       "Bash(crontab:*)",
       "Bash(sudo crontab:*)",
       "Bash(git reset:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(npm run build:*)",
+      "Bash(unset:*)",
+      "Bash(for file in resources/views/device-tabs/*.blade.php resources/views/device-tabs/partials/*.blade.php)",
+      "Bash(do php:*)",
+      "Bash(done)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

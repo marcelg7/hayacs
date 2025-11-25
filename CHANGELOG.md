@@ -6,6 +6,84 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added - November 25, 2025
+
+#### Authentication & Authorization System
+- **Laravel Breeze Integration**: Complete authentication scaffolding with Blade templates
+- **Role-Based Access Control (RBAC)**: Three-tier role system:
+  - **Admin**: Full system access including user management, device types, firmware
+  - **Support**: Device management and troubleshooting capabilities
+  - **User**: Basic device viewing and analytics access
+- **User Management Interface**: Full CRUD at `/users` route (admin-only)
+  - Paginated user listing with role badges
+  - Create users with role assignment and password enforcement
+  - Edit users with optional password change
+  - Delete users (with self-deletion protection)
+  - Role descriptions and permission explanations
+- **Password Enforcement**: Mandatory password change on first login
+  - `must_change_password` flag in database
+  - `/change-password` route accessible even when locked
+  - Blocks access to all other routes until password changed
+- **API Authentication**: Laravel Sanctum for SPA-style API authentication
+  - All API routes protected with `auth:sanctum` middleware
+  - Token-based authentication for API clients
+- **Custom Middleware**:
+  - `EnsureUserIsAdmin` - Restricts routes to admin users
+  - `EnsureUserIsAdminOrSupport` - Restricts routes to admin or support users
+  - `EnsurePasswordChanged` - Enforces password change requirement
+- **Theme Support**: Dark/light mode switcher integrated into navigation
+- **Layout Compatibility**: Support for both component and inheritance Blade syntax
+
+#### User Model Enhancements
+- Role helper methods: `isAdmin()`, `isSupport()`, `isAdminOrSupport()`
+- Laravel Sanctum's `HasApiTokens` trait
+- Password change tracking with `password_changed_at` timestamp
+
+### Changed - November 25, 2025
+
+#### Route Protection
+- **All web routes** now require authentication (`auth` middleware)
+- **All API routes** now require Sanctum authentication (`auth:sanctum` middleware)
+- **Admin routes** protected with `admin` middleware:
+  - User management (`/users`)
+  - Device types management (`/device-types`)
+  - Firmware management (`/firmware`)
+- Navigation links show/hide based on user role
+
+#### Database Schema
+- **Migration**: `2025_11_24_171758_add_role_to_users_table.php`
+  - Added `role` column (enum: 'admin', 'user', 'support')
+- **Breeze Tables**: Standard authentication tables (users, password_resets, sessions, etc.)
+
+#### Views and UI
+- **Navigation**: Admin-only links for Users, Device Types, Firmware
+- **Layout**: Modified `app.blade.php` to support both component (`{{ $slot }}`) and inheritance (`@yield`) syntax
+- **User Views**: New views in `resources/views/users/` (index, create, edit)
+- **Theme Switcher**: Re-added after Breeze installation
+
+### Fixed - November 25, 2025
+
+#### Configuration File Permissions
+- **Problem**: Config files had 600 permissions, causing 500 errors when Apache tried to read them
+- **Solution**: Changed config file permissions to 644
+- **Files Affected**: `/var/www/hayacs/config/*.php`
+- **Impact**: Resolved "Failed opening required config file" errors
+
+#### Route Registration Issues
+- **Problem**: Password change routes not registered, causing RouteNotFoundException
+- **Solution**: Added `/change-password` GET and POST routes with proper middleware exclusion
+- **Impact**: Users can now change passwords after login
+
+#### Layout Syntax Compatibility
+- **Problem**: Laravel Breeze uses component syntax (`{{ $slot }}`), existing views use inheritance (`@extends/@yield`)
+- **Solution**: Modified `app.blade.php` to check for `$slot` existence and fall back to `@yield('content')`
+- **Impact**: Both Breeze auth views and dashboard views work correctly
+
+#### Asset Compilation
+- **Problem**: Styles not applied, layout broken after Breeze installation
+- **Solution**: Ran `npm run build` to rebuild Vite assets
+- **Impact**: All Tailwind CSS styles and Alpine.js functionality restored
+
 ### Added - November 18, 2025
 
 #### Get Everything Feature

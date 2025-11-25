@@ -24,6 +24,10 @@ class EnsurePasswordChanged
 
         // Redirect to password change if required
         if ($user->must_change_password) {
+            // For AJAX requests, return JSON error instead of redirect
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['error' => 'Password change required'], 403);
+            }
             return redirect()->route('password.change')
                 ->with('warning', 'You must change your temporary password before continuing.');
         }

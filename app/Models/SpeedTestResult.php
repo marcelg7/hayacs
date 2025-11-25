@@ -9,40 +9,32 @@ class SpeedTestResult extends Model
 {
     protected $fillable = [
         'device_id',
-        'task_id',
-        'download_speed_kbps',
-        'upload_speed_kbps',
-        'latency_ms',
-        'jitter_ms',
-        'packet_loss_percent',
-        'test_duration_seconds',
-        'test_server_url',
-        'diagnostics_state',
-        'rom_time',
+        'download_speed_mbps',
+        'upload_speed_mbps',
+        'download_bytes',
+        'upload_bytes',
+        'download_duration_ms',
+        'upload_duration_ms',
+        'download_state',
+        'upload_state',
+        'download_start_time',
+        'download_end_time',
+        'upload_start_time',
+        'upload_end_time',
+        'test_type',
     ];
 
     protected $casts = [
-        'rom_time' => 'datetime',
-        'packet_loss_percent' => 'decimal:2',
+        'download_speed_mbps' => 'decimal:2',
+        'upload_speed_mbps' => 'decimal:2',
+        'download_start_time' => 'datetime',
+        'download_end_time' => 'datetime',
+        'upload_start_time' => 'datetime',
+        'upload_end_time' => 'datetime',
     ];
 
     public function device(): BelongsTo
     {
         return $this->belongsTo(Device::class, 'device_id', 'id');
-    }
-
-    public function task(): BelongsTo
-    {
-        return $this->belongsTo(Task::class);
-    }
-
-    public function getDownloadSpeedMbpsAttribute(): float
-    {
-        return round($this->download_speed_kbps / 1000, 2);
-    }
-
-    public function getUploadSpeedMbpsAttribute(): float
-    {
-        return round($this->upload_speed_kbps / 1000, 2);
     }
 }

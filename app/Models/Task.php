@@ -254,6 +254,10 @@ class Task extends Model
             'upload' => 'Upload Configuration',
             'backup' => 'Backup Configuration',
             'restore' => 'Restore Configuration',
+            'download_diagnostics' => 'Speed test (download)',
+            'upload_diagnostics' => 'Speed test (upload)',
+            'ping_diagnostics' => 'Ping test',
+            'traceroute_diagnostics' => 'Traceroute test',
         ];
 
         return $descriptions[$this->task_type] ?? ucfirst(str_replace('_', ' ', $this->task_type));
