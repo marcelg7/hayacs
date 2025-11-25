@@ -6,6 +6,7 @@ use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\DeviceTypeController;
 use App\Http\Controllers\FirmwareController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\PasswordChangeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -14,6 +15,10 @@ Route::get('/', function () {
 
 // Protected dashboard routes (requires authentication)
 Route::middleware(['auth'])->group(function () {
+    // Password Change (accessible even when must_change_password is true)
+    Route::get('/change-password', [PasswordChangeController::class, 'show'])->name('password.change')->withoutMiddleware('App\Http\Middleware\EnsurePasswordChanged');
+    Route::post('/change-password', [PasswordChangeController::class, 'update'])->name('password.update')->withoutMiddleware('App\Http\Middleware\EnsurePasswordChanged');
+
     // Main dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
