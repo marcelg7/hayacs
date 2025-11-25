@@ -11,6 +11,7 @@ use App\Http\Controllers\PasswordChangeController;
 use App\Http\Controllers\Auth\PasswordSetupController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\SubscriberController;
 use Illuminate\Support\Facades\Route;
 
 // CWMP Endpoint for TR-069 Device Communication (Protected with HTTP Basic Auth)
@@ -46,6 +47,17 @@ Route::middleware(['auth'])->group(function () {
 
     // Analytics
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+
+    // Subscribers (specific routes MUST come before wildcard routes)
+    Route::get('/subscribers', [SubscriberController::class, 'index'])->name('subscribers.index');
+
+    // Subscriber Data Import (Admin only - BEFORE {subscriber} wildcard)
+    Route::middleware(['admin'])->group(function () {
+        Route::get('/subscribers/import', [SubscriberController::class, 'import'])->name('subscribers.import');
+        Route::post('/subscribers/import', [SubscriberController::class, 'processImport'])->name('subscribers.import.process');
+    });
+
+    Route::get('/subscribers/{subscriber}', [SubscriberController::class, 'show'])->name('subscribers.show');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

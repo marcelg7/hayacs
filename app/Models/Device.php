@@ -12,6 +12,7 @@ class Device extends Model
 
     protected $fillable = [
         'id',
+        'subscriber_id',
         'manufacturer',
         'oui',
         'product_class',
@@ -71,6 +72,14 @@ class Device extends Model
     public function configBackups(): HasMany
     {
         return $this->hasMany(ConfigBackup::class, 'device_id');
+    }
+
+    /**
+     * Get the subscriber that owns this device
+     */
+    public function subscriber()
+    {
+        return $this->belongsTo(Subscriber::class);
     }
 
     /**
