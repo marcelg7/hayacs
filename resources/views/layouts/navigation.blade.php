@@ -22,6 +22,9 @@
                         {{ __('Analytics') }}
                     </x-nav-link>
                     @if(Auth::user()->isAdmin())
+                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                            {{ __('Users') }}
+                        </x-nav-link>
                         <x-nav-link :href="route('device-types.index')" :active="request()->routeIs('device-types.*')">
                             {{ __('Device Types') }}
                         </x-nav-link>
@@ -91,6 +94,9 @@
                 {{ __('Analytics') }}
             </x-responsive-nav-link>
             @if(Auth::user()->isAdmin())
+                <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                    {{ __('Users') }}
+                </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('device-types.index')" :active="request()->routeIs('device-types.*')">
                     {{ __('Device Types') }}
                 </x-responsive-nav-link>
