@@ -81,6 +81,8 @@ class CwmpController extends Controller
                 'Reboot' => $this->handleRebootResponse($parsed),
                 'FactoryReset' => $this->handleFactoryResetResponse($parsed),
                 'TransferComplete' => $this->handleTransferCompleteResponse($parsed),
+                'AddObject' => $this->handleAddObjectResponse($parsed),
+                'DeleteObject' => $this->handleDeleteObjectResponse($parsed),
                 default => $this->cwmpService->createEmptyResponse(),
             };
 
@@ -150,6 +152,13 @@ class CwmpController extends Controller
             $device->hardware_version = $parsed['parameters']['InternetGatewayDevice.DeviceInfo.HardwareVersion']['value'];
         } elseif (isset($parsed['parameters']['Device.DeviceInfo.HardwareVersion'])) {
             $device->hardware_version = $parsed['parameters']['Device.DeviceInfo.HardwareVersion']['value'];
+        }
+
+        // Extract ModelName for better device identification (e.g., 854G-1, 844G-1 instead of just ONT)
+        if (isset($parsed['parameters']['InternetGatewayDevice.DeviceInfo.ModelName'])) {
+            $device->model_name = $parsed['parameters']['InternetGatewayDevice.DeviceInfo.ModelName']['value'];
+        } elseif (isset($parsed['parameters']['Device.DeviceInfo.ModelName'])) {
+            $device->model_name = $parsed['parameters']['Device.DeviceInfo.ModelName']['value'];
         }
 
         if (isset($parsed['parameters']['InternetGatewayDevice.ManagementServer.ConnectionRequestURL'])) {
@@ -226,6 +235,38 @@ class CwmpController extends Controller
             ]);
         }
 
+        // Fetch connection request credentials if missing
+        // This allows the ACS to send connection requests to the device
+        if (empty($device->connection_request_username) || empty($device->connection_request_password)) {
+            // Check if we already have a pending task to fetch credentials
+            $hasPendingCredentialTask = $device->tasks()
+                ->where('status', 'pending')
+                ->where('description', 'Fetch connection request credentials')
+                ->exists();
+
+            if (!$hasPendingCredentialTask) {
+                // Try both TR-098 and TR-181 paths
+                $credentialParams = [
+                    'InternetGatewayDevice.ManagementServer.ConnectionRequestUsername',
+                    'InternetGatewayDevice.ManagementServer.ConnectionRequestPassword',
+                    'Device.ManagementServer.ConnectionRequestUsername',
+                    'Device.ManagementServer.ConnectionRequestPassword',
+                ];
+
+                Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'get_parameter_values',
+                    'description' => 'Fetch connection request credentials',
+                    'status' => 'pending',
+                    'parameters' => $credentialParams,
+                ]);
+
+                Log::info('Queued task to fetch connection request credentials', [
+                    'device_id' => $device->id,
+                ]);
+            }
+        }
+
         // Auto-create DeviceType if it doesn't exist for this product_class
         if ($parsed['product_class'] && $parsed['manufacturer']) {
             $deviceType = DeviceType::firstOrCreate(
@@ -252,6 +293,41 @@ class CwmpController extends Controller
             return $event['code'] === '8 DIAGNOSTICS COMPLETE';
         });
 
+        // Define diagnostic task types that need to wait for DIAGNOSTICS COMPLETE event
+        $diagnosticTaskTypes = ['ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics', 'wifi_scan'];
+
+        // Check for boot events (M Reboot or 1 BOOT)
+        // If device sends boot event, we can verify reboot succeeded without needing uptime value
+        $hasBootEvent = collect($parsed['events'])->contains(function ($event) {
+            return in_array($event['code'], ['M Reboot', '1 BOOT']);
+        });
+
+        // If boot event present, auto-complete any pending/sent uptime refresh tasks
+        // The boot event itself proves the reboot succeeded
+        if ($hasBootEvent) {
+            $uptimeTasks = $device->tasks()
+                ->whereIn('status', ['pending', 'sent'])
+                ->where('task_type', 'get_params')
+                ->get()
+                ->filter(fn($task) => $this->isUptimeRefreshTask($task));
+
+            foreach ($uptimeTasks as $uptimeTask) {
+                $uptimeTask->markAsCompleted([
+                    'verified_via' => 'boot_event',
+                    'boot_events' => collect($parsed['events'])
+                        ->filter(fn($e) => in_array($e['code'], ['M Reboot', '1 BOOT']))
+                        ->pluck('code')
+                        ->toArray(),
+                ]);
+
+                Log::info('Uptime refresh task auto-completed via boot event', [
+                    'device_id' => $device->id,
+                    'task_id' => $uptimeTask->id,
+                    'events' => $parsed['events'],
+                ]);
+            }
+        }
+
         // Check for tasks that were sent but never responded to
         // This can happen when a device starts a new session without sending responses
         $abandonedTasksQuery = $device->tasks()->where('status', 'sent');
@@ -259,7 +335,7 @@ class CwmpController extends Controller
         // If DIAGNOSTICS COMPLETE event is present, exclude diagnostic tasks
         // (they will be processed by queueDiagnosticResultRetrieval instead)
         if ($hasDiagnosticsComplete) {
-            $abandonedTasksQuery->whereNotIn('task_type', ['ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics', 'wifi_scan']);
+            $abandonedTasksQuery->whereNotIn('task_type', $diagnosticTaskTypes);
         }
 
         $abandonedTasks = $abandonedTasksQuery->get();
@@ -271,6 +347,37 @@ class CwmpController extends Controller
                 if ($abandonedTask->task_type === 'set_params') {
                     // Queue a verification task to check if parameters actually changed
                     $this->queueParameterVerification($device, $abandonedTask, $parsed['parameters']);
+                } elseif ($this->isUptimeRefreshTask($abandonedTask)) {
+                    // Special handling for post-reboot uptime refresh tasks
+                    // Some devices (like Nokia Beacon G6) close the post-boot session before responding
+                    // Give these tasks a retry instead of failing immediately
+                    $this->handleUptimeRefreshRetry($device, $abandonedTask);
+                } elseif (in_array($abandonedTask->task_type, $diagnosticTaskTypes)) {
+                    // Diagnostic tasks need time to complete - device will send DIAGNOSTICS COMPLETE event later
+                    // Only mark as failed if task has been sent for more than 3 minutes
+                    $sentAt = $abandonedTask->sent_at ?? $abandonedTask->updated_at;
+                    $minutesSinceSent = $sentAt ? now()->diffInMinutes($sentAt) : 0;
+
+                    if ($minutesSinceSent >= 3) {
+                        $abandonedTask->markAsFailed(
+                            'Diagnostic task timed out after ' . $minutesSinceSent . ' minutes. ' .
+                            'Device did not send DIAGNOSTICS COMPLETE event.'
+                        );
+
+                        Log::warning('Diagnostic task timed out', [
+                            'device_id' => $device->id,
+                            'task_id' => $abandonedTask->id,
+                            'task_type' => $abandonedTask->task_type,
+                            'minutes_since_sent' => $minutesSinceSent,
+                        ]);
+                    } else {
+                        Log::info('Diagnostic task still waiting for completion', [
+                            'device_id' => $device->id,
+                            'task_id' => $abandonedTask->id,
+                            'task_type' => $abandonedTask->task_type,
+                            'minutes_since_sent' => $minutesSinceSent,
+                        ]);
+                    }
                 } else {
                     $abandonedTask->markAsFailed(
                         'Device started new TR-069 session without responding to command. ' .
@@ -335,11 +442,8 @@ class CwmpController extends Controller
             return response('', 204)->header('Content-Type', 'text/xml; charset=utf-8');
         }
 
-        // Check for pending tasks
-        $pendingTask = $device->tasks()
-            ->where('status', 'pending')
-            ->orderBy('created_at')
-            ->first();
+        // Check for pending tasks (with proper ordering - diagnostics before reboot)
+        $pendingTask = $this->getNextPendingTask($device);
 
         if ($pendingTask) {
             Log::info('Sending queued RPC to device', [
@@ -398,11 +502,8 @@ class CwmpController extends Controller
                 if ($diagnosticTaskId) {
                     $diagnosticTask = Task::find($diagnosticTaskId);
                     if ($diagnosticTask) {
-                        $diagnosticTask->update([
-                            'result' => $parsed['parameters'],
-                            'status' => 'completed',
-                            'completed_at' => now(),
-                        ]);
+                        // Use markAsCompleted() to trigger any follow-up actions (like queuing upload after download)
+                        $diagnosticTask->markAsCompleted($parsed['parameters']);
 
                         Log::info('Diagnostic results stored', [
                             'device_id' => $device->id,
@@ -441,9 +542,14 @@ class CwmpController extends Controller
                 $detailedParams = app(\App\Http\Controllers\Api\DeviceController::class)
                     ->buildDetailedParametersFromDiscovery($parsed['parameters'], $dataModel, $device);
 
-                // Chunk parameters for devices that can't handle large requests (e.g., Calix 844E)
-                // Split into chunks of 20 parameters to avoid device crashes
-                $chunkSize = 20;
+                // Chunk parameters for devices that can't handle large requests
+                // SmartRG devices use partial path queries (one path per request like USS)
+                $isSmartRG = strtolower($device->manufacturer ?? '') === 'smartrg' ||
+                    strtoupper($device->oui ?? '') === 'E82C6D';
+
+                // SmartRG: 1 partial path per chunk (each path returns many params)
+                // Other devices: 20 individual params per chunk
+                $chunkSize = $isSmartRG ? 1 : 20;
                 $paramChunks = array_chunk($detailedParams, $chunkSize);
 
                 Log::info('Discovery completed, creating chunked detailed query tasks', [
@@ -498,14 +604,26 @@ class CwmpController extends Controller
             }
         }
 
-        // Check for more pending tasks
+        // Check for more pending tasks (with proper ordering)
         if ($task && $task->device) {
-            $nextTask = $task->device->tasks()
-                ->where('status', 'pending')
-                ->orderBy('created_at')
-                ->first();
+            $device = $task->device;
+            $nextTask = $this->getNextPendingTask($device);
 
             if ($nextTask) {
+                // SmartRG devices drop sessions after ~2 minutes
+                // End session after each task and trigger new connection
+                $isSmartRG = strtolower($device->manufacturer ?? '') === 'smartrg' ||
+                    strtoupper($device->oui ?? '') === 'E82C6D';
+
+                if ($isSmartRG) {
+                    Log::info('SmartRG: ending session, triggering new connection for next task', [
+                        'device_id' => $device->id,
+                        'next_task_id' => $nextTask->id,
+                    ]);
+                    $this->connectionRequestService->sendConnectionRequest($device);
+                    return $this->cwmpService->createEmptyResponse();
+                }
+
                 $nextTask->markAsSent();
                 return $this->generateRpcForTask($nextTask);
             }
@@ -583,12 +701,9 @@ class CwmpController extends Controller
             }
         }
 
-        // Check for more pending tasks
+        // Check for more pending tasks (with proper ordering)
         if ($task && $task->device) {
-            $nextTask = $task->device->tasks()
-                ->where('status', 'pending')
-                ->orderBy('created_at')
-                ->first();
+            $nextTask = $this->getNextPendingTask($task->device);
 
             if ($nextTask) {
                 $nextTask->markAsSent();
@@ -605,9 +720,9 @@ class CwmpController extends Controller
      */
     private function handleSetParameterValuesResponse(array $parsed): string
     {
-        // Find the task that was sent (set_params, set_parameter_values, download/upload diagnostics, ping_diagnostics, or traceroute_diagnostics)
+        // Find the task that was sent (set_params, set_parameter_values, download/upload diagnostics, ping_diagnostics, traceroute_diagnostics, or wifi_scan)
         $task = Task::where('status', 'sent')
-            ->whereIn('task_type', ['set_params', 'set_parameter_values', 'ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics'])
+            ->whereIn('task_type', ['set_params', 'set_parameter_values', 'ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics', 'wifi_scan'])
             ->orderBy('updated_at', 'desc')
             ->first();
 
@@ -615,7 +730,7 @@ class CwmpController extends Controller
             if ($parsed['status'] === 0) {
                 // For diagnostic tasks, keep them as 'sent' until we get the "8 DIAGNOSTICS COMPLETE" event
                 // and retrieve the actual results
-                if (in_array($task->task_type, ['ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics'])) {
+                if (in_array($task->task_type, ['ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics', 'wifi_scan'])) {
                     Log::info('Diagnostic task acknowledged by device, awaiting completion', [
                         'device_id' => $task->device_id,
                         'task_type' => $task->task_type,
@@ -623,6 +738,39 @@ class CwmpController extends Controller
                 } else {
                     $task->markAsCompleted(['status' => $parsed['status']]);
                     Log::info('SetParameterValues completed', ['device_id' => $task->device_id]);
+
+                    // If this was a port mapping configuration, automatically fetch updated port mappings
+                    if ($task->description === 'Configure port mapping' ||
+                        (is_array($task->parameters) &&
+                         collect($task->parameters)->keys()->first() &&
+                         str_contains(collect($task->parameters)->keys()->first(), 'PortMapping'))) {
+
+                        $device = $task->device;
+
+                        // Determine the correct PortMapping path for this device
+                        $portMappingPath = $this->findPortMappingPath($device);
+
+                        if ($portMappingPath) {
+                            // Create task to fetch ALL port mappings (trailing dot = get tree)
+                            $refreshTask = Task::create([
+                                'device_id' => $device->id,
+                                'task_type' => 'get_parameter_values',
+                                'description' => 'Fetch updated port mappings',
+                                'status' => 'pending',
+                                'parameters' => [$portMappingPath . '.'],
+                                'progress_info' => [
+                                    'wait_for_next_session' => true,
+                                    'auto_refresh_after_port_forward' => true,
+                                ],
+                            ]);
+
+                            Log::info('Auto-queued port mapping refresh after configuration', [
+                                'device_id' => $device->id,
+                                'task_id' => $refreshTask->id,
+                                'path' => $portMappingPath,
+                            ]);
+                        }
+                    }
                 }
             } else {
                 $task->markAsFailed('SetParameterValues failed with status: ' . $parsed['status']);
@@ -630,12 +778,9 @@ class CwmpController extends Controller
             }
         }
 
-        // Check for more pending tasks
+        // Check for more pending tasks (with proper ordering)
         if ($task && $task->device) {
-            $nextTask = $task->device->tasks()
-                ->where('status', 'pending')
-                ->orderBy('created_at')
-                ->first();
+            $nextTask = $this->getNextPendingTask($task->device);
 
             if ($nextTask) {
                 $nextTask->markAsSent();
@@ -749,6 +894,140 @@ class CwmpController extends Controller
     }
 
     /**
+     * Handle AddObjectResponse (for creating object instances like PortMapping)
+     */
+    private function handleAddObjectResponse(array $parsed): string
+    {
+        $task = Task::where('status', 'sent')
+            ->where('task_type', 'add_object')
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        if ($task) {
+            $instanceNumber = $parsed['instance_number'] ?? null;
+            $status = $parsed['status'] ?? 1;
+
+            if ($status === 0 && $instanceNumber) {
+                // Success - mark task as completed with instance number
+                $task->markAsCompleted([
+                    'instance_number' => $instanceNumber,
+                    'status' => $status,
+                ]);
+
+                Log::info('AddObject succeeded', [
+                    'device_id' => $task->device_id,
+                    'object_name' => $task->parameters['object_name'] ?? '',
+                    'instance_number' => $instanceNumber,
+                ]);
+
+                // Check if this is a port mapping creation with follow-up parameters
+                if (!empty($task->parameters['follow_up_parameters'])) {
+                    $device = $task->device;
+                    $followUpParams = $task->parameters['follow_up_parameters'];
+                    $objectPrefix = rtrim($task->parameters['object_name'] ?? '', '.');
+
+                    // Replace {instance} placeholder with actual instance number
+                    $parameters = [];
+                    foreach ($followUpParams as $key => $value) {
+                        $newKey = str_replace('{instance}', $instanceNumber, $key);
+                        $parameters[$newKey] = $value;
+                    }
+
+                    // Create the follow-up SetParameterValues task
+                    // Mark it to wait for next session (SmartRG one-task-per-session limitation)
+                    $followUpTask = Task::create([
+                        'device_id' => $device->id,
+                        'task_type' => 'set_parameter_values',
+                        'description' => 'Configure port mapping',
+                        'status' => 'pending',
+                        'parameters' => $parameters,
+                        'progress_info' => [
+                            'wait_for_next_session' => true,
+                            'follow_up_from_add_object' => true,
+                        ],
+                    ]);
+
+                    Log::info('Created follow-up SetParameterValues task (will execute on next session)', [
+                        'device_id' => $device->id,
+                        'task_id' => $followUpTask->id,
+                        'instance_number' => $instanceNumber,
+                    ]);
+
+                    // Follow-up task will be picked up on device's next connection
+                    // The wait_for_next_session flag ensures it's not sent immediately
+                }
+            } else {
+                // Failed
+                $task->markAsFailed(
+                    'AddObject failed with status: ' . $status
+                );
+
+                Log::warning('AddObject failed', [
+                    'device_id' => $task->device_id,
+                    'status' => $status,
+                ]);
+            }
+        }
+
+        // Check for more pending tasks
+        if ($task && $task->device) {
+            $nextTask = $this->getNextPendingTask($task->device);
+
+            if ($nextTask) {
+                $nextTask->markAsSent();
+                return $this->generateRpcForTask($nextTask);
+            }
+        }
+
+        return $this->cwmpService->createEmptyResponse();
+    }
+
+    /**
+     * Handle DeleteObjectResponse
+     */
+    private function handleDeleteObjectResponse(array $parsed): string
+    {
+        $task = Task::where('status', 'sent')
+            ->where('task_type', 'delete_object')
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        if ($task) {
+            $status = $parsed['status'] ?? 1;
+
+            if ($status === 0) {
+                $task->markAsCompleted(['status' => $status]);
+
+                Log::info('DeleteObject succeeded', [
+                    'device_id' => $task->device_id,
+                    'object_name' => $task->parameters['object_name'] ?? '',
+                ]);
+            } else {
+                $task->markAsFailed(
+                    'DeleteObject failed with status: ' . $status
+                );
+
+                Log::warning('DeleteObject failed', [
+                    'device_id' => $task->device_id,
+                    'status' => $status,
+                ]);
+            }
+        }
+
+        // Check for more pending tasks
+        if ($task && $task->device) {
+            $nextTask = $this->getNextPendingTask($task->device);
+
+            if ($nextTask) {
+                $nextTask->markAsSent();
+                return $this->generateRpcForTask($nextTask);
+            }
+        }
+
+        return $this->cwmpService->createEmptyResponse();
+    }
+
+    /**
      * Generate RPC message for a task
      */
     private function generateRpcForTask(Task $task): string
@@ -794,6 +1073,12 @@ class CwmpController extends Controller
             ),
             'ping_diagnostics' => $this->generatePingDiagnostics($task),
             'traceroute_diagnostics' => $this->generateTracerouteDiagnostics($task),
+            'add_object' => $this->cwmpService->createAddObject(
+                $task->parameters['object_name'] ?? ''
+            ),
+            'delete_object' => $this->cwmpService->createDeleteObject(
+                $task->parameters['object_name'] ?? ''
+            ),
             default => $this->cwmpService->createEmptyResponse(),
         };
     }
@@ -1162,6 +1447,180 @@ class CwmpController extends Controller
         return $type === 'state'
             ? 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats'
             : 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Stats.';
+    }
+
+    /**
+     * Get the next pending task for a device with proper ordering
+     * - Diagnostic tasks in 'sent' status block reboot/factory_reset
+     * - Reboot/factory_reset always execute last
+     */
+    private function getNextPendingTask(Device $device): ?Task
+    {
+        $destructiveTaskTypes = ['reboot', 'factory_reset'];
+        $diagnosticTaskTypes = ['ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics', 'wifi_scan'];
+
+        // Check if there are diagnostic tasks waiting for completion (in 'sent' status)
+        $hasPendingDiagnostics = $device->tasks()
+            ->where('status', 'sent')
+            ->whereIn('task_type', $diagnosticTaskTypes)
+            ->exists();
+
+        // Build query for pending tasks
+        $query = $device->tasks()
+            ->where('status', 'pending')
+            ->orderBy('created_at');
+
+        // If diagnostics are pending, exclude destructive tasks
+        if ($hasPendingDiagnostics) {
+            $query->whereNotIn('task_type', $destructiveTaskTypes);
+
+            Log::info('Holding destructive tasks until diagnostics complete', [
+                'device_id' => $device->id,
+            ]);
+        }
+
+        // Get all pending non-destructive tasks
+        $pendingTasks = (clone $query)
+            ->whereNotIn('task_type', $destructiveTaskTypes)
+            ->get();
+
+        // Filter out tasks marked to wait for next session if they were just created
+        $nextTask = $pendingTasks->first(function ($task) {
+            // Check if task is marked to wait for next session
+            if (is_array($task->progress_info) &&
+                ($task->progress_info['wait_for_next_session'] ?? false)) {
+
+                // Only skip if task was created very recently (within 90 seconds)
+                // This ensures sufficient time has passed for a true "next session"
+                // SmartRG devices can reconnect quickly (30-60s), so we need a longer window
+                $createdSeconds = $task->created_at->diffInSeconds(now());
+                if ($createdSeconds < 90) {
+                    Log::info('Skipping task marked to wait for next session', [
+                        'task_id' => $task->id,
+                        'task_type' => $task->task_type,
+                        'created_seconds_ago' => $createdSeconds,
+                    ]);
+                    return false; // Skip this task
+                }
+            }
+            return true; // Use this task
+        });
+
+        // If no non-destructive tasks, get destructive tasks (only if no pending diagnostics)
+        if (!$nextTask && !$hasPendingDiagnostics) {
+            $nextTask = $device->tasks()
+                ->where('status', 'pending')
+                ->whereIn('task_type', $destructiveTaskTypes)
+                ->orderBy('created_at')
+                ->first();
+        }
+
+        return $nextTask;
+    }
+
+    /**
+     * Check if a task is an uptime refresh task (created after reboot)
+     */
+    private function isUptimeRefreshTask(Task $task): bool
+    {
+        // Must be a get_params task
+        if ($task->task_type !== 'get_params') {
+            return false;
+        }
+
+        // Check description
+        if ($task->description && stripos($task->description, 'uptime') !== false) {
+            return true;
+        }
+
+        // Check parameters for UpTime
+        if (is_array($task->parameters)) {
+            foreach ($task->parameters as $paramName => $paramValue) {
+                if (stripos($paramName, 'UpTime') !== false) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Handle retry logic for uptime refresh tasks
+     * Some devices (like Nokia Beacon G6) close the post-boot session before responding
+     * to commands, so we give uptime refresh tasks a chance to retry
+     */
+    private function handleUptimeRefreshRetry(Device $device, Task $task): void
+    {
+        $maxRetries = 2;
+
+        // Get current retry count from progress_info
+        $progressInfo = $task->progress_info ?? [];
+        $retryCount = $progressInfo['uptime_retry_count'] ?? 0;
+
+        if ($retryCount < $maxRetries) {
+            // Increment retry count and reset task to pending
+            $progressInfo['uptime_retry_count'] = $retryCount + 1;
+            $progressInfo['last_retry_at'] = now()->toDateTimeString();
+
+            $task->update([
+                'status' => 'pending',
+                'progress_info' => $progressInfo,
+                'sent_at' => null,
+            ]);
+
+            Log::info('Uptime refresh task queued for retry', [
+                'device_id' => $device->id,
+                'task_id' => $task->id,
+                'retry_count' => $retryCount + 1,
+                'max_retries' => $maxRetries,
+            ]);
+        } else {
+            // Max retries reached, mark as failed
+            $task->markAsFailed(
+                'Post-reboot uptime refresh failed after ' . $maxRetries . ' retries. ' .
+                'Device may be closing sessions before responding to commands.'
+            );
+
+            Log::warning('Uptime refresh task failed after max retries', [
+                'device_id' => $device->id,
+                'task_id' => $task->id,
+                'retry_count' => $retryCount,
+            ]);
+        }
+    }
+
+    /**
+     * Find the correct PortMapping parameter path for a device
+     * Returns the full path like: InternetGatewayDevice.WANDevice.2.WANConnectionDevice.2.WANIPConnection.6.PortMapping
+     */
+    private function findPortMappingPath(Device $device): ?string
+    {
+        // Search for the active WAN connection with a valid external IP
+        $wanConnections = $device->parameters()
+            ->where('name', 'LIKE', '%WANIPConnection%.ExternalIPAddress')
+            ->where('value', '!=', '')
+            ->where('value', '!=', '0.0.0.0')
+            ->get();
+
+        foreach ($wanConnections as $ipParam) {
+            // Extract the WAN path
+            if (preg_match('/(InternetGatewayDevice\.WANDevice\.\d+\.WANConnectionDevice\.\d+\.WANIPConnection\.\d+)\.ExternalIPAddress/', $ipParam->name, $matches)) {
+                $wanPath = $matches[1];
+
+                // Check if this is a public IP (not 192.168.x.x which is MER "back door")
+                if (!str_starts_with($ipParam->value, '192.168.')) {
+                    return $wanPath . '.PortMapping';
+                }
+            }
+        }
+
+        // Fallback: return first WAN connection found (even if private IP)
+        if (isset($wanPath)) {
+            return $wanPath . '.PortMapping';
+        }
+
+        return null;
     }
 }
 

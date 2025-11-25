@@ -411,7 +411,7 @@ php artisan route:list | grep cwmp
 
 1. **HTTP Only for /cwmp**: Currently /cwmp must be HTTP (not HTTPS) due to device SSL certificate validation issues
 2. **IP Restrictions**: Dashboard only accessible from whitelisted IP ranges
-3. **Connection Request**: Not yet implemented (ACS cannot initiate connection to device)
+3. **Connection Request**: Fully implemented (HTTP with digest auth, UDP for STUN devices, "Connect Now" button in UI)
 4. **Parameter Retrieval**: ~9% of parameters may fail retrieval (device-specific, normal behavior)
 
 ## Testing

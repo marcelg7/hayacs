@@ -27,12 +27,38 @@ class CwmpBasicAuth
         $credentials = base64_decode(substr($authHeader, 6));
         [$username, $password] = explode(':', $credentials, 2);
 
-        // Validate credentials
-        if ($username !== 'acs-user' || $password !== 'acs-password') {
+        // Validate against allowed credential pairs
+        if (!$this->validateCredentials($username, $password)) {
             return $this->unauthorizedResponse();
         }
 
         return $next($request);
+    }
+
+    /**
+     * Validate credentials against configured pairs
+     */
+    private function validateCredentials(string $username, string $password): bool
+    {
+        $validPairs = config('cwmp.credentials', [
+            [
+                'username' => 'acs-user',
+                'password' => 'acs-password',
+            ],
+        ]);
+
+        foreach ($validPairs as $pair) {
+            // Skip empty credential pairs
+            if (empty($pair['username']) || empty($pair['password'])) {
+                continue;
+            }
+
+            if ($username === $pair['username'] && $password === $pair['password']) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

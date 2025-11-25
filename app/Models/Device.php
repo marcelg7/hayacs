@@ -15,6 +15,7 @@ class Device extends Model
         'manufacturer',
         'oui',
         'product_class',
+        'model_name',
         'serial_number',
         'hardware_version',
         'software_version',

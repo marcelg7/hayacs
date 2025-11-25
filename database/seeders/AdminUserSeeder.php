@@ -19,6 +19,7 @@ class AdminUserSeeder extends Seeder
                 'name' => 'Marcel (Admin)',
                 'email' => 'marcel@haymail.ca',
                 'password' => Hash::make('TempPassword123!'),
+                'role' => 'admin',
                 'must_change_password' => true,
                 'email_verified_at' => now(),
             ]

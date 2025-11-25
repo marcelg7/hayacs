@@ -6,11 +6,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
         'password_changed_at',
         'must_change_password',
     ];
@@ -48,5 +50,29 @@ class User extends Authenticatable
             'password_changed_at' => 'datetime',
             'must_change_password' => 'boolean',
         ];
+    }
+
+    /**
+     * Check if the user is an admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Check if the user is a support user
+     */
+    public function isSupport(): bool
+    {
+        return $this->role === 'support';
+    }
+
+    /**
+     * Check if the user has admin or support role
+     */
+    public function isAdminOrSupport(): bool
+    {
+        return in_array($this->role, ['admin', 'support']);
     }
 }

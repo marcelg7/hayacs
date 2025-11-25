@@ -57,8 +57,8 @@ class DashboardController extends Controller
             ->paginate(50);
 
         $tasks = $device->tasks()
-            ->orderBy('created_at', 'desc')
-            ->limit(20)
+            ->orderBy('id', 'desc')
+            ->limit(50)
             ->get();
 
         $sessions = $device->sessions()

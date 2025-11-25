@@ -189,6 +189,20 @@ class CwmpService
             $result['complete_time'] = $xpath->query('//cwmp:TransferComplete/CompleteTime')->item(0)?->nodeValue;
         }
 
+        // Parse AddObjectResponse
+        if ($result['method'] === 'AddObject') {
+            $instanceNode = $xpath->query('//cwmp:AddObjectResponse/*[local-name()="InstanceNumber"]')->item(0);
+            $statusNode = $xpath->query('//cwmp:AddObjectResponse/*[local-name()="Status"]')->item(0);
+            $result['instance_number'] = $instanceNode?->nodeValue;
+            $result['status'] = (int) ($statusNode?->nodeValue ?? 1);
+        }
+
+        // Parse DeleteObjectResponse
+        if ($result['method'] === 'DeleteObject') {
+            $statusNode = $xpath->query('//cwmp:DeleteObjectResponse/*[local-name()="Status"]')->item(0);
+            $result['status'] = (int) ($statusNode?->nodeValue ?? 1);
+        }
+
         return $result;
     }
 
@@ -372,6 +386,56 @@ class CwmpService
         // Create FactoryReset
         $factoryReset = $dom->createElement('cwmp:FactoryReset');
         $body->appendChild($factoryReset);
+
+        return $dom->saveXML();
+    }
+
+    /**
+     * Create AddObject RPC (for creating new object instances like PortMapping)
+     */
+    public function createAddObject(string $objectName, string $parameterKey = ''): string
+    {
+        $dom = new DOMDocument('1.0', 'UTF-8');
+        $dom->formatOutput = true;
+
+        // Create SOAP Envelope
+        $envelope = $this->createSoapEnvelope($dom);
+        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
+
+        // Create AddObject
+        $addObject = $dom->createElement('cwmp:AddObject');
+        $body->appendChild($addObject);
+
+        $objectNameEl = $dom->createElement('ObjectName', htmlspecialchars($objectName));
+        $addObject->appendChild($objectNameEl);
+
+        $paramKeyEl = $dom->createElement('ParameterKey', htmlspecialchars($parameterKey));
+        $addObject->appendChild($paramKeyEl);
+
+        return $dom->saveXML();
+    }
+
+    /**
+     * Create DeleteObject RPC (for deleting object instances)
+     */
+    public function createDeleteObject(string $objectName, string $parameterKey = ''): string
+    {
+        $dom = new DOMDocument('1.0', 'UTF-8');
+        $dom->formatOutput = true;
+
+        // Create SOAP Envelope
+        $envelope = $this->createSoapEnvelope($dom);
+        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
+
+        // Create DeleteObject
+        $deleteObject = $dom->createElement('cwmp:DeleteObject');
+        $body->appendChild($deleteObject);
+
+        $objectNameEl = $dom->createElement('ObjectName', htmlspecialchars($objectName));
+        $deleteObject->appendChild($objectNameEl);
+
+        $paramKeyEl = $dom->createElement('ParameterKey', htmlspecialchars($parameterKey));
+        $deleteObject->appendChild($paramKeyEl);
 
         return $dom->saveXML();
     }

@@ -2,6 +2,8 @@
 
 use App\Http\Middleware\CwmpBasicAuth;
 use App\Http\Middleware\EnsurePasswordChanged;
+use App\Http\Middleware\EnsureUserIsAdmin;
+use App\Http\Middleware\EnsureUserIsAdminOrSupport;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -39,8 +41,14 @@ return Application::configure(basePath: dirname(__DIR__))
             EnsurePasswordChanged::class,
         ]);
 
+        $middleware->api(prepend: [
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        ]);
+
         $middleware->alias([
             'cwmp.auth' => CwmpBasicAuth::class,
+            'admin' => EnsureUserIsAdmin::class,
+            'admin.support' => EnsureUserIsAdminOrSupport::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [

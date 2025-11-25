@@ -57,6 +57,14 @@ class Task extends Model
             'result' => $result,
             'completed_at' => now(),
         ]);
+
+        // Check if this is a download test that should trigger an upload test
+        if ($this->task_type === 'download_diagnostics' &&
+            is_array($this->progress_info) &&
+            ($this->progress_info['queue_upload_after'] ?? false)) {
+
+            $this->queueUploadTest();
+        }
     }
 
     /**
@@ -68,6 +76,125 @@ class Task extends Model
             'status' => 'failed',
             'error' => $error,
             'completed_at' => now(),
+        ]);
+    }
+
+    /**
+     * Queue upload test after download completes
+     */
+    private function queueUploadTest(): void
+    {
+        $uploadUrl = $this->progress_info['upload_url'] ?? 'http://tr143.hay.net/handler.php';
+        $isDevice2 = $this->progress_info['is_device2'] ?? false;
+        $isSmartRG = $this->progress_info['is_smartrg'] ?? false;
+
+        $uploadPrefix = $isDevice2
+            ? 'Device.IP.Diagnostics.UploadDiagnostics'
+            : 'InternetGatewayDevice.UploadDiagnostics';
+
+        \Log::info('Queueing upload test after download completion', [
+            'device_id' => $this->device_id,
+            'download_task_id' => $this->id,
+        ]);
+
+        if ($isSmartRG) {
+            // SmartRG: 3 separate tasks
+            // Task 1: Set NumberOfConnections
+            $configTask1 = self::create([
+                'device_id' => $this->device_id,
+                'task_type' => 'set_parameter_values',
+                'status' => 'pending',
+                'parameters' => [
+                    "{$uploadPrefix}.NumberOfConnections" => [
+                        'value' => '2',
+                        'type' => 'xsd:unsignedInt',
+                    ],
+                ],
+            ]);
+
+            // Task 2: Set TimeBasedTestDuration
+            $configTask2 = self::create([
+                'device_id' => $this->device_id,
+                'task_type' => 'set_parameter_values',
+                'status' => 'pending',
+                'parameters' => [
+                    "{$uploadPrefix}.TimeBasedTestDuration" => [
+                        'value' => '12',
+                        'type' => 'xsd:unsignedInt',
+                    ],
+                ],
+            ]);
+
+            // Task 3: Set DiagnosticsState + UploadURL + TestFileLength
+            $uploadTask = self::create([
+                'device_id' => $this->device_id,
+                'task_type' => 'upload_diagnostics',
+                'status' => 'pending',
+                'parameters' => [
+                    "{$uploadPrefix}.DiagnosticsState" => [
+                        'value' => 'Requested',
+                        'type' => 'xsd:string',
+                    ],
+                    "{$uploadPrefix}.UploadURL" => [
+                        'value' => $uploadUrl,
+                        'type' => 'xsd:string',
+                    ],
+                    "{$uploadPrefix}.TestFileLength" => [
+                        'value' => '1858291200',
+                        'type' => 'xsd:unsignedInt',
+                    ],
+                ],
+            ]);
+        } else {
+            // Standard devices: 3 separate tasks
+            $configTask1 = self::create([
+                'device_id' => $this->device_id,
+                'task_type' => 'set_parameter_values',
+                'status' => 'pending',
+                'parameters' => [
+                    "{$uploadPrefix}.NumberOfConnections" => [
+                        'value' => '2',
+                        'type' => 'xsd:unsignedInt',
+                    ],
+                ],
+            ]);
+
+            $configTask2 = self::create([
+                'device_id' => $this->device_id,
+                'task_type' => 'set_parameter_values',
+                'status' => 'pending',
+                'parameters' => [
+                    "{$uploadPrefix}.TimeBasedTestDuration" => [
+                        'value' => '12',
+                        'type' => 'xsd:unsignedInt',
+                    ],
+                ],
+            ]);
+
+            $uploadTask = self::create([
+                'device_id' => $this->device_id,
+                'task_type' => 'upload_diagnostics',
+                'status' => 'pending',
+                'parameters' => [
+                    "{$uploadPrefix}.DiagnosticsState" => [
+                        'value' => 'Requested',
+                        'type' => 'xsd:string',
+                    ],
+                    "{$uploadPrefix}.UploadURL" => [
+                        'value' => $uploadUrl,
+                        'type' => 'xsd:string',
+                    ],
+                    "{$uploadPrefix}.TestFileLength" => [
+                        'value' => '1858291200',
+                        'type' => 'xsd:unsignedInt',
+                    ],
+                ],
+            ]);
+        }
+
+        \Log::info('Upload test queued', [
+            'device_id' => $this->device_id,
+            'tasks_created' => 3,
         ]);
     }
 

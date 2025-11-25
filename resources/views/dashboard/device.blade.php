@@ -4273,6 +4273,7 @@
     <!-- Port Forwarding Tab -->
     <div x-show="activeTab === 'ports'" x-cloak x-data="{
         portMappings: [],
+        connectedDevices: [],
         loading: true,
         showAddForm: false,
         newMapping: {
@@ -4294,6 +4295,17 @@
                 alert('Error loading port mappings: ' + error.message);
             } finally {
                 this.loading = false;
+            }
+        },
+
+        async loadConnectedDevices() {
+            try {
+                const response = await fetch('/api/devices/{{ $device->id }}/connected-devices');
+                const data = await response.json();
+                this.connectedDevices = data.connected_devices || [];
+            } catch (error) {
+                console.error('Error loading connected devices:', error);
+                // Don't alert - this is not critical
             }
         },
 
@@ -4367,6 +4379,7 @@
 
         init() {
             this.loadPortMappings();
+            this.loadConnectedDevices();
         }
     }">
         <div class="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -4412,10 +4425,21 @@
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Internal IP Address</label>
-                        <input type="text" x-model="newMapping.internal_client" pattern="^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$" required
+                        <label class="block text-sm font-medium text-gray-700">
+                            Internal IP Address
+                            <span x-show="connectedDevices.length > 0" class="text-xs text-gray-500">
+                                (or select from connected devices)
+                            </span>
+                        </label>
+                        <input type="text" x-model="newMapping.internal_client" list="connected-devices-list"
+                               pattern="^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$" required
                                placeholder="192.168.1.100"
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <datalist id="connected-devices-list">
+                            <template x-for="device in connectedDevices" :key="device.ip">
+                                <option :value="device.ip" x-text="device.label"></option>
+                            </template>
+                        </datalist>
                     </div>
                     <div class="flex items-end">
                         <button type="submit"
@@ -4777,11 +4801,21 @@
             // Helper function to calculate speed
             $calculateSpeed = function($bytes, $bomTime, $eomTime) {
                 try {
+                    // Check for invalid/empty timing fields
+                    if (empty($bytes) || empty($bomTime) || empty($eomTime)) {
+                        return null;
+                    }
+
+                    // Check for placeholder dates
+                    if (str_starts_with($bomTime, '0001-01-01') || str_starts_with($eomTime, '0001-01-01')) {
+                        return null;
+                    }
+
                     $start = new \Carbon\Carbon($bomTime);
                     $end = new \Carbon\Carbon($eomTime);
-                    $duration = $end->diffInSeconds($start);
+                    $duration = abs($end->diffInSeconds($start, false)); // Fixed: use abs() and signed difference
 
-                    if ($duration <= 0) return null;
+                    if ($duration <= 0 || (int)$bytes <= 0) return null;
 
                     $bytesPerSecond = (int)$bytes / $duration;
                     $mbps = ($bytesPerSecond * 8) / 1000000; // Convert to Mbps
@@ -4857,7 +4891,7 @@
                                 : 'Device.IP.Diagnostics.UploadDiagnostics';
 
                             $ulState = $latestUpload->result["{$prefix}.DiagnosticsState"]['value'] ?? 'Unknown';
-                            $ulBytes = $latestUpload->result["{$prefix}.TestBytesSent"]['value'] ?? 0;
+                            $ulBytes = $latestUpload->result["{$prefix}.TotalBytesSent"]['value'] ?? 0;
                             $ulBOM = $latestUpload->result["{$prefix}.BOMTime"]['value'] ?? null;
                             $ulEOM = $latestUpload->result["{$prefix}.EOMTime"]['value'] ?? null;
                             $ulSpeed = $calculateSpeed($ulBytes, $ulBOM, $ulEOM);

@@ -353,6 +353,52 @@ class DeviceController extends Controller
     }
 
     /**
+     * Find the active WAN connection for a device
+     * Looks for WANIPConnection with ConnectionStatus=Connected and valid ExternalIPAddress
+     */
+    private function findActiveWanConnection(Device $device): ?array
+    {
+        // Search for WANIPConnection with Connected status and valid external IP
+        $connectedParams = $device->parameters()
+            ->where('name', 'LIKE', '%WANIPConnection%ConnectionStatus')
+            ->where('value', 'Connected')
+            ->get();
+
+        foreach ($connectedParams as $statusParam) {
+            // Extract the path: InternetGatewayDevice.WANDevice.X.WANConnectionDevice.Y.WANIPConnection.Z
+            if (preg_match('/WANDevice\.(\d+)\.WANConnectionDevice\.(\d+)\.WANIPConnection\.(\d+)/', $statusParam->name, $matches)) {
+                $wanDevice = (int) $matches[1];
+                $wanConnDevice = (int) $matches[2];
+                $wanConn = (int) $matches[3];
+
+                // Check if this connection has a valid external IP (not 0.0.0.0)
+                $ipParam = $device->parameters()
+                    ->where('name', "InternetGatewayDevice.WANDevice.{$wanDevice}.WANConnectionDevice.{$wanConnDevice}.WANIPConnection.{$wanConn}.ExternalIPAddress")
+                    ->first();
+
+                if ($ipParam && $ipParam->value && $ipParam->value !== '0.0.0.0') {
+                    // Also check if NAT is enabled on this connection (for port forwarding)
+                    $natParam = $device->parameters()
+                        ->where('name', "InternetGatewayDevice.WANDevice.{$wanDevice}.WANConnectionDevice.{$wanConnDevice}.WANIPConnection.{$wanConn}.NATEnabled")
+                        ->first();
+
+                    // Prefer connections with NAT enabled, but accept any connected one
+                    if (!$natParam || $natParam->value === '1' || $natParam->value === 'true') {
+                        return [
+                            'wanDevice' => $wanDevice,
+                            'wanConnDevice' => $wanConnDevice,
+                            'wanConn' => $wanConn,
+                            'externalIp' => $ipParam->value,
+                        ];
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Build detailed troubleshooting parameters from discovery results
      */
     public function buildDetailedParametersFromDiscovery(array $discoveryResults, string $dataModel, ?Device $device = null): array
@@ -365,6 +411,30 @@ class DeviceController extends Controller
             strtolower($device->manufacturer) === 'calix' ||
             strtoupper($device->oui) === 'D0768F'
         );
+
+        // SmartRG devices work best with partial path queries (trailing dot)
+        // This returns all parameters under a path in one request - much faster
+        $isSmartRG = $device && (
+            strtolower($device->manufacturer ?? '') === 'smartrg' ||
+            strtoupper($device->oui ?? '') === 'E82C6D'
+        );
+
+        if ($isSmartRG) {
+            // Use partial paths like USS does - gets all params under each path
+            // SmartRG uses WANDevice.3 based on USS traces
+            return [
+                'InternetGatewayDevice.DeviceInfo.',
+                'InternetGatewayDevice.Time.',
+                'InternetGatewayDevice.ManagementServer.',
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.',
+                'InternetGatewayDevice.LANDevice.1.Hosts.',
+                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.',
+                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.',
+                'InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.',
+                'InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.',
+                'InternetGatewayDevice.WANDevice.3.WANDSLInterfaceConfig.',
+            ];
+        }
 
         if ($isDevice2) {
             // WAN Information (Device:2 uses standard instances)
@@ -1725,59 +1795,113 @@ class DeviceController extends Controller
     {
         $device = Device::findOrFail($id);
 
-        // Detect manufacturer for device-specific instance handling
+        // Detect manufacturer for device-specific WAN path handling
         $isCalix = strtolower($device->manufacturer) === 'calix' ||
             strtoupper($device->oui) === 'D0768F';
 
+        $isSmartRG = strtolower($device->manufacturer) === 'smartrg' ||
+            strtoupper($device->oui) === 'E82C6D';
+
         if ($isCalix) {
             // Calix uses WANDevice.3.WANConnectionDevice.1.WANIPConnection.2
-            $wanIdx = 3;
-            $connIdx = 2;
+            $wanDeviceIdx = 3;
+            $wanConnDeviceIdx = 1;
+            $wanConnIdx = 2;
+        } elseif ($isSmartRG) {
+            // SmartRG: Find the active WAN connection dynamically
+            // Look for WANIPConnection with ConnectionStatus=Connected and valid ExternalIPAddress
+            $activeWan = $this->findActiveWanConnection($device);
+            if ($activeWan) {
+                $wanDeviceIdx = $activeWan['wanDevice'];
+                $wanConnDeviceIdx = $activeWan['wanConnDevice'];
+                $wanConnIdx = $activeWan['wanConn'];
+            } else {
+                // Fallback to common SmartRG path
+                $wanDeviceIdx = 2;
+                $wanConnDeviceIdx = 2;
+                $wanConnIdx = 1;
+            }
         } else {
             // Standard devices use WANDevice.1.WANConnectionDevice.1.WANIPConnection.1
-            $wanIdx = 1;
-            $connIdx = 1;
+            $wanDeviceIdx = 1;
+            $wanConnDeviceIdx = 1;
+            $wanConnIdx = 1;
         }
 
         $dataModel = $device->getDataModel();
         $isDevice2 = $dataModel === 'Device:2';
 
         if ($isDevice2) {
-            // Device:2 model - not yet implemented for Calix
+            // Device:2 model
             $portMappingPrefix = 'Device.NAT.PortMapping.';
         } else {
             // InternetGatewayDevice model
-            $portMappingPrefix = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.PortMapping.";
+            $portMappingPrefix = "InternetGatewayDevice.WANDevice.{$wanDeviceIdx}.WANConnectionDevice.{$wanConnDeviceIdx}.WANIPConnection.{$wanConnIdx}.PortMapping.";
         }
 
-        // Get all port mapping parameters
-        $portMappings = $device->parameters()
-            ->where('name', 'LIKE', $portMappingPrefix . '%')
-            ->get()
-            ->groupBy(function ($param) use ($portMappingPrefix) {
-                // Extract instance number from parameter name
-                $name = str_replace($portMappingPrefix, '', $param->name);
-                $parts = explode('.', $name);
-                return $parts[0]; // Instance number
-            })
-            ->map(function ($params, $instance) {
-                $mapping = ['instance' => (int) $instance];
-                foreach ($params as $param) {
-                    $parts = explode('.', $param->name);
-                    $field = end($parts);
-                    $mapping[$field] = $param->value;
-                }
-                return $mapping;
-            })
-            ->filter(function ($mapping) {
-                // Only include enabled mappings with required fields
-                return isset($mapping['PortMappingEnabled']) &&
-                    $mapping['PortMappingEnabled'] === '1';
-            })
-            ->values();
+        // For SmartRG, search ALL WAN interfaces for port mappings
+        // This ensures we find port forwards regardless of which interface they're on
+        if ($isSmartRG) {
+            $portMappings = $device->parameters()
+                ->where('name', 'LIKE', '%WANIPConnection%.PortMapping.%')
+                ->where('name', 'NOT LIKE', '%NumberOfEntries')
+                ->get()
+                ->groupBy(function ($param) {
+                    // Group by full path including WAN indices
+                    if (preg_match('/(.*\.PortMapping\.\d+)\./', $param->name, $matches)) {
+                        return $matches[1];
+                    }
+                    return null;
+                })
+                ->filter()
+                ->map(function ($params, $prefix) {
+                    // Extract WAN path info
+                    preg_match('/WANDevice\.(\d+)\.WANConnectionDevice\.(\d+)\.WANIPConnection\.(\d+)\.PortMapping\.(\d+)/', $prefix, $matches);
+                    $mapping = [
+                        'instance' => (int) ($matches[4] ?? 0),
+                        'wan_path' => "WANDevice.{$matches[1]}.WANConnectionDevice.{$matches[2]}.WANIPConnection.{$matches[3]}",
+                    ];
+                    foreach ($params as $param) {
+                        $parts = explode('.', $param->name);
+                        $field = end($parts);
+                        $mapping[$field] = $param->value;
+                    }
+                    return $mapping;
+                })
+                ->filter(function ($mapping) {
+                    return isset($mapping['PortMappingEnabled']) &&
+                        $mapping['PortMappingEnabled'] === '1';
+                })
+                ->values();
+        } else {
+            // Standard path-based lookup for other devices
+            $portMappings = $device->parameters()
+                ->where('name', 'LIKE', $portMappingPrefix . '%')
+                ->get()
+                ->groupBy(function ($param) use ($portMappingPrefix) {
+                    $name = str_replace($portMappingPrefix, '', $param->name);
+                    $parts = explode('.', $name);
+                    return $parts[0];
+                })
+                ->map(function ($params, $instance) {
+                    $mapping = ['instance' => (int) $instance];
+                    foreach ($params as $param) {
+                        $parts = explode('.', $param->name);
+                        $field = end($parts);
+                        $mapping[$field] = $param->value;
+                    }
+                    return $mapping;
+                })
+                ->filter(function ($mapping) {
+                    return isset($mapping['PortMappingEnabled']) &&
+                        $mapping['PortMappingEnabled'] === '1';
+                })
+                ->values();
+        }
 
         return response()->json([
             'port_mappings' => $portMappings,
+            'active_wan_path' => $isSmartRG ? "WANDevice.{$wanDeviceIdx}.WANConnectionDevice.{$wanConnDeviceIdx}.WANIPConnection.{$wanConnIdx}" : null,
         ]);
     }
 
@@ -1796,18 +1920,37 @@ class DeviceController extends Controller
             'internal_client' => 'required|ip',
         ]);
 
-        // Detect manufacturer for device-specific instance handling
+        // Detect manufacturer for device-specific WAN path handling
         $isCalix = strtolower($device->manufacturer) === 'calix' ||
             strtoupper($device->oui) === 'D0768F';
 
+        $isSmartRG = strtolower($device->manufacturer) === 'smartrg' ||
+            strtoupper($device->oui) === 'E82C6D';
+
         if ($isCalix) {
             // Calix uses WANDevice.3.WANConnectionDevice.1.WANIPConnection.2
-            $wanIdx = 3;
-            $connIdx = 2;
+            $wanDeviceIdx = 3;
+            $wanConnDeviceIdx = 1;
+            $wanConnIdx = 2;
+        } elseif ($isSmartRG) {
+            // SmartRG: Find the active WAN connection dynamically
+            // Look for WANIPConnection with ConnectionStatus=Connected and valid ExternalIPAddress
+            $activeWan = $this->findActiveWanConnection($device);
+            if ($activeWan) {
+                $wanDeviceIdx = $activeWan['wanDevice'];
+                $wanConnDeviceIdx = $activeWan['wanConnDevice'];
+                $wanConnIdx = $activeWan['wanConn'];
+            } else {
+                // Fallback to common SmartRG path
+                $wanDeviceIdx = 2;
+                $wanConnDeviceIdx = 2;
+                $wanConnIdx = 1;
+            }
         } else {
             // Standard devices use WANDevice.1.WANConnectionDevice.1.WANIPConnection.1
-            $wanIdx = 1;
-            $connIdx = 1;
+            $wanDeviceIdx = 1;
+            $wanConnDeviceIdx = 1;
+            $wanConnIdx = 1;
         }
 
         $dataModel = $device->getDataModel();
@@ -1818,7 +1961,7 @@ class DeviceController extends Controller
             $portMappingPrefix = 'Device.NAT.PortMapping';
         } else {
             // InternetGatewayDevice model
-            $portMappingPrefix = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.PortMapping";
+            $portMappingPrefix = "InternetGatewayDevice.WANDevice.{$wanDeviceIdx}.WANConnectionDevice.{$wanConnDeviceIdx}.WANIPConnection.{$wanConnIdx}.PortMapping";
         }
 
         // Find next available instance number
@@ -1841,44 +1984,66 @@ class DeviceController extends Controller
         }
 
         // Build parameters for the new port mapping
+        // Use {instance} placeholder for SmartRG (will be replaced after AddObject returns the instance number)
+        $instancePlaceholder = $isSmartRG ? '{instance}' : $instance;
+
         $parameters = [
-            "{$portMappingPrefix}.{$instance}.PortMappingEnabled" => [
+            "{$portMappingPrefix}.{$instancePlaceholder}.PortMappingEnabled" => [
                 'value' => true,
                 'type' => 'xsd:boolean',
             ],
-            "{$portMappingPrefix}.{$instance}.PortMappingDescription" => [
+            "{$portMappingPrefix}.{$instancePlaceholder}.PortMappingDescription" => [
                 'value' => $validated['description'],
                 'type' => 'xsd:string',
             ],
-            "{$portMappingPrefix}.{$instance}.PortMappingProtocol" => [
+            "{$portMappingPrefix}.{$instancePlaceholder}.PortMappingProtocol" => [
                 'value' => $validated['protocol'],
                 'type' => 'xsd:string',
             ],
-            "{$portMappingPrefix}.{$instance}.ExternalPort" => [
+            "{$portMappingPrefix}.{$instancePlaceholder}.ExternalPort" => [
                 'value' => $validated['external_port'],
                 'type' => 'xsd:unsignedInt',
             ],
-            "{$portMappingPrefix}.{$instance}.ExternalPortEndRange" => [
-                'value' => $validated['external_port'],
-                'type' => 'xsd:unsignedInt',
-            ],
-            "{$portMappingPrefix}.{$instance}.InternalPort" => [
+            "{$portMappingPrefix}.{$instancePlaceholder}.InternalPort" => [
                 'value' => $validated['internal_port'],
                 'type' => 'xsd:unsignedInt',
             ],
-            "{$portMappingPrefix}.{$instance}.InternalClient" => [
+            "{$portMappingPrefix}.{$instancePlaceholder}.InternalClient" => [
                 'value' => $validated['internal_client'],
                 'type' => 'xsd:string',
             ],
         ];
 
-        // Create task to add the port mapping
-        $task = Task::create([
-            'device_id' => $device->id,
-            'task_type' => 'set_parameter_values',
-            'status' => 'pending',
-            'parameters' => $parameters,
-        ]);
+        // Add ExternalPortEndRange only for non-SmartRG devices (SmartRG doesn't support it)
+        if (!$isSmartRG) {
+            $parameters["{$portMappingPrefix}.{$instancePlaceholder}.ExternalPortEndRange"] = [
+                'value' => $validated['external_port'],
+                'type' => 'xsd:unsignedInt',
+            ];
+        }
+
+        // SmartRG requires AddObject first to create the instance, then SetParameterValues
+        if ($isSmartRG) {
+            $task = Task::create([
+                'device_id' => $device->id,
+                'task_type' => 'add_object',
+                'description' => 'Create port mapping instance',
+                'status' => 'pending',
+                'parameters' => [
+                    'object_name' => "{$portMappingPrefix}.",
+                    'follow_up_parameters' => $parameters,
+                ],
+            ]);
+        } else {
+            // Other devices - directly set parameters
+            $task = Task::create([
+                'device_id' => $device->id,
+                'task_type' => 'set_parameter_values',
+                'description' => 'Add port mapping',
+                'status' => 'pending',
+                'parameters' => $parameters,
+            ]);
+        }
 
         // Trigger connection request
         $this->connectionRequestService->sendConnectionRequest($device);
@@ -1886,7 +2051,7 @@ class DeviceController extends Controller
         return response()->json([
             'task' => $task,
             'message' => 'Port mapping creation initiated',
-            'instance' => $instance,
+            'instance' => $isSmartRG ? 'pending' : $instance,
         ]);
     }
 
@@ -1901,18 +2066,37 @@ class DeviceController extends Controller
             'instance' => 'required|integer|min:1',
         ]);
 
-        // Detect manufacturer for device-specific instance handling
+        // Detect manufacturer for device-specific WAN path handling
         $isCalix = strtolower($device->manufacturer) === 'calix' ||
             strtoupper($device->oui) === 'D0768F';
 
+        $isSmartRG = strtolower($device->manufacturer) === 'smartrg' ||
+            strtoupper($device->oui) === 'E82C6D';
+
         if ($isCalix) {
             // Calix uses WANDevice.3.WANConnectionDevice.1.WANIPConnection.2
-            $wanIdx = 3;
-            $connIdx = 2;
+            $wanDeviceIdx = 3;
+            $wanConnDeviceIdx = 1;
+            $wanConnIdx = 2;
+        } elseif ($isSmartRG) {
+            // SmartRG: Find the active WAN connection dynamically
+            // Look for WANIPConnection with ConnectionStatus=Connected and valid ExternalIPAddress
+            $activeWan = $this->findActiveWanConnection($device);
+            if ($activeWan) {
+                $wanDeviceIdx = $activeWan['wanDevice'];
+                $wanConnDeviceIdx = $activeWan['wanConnDevice'];
+                $wanConnIdx = $activeWan['wanConn'];
+            } else {
+                // Fallback to common SmartRG path
+                $wanDeviceIdx = 2;
+                $wanConnDeviceIdx = 2;
+                $wanConnIdx = 1;
+            }
         } else {
             // Standard devices use WANDevice.1.WANConnectionDevice.1.WANIPConnection.1
-            $wanIdx = 1;
-            $connIdx = 1;
+            $wanDeviceIdx = 1;
+            $wanConnDeviceIdx = 1;
+            $wanConnIdx = 1;
         }
 
         $dataModel = $device->getDataModel();
@@ -1923,7 +2107,7 @@ class DeviceController extends Controller
             $objectName = "Device.NAT.PortMapping.{$validated['instance']}.";
         } else {
             // InternetGatewayDevice model
-            $objectName = "InternetGatewayDevice.WANDevice.{$wanIdx}.WANConnectionDevice.1.WANIPConnection.{$connIdx}.PortMapping.{$validated['instance']}.";
+            $objectName = "InternetGatewayDevice.WANDevice.{$wanDeviceIdx}.WANConnectionDevice.{$wanConnDeviceIdx}.WANIPConnection.{$wanConnIdx}.PortMapping.{$validated['instance']}.";
         }
 
         // Create task to delete the port mapping
@@ -1942,6 +2126,82 @@ class DeviceController extends Controller
         return response()->json([
             'task' => $task,
             'message' => 'Port mapping deletion initiated',
+        ]);
+    }
+
+    /**
+     * Get list of connected devices on the LAN
+     */
+    public function getConnectedDevices(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+        $connectedDevices = [];
+
+        // Try to get LAN hosts from device parameters
+        // Different data models use different paths
+        $hostPaths = [
+            'Device.Hosts.Host.',  // TR-181
+            'InternetGatewayDevice.LANDevice.1.Hosts.Host.',  // TR-098
+        ];
+
+        foreach ($hostPaths as $basePath) {
+            $hosts = $device->parameters()
+                ->where('name', 'LIKE', $basePath . '%')
+                ->get();
+
+            if ($hosts->isEmpty()) {
+                continue;
+            }
+
+            // Group parameters by host instance
+            $hostInstances = [];
+            foreach ($hosts as $param) {
+                // Extract host instance number (e.g., "Host.1." from "Device.Hosts.Host.1.IPAddress")
+                if (preg_match('/Host\.(\d+)\./', $param->name, $matches)) {
+                    $instanceNum = $matches[1];
+                    if (!isset($hostInstances[$instanceNum])) {
+                        $hostInstances[$instanceNum] = [];
+                    }
+                    // Extract parameter name after instance (e.g., "IPAddress" from "Device.Hosts.Host.1.IPAddress")
+                    $paramName = substr($param->name, strrpos($param->name, '.') + 1);
+                    $hostInstances[$instanceNum][$paramName] = $param->value;
+                }
+            }
+
+            // Build connected devices list
+            foreach ($hostInstances as $hostData) {
+                $ipAddress = $hostData['IPAddress'] ?? null;
+                $macAddress = $hostData['MACAddress'] ?? $hostData['PhysAddress'] ?? null;
+                $hostname = $hostData['HostName'] ?? null;
+                // Check for active: supports 'true', '1', true, 1
+                $activeValue = $hostData['Active'] ?? 'false';
+                $active = in_array($activeValue, ['true', '1', 1, true], true) || $activeValue === '1';
+
+                // Only include active devices with valid IP addresses
+                if ($active && $ipAddress && filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                    $connectedDevices[] = [
+                        'ip' => $ipAddress,
+                        'mac' => $macAddress,
+                        'hostname' => $hostname ?: 'Unknown Device',
+                        'label' => ($hostname ?: 'Unknown Device') . ' (' . $ipAddress . ')',
+                    ];
+                }
+            }
+
+            // If we found hosts, no need to check other paths
+            if (!empty($connectedDevices)) {
+                break;
+            }
+        }
+
+        // Sort by IP address
+        usort($connectedDevices, function ($a, $b) {
+            return ip2long($a['ip']) - ip2long($b['ip']);
+        });
+
+        return response()->json([
+            'connected_devices' => $connectedDevices,
+            'count' => count($connectedDevices),
         ]);
     }
 
@@ -2078,12 +2338,16 @@ class DeviceController extends Controller
         ]);
 
         $testType = $validated['test_type'];
-        // Use USS's speedtest server (verified working in traces)
-        $downloadUrl = $validated['download_url'] ?? 'http://speedtest.nisc-uss.com/2000mb.test';
-        $uploadUrl = $validated['upload_url'] ?? 'http://speedtest.nisc-uss.com/upload';
+        // Use Hay's TR-143 speedtest server
+        $downloadUrl = $validated['download_url'] ?? 'http://tr143.hay.net/download.zip';
+        $uploadUrl = $validated['upload_url'] ?? 'http://tr143.hay.net/handler.php';
 
         $dataModel = $device->getDataModel();
         $isDevice2 = $dataModel === 'Device:2';
+
+        // Detect SmartRG for combined parameter approach
+        $isSmartRG = strtolower($device->manufacturer ?? '') === 'smartrg' ||
+            strtoupper($device->oui ?? '') === 'E82C6D';
 
         $tasks = [];
 
@@ -2093,103 +2357,218 @@ class DeviceController extends Controller
                 ? 'Device.IP.Diagnostics.DownloadDiagnostics'
                 : 'InternetGatewayDevice.DownloadDiagnostics';
 
-            // USS pattern: First set NumberOfConnections separately
-            $configTask = Task::create([
-                'device_id' => $device->id,
-                'task_type' => 'set_parameter_values',
-                'status' => 'pending',
-                'parameters' => [
-                    "{$downloadPrefix}.NumberOfConnections" => [
-                        'value' => '2',
-                        'type' => 'xsd:unsignedInt',
+            if ($isSmartRG) {
+                // SmartRG: USS pattern - config params first, then trigger (REQUIRES TimeBasedTestDuration!)
+                // Task 1: Set NumberOfConnections
+                $configTask1 = Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'set_parameter_values',
+                    'status' => 'pending',
+                    'parameters' => [
+                        "{$downloadPrefix}.NumberOfConnections" => [
+                            'value' => '2',
+                            'type' => 'xsd:unsignedInt',
+                        ],
                     ],
-                ],
-            ]);
+                ]);
+                $tasks[] = $configTask1;
 
-            $tasks[] = $configTask;
+                // Task 2: Set TimeBasedTestDuration (CRITICAL - USS sets this for download too!)
+                $configTask2 = Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'set_parameter_values',
+                    'status' => 'pending',
+                    'parameters' => [
+                        "{$downloadPrefix}.TimeBasedTestDuration" => [
+                            'value' => '12',
+                            'type' => 'xsd:unsignedInt',
+                        ],
+                    ],
+                ]);
+                $tasks[] = $configTask2;
 
-            // Then set DiagnosticsState + URL to trigger the test
-            $downloadParams = [
-                "{$downloadPrefix}.DiagnosticsState" => [
-                    'value' => 'Requested',
-                    'type' => 'xsd:string',
-                ],
-                "{$downloadPrefix}.DownloadURL" => [
-                    'value' => $downloadUrl,
-                    'type' => 'xsd:string',
-                ],
-            ];
+                // Task 3: Set DiagnosticsState + DownloadURL to trigger test
+                $downloadTask = Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'download_diagnostics',
+                    'status' => 'pending',
+                    'parameters' => [
+                        "{$downloadPrefix}.DiagnosticsState" => [
+                            'value' => 'Requested',
+                            'type' => 'xsd:string',
+                        ],
+                        "{$downloadPrefix}.DownloadURL" => [
+                            'value' => $downloadUrl,
+                            'type' => 'xsd:string',
+                        ],
+                    ],
+                ]);
+                $tasks[] = $downloadTask;
+            } else {
+                // Standard devices: Separate config and trigger tasks
+                $configTask = Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'set_parameter_values',
+                    'status' => 'pending',
+                    'parameters' => [
+                        "{$downloadPrefix}.NumberOfConnections" => [
+                            'value' => '2',
+                            'type' => 'xsd:unsignedInt',
+                        ],
+                    ],
+                ]);
 
-            $downloadTask = Task::create([
-                'device_id' => $device->id,
-                'task_type' => 'download_diagnostics',
-                'status' => 'pending',
-                'parameters' => $downloadParams,
-            ]);
+                $tasks[] = $configTask;
 
-            $tasks[] = $downloadTask;
+                // Then set DiagnosticsState + URL to trigger the test
+                $downloadParams = [
+                    "{$downloadPrefix}.DiagnosticsState" => [
+                        'value' => 'Requested',
+                        'type' => 'xsd:string',
+                    ],
+                    "{$downloadPrefix}.DownloadURL" => [
+                        'value' => $downloadUrl,
+                        'type' => 'xsd:string',
+                    ],
+                ];
+
+                $downloadTask = Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'download_diagnostics',
+                    'status' => 'pending',
+                    'parameters' => $downloadParams,
+                ]);
+
+                $tasks[] = $downloadTask;
+            }
         }
 
-        // Upload Test
-        if ($testType === 'upload' || $testType === 'both') {
+        // For "both" tests, store upload config in download task metadata
+        // Upload will be queued automatically when download completes
+        if ($testType === 'both' && isset($downloadTask)) {
+            $downloadTask->progress_info = [
+                'queue_upload_after' => true,
+                'upload_url' => $uploadUrl,
+                'is_device2' => $isDevice2,
+                'is_smartrg' => $isSmartRG,
+            ];
+            $downloadTask->save();
+        }
+
+        // Upload Test (only queue immediately if user selected "upload" only, not "both")
+        if ($testType === 'upload') {
             $uploadPrefix = $isDevice2
                 ? 'Device.IP.Diagnostics.UploadDiagnostics'
                 : 'InternetGatewayDevice.UploadDiagnostics';
 
-            // USS pattern: First set NumberOfConnections separately
-            $configTask1 = Task::create([
-                'device_id' => $device->id,
-                'task_type' => 'set_parameter_values',
-                'status' => 'pending',
-                'parameters' => [
-                    "{$uploadPrefix}.NumberOfConnections" => [
-                        'value' => '10',
+            if ($isSmartRG) {
+                // SmartRG: USS pattern - config params first (separately), then trigger params together
+                // Task 1: Set NumberOfConnections
+                $configTask1 = Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'set_parameter_values',
+                    'status' => 'pending',
+                    'parameters' => [
+                        "{$uploadPrefix}.NumberOfConnections" => [
+                            'value' => '2',
+                            'type' => 'xsd:unsignedInt',
+                        ],
+                    ],
+                ]);
+                $tasks[] = $configTask1;
+
+                // Task 2: Set TimeBasedTestDuration
+                $configTask2 = Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'set_parameter_values',
+                    'status' => 'pending',
+                    'parameters' => [
+                        "{$uploadPrefix}.TimeBasedTestDuration" => [
+                            'value' => '12',
+                            'type' => 'xsd:unsignedInt',
+                        ],
+                    ],
+                ]);
+                $tasks[] = $configTask2;
+
+                // Task 3: Set DiagnosticsState + UploadURL + TestFileLength together to trigger test
+                $uploadTask = Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'upload_diagnostics',
+                    'status' => 'pending',
+                    'parameters' => [
+                        "{$uploadPrefix}.DiagnosticsState" => [
+                            'value' => 'Requested',
+                            'type' => 'xsd:string',
+                        ],
+                        "{$uploadPrefix}.UploadURL" => [
+                            'value' => $uploadUrl,
+                            'type' => 'xsd:string',
+                        ],
+                        "{$uploadPrefix}.TestFileLength" => [
+                            'value' => '1858291200',  // ~1.7GB (USS default from trace)
+                            'type' => 'xsd:unsignedInt',
+                        ],
+                    ],
+                ]);
+                $tasks[] = $uploadTask;
+            } else {
+                // Standard devices: Separate config and trigger tasks
+                // USS uses 2 connections for upload, not 10
+                $configTask1 = Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'set_parameter_values',
+                    'status' => 'pending',
+                    'parameters' => [
+                        "{$uploadPrefix}.NumberOfConnections" => [
+                            'value' => '2',
+                            'type' => 'xsd:unsignedInt',
+                        ],
+                    ],
+                ]);
+
+                $tasks[] = $configTask1;
+
+                // Then set TimeBasedTestDuration
+                $configTask2 = Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'set_parameter_values',
+                    'status' => 'pending',
+                    'parameters' => [
+                        "{$uploadPrefix}.TimeBasedTestDuration" => [
+                            'value' => '12',
+                            'type' => 'xsd:unsignedInt',
+                        ],
+                    ],
+                ]);
+
+                $tasks[] = $configTask2;
+
+                // Finally set DiagnosticsState + URL + TestFileLength to trigger the test
+                $uploadParams = [
+                    "{$uploadPrefix}.DiagnosticsState" => [
+                        'value' => 'Requested',
+                        'type' => 'xsd:string',
+                    ],
+                    "{$uploadPrefix}.UploadURL" => [
+                        'value' => $uploadUrl,
+                        'type' => 'xsd:string',
+                    ],
+                    "{$uploadPrefix}.TestFileLength" => [
+                        'value' => '1858291200',  // ~1.7GB (USS default from trace)
                         'type' => 'xsd:unsignedInt',
                     ],
-                ],
-            ]);
+                ];
 
-            $tasks[] = $configTask1;
+                $uploadTask = Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'upload_diagnostics',
+                    'status' => 'pending',
+                    'parameters' => $uploadParams,
+                ]);
 
-            // Then set TimeBasedTestDuration
-            $configTask2 = Task::create([
-                'device_id' => $device->id,
-                'task_type' => 'set_parameter_values',
-                'status' => 'pending',
-                'parameters' => [
-                    "{$uploadPrefix}.TimeBasedTestDuration" => [
-                        'value' => '12',
-                        'type' => 'xsd:unsignedInt',
-                    ],
-                ],
-            ]);
-
-            $tasks[] = $configTask2;
-
-            // Finally set DiagnosticsState + URL + TestFileLength to trigger the test
-            $uploadParams = [
-                "{$uploadPrefix}.DiagnosticsState" => [
-                    'value' => 'Requested',
-                    'type' => 'xsd:string',
-                ],
-                "{$uploadPrefix}.UploadURL" => [
-                    'value' => $uploadUrl,
-                    'type' => 'xsd:string',
-                ],
-                "{$uploadPrefix}.TestFileLength" => [
-                    'value' => '1858291200',  // ~1.7GB (USS default from trace)
-                    'type' => 'xsd:unsignedInt',
-                ],
-            ];
-
-            $uploadTask = Task::create([
-                'device_id' => $device->id,
-                'task_type' => 'upload_diagnostics',
-                'status' => 'pending',
-                'parameters' => $uploadParams,
-            ]);
-
-            $tasks[] = $uploadTask;
+                $tasks[] = $uploadTask;
+            }
         }
 
         // Trigger connection request
@@ -2257,8 +2636,8 @@ class DeviceController extends Controller
                 'eom_time' => $uploadParams['EOMTime'] ?? null,
                 'test_bytes_sent' => $uploadParams['TestBytesSent'] ?? null,
                 'total_bytes_sent' => $uploadParams['TotalBytesSent'] ?? null,
-                'upload_speed_kbps' => isset($uploadParams['TestBytesSent'], $uploadParams['BOMTime'], $uploadParams['EOMTime'])
-                    ? $this->calculateSpeed($uploadParams['TestBytesSent'], $uploadParams['BOMTime'], $uploadParams['EOMTime'])
+                'upload_speed_kbps' => isset($uploadParams['TotalBytesSent'], $uploadParams['BOMTime'], $uploadParams['EOMTime'])
+                    ? $this->calculateSpeed($uploadParams['TotalBytesSent'], $uploadParams['BOMTime'], $uploadParams['EOMTime'])
                     : null,
             ],
         ]);
@@ -2303,11 +2682,21 @@ class DeviceController extends Controller
     private function calculateSpeed(string $bytes, string $startTime, string $endTime): ?int
     {
         try {
+            // Check for invalid/empty timing fields
+            if (empty($bytes) || empty($startTime) || empty($endTime)) {
+                return null;
+            }
+
+            // Check for placeholder dates (device hasn't run test yet)
+            if (str_starts_with($startTime, '0001-01-01') || str_starts_with($endTime, '0001-01-01')) {
+                return null;
+            }
+
             $start = \Carbon\Carbon::parse($startTime);
             $end = \Carbon\Carbon::parse($endTime);
-            $durationSeconds = $end->diffInSeconds($start);
+            $durationSeconds = abs($end->diffInSeconds($start, false)); // false = signed difference, then abs()
 
-            if ($durationSeconds <= 0) {
+            if ($durationSeconds <= 0 || (int) $bytes <= 0) {
                 return null;
             }
 

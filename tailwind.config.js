@@ -9,8 +9,6 @@ export default {
         './resources/views/**/*.blade.php',
     ],
 
-    darkMode: 'class',
-
     theme: {
         extend: {
             fontFamily: {
@@ -18,22 +16,6 @@ export default {
             },
         },
     },
-
-    safelist: [
-        // Safelist all theme colors so they're always compiled
-        {
-            pattern: /bg-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(50|100|200|300|400|500|600|700|800|900|950)/,
-            variants: ['dark', 'hover', 'dark:hover'],
-        },
-        {
-            pattern: /text-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(50|100|200|300|400|500|600|700|800|900|950)/,
-            variants: ['dark', 'hover', 'dark:hover'],
-        },
-        {
-            pattern: /border-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(50|100|200|300|400|500|600|700|800|900|950)/,
-            variants: ['dark', 'hover', 'dark:hover'],
-        },
-    ],
 
     plugins: [forms],
 };
