@@ -5,11 +5,13 @@
              scanning: false,
              scanState: null,
              scanResults: [],
-             lastUpdate: null,
+             lastScanCompleted: null,
+             pollStatus: null,
 
              async startScan() {
                  this.scanning = true;
                  this.scanState = 'Requested';
+                 this.pollStatus = 'Waiting for device to receive scan request...';
                  try {
                      const response = await fetch('/api/devices/{{ $device->id }}/wifi-scan', {
                          method: 'POST',
@@ -25,21 +27,25 @@
                      } else {
                          alert('Failed to start scan: ' + (data.message || 'Unknown error'));
                          this.scanning = false;
+                         this.pollStatus = null;
                      }
                  } catch (error) {
                      alert('Error starting scan: ' + error.message);
                      this.scanning = false;
+                     this.pollStatus = null;
                  }
              },
 
              async pollResults() {
                  const maxAttempts = 120;
                  let attempts = 0;
+                 let sawNonComplete = false; // Track if scan has started
 
                  const poll = async () => {
                      if (attempts++ >= maxAttempts) {
                          this.scanning = false;
-                         this.scanState = 'Timeout - Device may require up to 5 minutes to check in';
+                         this.scanState = 'Timeout';
+                         this.pollStatus = 'Device may require up to 5 minutes to check in';
                          return;
                      }
 
@@ -49,14 +55,40 @@
                          });
                          const data = await response.json();
 
-                         this.scanState = data.state || 'Waiting for device...';
-                         this.lastUpdate = new Date().toLocaleTimeString();
+                         const deviceState = data.state || '';
+                         const stateLC = deviceState.toLowerCase();
+                         const isComplete = stateLC === 'complete' || stateLC === 'completed';
+                         const isError = stateLC.includes('error');
 
-                         if (data.state === 'Complete') {
-                             this.scanResults = data.results;
+                         // Track if we saw a non-complete state (scan actually started)
+                         if (!isComplete && !isError && stateLC !== 'none' && stateLC !== '') {
+                             sawNonComplete = true;
+                         }
+
+                         // Show user-friendly status during polling
+                         if (sawNonComplete) {
+                             this.scanState = deviceState;
+                             this.pollStatus = 'Scan in progress on device...';
+                         } else if (isComplete && attempts <= 5) {
+                             // Still showing old completed state, waiting for new scan to start
+                             this.scanState = 'Requested';
+                             this.pollStatus = 'Waiting for device to start scan... (poll ' + attempts + ')';
+                         } else {
+                             this.scanState = deviceState || 'Waiting for device...';
+                             this.pollStatus = 'Polling device status... (attempt ' + attempts + ')';
+                         }
+
+                         // Only finish if we saw the scan transition OR waited at least 5 polls (~15 sec)
+                         // This prevents immediately seeing leftover Completed state from previous scan
+                         if (isComplete && (sawNonComplete || attempts > 5)) {
+                             this.scanResults = data.results || [];
                              this.scanning = false;
-                         } else if (data.state === 'Error' || data.state === 'Error_Internal') {
+                             this.scanState = 'Completed';
+                             this.pollStatus = null;
+                             this.lastScanCompleted = new Date().toLocaleTimeString();
+                         } else if (isError) {
                              this.scanning = false;
+                             this.pollStatus = null;
                              alert('Scan failed - device reported an error');
                          } else {
                              setTimeout(poll, 3000);
@@ -64,6 +96,7 @@
                      } catch (error) {
                          console.error('Error polling results:', error);
                          this.scanning = false;
+                         this.pollStatus = null;
                      }
                  };
 
@@ -76,7 +109,10 @@
                      const data = await response.json();
                      this.scanState = data.state;
                      this.scanResults = data.results;
-                     this.lastUpdate = new Date().toLocaleTimeString();
+                     // Only update lastScanCompleted if we have results and state is complete
+                     if (data.results && data.results.length > 0 && !this.lastScanCompleted) {
+                         this.lastScanCompleted = 'Previously loaded';
+                     }
                  } catch (error) {
                      console.error('Error refreshing results:', error);
                  }
@@ -130,8 +166,8 @@
                 <p class="mt-1 text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}">
                     Scan for nearby WiFi networks to identify interference and channel congestion
                 </p>
-                <div x-show="lastUpdate" class="mt-1 text-xs text-gray-400 dark:text-{{ $colors['text-muted'] }}">
-                    Last updated: <span x-text="lastUpdate"></span>
+                <div x-show="lastScanCompleted" class="mt-1 text-xs text-gray-400 dark:text-{{ $colors['text-muted'] }}">
+                    Last scan completed: <span x-text="lastScanCompleted"></span>
                 </div>
             </div>
             <div class="flex space-x-3">
@@ -159,14 +195,17 @@
         </div>
 
         <!-- Scan Status -->
-        <div x-show="scanState" class="mb-4 p-4 rounded-md"
+        <div x-show="scanState || pollStatus" class="mb-4 p-4 rounded-md"
              :class="{
-                 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300': scanState === 'Requested' || scanState === 'InProgress',
-                 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300': scanState === 'Complete',
+                 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300': scanning || scanState === 'Requested' || scanState === 'InProgress',
+                 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300': !scanning && (scanState === 'Complete' || scanState === 'Completed'),
                  'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300': scanState === 'Error' || scanState === 'Timeout'
              }">
             <p class="text-sm font-medium">
                 Status: <span x-text="scanState"></span>
+            </p>
+            <p x-show="pollStatus" class="text-xs mt-1 opacity-75">
+                <span x-text="pollStatus"></span>
             </p>
         </div>
 

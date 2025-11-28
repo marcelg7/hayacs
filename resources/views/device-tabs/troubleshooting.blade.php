@@ -49,7 +49,7 @@
 
         // Determine data model
         $dataModel = $device->getDataModel();
-        $isDevice2 = $dataModel === 'Device:2';
+        $isDevice2 = $dataModel === 'TR-181';
     @endphp
 
     <!-- 1. WAN Information -->
@@ -313,7 +313,7 @@
                     </div>
                 </div>
             @empty
-                <p class="text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }} text-center py-4">No WiFi radio information available. Click "Query Device Info" to fetch WiFi parameters.</p>
+                <p class="text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }} text-center py-4">No WiFi radio information available. Click "Refresh" to fetch WiFi parameters.</p>
             @endforelse
         </div>
     </div>
@@ -583,7 +583,7 @@
                 </div>
             @else
                 <div class="px-6 py-8 text-center">
-                    <p class="text-sm text-gray-500 dark:text-{{ $colors["text-muted"] }}">No connected devices found. Click "Query Device Info" to fetch host table information.</p>
+                    <p class="text-sm text-gray-500 dark:text-{{ $colors["text-muted"] }}">No connected devices found. Click "Refresh" to fetch host table information.</p>
                 </div>
             @endif
         </div>

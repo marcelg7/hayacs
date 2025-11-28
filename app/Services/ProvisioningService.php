@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\ConfigBackup;
 use App\Models\Device;
+use App\Models\SubscriberEquipment;
 use App\Models\Task;
 use Illuminate\Support\Facades\Log;
 
@@ -13,12 +15,34 @@ class ProvisioningService
      */
     public function autoProvision(Device $device, array $informEvents): void
     {
-        // Check if this is a bootstrap event (first connection)
+        // Check if this is a bootstrap event (first connection or factory reset)
         $isBootstrap = $this->hasBootstrapEvent($informEvents);
 
         if ($isBootstrap) {
-            Log::info('Auto-provisioning new device', ['device_id' => $device->id]);
-            $this->provisionNewDevice($device);
+            // Check if device has existing backups older than 1 minute
+            // If backup is very recent, it was just created - this is a new device
+            // If backup is older, device had backups before - this is a factory reset
+            $existingBackup = $device->configBackups()
+                ->where('created_at', '<', now()->subMinute())
+                ->latest()
+                ->first();
+
+            if ($existingBackup) {
+                // Factory reset detected - restore from existing backup
+                Log::info('Factory reset detected - restoring from backup', [
+                    'device_id' => $device->id,
+                    'backup_id' => $existingBackup->id,
+                    'backup_name' => $existingBackup->name,
+                ]);
+                $this->restoreFromBackup($device, $existingBackup);
+            } else {
+                // New device - apply standard provisioning
+                Log::info('Auto-provisioning new device', ['device_id' => $device->id]);
+                $this->provisionNewDevice($device);
+            }
+
+            // Link device to subscriber if not already linked
+            $this->linkToSubscriber($device);
         }
 
         // Apply manufacturer-specific provisioning
@@ -72,11 +96,120 @@ class ProvisioningService
                 'status' => 'pending',
             ]);
 
+            // Store connection request credentials in database
+            // Since we're setting them on the device, we know what they are
+            $crUsername = config('cwmp.connection_request_username', 'admin');
+            $crPassword = config('cwmp.connection_request_password', 'admin');
+            $device->update([
+                'connection_request_username' => $crUsername,
+                'connection_request_password' => $crPassword,
+            ]);
+
             Log::info('Created standard configuration task', [
                 'device_id' => $device->id,
                 'params' => array_keys($standardConfig),
             ]);
         }
+    }
+
+    /**
+     * Link device to subscriber based on serial number match
+     */
+    private function linkToSubscriber(Device $device): void
+    {
+        // Skip if already linked
+        if ($device->subscriber_id) {
+            return;
+        }
+
+        // Skip if no serial number
+        if (empty($device->serial_number)) {
+            return;
+        }
+
+        // Find matching equipment by serial number (case-insensitive)
+        $equipment = SubscriberEquipment::whereRaw('LOWER(serial) = ?', [strtolower($device->serial_number)])
+            ->first();
+
+        if ($equipment && $equipment->subscriber_id) {
+            $device->update(['subscriber_id' => $equipment->subscriber_id]);
+
+            Log::info('Device linked to subscriber', [
+                'device_id' => $device->id,
+                'serial_number' => $device->serial_number,
+                'subscriber_id' => $equipment->subscriber_id,
+            ]);
+        }
+    }
+
+    /**
+     * Restore device from a backup after factory reset
+     */
+    private function restoreFromBackup(Device $device, ConfigBackup $backup): void
+    {
+        // Check if there's already a pending restore task to avoid duplicates
+        $existingRestoreTask = Task::where('device_id', $device->id)
+            ->where('task_type', 'set_parameter_values')
+            ->whereIn('status', ['pending', 'sent'])
+            ->where('description', 'like', 'Auto-restore from backup%')
+            ->exists();
+
+        if ($existingRestoreTask) {
+            Log::info('Skipping auto-restore - task already exists', [
+                'device_id' => $device->id,
+            ]);
+            return;
+        }
+
+        // Filter parameters to only include writable ones
+        $writableParams = collect($backup->backup_data)
+            ->filter(function ($param, $name) {
+                // Must be writable
+                if (!($param['writable'] ?? false)) {
+                    return false;
+                }
+                // Skip management server parameters (ACS URL, credentials, etc.)
+                // These should stay at factory defaults to maintain ACS connectivity
+                if (str_contains($name, 'ManagementServer.URL') ||
+                    str_contains($name, 'ManagementServer.Username') ||
+                    str_contains($name, 'ManagementServer.Password')) {
+                    return false;
+                }
+                return true;
+            })
+            ->mapWithKeys(function ($param, $name) {
+                return [$name => [
+                    'value' => $param['value'],
+                    'type' => $param['type'] ?? 'xsd:string',
+                ]];
+            })
+            ->toArray();
+
+        if (empty($writableParams)) {
+            Log::warning('No writable parameters found in backup for auto-restore', [
+                'device_id' => $device->id,
+                'backup_id' => $backup->id,
+            ]);
+            return;
+        }
+
+        // Create task to restore the parameters
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'set_parameter_values',
+            'description' => 'Auto-restore from backup: ' . $backup->name,
+            'status' => 'pending',
+            'parameters' => $writableParams,
+        ]);
+
+        Log::info('Created auto-restore task after factory reset', [
+            'device_id' => $device->id,
+            'backup_id' => $backup->id,
+            'backup_name' => $backup->name,
+            'task_id' => $task->id,
+            'writable_params_count' => count($writableParams),
+            'total_params_in_backup' => count($backup->backup_data),
+        ]);
     }
 
     /**
@@ -87,25 +220,56 @@ class ProvisioningService
         $dataModel = $device->getDataModel();
         $config = [];
 
+        // Connection request credentials - allows ACS to initiate connections
+        $crUsername = config('cwmp.connection_request_username', 'admin');
+        $crPassword = config('cwmp.connection_request_password', 'admin');
+
+        // Check if this is a Nokia/Alcatel-Lucent device
+        $nokiaOuis = ['80AB4D', '0C7C28'];
+        $isNokia = in_array(strtoupper($device->oui ?? ''), $nokiaOuis) ||
+            stripos($device->manufacturer ?? '', 'Nokia') !== false ||
+            stripos($device->manufacturer ?? '', 'Alcatel') !== false ||
+            stripos($device->manufacturer ?? '', 'ALCL') !== false;
+
         if ($dataModel === 'TR-098') {
+            // Base TR-098 config - management server settings
             $config = [
                 // Enable periodic inform every 5 minutes
                 'InternetGatewayDevice.ManagementServer.PeriodicInformEnable' => '1',
                 'InternetGatewayDevice.ManagementServer.PeriodicInformInterval' => '300',
 
-                // Enable NTP
-                'InternetGatewayDevice.Time.Enable' => '1',
-                'InternetGatewayDevice.Time.NTPServer1' => 'pool.ntp.org',
+                // Set connection request credentials
+                'InternetGatewayDevice.ManagementServer.ConnectionRequestUsername' => $crUsername,
+                'InternetGatewayDevice.ManagementServer.ConnectionRequestPassword' => $crPassword,
             ];
+
+            // Nokia Beacon G6 TR-098 uses different time parameter paths
+            if ($isNokia) {
+                // Nokia uses InternetGatewayDevice.Time.LocalTimeZoneName for timezone
+                // and InternetGatewayDevice.Time.NTPServer1 exists but as a different path
+                // The Time.Enable parameter doesn't exist on Nokia - skip NTP config
+                // Nokia devices handle NTP automatically
+                Log::info('Nokia TR-098 device detected - skipping NTP configuration', [
+                    'device_id' => $device->id,
+                ]);
+            } else {
+                // Standard TR-098 NTP configuration
+                $config['InternetGatewayDevice.Time.Enable'] = '1';
+                $config['InternetGatewayDevice.Time.NTPServer1'] = 'ntp.hay.net';
+            }
         } else { // TR-181
             $config = [
                 // Enable periodic inform every 5 minutes
                 'Device.ManagementServer.PeriodicInformEnable' => 'true',
                 'Device.ManagementServer.PeriodicInformInterval' => '300',
 
-                // Enable NTP
+                // Set connection request credentials
+                'Device.ManagementServer.ConnectionRequestUsername' => $crUsername,
+                'Device.ManagementServer.ConnectionRequestPassword' => $crPassword,
+
+                // NTP configuration
                 'Device.Time.Enable' => 'true',
-                'Device.Time.NTPServer1' => 'pool.ntp.org',
+                'Device.Time.NTPServer1' => 'ntp.hay.net',
             ];
         }
 

@@ -5,11 +5,17 @@
 
     RewriteEngine On
 
-    # Redirect HTTP to HTTPS for all requests EXCEPT /cwmp
+    # Redirect HTTP to HTTPS for all requests EXCEPT /cwmp, /device-upload, and /device-config
     # Use THE_REQUEST to check original request (not rewritten URI)
+    # /cwmp - TR-069 device communication
+    # /device-upload - TR-069 Upload RPC file reception (devices PUT config files here)
+    # /device-config - TR-069 Download RPC file serving (devices GET config files from here)
     RewriteCond %{HTTPS} off
     RewriteCond %{THE_REQUEST} !^POST\ /cwmp[\s?]
     RewriteCond %{THE_REQUEST} !^GET\ /cwmp[\s?]
+    RewriteCond %{THE_REQUEST} !^PUT\ /device-upload
+    RewriteCond %{THE_REQUEST} !^POST\ /device-upload
+    RewriteCond %{THE_REQUEST} !^GET\ /device-config
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
     # Handle Authorization Header
@@ -31,12 +37,16 @@
     RewriteRule ^ index.php [L]
 </IfModule>
 
-# IP Restriction - Allow only specific IPs except for /cwmp endpoint
+# IP Restriction - Allow only specific IPs except for /cwmp, /device-upload, and /device-config endpoints
 <IfModule mod_authz_core.c>
-    # Allow CWMP endpoint from any IP
+    # Allow CWMP endpoint from any IP (TR-069 device communication)
     SetEnvIf Request_URI "^/cwmp" allow_cwmp=1
+    # Allow device-upload endpoint from any IP (TR-069 Upload RPC file reception)
+    SetEnvIf Request_URI "^/device-upload" allow_device_upload=1
+    # Allow device-config endpoint from any IP (TR-069 Download RPC config file serving)
+    SetEnvIf Request_URI "^/device-config" allow_device_config=1
 
-    # Block all except allowed IPs (unless it's the cwmp endpoint)
+    # Block all except allowed IPs (unless it's a device endpoint)
     <RequireAll>
         <RequireAny>
             Require ip 163.182.0.0/16
@@ -46,6 +56,8 @@
             Require ip 206.130.0.0/16
             Require ip 23.155.0.0/16
             Require env allow_cwmp
+            Require env allow_device_upload
+            Require env allow_device_config
         </RequireAny>
     </RequireAll>
 </IfModule>

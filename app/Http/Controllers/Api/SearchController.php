@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Device;
 use App\Models\Parameter;
+use App\Models\Subscriber;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -61,10 +62,13 @@ class SearchController extends Controller
                     'category' => 'By Serial Number',
                     'icon' => 'serial',
                     'items' => $newSerialDevices->map(function ($device) {
+                        $subtitle = $device->subscriber
+                            ? "{$device->subscriber->name} | {$device->manufacturer} {$device->model_name}"
+                            : "{$device->manufacturer} {$device->model_name}";
                         return [
                             'id' => $device->id,
                             'title' => $device->serial_number,
-                            'subtitle' => "{$device->manufacturer} {$device->model_name}",
+                            'subtitle' => $subtitle,
                             'meta' => $device->online ? 'Online' : 'Offline',
                             'meta_class' => $device->online ? 'text-green-600' : 'text-red-600',
                             'url' => "/devices/{$device->id}",
@@ -82,10 +86,13 @@ class SearchController extends Controller
                 'category' => 'By IP Address',
                 'icon' => 'network',
                 'items' => $ipDevices->map(function ($device) {
+                    $subtitle = $device->subscriber
+                        ? "{$device->subscriber->name} | {$device->manufacturer} {$device->model_name}"
+                        : "{$device->manufacturer} {$device->model_name} ({$device->id})";
                     return [
                         'id' => $device->id,
                         'title' => $device->ip_address,
-                        'subtitle' => "{$device->manufacturer} {$device->model_name} ({$device->id})",
+                        'subtitle' => $subtitle,
                         'meta' => $device->online ? 'Online' : 'Offline',
                         'meta_class' => $device->online ? 'text-green-600' : 'text-red-600',
                         'url' => "/devices/{$device->id}",
@@ -110,6 +117,27 @@ class SearchController extends Controller
                         'meta_class' => 'text-gray-500',
                         'url' => "/devices/{$result->device_id}",
                         'type' => 'device',
+                    ];
+                })->values(),
+            ];
+        }
+
+        // Search Subscribers
+        $subscribers = $this->searchSubscribers($query, $limit);
+        if ($subscribers->isNotEmpty()) {
+            $results[] = [
+                'category' => 'Subscribers',
+                'icon' => 'subscriber',
+                'items' => $subscribers->map(function ($subscriber) {
+                    $deviceCount = $subscriber->devices_count ?? 0;
+                    return [
+                        'id' => $subscriber->id,
+                        'title' => $subscriber->name,
+                        'subtitle' => "Account: {$subscriber->account}" . ($subscriber->service_type ? " | {$subscriber->service_type}" : ''),
+                        'meta' => $deviceCount > 0 ? "{$deviceCount} device" . ($deviceCount > 1 ? 's' : '') : 'No devices',
+                        'meta_class' => $deviceCount > 0 ? 'text-green-600' : 'text-gray-500',
+                        'url' => "/subscribers/{$subscriber->id}",
+                        'type' => 'subscriber',
                     ];
                 })->values(),
             ];
@@ -171,19 +199,25 @@ class SearchController extends Controller
             $searchTerms[] = $modelAliases[$upperQuery];
         }
 
-        return Device::where(function ($q) use ($searchTerms) {
-            foreach ($searchTerms as $term) {
-                $q->orWhere('id', 'LIKE', "%{$term}%")
-                  ->orWhere('manufacturer', 'LIKE', "%{$term}%")
-                  ->orWhere('model_name', 'LIKE', "%{$term}%")
-                  ->orWhere('product_class', 'LIKE', "%{$term}%")
-                  ->orWhere('oui', 'LIKE', "%{$term}%");
-            }
-        })
-        ->orderByDesc('online')
-        ->orderByDesc('last_inform')
-        ->limit($limit)
-        ->get();
+        return Device::with('subscriber')
+            ->where(function ($q) use ($searchTerms) {
+                foreach ($searchTerms as $term) {
+                    $q->orWhere('id', 'LIKE', "%{$term}%")
+                      ->orWhere('manufacturer', 'LIKE', "%{$term}%")
+                      ->orWhere('model_name', 'LIKE', "%{$term}%")
+                      ->orWhere('product_class', 'LIKE', "%{$term}%")
+                      ->orWhere('oui', 'LIKE', "%{$term}%");
+                }
+            })
+            ->orWhereHas('subscriber', function ($q) use ($query) {
+                $q->where('name', 'LIKE', "%{$query}%")
+                  ->orWhere('account', 'LIKE', "%{$query}%")
+                  ->orWhere('customer', 'LIKE', "%{$query}%");
+            })
+            ->orderByDesc('online')
+            ->orderByDesc('last_inform')
+            ->limit($limit)
+            ->get();
     }
 
     /**
@@ -191,7 +225,8 @@ class SearchController extends Controller
      */
     private function searchBySerialNumber(string $query, int $limit)
     {
-        return Device::where('serial_number', 'LIKE', "%{$query}%")
+        return Device::with('subscriber')
+            ->where('serial_number', 'LIKE', "%{$query}%")
             ->orderByDesc('online')
             ->orderByDesc('last_inform')
             ->limit($limit)
@@ -208,7 +243,8 @@ class SearchController extends Controller
             return collect();
         }
 
-        return Device::where('ip_address', 'LIKE', "%{$query}%")
+        return Device::with('subscriber')
+            ->where('ip_address', 'LIKE', "%{$query}%")
             ->orderByDesc('online')
             ->orderByDesc('last_inform')
             ->limit($limit)
@@ -252,11 +288,32 @@ class SearchController extends Controller
     }
 
     /**
+     * Search subscribers by name, account, or customer ID
+     */
+    private function searchSubscribers(string $query, int $limit)
+    {
+        return Subscriber::withCount('devices')
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'LIKE', "%{$query}%")
+                  ->orWhere('account', 'LIKE', "%{$query}%")
+                  ->orWhere('customer', 'LIKE', "%{$query}%");
+            })
+            ->orderByDesc('devices_count')
+            ->orderBy('name')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
      * Get a descriptive subtitle for a device
      */
     private function getDeviceSubtitle(Device $device): string
     {
         $parts = [];
+
+        if ($device->subscriber) {
+            $parts[] = $device->subscriber->name;
+        }
 
         if ($device->manufacturer) {
             $parts[] = $device->manufacturer;
@@ -266,7 +323,7 @@ class SearchController extends Controller
             $parts[] = $device->model_name;
         }
 
-        if ($device->serial_number) {
+        if ($device->serial_number && !$device->subscriber) {
             $parts[] = "S/N: {$device->serial_number}";
         }
 

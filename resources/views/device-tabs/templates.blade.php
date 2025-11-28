@@ -55,7 +55,7 @@
             description: '',
             category: 'general',
             source_type: sourceType,
-            source_id: sourceType === 'device' ? {{ $device->id }} : null,
+            source_id: sourceType === 'device' ? '{{ $device->id }}' : null,
             tags: [],
             parameter_patterns: [],
             device_model_filter: '',
@@ -90,7 +90,7 @@
     openApplyModal(template) {
         this.selectedTemplate = template;
         this.applyForm = {
-            device_ids: [{{ $device->id }}],
+            device_ids: ['{{ $device->id }}'],
             merge_strategy: 'merge',
             create_backup: true
         };

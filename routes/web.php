@@ -12,11 +12,13 @@ use App\Http\Controllers\Auth\PasswordSetupController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\SubscriberController;
+use App\Http\Controllers\DeviceUploadController;
 use Illuminate\Support\Facades\Route;
 
 // CWMP Endpoint for TR-069 Device Communication (Protected with HTTP Basic Auth)
 // This must be outside the auth middleware group - devices use HTTP Basic Auth
 Route::match(['get', 'post'], '/cwmp', [CwmpController::class, 'handle'])->middleware('cwmp.auth');
+
 
 // Password Setup (for new users via email link - no auth required, uses signed URL)
 Route::get('/password/setup/{user}', [PasswordSetupController::class, 'show'])->name('password.setup');
@@ -55,6 +57,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['admin'])->group(function () {
         Route::get('/subscribers/import', [SubscriberController::class, 'import'])->name('subscribers.import');
         Route::post('/subscribers/import', [SubscriberController::class, 'processImport'])->name('subscribers.import.process');
+        Route::get('/subscribers/import/status/{importStatus}', [SubscriberController::class, 'importStatus'])->name('subscribers.import.status');
     });
 
     Route::get('/subscribers/{subscriber}', [SubscriberController::class, 'show'])->name('subscribers.show');
@@ -79,6 +82,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/device-types/{deviceType}/firmware', [FirmwareController::class, 'store'])->name('firmware.store');
         Route::post('/device-types/{deviceType}/firmware/{firmware}/toggle', [FirmwareController::class, 'toggleActive'])->name('firmware.toggle');
         Route::delete('/device-types/{deviceType}/firmware/{firmware}', [FirmwareController::class, 'destroy'])->name('firmware.destroy');
+
+        // Device Upload Management (view/download uploaded config files)
+        Route::get('/device-upload/{taskId}/view', [DeviceUploadController::class, 'view'])->name('device.upload.view');
+        Route::get('/device-upload/{taskId}/download', [DeviceUploadController::class, 'download'])->name('device.upload.download');
     });
 });
 

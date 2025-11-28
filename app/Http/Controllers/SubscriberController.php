@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ImportSubscribersJob;
+use App\Models\Device;
+use App\Models\ImportStatus;
 use App\Models\Subscriber;
 use App\Models\SubscriberEquipment;
-use App\Models\Device;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class SubscriberController extends Controller
 {
@@ -21,7 +22,7 @@ class SubscriberController extends Controller
         $query = Subscriber::query()->with('equipment', 'devices');
 
         // Search functionality
-        if ($request->has('search') && $request->search) {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -30,9 +31,55 @@ class SubscriberController extends Controller
             });
         }
 
-        $subscribers = $query->orderBy('name')->paginate(50);
+        // Filter by service type
+        if ($request->filled('service_type')) {
+            $query->where('service_type', $request->service_type);
+        }
 
-        return view('subscribers.index', compact('subscribers'));
+        // Filter by has devices
+        if ($request->filled('has_devices')) {
+            if ($request->has_devices === 'yes') {
+                $query->whereHas('devices');
+            } elseif ($request->has_devices === 'no') {
+                $query->whereDoesntHave('devices');
+            }
+        }
+
+        // Sorting
+        $sortField = $request->get('sort', 'name');
+        $sortDirection = $request->get('direction', 'asc');
+
+        // Validate sort field
+        $allowedSorts = ['customer', 'name', 'service_type', 'connection_date', 'devices_count'];
+        if (!in_array($sortField, $allowedSorts)) {
+            $sortField = 'name';
+        }
+
+        // Validate direction
+        if (!in_array($sortDirection, ['asc', 'desc'])) {
+            $sortDirection = 'asc';
+        }
+
+        // Add devices count for sorting
+        $query->withCount('devices');
+
+        if ($sortField === 'devices_count') {
+            $query->orderBy('devices_count', $sortDirection);
+        } else {
+            $query->orderBy($sortField, $sortDirection);
+        }
+
+        $subscribers = $query->paginate(50)->withQueryString();
+
+        // Get unique service types for filter dropdown
+        $serviceTypes = Subscriber::select('service_type')
+            ->distinct()
+            ->whereNotNull('service_type')
+            ->where('service_type', '!=', '')
+            ->orderBy('service_type')
+            ->pluck('service_type');
+
+        return view('subscribers.index', compact('subscribers', 'serviceTypes', 'sortField', 'sortDirection'));
     }
 
     /**
@@ -42,7 +89,14 @@ class SubscriberController extends Controller
     {
         $subscriber = Subscriber::with(['equipment', 'devices'])->findOrFail($id);
 
-        return view('subscribers.show', compact('subscriber'));
+        // Get other accounts under the same customer (excluding current one)
+        $relatedAccounts = Subscriber::where('customer', $subscriber->customer)
+            ->where('id', '!=', $subscriber->id)
+            ->withCount(['equipment', 'devices'])
+            ->orderBy('account')
+            ->get();
+
+        return view('subscribers.show', compact('subscriber', 'relatedAccounts'));
     }
 
     /**
@@ -56,7 +110,17 @@ class SubscriberController extends Controller
             'linked_devices' => Device::whereNotNull('subscriber_id')->count(),
         ];
 
-        return view('subscribers.import', compact('stats'));
+        // Get recent imports and any currently running import
+        $recentImports = ImportStatus::where('type', 'subscriber')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        $runningImport = ImportStatus::where('type', 'subscriber')
+            ->whereIn('status', ['pending', 'processing'])
+            ->first();
+
+        return view('subscribers.import', compact('stats', 'recentImports', 'runningImport'));
     }
 
     /**
@@ -69,51 +133,71 @@ class SubscriberController extends Controller
             'csv_files.*' => 'required|file|mimes:csv,txt|max:102400', // Max 100MB per file
         ]);
 
+        // Check if there's already an import running
+        $runningImport = ImportStatus::where('type', 'subscriber')
+            ->whereIn('status', ['pending', 'processing'])
+            ->first();
+
+        if ($runningImport) {
+            return redirect()
+                ->route('subscribers.import')
+                ->with('error', 'An import is already in progress. Please wait for it to complete.');
+        }
+
         $truncate = $request->has('truncate');
         $uploadedFiles = [];
-        $stats = [
-            'subscribers_created' => 0,
-            'subscribers_updated' => 0,
-            'equipment_created' => 0,
-            'devices_linked' => 0,
-        ];
+        $filenames = [];
 
         try {
             // Store uploaded files
             foreach ($request->file('csv_files') as $file) {
                 $filename = 'import_' . now()->format('Y-m-d_His') . '_' . $file->getClientOriginalName();
                 $path = $file->storeAs('subscriber-imports', $filename);
-                $uploadedFiles[] = storage_path('app/' . $path);
+                $uploadedFiles[] = Storage::path($path);
+                $filenames[] = $file->getClientOriginalName();
             }
 
-            // Truncate if requested
-            if ($truncate) {
-                DB::table('subscriber_equipment')->truncate();
-                DB::table('subscribers')->truncate();
-                DB::table('devices')->update(['subscriber_id' => null]);
-            }
+            // Create import status record
+            $importStatus = ImportStatus::create([
+                'type' => 'subscriber',
+                'status' => 'pending',
+                'filename' => implode(', ', $filenames),
+                'message' => 'Import queued, waiting to start...',
+                'user_id' => auth()->id(),
+            ]);
 
-            // Process each file
-            foreach ($uploadedFiles as $filePath) {
-                $fileStats = $this->processFile($filePath);
-                $stats['subscribers_created'] += $fileStats['subscribers_created'];
-                $stats['subscribers_updated'] += $fileStats['subscribers_updated'];
-                $stats['equipment_created'] += $fileStats['equipment_created'];
-            }
-
-            // Link devices to subscribers
-            $stats['devices_linked'] = $this->linkDevicesToSubscribers();
+            // Dispatch the job
+            ImportSubscribersJob::dispatch($uploadedFiles, $truncate, $importStatus->id);
 
             return redirect()
                 ->route('subscribers.import')
-                ->with('success', 'Import completed successfully!')
-                ->with('stats', $stats);
+                ->with('success', 'Import started! The file is being processed in the background. This page will update with progress.');
 
         } catch (\Exception $e) {
             return redirect()
                 ->route('subscribers.import')
-                ->with('error', 'Import failed: ' . $e->getMessage());
+                ->with('error', 'Failed to start import: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Get import status for AJAX polling.
+     */
+    public function importStatus(ImportStatus $importStatus)
+    {
+        return response()->json([
+            'id' => $importStatus->id,
+            'status' => $importStatus->status,
+            'progress_percent' => $importStatus->progress_percent,
+            'total_rows' => $importStatus->total_rows,
+            'processed_rows' => $importStatus->processed_rows,
+            'subscribers_created' => $importStatus->subscribers_created,
+            'subscribers_updated' => $importStatus->subscribers_updated,
+            'equipment_created' => $importStatus->equipment_created,
+            'devices_linked' => $importStatus->devices_linked,
+            'message' => $importStatus->message,
+            'is_running' => $importStatus->isRunning(),
+        ]);
     }
 
     /**

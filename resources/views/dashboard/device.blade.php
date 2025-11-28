@@ -13,7 +13,11 @@
     $useColorful = $themeConfig['use_colorful_buttons'] ?? false;
 @endphp
 <div class="space-y-6" x-data="{
-    activeTab: localStorage.getItem('deviceActiveTab_{{ $device->id }}') || 'dashboard',
+    activeTab: (() => {
+        const saved = localStorage.getItem('deviceActiveTab_{{ $device->id }}');
+        // Redirect old troubleshooting tab users to dashboard (merged)
+        return saved === 'troubleshooting' ? 'dashboard' : (saved || 'dashboard');
+    })(),
     taskLoading: false,
     taskMessage: '',
     taskId: null,
@@ -162,9 +166,38 @@
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Offline</span>
                     @endif
                 </div>
-                <div class="mt-2 flex items-center text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}">
-                    Last Inform: {{ $device->last_inform ? $device->last_inform->diffForHumans() : 'Never' }}
+                <div class="mt-2 flex items-center text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }} space-x-4">
+                    <span>Created: {{ $device->created_at ? $device->created_at->format('M j, Y') : 'Unknown' }}</span>
+                    <span>Last Inform: {{ $device->last_inform ? $device->last_inform->diffForHumans() : 'Never' }}</span>
+                    <span>Last Refresh: {{ $device->last_refresh_at ? $device->last_refresh_at->diffForHumans() : 'Never' }}</span>
+                    <span>Last Backup: {{ $device->last_backup_at ? $device->last_backup_at->diffForHumans() : 'Never' }}</span>
                 </div>
+                @if($device->subscriber)
+                <div class="mt-2 flex items-center text-sm">
+                    <svg class="w-4 h-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                    <a href="{{ route('subscribers.show', $device->subscriber->id) }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
+                        {{ $device->subscriber->name }}
+                    </a>
+                    <span class="ml-2 text-gray-400 dark:text-gray-500">({{ $device->subscriber->account }})</span>
+                    @if($device->subscriber->isCableInternet() && $device->serial_number)
+                        @php
+                            $isValidMac = strlen(preg_replace('/[^a-fA-F0-9]/', '', $device->serial_number)) === 12;
+                        @endphp
+                        @if($isValidMac)
+                            <a href="{{ $device->subscriber->getCablePortalUrl($device->serial_number) }}"
+                               target="_blank"
+                               class="ml-2 inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors">
+                                Cable Portal
+                                <svg class="w-3 h-3 ml-1 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                </svg>
+                            </a>
+                        @endif
+                    @endif
+                </div>
+                @endif
             </div>
 
             @php
@@ -618,7 +651,7 @@
             </form>
 
             {{-- Get Everything (Admin Only) --}}
-            @if(auth()->user()->isAdmin())
+            @if(auth()->user()?->isAdmin())
             <form @submit.prevent="async (e) => {
                 taskLoading = true;
                 taskMessage = 'Discovering All Parameters...';
@@ -669,7 +702,7 @@
 
                 if (isSmartRG && merIp) {
                     const url = 'http://' + merIp + '/';
-                    window.open(url, '_blank');
+                    window.open(url, '_blank', 'noopener,noreferrer');
                     return;
                 }
 
@@ -686,11 +719,13 @@
                     const result = await response.json();
 
                     if (result.enable_task && result.enable_task.id) {
-                        const port = '8443';
+                        // Use port from API response if provided (Nokia=443), otherwise default to 8443
+                        const port = result.port || '8443';
                         const externalIp = result.external_ip || '{{ $externalIp }}';
                         if (externalIp) {
                             const url = 'https://' + externalIp + ':' + port + '/';
-                            window.open(url, '_blank');
+                            // Use noopener,noreferrer to avoid Invalid REFERER errors on Nokia devices
+                            window.open(url, '_blank', 'noopener,noreferrer');
                             taskLoading = false;
                             taskMessage = '';
                         } else {
@@ -715,6 +750,20 @@
                     <span class="ml-1 text-xs text-gray-300">(MER)</span>
                 @endif
             </button>
+
+            {{-- Remote GUI Open Indicator --}}
+            @if($device->remote_gui_enabled_at && $device->remote_gui_enabled_at->gt(now()->subHours(1)))
+                <div class="inline-flex items-center px-3 py-1.5 rounded-md bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700">
+                    <span class="relative flex h-2.5 w-2.5 mr-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500"></span>
+                    </span>
+                    <span class="text-xs font-medium text-yellow-800 dark:text-yellow-300">
+                        Remote GUI Open
+                        <span class="text-yellow-600 dark:text-yellow-400 ml-1">({{ $device->remote_gui_enabled_at->diffForHumans() }})</span>
+                    </span>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -736,11 +785,6 @@
                     class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                 Tasks
             </button>
-            <button @click="activeTab = 'troubleshooting'"
-                    :class="activeTab === 'troubleshooting' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 dark:text-{{ $colors['text-muted'] }} hover:text-gray-700 hover:border-gray-300'"
-                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                Troubleshooting
-            </button>
             <button @click="activeTab = 'wifi'"
                     :class="activeTab === 'wifi' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 dark:text-{{ $colors['text-muted'] }} hover:text-gray-700 hover:border-gray-300'"
                     class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
@@ -751,7 +795,12 @@
                     class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                 Backups
             </button>
-            @if(auth()->user()->isAdmin())
+            <button @click="activeTab = 'events'"
+                    :class="activeTab === 'events' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 dark:text-{{ $colors['text-muted'] }} hover:text-gray-700 hover:border-gray-300'"
+                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                Events
+            </button>
+            @if(auth()->user()?->isAdmin())
             <button @click="activeTab = 'templates'"
                     :class="activeTab === 'templates' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 dark:text-{{ $colors['text-muted'] }} hover:text-gray-700 hover:border-gray-300'"
                     class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
@@ -791,10 +840,10 @@
     @include('device-tabs.dashboard', ['device' => $device, 'colors' => $colors])
     @include('device-tabs.parameters', ['device' => $device, 'colors' => $colors])
     @include('device-tabs.tasks', ['device' => $device, 'colors' => $colors])
-    @include('device-tabs.troubleshooting', ['device' => $device, 'colors' => $colors])
     @include('device-tabs.wifi', ['device' => $device, 'colors' => $colors])
     @include('device-tabs.backups', ['device' => $device, 'colors' => $colors])
-    @if(auth()->user()->isAdmin())
+    @include('device-tabs.events', ['device' => $device, 'colors' => $colors, 'events' => $events])
+    @if(auth()->user()?->isAdmin())
     @include('device-tabs.templates', ['device' => $device, 'colors' => $colors])
     @endif
     @include('device-tabs.ports', ['device' => $device, 'colors' => $colors])

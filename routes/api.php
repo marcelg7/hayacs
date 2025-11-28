@@ -53,6 +53,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/devices/{id}/factory-reset', [DeviceController::class, 'factoryReset']);
     Route::post('/devices/{id}/firmware-upgrade', [DeviceController::class, 'firmwareUpgrade']);
     Route::post('/devices/{id}/upload', [DeviceController::class, 'uploadFile']);
+    Route::post('/devices/{id}/request-config-backup', [DeviceController::class, 'requestConfigBackup']);
     Route::post('/devices/{id}/ping-test', [DeviceController::class, 'pingTest']);
     Route::post('/devices/{id}/traceroute-test', [DeviceController::class, 'tracerouteTest']);
 
@@ -60,6 +61,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/devices/{id}/wifi-config', [DeviceController::class, 'getWifiConfig']);
     Route::post('/devices/{id}/wifi-config', [DeviceController::class, 'updateWifi']);
     Route::post('/devices/{id}/wifi-radio', [DeviceController::class, 'updateWifiRadio']);
+
+    // Standard WiFi Setup (simplified customer-friendly configuration)
+    Route::get('/devices/{id}/standard-wifi', [DeviceController::class, 'getStandardWifiConfig']);
+    Route::post('/devices/{id}/standard-wifi', [DeviceController::class, 'applyStandardWifiConfig']);
+    Route::post('/devices/{id}/guest-network', [DeviceController::class, 'toggleGuestNetwork']);
 
     // Configuration Backups
     Route::get('/devices/{id}/backups', [DeviceController::class, 'getBackups']);
@@ -69,6 +75,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/devices/{id}/backups/{backup1Id}/compare/{backup2Id}', [DeviceController::class, 'compareBackups']);
     Route::get('/devices/{id}/backups/{backupId}/download', [DeviceController::class, 'downloadBackup']);
     Route::post('/devices/{id}/backups/import', [DeviceController::class, 'importBackup']);
+
+    // Native Config File Operations (binary config files from device)
+    Route::get('/devices/{id}/native-configs', [DeviceController::class, 'getNativeConfigFiles']);
+    Route::post('/devices/{id}/native-configs/restore', [DeviceController::class, 'restoreNativeConfig']);
 
     // Port Management
     Route::get('/devices/{id}/port-mappings', [DeviceController::class, 'getPortMappings']);
@@ -101,4 +111,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/analytics/fleet', [AnalyticsController::class, 'fleetAnalytics']);
     Route::get('/analytics/speedtest-results', [AnalyticsController::class, 'speedTestResults']);
     Route::get('/analytics/available-parameters', [AnalyticsController::class, 'getAvailableParameters']);
+
+    // TR-181 Migration (Nokia Beacon G6)
+    Route::get('/migration/stats', [DeviceController::class, 'getMigrationStats']);
+    Route::get('/migration/eligible-devices', [DeviceController::class, 'getEligibleDevices']);
+    Route::get('/devices/{id}/migration/check', [DeviceController::class, 'checkMigrationEligibility']);
+    Route::post('/devices/{id}/migration/start', [DeviceController::class, 'startMigration']);
+    Route::get('/devices/{id}/migration/verify', [DeviceController::class, 'verifyMigration']);
+    Route::post('/devices/{id}/migration/wifi-fallback', [DeviceController::class, 'createWifiFallback']);
 });

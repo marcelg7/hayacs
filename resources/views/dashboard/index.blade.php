@@ -140,6 +140,7 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscriber</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manufacturer</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -154,6 +155,15 @@
                             <a href="{{ route('device.show', $device->id) }}" class="text-blue-600 hover:text-blue-900">
                                 {{ $device->id }}
                             </a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            @if($device->subscriber)
+                                <a href="{{ route('subscribers.show', $device->subscriber->id) }}" class="text-blue-600 hover:text-blue-900">
+                                    {{ $device->subscriber->name }}
+                                </a>
+                            @else
+                                <span class="text-gray-400">-</span>
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $device->manufacturer }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $device->model_name ?? $device->product_class }}</td>
@@ -173,7 +183,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                        <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
                             No devices found. Devices will appear here once they connect to the ACS.
                         </td>
                     </tr>

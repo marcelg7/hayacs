@@ -23,7 +23,8 @@
       "Bash(for file in resources/views/device-tabs/*.blade.php resources/views/device-tabs/partials/*.blade.php)",
       "Bash(do php:*)",
       "Bash(done)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(sudo grep:*)"
     ],
     "deny": [],
     "ask": []

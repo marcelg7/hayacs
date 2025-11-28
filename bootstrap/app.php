@@ -8,6 +8,7 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function () {
+            // Device routes - no middleware for TR-069 device communication
+            Route::middleware([])
+                ->group(base_path('routes/device.php'));
+        },
     )
     ->withSchedule(function (Schedule $schedule): void {
         // Run task timeout check every minute
@@ -53,6 +59,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'cwmp',
+            'device-upload/*', // TR-069 Upload RPC file reception
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

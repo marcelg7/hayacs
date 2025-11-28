@@ -26,6 +26,18 @@ A complete TR-069/CWMP Auto Configuration Server (ACS) implementation built with
 - AddObject / DeleteObject
 - GetRPCMethods
 
+### Subscriber Management
+- 👥 **Subscriber Import** - CSV import with background processing
+  - Large file support via queue jobs (no timeouts)
+  - Real-time progress tracking
+  - Automatic device linking by serial number
+- 📊 **Subscriber Hierarchy** - Customer > Account > Agreement structure
+  - Related accounts visible in subscriber details
+  - Equipment grouped by agreement
+- 🔗 **Device Linking** - Case-insensitive serial number matching
+  - Links TR-069 devices to billing subscribers
+  - Equipment-to-device relationship tracking
+
 ### Advanced Features
 - 🔍 **Get Everything** - Smart parameter discovery with automatic chunking
   - Discovers all available parameters using GetParameterNames
@@ -219,7 +231,12 @@ hay-acs/
 │   │   ├── Device.php        # Device model
 │   │   ├── Parameter.php     # Parameter storage
 │   │   ├── Task.php          # Task queue
-│   │   └── CwmpSession.php   # Session tracking
+│   │   ├── CwmpSession.php   # Session tracking
+│   │   ├── Subscriber.php    # Subscriber model
+│   │   ├── SubscriberEquipment.php # Equipment records
+│   │   └── ImportStatus.php  # Import job tracking
+│   ├── Jobs/
+│   │   └── ImportSubscribersJob.php # Background CSV import
 │   ├── Services/
 │   │   ├── CwmpService.php   # TR-069 SOAP/XML handling
 │   │   └── ProvisioningService.php # Auto-provisioning
@@ -254,6 +271,15 @@ Queue for asynchronous device operations (get/set parameters, reboot, firmware u
 
 ### CWMP Sessions
 Tracks all device communication sessions for audit and debugging.
+
+### Subscribers
+Customer billing records imported from external systems (Customer > Account > Agreement hierarchy).
+
+### Subscriber Equipment
+Equipment records tied to subscriber agreements, used for device-subscriber linking via serial numbers.
+
+### Import Status
+Tracks background import job progress with real-time statistics.
 
 ## Deployment
 

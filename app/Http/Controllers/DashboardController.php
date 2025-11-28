@@ -23,7 +23,8 @@ class DashboardController extends Controller
             'failed_tasks' => Task::where('status', 'failed')->count(),
         ];
 
-        $recentDevices = Device::orderBy('last_inform', 'desc')
+        $recentDevices = Device::with('subscriber')
+            ->orderBy('last_inform', 'desc')
             ->limit(10)
             ->get();
 
@@ -40,7 +41,9 @@ class DashboardController extends Controller
      */
     public function devices(): View
     {
-        $devices = Device::orderBy('last_inform', 'desc')->paginate(20);
+        $devices = Device::with('subscriber')
+            ->orderBy('last_inform', 'desc')
+            ->paginate(20);
 
         return view('dashboard.devices', compact('devices'));
     }
@@ -50,7 +53,7 @@ class DashboardController extends Controller
      */
     public function device(string $id): View
     {
-        $device = Device::findOrFail($id);
+        $device = Device::with('subscriber')->findOrFail($id);
 
         $parameters = $device->parameters()
             ->orderBy('name')
@@ -66,6 +69,10 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
-        return view('dashboard.device', compact('device', 'parameters', 'tasks', 'sessions'));
+        $events = $device->events()
+            ->orderBy('created_at', 'desc')
+            ->paginate(50, ['*'], 'events_page');
+
+        return view('dashboard.device', compact('device', 'parameters', 'tasks', 'sessions', 'events'));
     }
 }

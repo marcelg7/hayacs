@@ -1,0 +1,492 @@
+[alert] <129>1 2025-11-27T17:26:31.003269-05:00 Cortina syslog - - - TR069: tr_backup fail in write_event2disk  
+[alert] <129>1 2025-11-27T17:26:31.021828-05:00 Cortina syslog - - - TR069: Bind successful with port :32556  
+[alert] <129>1 2025-11-27T17:26:31.023151-05:00 Cortina syslog - - - TR069: TR069: Connect to server (https://hayacs.hay.net/cwmp | 163.182.253.70):443 is successful.  
+[alert] <129>1 2025-11-27T17:26:31.409121-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:26:31.409121-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:26:31.409121-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:26:31.540057-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:26:31.540057-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:26:31.540057-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:26:31.570854-05:00 Cortina syslog - - - TR069: tr_backup fail in write_event2disk  
+[alert] <129>1 2025-11-27T17:26:31.614567-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:26:31.614567-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:26:31.614567-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:26:50.304255-05:00 Cortina syslog - - - TR069: Bind successful with port :32556  
+[alert] <129>1 2025-11-27T17:26:50.305356-05:00 Cortina syslog - - - TR069: TR069: Connect to server (https://hayacs.hay.net/cwmp | 163.182.253.70):443 is successful.  
+[alert] <129>1 2025-11-27T17:26:50.595551-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:26:50.595551-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:26:50.595551-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:26:50.717924-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:26:50.717924-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:26:50.717924-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:26:50.723198-05:00 Cortina syslog - - - TR069: tr_backup fail in write_event2disk  
+[alert] <129>1 2025-11-27T17:26:50.757818-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:26:50.757818-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:26:50.757818-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:26:50.763358-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.3.Enable=1)  
+[alert] <129>1 2025-11-27T17:26:50.766938-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.3.SSIDAdvertisementEnabled=1)  
+[alert] <129>1 2025-11-27T17:26:50.769105-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.7.Enable=1)  
+[alert] <129>1 2025-11-27T17:26:50.772702-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.7.SSIDAdvertisementEnabled=1)  
+[alert] <129>1 2025-11-27T17:27:05.605095-05:00 Cortina syslog - - - TR069: System clock change diff_uptime is -15, diff_systime is 0  
+[alert] <129>1 2025-11-27T17:27:05.605095-05:00 Cortina syslog - - - TR069: cur_time=17015,old_time=17030,cur_sys_time=1764282425,old_sys_time=1764282425  
+[alert] <129>1 2025-11-27T17:27:05.605095-05:00 Cortina syslog - - - TR069: reboot_systime_change called  
+[alert] <129>1 2025-11-27T17:27:05.629231-05:00 Cortina syslog - - - TR069: default scheduled reboot time 0001-01-01T00:00:00Z and return  
+[alert] <129>1 2025-11-27T17:27:05.629636-05:00 Cortina syslog - - - TR069: SSL_read got ZERO_RETURN, peer has closed connection, ret=0,len=2047  
+[alert] <129>1 2025-11-27T17:27:05.630271-05:00 Cortina syslog - - - TR069: Received HTTP ERROR, inform failed  
+[alert] <129>1 2025-11-27T17:28:30.803036-05:00 Cortina syslog - - - TR069: tr_backup fail in write_event2disk  
+[alert] <129>1 2025-11-27T17:28:30.814120-05:00 Cortina syslog - - - TR069: Bind successful with port :32556  
+[alert] <129>1 2025-11-27T17:28:30.815248-05:00 Cortina syslog - - - TR069: TR069: Connect to server (https://hayacs.hay.net/cwmp | 163.182.253.70):443 is successful.  
+[alert] <129>1 2025-11-27T17:28:31.199417-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:28:31.199417-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:28:31.199417-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:28:31.326542-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:28:31.326542-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:28:31.326542-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:28:31.353451-05:00 Cortina syslog - - - TR069: tr_backup fail in write_event2disk  
+[alert] <129>1 2025-11-27T17:28:31.394459-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:28:31.394459-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:28:31.394459-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:28:31.401954-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.SSID.1.SSID=Marcel-Test)  
+[alert] <129>1 2025-11-27T17:28:31.406529-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.1.Enable=1)  
+[alert] <129>1 2025-11-27T17:28:31.411600-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.1.SSIDAdvertisementEnabled=1)  
+[alert] <129>1 2025-11-27T17:28:31.414820-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.1.Security.ModeEnabled=WPA2-Personal)  
+[alert] <129>1 2025-11-27T17:28:31.417727-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.1.Security.KeyPassphrase=**********)  
+[alert] <129>1 2025-11-27T17:28:31.420664-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.SSID.5.SSID=Marcel-Test)  
+[alert] <129>1 2025-11-27T17:28:31.425353-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.5.Enable=1)  
+[alert] <129>1 2025-11-27T17:28:31.430202-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.5.SSIDAdvertisementEnabled=1)  
+[alert] <129>1 2025-11-27T17:28:31.433222-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.5.Security.ModeEnabled=WPA2-Personal)  
+[alert] <129>1 2025-11-27T17:28:31.436146-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.5.Security.KeyPassphrase=**********)  
+[alert] <129>1 2025-11-27T17:28:31.440112-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.SSID.2.SSID=Marcel-Test-2.4GHz)  
+[alert] <129>1 2025-11-27T17:28:31.452469-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.2.Enable=1)  
+[alert] <129>1 2025-11-27T17:28:31.457287-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.2.SSIDAdvertisementEnabled=1)  
+[alert] <129>1 2025-11-27T17:28:31.460171-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.2.Security.ModeEnabled=WPA2-Personal)  
+[alert] <129>1 2025-11-27T17:28:31.463170-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.2.Security.KeyPassphrase=**********)  
+[alert] <129>1 2025-11-27T17:28:31.466409-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.SSID.6.SSID=Marcel-Test-5GHz)  
+[alert] <129>1 2025-11-27T17:28:31.471091-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.6.Enable=1)  
+[alert] <129>1 2025-11-27T17:28:31.475770-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.6.SSIDAdvertisementEnabled=1)  
+[alert] <129>1 2025-11-27T17:28:31.478782-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.6.Security.ModeEnabled=WPA2-Personal)  
+[alert] <129>1 2025-11-27T17:28:31.482081-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.6.Security.KeyPassphrase=**********)  
+[alert] <129>1 2025-11-27T17:28:31.485494-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.SSID.3.SSID=Marcel-Test-Guest)  
+[alert] <129>1 2025-11-27T17:28:31.489999-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.3.Enable=1)  
+[alert] <129>1 2025-11-27T17:28:31.494583-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.3.SSIDAdvertisementEnabled=1)  
+[alert] <129>1 2025-11-27T17:28:31.497467-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.3.Security.ModeEnabled=WPA2-Personal)  
+[alert] <129>1 2025-11-27T17:28:31.500306-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.3.Security.KeyPassphrase=**********)  
+[alert] <129>1 2025-11-27T17:28:31.503913-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.SSID.7.SSID=Marcel-Test-Guest)  
+[alert] <129>1 2025-11-27T17:28:31.508583-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.7.Enable=1)  
+[alert] <129>1 2025-11-27T17:28:31.513597-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.7.SSIDAdvertisementEnabled=1)  
+[alert] <129>1 2025-11-27T17:28:31.517173-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.7.Security.ModeEnabled=WPA2-Personal)  
+[alert] <129>1 2025-11-27T17:28:31.520166-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.7.Security.KeyPassphrase=**********)  
+[alert] <129>1 2025-11-27T17:28:31.523697-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.4.Enable=0)  
+[alert] <129>1 2025-11-27T17:28:31.528265-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.WiFi.AccessPoint.8.Enable=0)  
+[err] <131>1 2025-11-27T17:28:36.106607-05:00 Cortina login_web_app.cgi - - - [libcgi] update_mapp_client_ip 479   
+[err] <131>1 2025-11-27T17:28:36.106607-05:00 Cortina login_web_app.cgi - - - [libcgi] Not a NGINX, its a legacy server working...   
+[err] <131>1 2025-11-27T17:28:36.106607-05:00 Cortina login_web_app.cgi - - - Nokia SE_passwd_set_block_plcy has set!  
+[alert] <129>1 2025-11-27T17:28:36.368659-05:00 Cortina syslog - - - tr069client-MAPPER: NOKIA: set_ssid_info() exit with MAP_RET_NO_LAST_CHANGE_UPDATE  
+[err] <131>1 2025-11-27T17:28:36.509620-05:00 Cortina login_web_app.cgi - - - Inside get_nonce_app  
+[err] <131>1 2025-11-27T17:28:36.516667-05:00 Cortina login_web_app.cgi - - - nonce:eCxJW3Gkxg4nU/W41kyUIKWgBQt1JNAlPdytlxk8sl0=  
+[err] <131>1 2025-11-27T17:28:43.579348-05:00 Cortina syslog - - - isWifiMatchPasswordRule 563 get password rules failed for type   
+[err] <131>1 2025-11-27T17:28:54.197108-05:00 Cortina main_web_app.cgi - - - [cgi-webapp] ParentalCtlModeObject returns CFG_RET_SUCCESS  
+[err] <131>1 2025-11-27T17:28:54.197108-05:00 Cortina main_web_app.cgi - - - [cgi-webapp] parental_control_mode = NEW_ONLY  
+[alert] <129>1 2025-11-27T17:29:02.368803-05:00 Cortina syslog - - - tr069client-MAPPER: NOKIA: set_ssid_info() exit with MAP_RET_NO_LAST_CHANGE_UPDATE  
+[err] <131>1 2025-11-27T17:29:02.371302-05:00 Cortina syslog - - - [cgi-webapp]:==>is_result_existed  
+[err] <131>1 2025-11-27T17:29:02.603021-05:00 Cortina login_web_app.cgi - - - [libcgi] update_mapp_client_ip 479   
+[err] <131>1 2025-11-27T17:29:02.603021-05:00 Cortina login_web_app.cgi - - - [libcgi] Not a NGINX, its a legacy server working...   
+[err] <131>1 2025-11-27T17:29:02.603021-05:00 Cortina login_web_app.cgi - - - Nokia SE_passwd_set_block_plcy has set!  
+[err] <131>1 2025-11-27T17:29:09.934686-05:00 Cortina syslog - - - isWifiMatchPasswordRule 563 get password rules failed for type   
+[err] <131>1 2025-11-27T17:29:10.037020-05:00 Cortina login_web_app.cgi - - - Nokia test login begin normalfailtimes =0 , superfailtimes=0 invalidaccountfailtimes=0  
+[alert] <129>1 2025-11-27T17:29:24.206941-05:00 Cortina syslog - - - tr069client-MAPPER: NOKIA: set_ssid_info() exit with MAP_RET_NO_LAST_CHANGE_UPDATE  
+[err] <131>1 2025-11-27T17:29:24.211283-05:00 Cortina login_web_app.cgi - - - Nokia login super user!  
+[err] <131>1 2025-11-27T17:29:24.435341-05:00 Cortina login_web_app.cgi - - - Nokia login pwdcheckret =0,pcntFailTimes =0,pwaitTime =0!  
+[err] <131>1 2025-11-27T17:29:29.963610-05:00 Cortina login_web_app.cgi - - - Numbers in the string:   
+[err] <131>1 2025-11-27T17:29:29.963610-05:00 Cortina login_web_app.cgi - - - 1  
+[err] <131>1 2025-11-27T17:29:29.963610-05:00 Cortina login_web_app.cgi - - - 2  
+[err] <131>1 2025-11-27T17:29:30.494161-05:00 Cortina login_web_app.cgi - - - Numbers in the string:   
+[err] <131>1 2025-11-27T17:29:30.494161-05:00 Cortina login_web_app.cgi - - - 1  
+[err] <131>1 2025-11-27T17:29:30.494161-05:00 Cortina login_web_app.cgi - - - 2  
+[err] <131>1 2025-11-27T17:29:30.972404-05:00 Cortina syslog - - - isWifiMatchPasswordRule 563 get password rules failed for type   
+[err] <131>1 2025-11-27T17:29:36.959004-05:00 Cortina capabilities_status_web_app.cgi - - - new_expire ->17460  
+[err] <131>1 2025-11-27T17:29:39.584405-05:00 Cortina capabilities_status_web_app.cgi - - - new_expire ->17466  
+[err] <131>1 2025-11-27T17:29:39.584405-05:00 Cortina capabilities_status_web_app.cgi - - - INFO: User type = 1   
+[err] <131>1 2025-11-27T17:29:39.587206-05:00 Cortina capabilities_status_web_app.cgi - - - [capability-webapp]: Selcting the object Beacon Finally from [get_object_to_be_selected_for_hw]  
+[err] <131>1 2025-11-27T17:29:39.588942-05:00 Cortina capabilities_status_web_app.cgi - - - [capability-webapp]:Support OPID : EGEB from function [get_supported_opid_from_map_file]  
+[alert] <129>1 2025-11-27T17:29:46.724770-05:00 Cortina syslog - - - tr069client-MAPPER: NOKIA: set_ssid_info() exit with MAP_RET_NO_LAST_CHANGE_UPDATE  
+[err] <131>1 2025-11-27T17:29:47.069422-05:00 Cortina capabilities_status_web_app.cgi - - - Successfully modified the json content   
+[err] <131>1 2025-11-27T17:29:47.073156-05:00 Cortina capabilities_status_web_app.cgi - - - INFO: File path = /tmp/Temp.json   
+[err] <131>1 2025-11-27T17:29:52.484646-05:00 Cortina dashboard_status_web_app.cgi - - - new_expire ->17476  
+[err] <131>1 2025-11-27T17:29:55.331581-05:00 Cortina syslog - - - isWifiMatchPasswordRule 563 get password rules failed for type   
+[alert] <129>1 2025-11-27T17:30:21.125166-05:00 Cortina syslog - - - tr069client-MAPPER: NOKIA: set_ssid_info() exit with MAP_RET_NO_LAST_CHANGE_UPDATE  
+[err] <131>1 2025-11-27T17:30:41.759452-05:00 Cortina device_home_nw_client_status_web_app.cgi - - - new_expire ->17531  
+[err] <131>1 2025-11-27T17:30:42.018737-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:30:42.023990-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:30:42.023990-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:30:42.423238-05:00 Cortina container_management_status_web_app.cgi - - - new_expire ->17531  
+[err] <131>1 2025-11-27T17:30:42.423238-05:00 Cortina web_customization_web_app.cgi - - - new_expire ->17531  
+[err] <131>1 2025-11-27T17:30:42.430684-05:00 Cortina radio_receiver_status_web_app.cgi - - - new_expire ->17531  
+[err] <131>1 2025-11-27T17:30:42.430684-05:00 Cortina web_customization_web_app.cgi - - - [capability-webapp]: Selcting the object Beacon Finally from [get_object_to_be_selected_for_hw]  
+[err] <131>1 2025-11-27T17:30:42.430684-05:00 Cortina web_customization_web_app.cgi - - - [capability-webapp]:Support OPID : EGEB from function [get_supported_opid_from_map_file]  
+[err] <131>1 2025-11-27T17:30:42.431929-05:00 Cortina web_customization_web_app.cgi - - - chooseLanguage JSON object written to: /tmp/chooseLanguage.json  
+[err] <131>1 2025-11-27T17:30:42.470052-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]: File exists and copying to buffer <<<<   
+[err] <131>1 2025-11-27T17:30:42.617461-05:00 Cortina container_management_status_web_app.cgi - - - Entering GET next obj container mgmt  0 deploy 0  
+[err] <131>1 2025-11-27T17:30:43.312758-05:00 Cortina syslog - - - isWifiMatchPasswordRule 563 get password rules failed for type   
+[err] <131>1 2025-11-27T17:31:01.890692-05:00 Cortina overview_status_web_app.cgi - - - new_expire ->17533  
+[err] <131>1 2025-11-27T17:31:01.893223-05:00 Cortina overview_status_web_app.cgi - - - new_expire ->17536  
+[err] <131>1 2025-11-27T17:31:01.897401-05:00 Cortina overview_status_web_app.cgi - - - new_expire ->17539  
+[err] <131>1 2025-11-27T17:31:02.085458-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: Starting overview_status_web_app.cgi >>>  
+[err] <131>1 2025-11-27T17:31:02.108030-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: Starting overview_status_web_app.cgi >>>  
+[err] <131>1 2025-11-27T17:31:02.129649-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: Starting overview_status_web_app.cgi >>>  
+[err] <131>1 2025-11-27T17:31:02.904818-05:00 Cortina overview_status_web_app.cgi - - - new_expire ->17542  
+[err] <131>1 2025-11-27T17:31:03.104035-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: Starting overview_status_web_app.cgi >>>  
+[err] <131>1 2025-11-27T17:31:03.527241-05:00 Cortina overview_status_web_app.cgi - - - new_expire ->17545  
+[err] <131>1 2025-11-27T17:31:03.727235-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: Starting overview_status_web_app.cgi >>>  
+[err] <131>1 2025-11-27T17:31:04.979438-05:00 Cortina overview_status_web_app.cgi - - - new_expire ->17553  
+[err] <131>1 2025-11-27T17:31:05.264236-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: Starting overview_status_web_app.cgi >>>  
+[alert] <129>1 2025-11-27T17:31:10.012073-05:00 Cortina syslog - - - tr069client-MAPPER: NOKIA: set_ssid_info() exit with MAP_RET_NO_LAST_CHANGE_UPDATE  
+[err] <131>1 2025-11-27T17:31:19.591078-05:00 Cortina syslog - - - isWifiMatchPasswordRule 563 get password rules failed for type   
+[err] <131>1 2025-11-27T17:31:37.595023-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:31:37.595023-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:31:37.595023-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:31:46.812827-05:00 Cortina web_customization_web_app.cgi - - - new_expire ->17586  
+[err] <131>1 2025-11-27T17:31:46.814457-05:00 Cortina overview_status_web_app.cgi - - - new_expire ->17584  
+[err] <131>1 2025-11-27T17:31:46.824290-05:00 Cortina web_customization_web_app.cgi - - - [capability-webapp]: Selcting the object Beacon Finally from [get_object_to_be_selected_for_hw]  
+[err] <131>1 2025-11-27T17:31:46.825352-05:00 Cortina web_customization_web_app.cgi - - - [capability-webapp]:Support OPID : EGEB from function [get_supported_opid_from_map_file]  
+[err] <131>1 2025-11-27T17:31:46.829758-05:00 Cortina dashboard_status_web_app.cgi - - - new_expire ->17587  
+[err] <131>1 2025-11-27T17:31:46.889568-05:00 Cortina web_customization_web_app.cgi - - - chooseLanguage JSON object written to: /tmp/chooseLanguage.json  
+[err] <131>1 2025-11-27T17:31:46.893077-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]: File exists and copying to buffer <<<<   
+[err] <131>1 2025-11-27T17:31:47.119968-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: Starting overview_status_web_app.cgi >>>  
+[err] <131>1 2025-11-27T17:31:47.119968-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: ntwtopo_cfg >>>  
+[err] <131>1 2025-11-27T17:31:47.781367-05:00 Cortina capabilities_status_web_app.cgi - - - new_expire ->17587  
+[err] <131>1 2025-11-27T17:31:53.392454-05:00 Cortina capabilities_status_web_app.cgi - - - new_expire ->17597  
+[err] <131>1 2025-11-27T17:31:53.392454-05:00 Cortina capabilities_status_web_app.cgi - - - INFO: User type = 1   
+[err] <131>1 2025-11-27T17:31:53.392454-05:00 Cortina capabilities_status_web_app.cgi - - - [capability-webapp]: Selcting the object Beacon Finally from [get_object_to_be_selected_for_hw]  
+[err] <131>1 2025-11-27T17:31:53.392454-05:00 Cortina capabilities_status_web_app.cgi - - - [capability-webapp]:Support OPID : EGEB from function [get_supported_opid_from_map_file]  
+[err] <131>1 2025-11-27T17:31:54.308444-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: device_info >>>  
+[err] <131>1 2025-11-27T17:31:54.863068-05:00 Cortina main_web_app.cgi - - - [cgi-webapp] ParentalCtlModeObject returns CFG_RET_SUCCESS  
+[err] <131>1 2025-11-27T17:31:54.863068-05:00 Cortina main_web_app.cgi - - - [cgi-webapp] parental_control_mode = NEW_ONLY  
+[err] <131>1 2025-11-27T17:31:54.902419-05:00 Cortina capabilities_status_web_app.cgi - - - Successfully modified the json content   
+[err] <131>1 2025-11-27T17:31:54.925432-05:00 Cortina capabilities_status_web_app.cgi - - - INFO: File path = /tmp/Temp.json   
+[err] <131>1 2025-11-27T17:31:55.563979-05:00 Cortina syslog - - - [cgi-webapp]:==>is_result_existed  
+[alert] <129>1 2025-11-27T17:31:56.117099-05:00 Cortina syslog - - - TR069: System clock change diff_uptime is -205, diff_systime is 0  
+[alert] <129>1 2025-11-27T17:31:56.117099-05:00 Cortina syslog - - - TR069: cur_time=17305,old_time=17510,cur_sys_time=1764282716,old_sys_time=1764282716  
+[alert] <129>1 2025-11-27T17:31:56.117099-05:00 Cortina syslog - - - TR069: reboot_systime_change called  
+[err] <131>1 2025-11-27T17:31:56.444699-05:00 Cortina main_web_app.cgi - - - [cgi-webapp] ParentalCtlModeObject returns CFG_RET_SUCCESS  
+[err] <131>1 2025-11-27T17:31:56.444699-05:00 Cortina main_web_app.cgi - - - [cgi-webapp] parental_control_mode = NEW_ONLY  
+[alert] <129>1 2025-11-27T17:31:56.465346-05:00 Cortina syslog - - - TR069: default scheduled reboot time 0001-01-01T00:00:00Z and return  
+[alert] <129>1 2025-11-27T17:31:56.465346-05:00 Cortina syslog - - - TR069: tr_backup fail in write_event2disk  
+[err] <131>1 2025-11-27T17:31:57.627152-05:00 Cortina syslog - - - [cgi-webapp]:==>is_result_existed  
+[alert] <129>1 2025-11-27T17:31:59.309539-05:00 Cortina syslog - - - TR069: sched is NOT NULL, Current session might be in progress  
+[alert] <129>1 2025-11-27T17:31:59.309539-05:00 Cortina syslog - - - TR069: SSL_read got ZERO_RETURN, peer has closed connection, ret=0,len=2047  
+[alert] <129>1 2025-11-27T17:31:59.309539-05:00 Cortina syslog - - - TR069: Received HTTP ERROR, inform failed  
+[err] <131>1 2025-11-27T17:31:59.627601-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:31:59.628015-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:31:59.628338-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:31:59.904889-05:00 Cortina device_home_nw_client_status_web_app.cgi - - - new_expire ->17608  
+[err] <131>1 2025-11-27T17:31:59.912874-05:00 Cortina web_customization_web_app.cgi - - - new_expire ->17609  
+[err] <131>1 2025-11-27T17:31:59.912874-05:00 Cortina radio_receiver_status_web_app.cgi - - - new_expire ->17608  
+[err] <131>1 2025-11-27T17:31:59.912874-05:00 Cortina web_customization_web_app.cgi - - - [capability-webapp]: Selcting the object Beacon Finally from [get_object_to_be_selected_for_hw]  
+[err] <131>1 2025-11-27T17:31:59.912874-05:00 Cortina web_customization_web_app.cgi - - - [capability-webapp]:Support OPID : EGEB from function [get_supported_opid_from_map_file]  
+[err] <131>1 2025-11-27T17:31:59.912874-05:00 Cortina container_management_status_web_app.cgi - - - new_expire ->17608  
+[err] <131>1 2025-11-27T17:31:59.916097-05:00 Cortina web_customization_web_app.cgi - - - chooseLanguage JSON object written to: /tmp/chooseLanguage.json  
+[err] <131>1 2025-11-27T17:31:59.918479-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]: File exists and copying to buffer <<<<   
+[err] <131>1 2025-11-27T17:32:00.251605-05:00 Cortina container_management_status_web_app.cgi - - - Entering GET next obj container mgmt  0 deploy 0  
+[err] <131>1 2025-11-27T17:32:03.610488-05:00 Cortina overview_status_web_app.cgi - - - new_expire ->17610  
+[err] <131>1 2025-11-27T17:32:03.777696-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: Starting overview_status_web_app.cgi >>>  
+[err] <131>1 2025-11-27T17:32:03.777696-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: ntwtopo_cfg >>>  
+[err] <131>1 2025-11-27T17:32:09.517946-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: device_info >>>  
+[alert] <129>1 2025-11-27T17:32:12.902945-05:00 Cortina syslog - - - TR069: Bind successful with port :32556  
+[alert] <129>1 2025-11-27T17:32:12.903672-05:00 Cortina syslog - - - TR069: TR069: Connect to server (https://hayacs.hay.net/cwmp | 163.182.253.70):443 is successful.  
+[err] <131>1 2025-11-27T17:32:23.669518-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: lan_ether  >>>  
+[err] <131>1 2025-11-27T17:32:33.881865-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]:  network_map  >>>  
+[err] <131>1 2025-11-27T17:32:33.892806-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]:  pon_status  >>>  
+[err] <131>1 2025-11-27T17:32:34.245860-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: get_wlan_name >>> !!!  
+[alert] <129>1 2025-11-27T17:32:34.306856-05:00 Cortina syslog - - - TR069: System clock change diff_uptime is -18, diff_systime is 17  
+[alert] <129>1 2025-11-27T17:32:34.306856-05:00 Cortina syslog - - - TR069: cur_time=17343,old_time=17361,cur_sys_time=1764282754,old_sys_time=1764282737  
+[alert] <129>1 2025-11-27T17:32:34.306856-05:00 Cortina syslog - - - TR069: reboot_systime_change called  
+[alert] <129>1 2025-11-27T17:32:35.098270-05:00 Cortina syslog - - - TR069: default scheduled reboot time 0001-01-01T00:00:00Z and return  
+[err] <131>1 2025-11-27T17:32:36.596720-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: lan_ether  >>>  
+[err] <131>1 2025-11-27T17:32:38.442906-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: device_detail  >>>  
+[err] <131>1 2025-11-27T17:32:38.442906-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] Enters - get_device_details() >>>  
+[err] <131>1 2025-11-27T17:32:38.495050-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] read_output_client_file()   
+[err] <131>1 2025-11-27T17:32:38.495050-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] Entered in to read_output_file function <<<<  
+[err] <131>1 2025-11-27T17:32:38.495050-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp]: File exists in output folder as expected <<<<  
+[err] <131>1 2025-11-27T17:32:38.495050-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp]: File exists and copying to buffer <<<<   
+[err] <131>1 2025-11-27T17:32:38.495050-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] read_output_client_file() !!!   
+[err] <131>1 2025-11-27T17:32:38.495050-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] Exit - get_device_details() !!!  
+[err] <131>1 2025-11-27T17:32:38.495050-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: wlan_status_glb >>>  
+[alert] <129>1 2025-11-27T17:32:39.478654-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:32:39.478654-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:32:39.478654-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[err] <131>1 2025-11-27T17:32:40.101030-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]:  network_map  >>>  
+[err] <131>1 2025-11-27T17:32:40.107240-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]:  pon_status  >>>  
+[err] <131>1 2025-11-27T17:32:41.124569-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: get_wlan_name >>> !!!  
+[err] <131>1 2025-11-27T17:32:48.027907-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: lan_ifip  >>>  
+[err] <131>1 2025-11-27T17:32:49.426514-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: delegated_prefix  >>>  
+[err] <131>1 2025-11-27T17:32:51.727741-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: device_detail  >>>  
+[err] <131>1 2025-11-27T17:32:51.727741-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] Enters - get_device_details() >>>  
+[err] <131>1 2025-11-27T17:32:51.771389-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] read_output_client_file()   
+[err] <131>1 2025-11-27T17:32:51.771389-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] Entered in to read_output_file function <<<<  
+[err] <131>1 2025-11-27T17:32:51.771389-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp]: File exists in output folder as expected <<<<  
+[err] <131>1 2025-11-27T17:32:51.771389-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp]: File exists and copying to buffer <<<<   
+[err] <131>1 2025-11-27T17:32:51.771389-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] read_output_client_file() !!!   
+[err] <131>1 2025-11-27T17:32:51.771389-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] Exit - get_device_details() !!!  
+[err] <131>1 2025-11-27T17:32:51.771389-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: wlan_status_glb >>>  
+[err] <131>1 2025-11-27T17:32:53.271504-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: sntp_status  >>>  
+[err] <131>1 2025-11-27T17:32:54.220738-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: wan_status: SSID & lan_ether info  >>>  
+[err] <131>1 2025-11-27T17:33:06.079206-05:00 Cortina index.cgi - - - new_expire ->17675  
+[err] <131>1 2025-11-27T17:33:08.057448-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: lan_ifip  >>>  
+[err] <131>1 2025-11-27T17:33:08.993460-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: delegated_prefix  >>>  
+[err] <131>1 2025-11-27T17:33:09.377569-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:33:09.378497-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:33:09.379978-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:33:09.610845-05:00 Cortina capabilities_status_web_app.cgi - - - new_expire ->17678  
+[err] <131>1 2025-11-27T17:33:09.613321-05:00 Cortina dashboard_status_web_app.cgi - - - new_expire ->17678  
+[err] <131>1 2025-11-27T17:33:09.615299-05:00 Cortina web_customization_web_app.cgi - - - new_expire ->17678  
+[err] <131>1 2025-11-27T17:33:09.616716-05:00 Cortina web_customization_web_app.cgi - - - [capability-webapp]: Selcting the object Beacon Finally from [get_object_to_be_selected_for_hw]  
+[err] <131>1 2025-11-27T17:33:09.617553-05:00 Cortina web_customization_web_app.cgi - - - [capability-webapp]:Support OPID : EGEB from function [get_supported_opid_from_map_file]  
+[err] <131>1 2025-11-27T17:33:09.621010-05:00 Cortina web_customization_web_app.cgi - - - chooseLanguage JSON object written to: /tmp/chooseLanguage.json  
+[err] <131>1 2025-11-27T17:33:09.622349-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]: File exists and copying to buffer <<<<   
+[alert] <129>1 2025-11-27T17:33:10.123610-05:00 Cortina syslog - - - TR069: System clock change diff_uptime is -31, diff_systime is 0  
+[alert] <129>1 2025-11-27T17:33:10.123610-05:00 Cortina syslog - - - TR069: cur_time=17379,old_time=17410,cur_sys_time=1764282790,old_sys_time=1764282790  
+[alert] <129>1 2025-11-27T17:33:10.123610-05:00 Cortina syslog - - - TR069: reboot_systime_change called  
+[err] <131>1 2025-11-27T17:33:10.132730-05:00 Cortina capabilities_status_web_app.cgi - - - new_expire ->17679  
+[err] <131>1 2025-11-27T17:33:10.132730-05:00 Cortina capabilities_status_web_app.cgi - - - INFO: User type = 1   
+[err] <131>1 2025-11-27T17:33:10.134841-05:00 Cortina capabilities_status_web_app.cgi - - - [capability-webapp]: Selcting the object Beacon Finally from [get_object_to_be_selected_for_hw]  
+[err] <131>1 2025-11-27T17:33:10.136571-05:00 Cortina capabilities_status_web_app.cgi - - - [capability-webapp]:Support OPID : EGEB from function [get_supported_opid_from_map_file]  
+[alert] <129>1 2025-11-27T17:33:10.137674-05:00 Cortina syslog - - - TR069: default scheduled reboot time 0001-01-01T00:00:00Z and return  
+[err] <131>1 2025-11-27T17:33:10.630072-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: sntp_status  >>>  
+[err] <131>1 2025-11-27T17:33:11.055702-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: wan_status: SSID & lan_ether info  >>>  
+[err] <131>1 2025-11-27T17:33:11.496187-05:00 Cortina main_web_app.cgi - - - [cgi-webapp] ParentalCtlModeObject returns CFG_RET_SUCCESS  
+[err] <131>1 2025-11-27T17:33:11.496187-05:00 Cortina main_web_app.cgi - - - [cgi-webapp] parental_control_mode = NEW_ONLY  
+[err] <131>1 2025-11-27T17:33:11.496187-05:00 Cortina main_web_app.cgi - - - [cgi-webapp] ParentalCtlModeObject returns CFG_RET_SUCCESS  
+[err] <131>1 2025-11-27T17:33:11.496187-05:00 Cortina main_web_app.cgi - - - [cgi-webapp] parental_control_mode = NEW_ONLY  
+[err] <131>1 2025-11-27T17:33:11.501267-05:00 Cortina capabilities_status_web_app.cgi - - - Successfully modified the json content   
+[err] <131>1 2025-11-27T17:33:11.502567-05:00 Cortina capabilities_status_web_app.cgi - - - INFO: File path = /tmp/Temp.json   
+[err] <131>1 2025-11-27T17:33:11.511605-05:00 Cortina syslog - - - [cgi-webapp]:==>is_result_existed  
+[err] <131>1 2025-11-27T17:33:11.517371-05:00 Cortina syslog - - - [cgi-webapp]:==>is_result_existed  
+[alert] <129>1 2025-11-27T17:33:13.249286-05:00 Cortina syslog - - - TR069: SSL_read got ZERO_RETURN, peer has closed connection, ret=0,len=2047  
+[alert] <129>1 2025-11-27T17:33:13.249286-05:00 Cortina syslog - - - TR069: Received HTTP ERROR, inform failed  
+[err] <131>1 2025-11-27T17:33:13.252021-05:00 Cortina container_management_status_web_app.cgi - - - new_expire ->17682  
+[err] <131>1 2025-11-27T17:33:13.254483-05:00 Cortina device_home_nw_client_status_web_app.cgi - - - new_expire ->17682  
+[err] <131>1 2025-11-27T17:33:13.499994-05:00 Cortina container_management_status_web_app.cgi - - - Entering GET next obj container mgmt  0 deploy 0  
+[err] <131>1 2025-11-27T17:33:13.536928-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:33:13.537623-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:33:13.538174-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:33:13.798504-05:00 Cortina web_customization_web_app.cgi - - - new_expire ->17682  
+[err] <131>1 2025-11-27T17:33:13.798504-05:00 Cortina radio_receiver_status_web_app.cgi - - - new_expire ->17682  
+[err] <131>1 2025-11-27T17:33:13.798504-05:00 Cortina web_customization_web_app.cgi - - - [capability-webapp]: Selcting the object Beacon Finally from [get_object_to_be_selected_for_hw]  
+[err] <131>1 2025-11-27T17:33:13.798504-05:00 Cortina web_customization_web_app.cgi - - - [capability-webapp]:Support OPID : EGEB from function [get_supported_opid_from_map_file]  
+[err] <131>1 2025-11-27T17:33:13.807777-05:00 Cortina web_customization_web_app.cgi - - - chooseLanguage JSON object written to: /tmp/chooseLanguage.json  
+[err] <131>1 2025-11-27T17:33:13.810240-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]: File exists and copying to buffer <<<<   
+[err] <131>1 2025-11-27T17:33:14.392634-05:00 Cortina overview_status_web_app.cgi - - - new_expire ->17683  
+[err] <131>1 2025-11-27T17:33:14.568697-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: Starting overview_status_web_app.cgi >>>  
+[err] <131>1 2025-11-27T17:33:14.568697-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: ntwtopo_cfg >>>  
+[err] <131>1 2025-11-27T17:33:15.321208-05:00 Cortina cfgmgr - - - notifyACSConnStatus enter  
+[err] <131>1 2025-11-27T17:33:15.321208-05:00 Cortina cfgmgr - - - notifyACSConnStatus send signal success.  
+[err] <131>1 2025-11-27T17:33:15.688249-05:00 Cortina overview_status_web_app.cgi - - - Get MLOEnabled Success getMLOFromDm = 0   
+[err] <131>1 2025-11-27T17:33:15.688249-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: wireless2_info  >>>  
+[alert] <129>1 2025-11-27T17:33:16.556660-05:00 Cortina syslog - - - TR069: Retry session having 2 Periodic event code  
+[alert] <129>1 2025-11-27T17:33:16.556660-05:00 Cortina syslog - - -   
+[err] <131>1 2025-11-27T17:33:16.561112-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: device_info >>>  
+[alert] <129>1 2025-11-27T17:33:17.137408-05:00 Cortina syslog - - - TR069: Retry timeout: 17391  
+[alert] <129>1 2025-11-27T17:33:17.137408-05:00 Cortina syslog - - -   
+[err] <131>1 2025-11-27T17:33:23.108448-05:00 Cortina overview_status_web_app.cgi - - - Get MLOEnabled Success getMLOFromDm = 0   
+[err] <131>1 2025-11-27T17:33:23.108448-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: wireless2_info  >>>  
+[alert] <129>1 2025-11-27T17:33:27.945096-05:00 Cortina syslog - - - TR069: Bind successful with port :32556  
+[alert] <129>1 2025-11-27T17:33:27.947485-05:00 Cortina syslog - - - TR069: TR069: Connect to server (https://hayacs.hay.net/cwmp | 163.182.253.70):443 is successful.  
+[err] <131>1 2025-11-27T17:33:30.809066-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: lan_ether  >>>  
+[err] <131>1 2025-11-27T17:33:31.522981-05:00 Cortina dashboard_status_web_app.cgi - - - new_expire ->17700  
+[err] <131>1 2025-11-27T17:33:32.388376-05:00 Cortina dashboard_status_web_app.cgi - - - new_expire ->17701  
+[err] <131>1 2025-11-27T17:33:33.610229-05:00 Cortina dashboard_status_web_app.cgi - - - new_expire ->17702  
+[err] <131>1 2025-11-27T17:33:34.601627-05:00 Cortina dashboard_status_web_app.cgi - - - new_expire ->17702  
+[err] <131>1 2025-11-27T17:33:35.642825-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]:  network_map  >>>  
+[err] <131>1 2025-11-27T17:33:35.660788-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]:  pon_status  >>>  
+[err] <131>1 2025-11-27T17:33:36.297168-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: get_wlan_name >>> !!!  
+[err] <131>1 2025-11-27T17:33:36.928168-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:33:36.928168-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:33:36.928168-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:33:37.026750-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: wireless5_info  >>>  
+[err] <131>1 2025-11-27T17:33:38.514105-05:00 Cortina capabilities_status_web_app.cgi - - - new_expire ->17706  
+[err] <131>1 2025-11-27T17:33:38.519101-05:00 Cortina dashboard_status_web_app.cgi - - - new_expire ->17706  
+[err] <131>1 2025-11-27T17:33:38.521454-05:00 Cortina web_customization_web_app.cgi - - - new_expire ->17706  
+[err] <131>1 2025-11-27T17:33:38.523167-05:00 Cortina web_customization_web_app.cgi - - - [capability-webapp]: Selcting the object Beacon Finally from [get_object_to_be_selected_for_hw]  
+[err] <131>1 2025-11-27T17:33:38.524678-05:00 Cortina web_customization_web_app.cgi - - - [capability-webapp]:Support OPID : EGEB from function [get_supported_opid_from_map_file]  
+[err] <131>1 2025-11-27T17:33:38.539773-05:00 Cortina web_customization_web_app.cgi - - - chooseLanguage JSON object written to: /tmp/chooseLanguage.json  
+[err] <131>1 2025-11-27T17:33:38.541516-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]: File exists and copying to buffer <<<<   
+[err] <131>1 2025-11-27T17:33:39.962228-05:00 Cortina capabilities_status_web_app.cgi - - - new_expire ->17708  
+[err] <131>1 2025-11-27T17:33:39.962228-05:00 Cortina capabilities_status_web_app.cgi - - - INFO: User type = 1   
+[err] <131>1 2025-11-27T17:33:39.963898-05:00 Cortina capabilities_status_web_app.cgi - - - [capability-webapp]: Selcting the object Beacon Finally from [get_object_to_be_selected_for_hw]  
+[err] <131>1 2025-11-27T17:33:39.976521-05:00 Cortina capabilities_status_web_app.cgi - - - [capability-webapp]:Support OPID : EGEB from function [get_supported_opid_from_map_file]  
+[alert] <129>1 2025-11-27T17:33:40.925330-05:00 Cortina syslog - - - TR069: System clock change diff_uptime is -12, diff_systime is 4  
+[alert] <129>1 2025-11-27T17:33:40.925330-05:00 Cortina syslog - - - TR069: cur_time=17410,old_time=17422,cur_sys_time=1764282820,old_sys_time=1764282816  
+[alert] <129>1 2025-11-27T17:33:40.925330-05:00 Cortina syslog - - - TR069: reboot_systime_change called  
+[alert] <129>1 2025-11-27T17:33:42.065151-05:00 Cortina syslog - - - TR069: default scheduled reboot time 0001-01-01T00:00:00Z and return  
+[alert] <129>1 2025-11-27T17:33:42.066692-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:33:42.066692-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:33:42.066692-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[err] <131>1 2025-11-27T17:33:43.297399-05:00 Cortina capabilities_status_web_app.cgi - - - Successfully modified the json content   
+[err] <131>1 2025-11-27T17:33:43.298733-05:00 Cortina capabilities_status_web_app.cgi - - - INFO: File path = /tmp/Temp.json   
+[err] <131>1 2025-11-27T17:33:45.699239-05:00 Cortina main_web_app.cgi - - - [cgi-webapp] ParentalCtlModeObject returns CFG_RET_SUCCESS  
+[err] <131>1 2025-11-27T17:33:45.699239-05:00 Cortina main_web_app.cgi - - - [cgi-webapp] parental_control_mode = NEW_ONLY  
+[err] <131>1 2025-11-27T17:33:45.700436-05:00 Cortina main_web_app.cgi - - - [cgi-webapp] ParentalCtlModeObject returns CFG_RET_SUCCESS  
+[err] <131>1 2025-11-27T17:33:45.700436-05:00 Cortina main_web_app.cgi - - - [cgi-webapp] parental_control_mode = NEW_ONLY  
+[err] <131>1 2025-11-27T17:33:46.134791-05:00 Cortina syslog - - - [cgi-webapp]:==>is_result_existed  
+[err] <131>1 2025-11-27T17:33:46.138687-05:00 Cortina syslog - - - [cgi-webapp]:==>is_result_existed  
+[err] <131>1 2025-11-27T17:33:46.990204-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: device_detail  >>>  
+[err] <131>1 2025-11-27T17:33:46.990204-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] Enters - get_device_details() >>>  
+[err] <131>1 2025-11-27T17:33:47.032856-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] read_output_client_file()   
+[err] <131>1 2025-11-27T17:33:47.032856-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] Entered in to read_output_file function <<<<  
+[err] <131>1 2025-11-27T17:33:47.032856-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp]: File exists in output folder as expected <<<<  
+[err] <131>1 2025-11-27T17:33:47.032856-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp]: File exists and copying to buffer <<<<   
+[err] <131>1 2025-11-27T17:33:47.032856-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] read_output_client_file() !!!   
+[err] <131>1 2025-11-27T17:33:47.032856-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] Exit - get_device_details() !!!  
+[err] <131>1 2025-11-27T17:33:47.032856-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: wlan_status_glb >>>  
+[err] <131>1 2025-11-27T17:33:47.754211-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:33:47.754873-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:33:47.755362-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]:SVG File not exists <<<<   
+[err] <131>1 2025-11-27T17:33:48.418087-05:00 Cortina device_home_nw_client_status_web_app.cgi - - - new_expire ->17717  
+[err] <131>1 2025-11-27T17:33:48.418087-05:00 Cortina container_management_status_web_app.cgi - - - new_expire ->17717  
+[err] <131>1 2025-11-27T17:33:48.418897-05:00 Cortina radio_receiver_status_web_app.cgi - - - new_expire ->17717  
+[err] <131>1 2025-11-27T17:33:48.418897-05:00 Cortina web_customization_web_app.cgi - - - new_expire ->17717  
+[err] <131>1 2025-11-27T17:33:48.420564-05:00 Cortina web_customization_web_app.cgi - - - [capability-webapp]: Selcting the object Beacon Finally from [get_object_to_be_selected_for_hw]  
+[err] <131>1 2025-11-27T17:33:48.421459-05:00 Cortina web_customization_web_app.cgi - - - [capability-webapp]:Support OPID : EGEB from function [get_supported_opid_from_map_file]  
+[err] <131>1 2025-11-27T17:33:48.425258-05:00 Cortina web_customization_web_app.cgi - - - chooseLanguage JSON object written to: /tmp/chooseLanguage.json  
+[err] <131>1 2025-11-27T17:33:48.426987-05:00 Cortina web_customization_web_app.cgi - - - >>>> [cgi-webapp]: File exists and copying to buffer <<<<   
+[err] <131>1 2025-11-27T17:33:48.773076-05:00 Cortina container_management_status_web_app.cgi - - - Entering GET next obj container mgmt  0 deploy 0  
+[err] <131>1 2025-11-27T17:33:49.323134-05:00 Cortina overview_status_web_app.cgi - - - new_expire ->17718  
+[err] <131>1 2025-11-27T17:33:49.501983-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: Starting overview_status_web_app.cgi >>>  
+[err] <131>1 2025-11-27T17:33:49.501983-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: ntwtopo_cfg >>>  
+[err] <131>1 2025-11-27T17:33:52.096087-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: wireless5_info  >>>  
+[err] <131>1 2025-11-27T17:33:54.955704-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: device_info >>>  
+[alert] <129>1 2025-11-27T17:33:58.812850-05:00 Cortina syslog - - - TR069: System clock change diff_uptime is -17, diff_systime is -1  
+[alert] <129>1 2025-11-27T17:33:58.812850-05:00 Cortina syslog - - - TR069: cur_time=17428,old_time=17445,cur_sys_time=1764282838,old_sys_time=1764282839  
+[alert] <129>1 2025-11-27T17:33:58.812850-05:00 Cortina syslog - - - TR069: reboot_systime_change called  
+[err] <131>1 2025-11-27T17:33:58.814241-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: lan_ifip  >>>  
+[alert] <129>1 2025-11-27T17:34:00.269346-05:00 Cortina syslog - - - TR069: default scheduled reboot time 0001-01-01T00:00:00Z and return  
+[err] <131>1 2025-11-27T17:34:00.273108-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: delegated_prefix  >>>  
+[err] <131>1 2025-11-27T17:34:01.752197-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: sntp_status  >>>  
+[err] <131>1 2025-11-27T17:34:02.617123-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: wan_status: SSID & lan_ether info  >>>  
+[alert] <129>1 2025-11-27T17:34:04.412311-05:00 Cortina syslog - - - TR069: SSL_read got ZERO_RETURN, peer has closed connection, ret=0,len=2047  
+[alert] <129>1 2025-11-27T17:34:04.412311-05:00 Cortina syslog - - - TR069: Received HTTP ERROR, inform failed  
+[alert] <129>1 2025-11-27T17:34:04.898481-05:00 Cortina syslog - - - TR069: Retry session having 2 Periodic event code  
+[alert] <129>1 2025-11-27T17:34:04.898481-05:00 Cortina syslog - - -   
+[alert] <129>1 2025-11-27T17:34:05.295954-05:00 Cortina syslog - - - TR069: Retry timeout: 17445  
+[alert] <129>1 2025-11-27T17:34:05.295954-05:00 Cortina syslog - - -   
+[err] <131>1 2025-11-27T17:34:09.496406-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: lan_ether  >>>  
+[err] <131>1 2025-11-27T17:34:10.264026-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: mesh_info  >>>  
+[err] <131>1 2025-11-27T17:34:11.231492-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]:  network_map  >>>  
+[err] <131>1 2025-11-27T17:34:11.235535-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]:  pon_status  >>>  
+[err] <131>1 2025-11-27T17:34:11.350145-05:00 Cortina overview_status_web_app.cgi - - - Get MLOEnabled Success getMLOFromDm = 0   
+[err] <131>1 2025-11-27T17:34:11.350145-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: wireless2_info  >>>  
+[err] <131>1 2025-11-27T17:34:11.352793-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: get_wlan_name >>> !!!  
+[err] <131>1 2025-11-27T17:34:16.641937-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: Successfully Exit of overview_status_web_app.cgi !!!  
+[err] <131>1 2025-11-27T17:34:18.066617-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: device_detail  >>>  
+[err] <131>1 2025-11-27T17:34:18.066617-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] Enters - get_device_details() >>>  
+[err] <131>1 2025-11-27T17:34:18.066617-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: mesh_info  >>>  
+[err] <131>1 2025-11-27T17:34:18.106175-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] read_output_client_file()   
+[err] <131>1 2025-11-27T17:34:18.106175-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] Entered in to read_output_file function <<<<  
+[err] <131>1 2025-11-27T17:34:18.106175-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp]: File exists in output folder as expected <<<<  
+[err] <131>1 2025-11-27T17:34:18.106175-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp]: File exists and copying to buffer <<<<   
+[err] <131>1 2025-11-27T17:34:18.106175-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] read_output_client_file() !!!   
+[err] <131>1 2025-11-27T17:34:18.106175-05:00 Cortina overview_status_web_app.cgi - - - >>>> [cgi-webapp] Exit - get_device_details() !!!  
+[err] <131>1 2025-11-27T17:34:18.106175-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: wlan_status_glb >>>  
+[err] <131>1 2025-11-27T17:34:22.024943-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: lan_ifip  >>>  
+[err] <131>1 2025-11-27T17:34:22.026769-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: Successfully Exit of overview_status_web_app.cgi !!!  
+[err] <131>1 2025-11-27T17:34:22.032291-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: delegated_prefix  >>>  
+[alert] <129>1 2025-11-27T17:34:22.036609-05:00 Cortina syslog - - - TR069: Bind successful with port :32556  
+[alert] <129>1 2025-11-27T17:34:22.037732-05:00 Cortina syslog - - - TR069: TR069: Connect to server (https://hayacs.hay.net/cwmp | 163.182.253.70):443 is successful.  
+[err] <131>1 2025-11-27T17:34:22.047987-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: sntp_status  >>>  
+[err] <131>1 2025-11-27T17:34:22.054187-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: wan_status: SSID & lan_ether info  >>>  
+[err] <131>1 2025-11-27T17:34:22.624004-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: wireless5_info  >>>  
+[err] <131>1 2025-11-27T17:34:24.594760-05:00 Cortina overview_status_web_app.cgi - - - Get MLOEnabled Success getMLOFromDm = 0   
+[err] <131>1 2025-11-27T17:34:24.594760-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: wireless2_info  >>>  
+[alert] <129>1 2025-11-27T17:34:26.038100-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:34:26.038100-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:34:26.038100-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[err] <131>1 2025-11-27T17:34:28.173976-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: mesh_info  >>>  
+[err] <131>1 2025-11-27T17:34:28.571871-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: wireless5_info  >>>  
+[alert] <129>1 2025-11-27T17:34:28.576239-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:34:28.576239-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:34:28.576239-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[err] <131>1 2025-11-27T17:34:30.757681-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: Successfully Exit of overview_status_web_app.cgi !!!  
+[err] <131>1 2025-11-27T17:34:30.799618-05:00 Cortina cfgmgr - - - notifyACSConnStatus enter  
+[err] <131>1 2025-11-27T17:34:30.800425-05:00 Cortina cfgmgr - - - notifyACSConnStatus send signal success.  
+[alert] <129>1 2025-11-27T17:34:30.823951-05:00 Cortina syslog - - - TR069: tr_backup fail in write_event2disk  
+[err] <131>1 2025-11-27T17:34:32.291022-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: mesh_info  >>>  
+[alert] <129>1 2025-11-27T17:34:32.324357-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:34:32.324357-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:34:32.324357-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[err] <131>1 2025-11-27T17:34:32.331069-05:00 Cortina overview_status_web_app.cgi - - - [cgi-webapp]: Successfully Exit of overview_status_web_app.cgi !!!  
+[alert] <129>1 2025-11-27T17:34:32.347119-05:00 Cortina syslog - - - tr069client-MAPPER: cfgUtl_getOidIidByPath uri=Device.X_ALU_COM_RemoteGUI. is not found!  
+[alert] <129>1 2025-11-27T17:34:32.347119-05:00 Cortina syslog - - - tr069client-MAPPER: map_pathToNode cfgUtl_getOidIidByPath failed, path=Device.X_ALU_COM_RemoteGUI.Enable,uri=Device.X_ALU_COM_RemoteGUI.  
+[alert] <129>1 2025-11-27T17:34:32.347119-05:00 Cortina syslog - - - TR069: cfg_pathToTr069Node path Device.X_ALU_COM_RemoteGUI.Enable return fail  
+[alert] <129>1 2025-11-27T17:34:32.347119-05:00 Cortina syslog - - - TR069: Unknown error on Device.X_ALU_COM_RemoteGUI.Enable, return 9005  
+[alert] <129>1 2025-11-27T17:34:32.411112-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:34:32.411112-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:34:32.411112-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:34:34.435964-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - dal_resolve_node(Device.X_ALU-COM_Wifi.X_ASB_COM_BOENGAgent.) failed  
+[alert] <129>1 2025-11-27T17:34:34.435964-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - Device.X_ALU-COM_Wifi.X_ASB_COM_BOENGAgent. is a deleted node  
+[alert] <129>1 2025-11-27T17:34:34.439356-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - dal_resolve_node(Device.X_ALU-COM_Wifi.X_ASB_COM_OtaImgMgmt.) failed  
+[alert] <129>1 2025-11-27T17:34:34.439356-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - Device.X_ALU-COM_Wifi.X_ASB_COM_OtaImgMgmt. is a deleted node  
+[alert] <129>1 2025-11-27T17:34:34.439356-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - dal_resolve_node(Device.X_ALU-COM_Wifi.X_ASB_COM_OtaSwAgent.) failed  
+[alert] <129>1 2025-11-27T17:34:34.439356-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - Device.X_ALU-COM_Wifi.X_ASB_COM_OtaSwAgent. is a deleted node  
+[alert] <129>1 2025-11-27T17:34:34.471324-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - dal_resolve_node(Device.X_ALU-COM_Wifi.X_ASB_COM_OtaSwAgent.) failed  
+[alert] <129>1 2025-11-27T17:34:34.471324-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - Device.X_ALU-COM_Wifi.X_ASB_COM_OtaSwAgent. is a deleted node  
+[alert] <129>1 2025-11-27T17:34:34.927242-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - dal_resolve_node(Device.X_ALU-COM_Wifi.X_ASB_COM_BOENGAgent.) failed  
+[alert] <129>1 2025-11-27T17:34:34.927747-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - Device.X_ALU-COM_Wifi.X_ASB_COM_BOENGAgent. is a deleted node  
+[alert] <129>1 2025-11-27T17:34:34.931425-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - dal_resolve_node(Device.X_ALU-COM_Wifi.X_ASB_COM_OtaImgMgmt.) failed  
+[alert] <129>1 2025-11-27T17:34:34.931848-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - Device.X_ALU-COM_Wifi.X_ASB_COM_OtaImgMgmt. is a deleted node  
+[alert] <129>1 2025-11-27T17:34:34.932261-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - dal_resolve_node(Device.X_ALU-COM_Wifi.X_ASB_COM_OtaSwAgent.) failed  
+[alert] <129>1 2025-11-27T17:34:34.932731-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - Device.X_ALU-COM_Wifi.X_ASB_COM_OtaSwAgent. is a deleted node  
+[alert] <129>1 2025-11-27T17:34:34.964696-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - dal_resolve_node(Device.X_ALU-COM_Wifi.X_ASB_COM_OtaSwAgent.) failed  
+[alert] <129>1 2025-11-27T17:34:34.964992-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - Device.X_ALU-COM_Wifi.X_ASB_COM_OtaSwAgent. is a deleted node  
+[alert] <129>1 2025-11-27T17:34:35.159451-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - dal_resolve_node(Device.X_ALU-COM_Wifi.X_ASB_COM_BOENGAgent.) failed  
+[alert] <129>1 2025-11-27T17:34:35.159451-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - Device.X_ALU-COM_Wifi.X_ASB_COM_BOENGAgent. is a deleted node  
+[alert] <129>1 2025-11-27T17:34:35.162240-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - dal_resolve_node(Device.X_ALU-COM_Wifi.X_ASB_COM_OtaImgMgmt.) failed  
+[alert] <129>1 2025-11-27T17:34:35.162240-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - Device.X_ALU-COM_Wifi.X_ASB_COM_OtaImgMgmt. is a deleted node  
+[alert] <129>1 2025-11-27T17:34:35.162240-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - dal_resolve_node(Device.X_ALU-COM_Wifi.X_ASB_COM_OtaSwAgent.) failed  
+[alert] <129>1 2025-11-27T17:34:35.162240-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - Device.X_ALU-COM_Wifi.X_ASB_COM_OtaSwAgent. is a deleted node  
+[alert] <129>1 2025-11-27T17:34:35.183224-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - dal_resolve_node(Device.X_ALU-COM_Wifi.X_ASB_COM_OtaSwAgent.) failed  
+[alert] <129>1 2025-11-27T17:34:35.183865-05:00 Cortina syslog - - - nuspd-MAPPER: nusp_dal_resolve_node NUSP - Device.X_ALU-COM_Wifi.X_ASB_COM_OtaSwAgent. is a deleted node  
+[err] <131>1 2025-11-27T17:35:40.016670-05:00 Cortina dashboard_status_web_app.cgi - - - new_expire ->17829  
+[err] <131>1 2025-11-27T17:35:40.331596-05:00 Cortina wan_config_glb_status_web_app.cgi - - - new_expire ->17829  
+[err] <131>1 2025-11-27T17:35:40.353479-05:00 Cortina wlan_config_status_web_app.cgi - - - new_expire ->17829  
+[err] <131>1 2025-11-27T17:35:40.367961-05:00 Cortina wlan_config_status_web_app.cgi - - - new_expire ->17829  
+[err] <131>1 2025-11-27T17:35:40.493757-05:00 Cortina wlan_config_status_web_app.cgi - - - Get MLOEnabled Success getMLOFromDm = 0   
+[err] <131>1 2025-11-27T17:35:40.939078-05:00 Cortina wlan_config_status_web_app.cgi - - - Get MLOEnabled Success getMLOFromDm = 0   
+[alert] <129>1 2025-11-27T17:35:45.236008-05:00 Cortina syslog - - - [wlan_config]--is_bridge_mode ---ret.ival=0  
+[alert] <129>1 2025-11-27T17:35:45.250566-05:00 Cortina syslog - - - [wlan_config]--is_bridge_mode ---ret.ival=0  
+[alert] <129>1 2025-11-27T17:36:00.443045-05:00 Cortina syslog - - - TR069: tr_backup fail in write_event2disk  
+[alert] <129>1 2025-11-27T17:36:00.452927-05:00 Cortina syslog - - - TR069: Bind successful with port :32556  
+[alert] <129>1 2025-11-27T17:36:00.454464-05:00 Cortina syslog - - - TR069: TR069: Connect to server (https://hayacs.hay.net/cwmp | 163.182.253.70):443 is successful.  
+[alert] <129>1 2025-11-27T17:36:00.753078-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:36:00.753078-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:36:00.753078-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:36:00.867091-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:36:00.867091-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:36:00.867091-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:36:00.890334-05:00 Cortina syslog - - - TR069: tr_backup fail in write_event2disk  
+[alert] <129>1 2025-11-27T17:36:00.919829-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:36:00.919829-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:36:00.919829-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:36:00.925818-05:00 Cortina syslog - - - TR069: SetParameterValues(Device.UserInterface.RemoteAccess.Enable=1)  
+[alert] <129>1 2025-11-27T17:36:00.930818-05:00 Cortina syslog - - - tr069client-MAPPER: check_http_on HTTP port 0 mismatch target port 80  
+[alert] <129>1 2025-11-27T17:36:00.930818-05:00 Cortina syslog - - - tr069client-MAPPER: wan_set_remote_access invalid HTTP parameter  
+[alert] <129>1 2025-11-27T17:36:00.930818-05:00 Cortina syslog - - - tr069client-MAPPER: map_setObj RTS failed on oid 64 uri=Device.UserInterface.RemoteAccess.  
+[alert] <129>1 2025-11-27T17:36:00.930818-05:00 Cortina syslog - - - tr069client-MAPPER: map_phlCommit map_setObj failed, ret=9007  
+[alert] <129>1 2025-11-27T17:36:00.930818-05:00 Cortina syslog - - - TR069: set parameter value fail! ret=[9007]  
+[alert] <129>1 2025-11-27T17:36:00.933641-05:00 Cortina syslog - - - TR069: rewind due to fault code 9003  
+[alert] <129>1 2025-11-27T17:36:00.964800-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[alert] <129>1 2025-11-27T17:36:00.964800-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: httponly=  
+[alert] <129>1 2025-11-27T17:36:00.964800-05:00 Cortina syslog - - - TR069: Ignore unknown attribute: samesite=lax  
+[err] <131>1 2025-11-27T17:36:51.331766-05:00 Cortina dashboard_status_web_app.cgi - - - new_expire ->17900  
+[err] <131>1 2025-11-27T17:36:51.571426-05:00 Cortina troubleshooting_status_web_app.cgi - - - new_expire ->17900  
+[err] <131>1 2025-11-27T17:36:51.807114-05:00 Cortina troubleshooting_web_app.cgi - - - new_expire ->17901  
+[err] <131>1 2025-11-27T17:36:51.938034-05:00 Cortina troubleshooting_web_app.cgi - - - new_expire ->17901  
+[err] <131>1 2025-11-27T17:36:54.562126-05:00 Cortina dashboard_status_web_app.cgi - - - new_expire ->17903  
+[err] <131>1 2025-11-27T17:36:54.796181-05:00 Cortina password_status_web_app.cgi - - - new_expire ->17904  
+[err] <131>1 2025-11-27T17:36:54.897211-05:00 Cortina password_status_web_app.cgi - - - AccountNumer:1  
+[err] <131>1 2025-11-27T17:36:54.897211-05:00 Cortina password_status_web_app.cgi - - - AccountNumer:2  
+[err] <131>1 2025-11-27T17:36:54.897944-05:00 Cortina password_status_web_app.cgi - - - AccountNumer:1  
+[err] <131>1 2025-11-27T17:36:54.897944-05:00 Cortina password_status_web_app.cgi - - - AccountNumer:2  
+[err] <131>1 2025-11-27T17:37:02.728324-05:00 Cortina log_status_web_app.cgi - - - new_expire ->17912  
+[err] <131>1 2025-11-27T17:37:03.052405-05:00 Cortina log_status_web_app.cgi - - - new_expire ->17912  
+

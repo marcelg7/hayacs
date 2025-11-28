@@ -66,7 +66,8 @@
                             @php
                                 $results = is_array($task->result) ? $task->result : json_decode($task->result, true);
                                 $firstKey = array_key_first($results ?? []);
-                                $prefix = str_starts_with($firstKey, 'Device.IP.') ? 'Device.IP.Diagnostics.IPPingDiagnostics' : 'InternetGatewayDevice.IPPingDiagnostics';
+                                // TR-181 uses IPPing (not IPPingDiagnostics)
+                                $prefix = str_starts_with($firstKey, 'Device.IP.') ? 'Device.IP.Diagnostics.IPPing' : 'InternetGatewayDevice.IPPingDiagnostics';
 
                                 // Get timing values
                                 $successCount = (int)($results["{$prefix}.SuccessCount"]['value'] ?? 0);
@@ -124,12 +125,13 @@
                             @php
                                 $results = is_array($task->result) ? $task->result : json_decode($task->result, true);
                                 $firstKey = array_key_first($results ?? []);
-                                $prefix = str_starts_with($firstKey, 'Device.IP.') ? 'Device.IP.Diagnostics.TraceRouteDiagnostics' : 'InternetGatewayDevice.TraceRouteDiagnostics';
+                                // TR-181 uses TraceRoute (not TraceRouteDiagnostics)
+                                $prefix = str_starts_with($firstKey, 'Device.IP.') ? 'Device.IP.Diagnostics.TraceRoute' : 'InternetGatewayDevice.TraceRouteDiagnostics';
 
-                                // Extract hop data
+                                // Extract hop data - handles both TR-181 (Host, HostAddress, RTTimes) and TR-098 (HopHost, HopHostAddress, HopRTTimes)
                                 $hops = [];
                                 foreach ($results as $key => $data) {
-                                    if (preg_match('/.RouteHops\.(\d+)\.(.+)/', $key, $matches)) {
+                                    if (preg_match('/RouteHops\.(\d+)\.(.+)$/', $key, $matches)) {
                                         $hopNum = (int)$matches[1];
                                         $field = $matches[2];
                                         if (!isset($hops[$hopNum])) {
@@ -173,9 +175,9 @@
                                                 @foreach($hops as $hop)
                                                 <tr>
                                                     <td class="px-3 py-2 whitespace-nowrap text-gray-900 dark:text-{{ $colors['text'] }}">{{ $hop['number'] }}</td>
-                                                    <td class="px-3 py-2 text-gray-900 dark:text-{{ $colors['text'] }}">{{ $hop['HopHost'] ?? '-' }}</td>
-                                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900 dark:text-{{ $colors['text'] }}">{{ $hop['HopHostAddress'] ?? '-' }}</td>
-                                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900 dark:text-{{ $colors['text'] }}">{{ $hop['HopRTTimes'] ?? '-' }}</td>
+                                                    <td class="px-3 py-2 text-gray-900 dark:text-{{ $colors['text'] }}">{{ $hop['Host'] ?? $hop['HopHost'] ?? '-' }}</td>
+                                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900 dark:text-{{ $colors['text'] }}">{{ $hop['HostAddress'] ?? $hop['HopHostAddress'] ?? '-' }}</td>
+                                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900 dark:text-{{ $colors['text'] }}">{{ $hop['RTTimes'] ?? $hop['HopRTTimes'] ?? '-' }}</td>
                                                 </tr>
                                                 @endforeach
                                             </tbody>

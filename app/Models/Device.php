@@ -28,8 +28,11 @@ class Device extends Model
         'stun_enabled',
         'online',
         'last_inform',
+        'remote_gui_enabled_at',
         'initial_backup_created',
         'last_backup_at',
+        'last_refresh_at',
+        'auto_provisioned',
         'tags',
     ];
 
@@ -37,8 +40,11 @@ class Device extends Model
         'online' => 'boolean',
         'stun_enabled' => 'boolean',
         'initial_backup_created' => 'boolean',
+        'auto_provisioned' => 'boolean',
         'last_inform' => 'datetime',
+        'remote_gui_enabled_at' => 'datetime',
         'last_backup_at' => 'datetime',
+        'last_refresh_at' => 'datetime',
         'tags' => 'array',
     ];
 
@@ -96,6 +102,25 @@ class Device extends Model
     public function taskMetrics(): HasMany
     {
         return $this->hasMany(TaskMetric::class, 'device_id');
+    }
+
+    /**
+     * Get all events for this device
+     */
+    public function events(): HasMany
+    {
+        return $this->hasMany(DeviceEvent::class, 'device_id');
+    }
+
+    /**
+     * Get recent boot events for reboot frequency analysis
+     */
+    public function recentBoots(int $hours = 24)
+    {
+        return $this->events()
+            ->boots()
+            ->where('created_at', '>=', now()->subHours($hours))
+            ->orderBy('created_at', 'desc');
     }
 
     /**

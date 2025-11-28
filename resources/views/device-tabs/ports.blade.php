@@ -300,8 +300,9 @@
                     <tbody class="bg-white dark:bg-{{ $colors['card'] }} divide-y divide-gray-200 dark:divide-{{ $colors['border'] }}">
                         <template x-for="mapping in portMappings" :key="mapping.instance">
                             <tr class="hover:bg-gray-50 dark:hover:bg-{{ $colors['bg'] }}">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-{{ $colors['text'] }}" x-text="mapping.PortMappingDescription || 'N/A'"></td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}" x-text="mapping.PortMappingProtocol || 'N/A'"></td>
+                                {{-- TR-181 uses Description/Protocol, TR-098 uses PortMappingDescription/PortMappingProtocol --}}
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-{{ $colors['text'] }}" x-text="mapping.Description || mapping.PortMappingDescription || 'N/A'"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}" x-text="mapping.Protocol || mapping.PortMappingProtocol || 'N/A'"></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}" x-text="mapping.ExternalPort || 'N/A'"></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}" x-text="mapping.InternalPort || 'N/A'"></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}" x-text="mapping.InternalClient || 'N/A'"></td>

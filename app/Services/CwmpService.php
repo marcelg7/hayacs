@@ -182,11 +182,18 @@ class CwmpService
 
         // Parse TransferComplete
         if ($result['method'] === 'TransferComplete') {
-            $result['command_key'] = $xpath->query('//cwmp:TransferComplete/CommandKey')->item(0)?->nodeValue;
-            $result['fault_code'] = (int) ($xpath->query('//cwmp:TransferComplete/FaultStruct/FaultCode')->item(0)?->nodeValue ?? 0);
-            $result['fault_string'] = $xpath->query('//cwmp:TransferComplete/FaultStruct/FaultString')->item(0)?->nodeValue ?? '';
-            $result['start_time'] = $xpath->query('//cwmp:TransferComplete/StartTime')->item(0)?->nodeValue;
-            $result['complete_time'] = $xpath->query('//cwmp:TransferComplete/CompleteTime')->item(0)?->nodeValue;
+            // Try with namespace first, then without (some devices don't namespace child elements)
+            $result['command_key'] = $xpath->query('//cwmp:TransferComplete/CommandKey')->item(0)?->nodeValue
+                ?? $xpath->query('//*[local-name()="TransferComplete"]/*[local-name()="CommandKey"]')->item(0)?->nodeValue;
+
+            // FaultStruct children often don't have namespace prefix
+            $result['fault_code'] = (int) ($xpath->query('//*[local-name()="TransferComplete"]//*[local-name()="FaultCode"]')->item(0)?->nodeValue ?? 0);
+            $result['fault_string'] = $xpath->query('//*[local-name()="TransferComplete"]//*[local-name()="FaultString"]')->item(0)?->nodeValue ?? '';
+
+            $result['start_time'] = $xpath->query('//cwmp:TransferComplete/StartTime')->item(0)?->nodeValue
+                ?? $xpath->query('//*[local-name()="TransferComplete"]/*[local-name()="StartTime"]')->item(0)?->nodeValue;
+            $result['complete_time'] = $xpath->query('//cwmp:TransferComplete/CompleteTime')->item(0)?->nodeValue
+                ?? $xpath->query('//*[local-name()="TransferComplete"]/*[local-name()="CompleteTime"]')->item(0)?->nodeValue;
         }
 
         // Parse AddObjectResponse
@@ -335,6 +342,19 @@ class CwmpService
             } else {
                 $paramValue = $value;
                 $paramType = 'xsd:string';
+            }
+
+            // Handle boolean values properly - PHP false becomes "" when cast to string
+            if ($paramType === 'xsd:boolean') {
+                // Convert to "1" or "0" for TR-069 boolean
+                if (is_bool($paramValue)) {
+                    $paramValue = $paramValue ? '1' : '0';
+                } elseif (is_string($paramValue)) {
+                    // Normalize string boolean values
+                    $paramValue = in_array(strtolower($paramValue), ['true', '1', 'yes']) ? '1' : '0';
+                } else {
+                    $paramValue = $paramValue ? '1' : '0';
+                }
             }
 
             $valueEl = $dom->createElement('Value', htmlspecialchars((string) $paramValue));

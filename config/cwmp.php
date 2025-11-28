@@ -28,4 +28,17 @@ return [
             'password' => env('CWMP_PASSWORD_3'),
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Connection Request Credentials
+    |--------------------------------------------------------------------------
+    |
+    | Credentials set on devices for ACS-initiated connection requests.
+    | These are pushed to devices during auto-provisioning.
+    |
+    */
+
+    'connection_request_username' => env('CWMP_CR_USERNAME', 'admin'),
+    'connection_request_password' => env('CWMP_CR_PASSWORD', 'admin'),
 ];

@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\BackupTemplate;
 use App\Models\ConfigBackup;
 use App\Models\Device;
+use App\Models\DeviceWifiCredential;
 use App\Models\SpeedTestResult;
 use App\Models\Task;
 use App\Services\ConnectionRequestService;
+use App\Services\Tr181MigrationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class DeviceController extends Controller
 {
@@ -20,6 +23,38 @@ class DeviceController extends Controller
     public function __construct(ConnectionRequestService $connectionRequestService)
     {
         $this->connectionRequestService = $connectionRequestService;
+    }
+
+    /**
+     * Check if a device only processes one TR-069 RPC per CWMP session.
+     * SmartRG/Sagemcom and Nokia Beacon devices have this limitation.
+     * When multiple tasks are queued, only the first executes in each session.
+     */
+    private function isOneTaskPerSessionDevice(Device $device): bool
+    {
+        // SmartRG/Sagemcom OUIs
+        $smartRgOuis = ['E82C6D'];
+
+        // Nokia/Alcatel-Lucent OUIs
+        $nokiaOuis = ['80AB4D', '0C7C28'];
+
+        $oui = strtoupper($device->oui ?? '');
+        $manufacturer = strtolower($device->manufacturer ?? '');
+
+        // Check SmartRG by OUI or manufacturer
+        if (in_array($oui, $smartRgOuis) || $manufacturer === 'smartrg' || $manufacturer === 'sagemcom') {
+            return true;
+        }
+
+        // Check Nokia by OUI or manufacturer
+        if (in_array($oui, $nokiaOuis) ||
+            strpos($manufacturer, 'nokia') !== false ||
+            strpos($manufacturer, 'alcatel') !== false ||
+            strpos($manufacturer, 'alcl') !== false) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -239,7 +274,7 @@ class DeviceController extends Controller
 
         // Determine data model prefix
         $dataModel = $device->getDataModel();
-        $prefix = $dataModel === 'Device:2' ? 'Device.' : 'InternetGatewayDevice.';
+        $prefix = $dataModel === 'TR-181' ? 'Device.' : 'InternetGatewayDevice.';
 
         // Query essential device info parameters
         $task = Task::create([
@@ -292,6 +327,9 @@ class DeviceController extends Controller
             'status' => 'pending',
         ]);
 
+        // Update last refresh timestamp
+        $device->update(['last_refresh_at' => now()]);
+
         // Trigger immediate connection
         $this->triggerConnectionRequestForTask($device);
 
@@ -307,7 +345,7 @@ class DeviceController extends Controller
      */
     private function buildDiscoveryParameters(string $dataModel): array
     {
-        $isDevice2 = $dataModel === 'Device:2';
+        $isDevice2 = $dataModel === 'TR-181';
 
         if ($isDevice2) {
             return [
@@ -404,7 +442,7 @@ class DeviceController extends Controller
      */
     public function buildDetailedParametersFromDiscovery(array $discoveryResults, string $dataModel, ?Device $device = null): array
     {
-        $isDevice2 = $dataModel === 'Device:2';
+        $isDevice2 = $dataModel === 'TR-181';
         $parameters = [];
 
         // Detect manufacturer for device-specific instance handling
@@ -715,32 +753,59 @@ class DeviceController extends Controller
 
     /**
      * Get ALL parameters from device (like NISC USS "Get Everything")
-     * Uses GetParameterNames to discover all available parameters
+     *
+     * For TR-098 devices (Nokia Beacon G6, SmartRG):
+     *   Uses GetParameterValues with partial path 'InternetGatewayDevice.'
+     *   This returns ALL parameters with values in a single response (~15 seconds)
+     *   This matches USS behavior and is much faster than parameter discovery
+     *
+     * For TR-181 devices (Calix):
+     *   Uses GetParameterNames to discover all parameters, then fetches in chunks
+     *   TR-181 devices handle this approach better
      */
     public function getAllParameters(string $id): JsonResponse
     {
         $device = Device::findOrFail($id);
 
-        // Determine data model root
+        // Determine data model and root path
         $dataModel = $device->getDataModel();
-        $root = $dataModel === 'Device:2' ? 'Device.' : 'InternetGatewayDevice.';
+        $root = $dataModel === 'TR-181' ? 'Device.' : 'InternetGatewayDevice.';
 
-        $task = Task::create([
-            'device_id' => $device->id,
-            'task_type' => 'get_parameter_names',
-            'parameters' => [
-                'path' => $root,
-                'next_level' => false, // Get ALL parameters recursively
-            ],
-            'status' => 'pending',
-        ]);
+        // TR-098 devices support GetParameterValues with partial path
+        // This returns ALL parameters with values in one response (like USS does)
+        if ($dataModel === 'TR-098') {
+            $task = Task::create([
+                'device_id' => $device->id,
+                'task_type' => 'get_params',
+                'parameters' => [
+                    'names' => [$root],  // Partial path returns all parameters below it
+                ],
+                'status' => 'pending',
+            ]);
+
+            $message = 'Get all parameters task created - fetching all parameters with values in single request';
+        } else {
+            // TR-181 devices: use GetParameterNames discovery approach
+            $task = Task::create([
+                'device_id' => $device->id,
+                'task_type' => 'get_parameter_names',
+                'parameters' => [
+                    'path' => $root,
+                    'next_level' => false, // Get ALL parameters recursively
+                ],
+                'status' => 'pending',
+            ]);
+
+            $message = 'Get all parameters task created - discovering all device parameters';
+        }
 
         // Trigger immediate connection
         $this->triggerConnectionRequestForTask($device);
 
         return response()->json([
-            'message' => 'Get all parameters task created - discovering all device parameters',
+            'message' => $message,
             'task' => $task,
+            'approach' => $dataModel === 'TR-098' ? 'partial_path_gpv' : 'parameter_discovery',
         ], 201);
     }
 
@@ -867,27 +932,106 @@ class DeviceController extends Controller
         $device = Device::findOrFail($id);
 
         $validated = $request->validate([
-            'url' => 'required|url',
+            'url' => 'nullable|url',
             'file_type' => 'nullable|string',
             'username' => 'nullable|string',
             'password' => 'nullable|string',
         ]);
 
+        // Generate secure token for this upload
+        $uploadToken = bin2hex(random_bytes(16));
+
+        // Create task first to get task ID
         $task = Task::create([
             'device_id' => $device->id,
             'task_type' => 'upload',
             'parameters' => [
-                'url' => $validated['url'],
-                'file_type' => $validated['file_type'] ?? '3 Vendor Log File',
-                'username' => $validated['username'] ?? '',
-                'password' => $validated['password'] ?? '',
+                'url' => '', // Will be set below
+                'file_type' => $validated['file_type'] ?? '1 Vendor Configuration File',
+                'username' => '',
+                'password' => '',
+                'upload_token' => $uploadToken,
             ],
             'status' => 'pending',
         ]);
 
+        // Generate URL if not provided - device will PUT file to this URL
+        // URL-encode the device ID (it may contain spaces)
+        $encodedDeviceId = urlencode($device->id);
+        $url = $validated['url'] ?? url("/device-upload/{$encodedDeviceId}/{$task->id}?token={$uploadToken}");
+
+        // Update task with the URL
+        $task->update([
+            'parameters' => array_merge($task->parameters, ['url' => $url]),
+        ]);
+
+        // Trigger connection request so device connects immediately
+        $this->triggerConnectionRequestForTask($device);
+
         return response()->json([
             'message' => 'Upload task created successfully',
-            'task' => $task,
+            'task' => $task->fresh(),
+            'upload_url' => $url,
+        ], 201);
+    }
+
+    /**
+     * Request config backup from device
+     * Uses TR-069 Upload RPC to have device send its configuration file
+     */
+    public function requestConfigBackup(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        // Generate secure token for this upload
+        $uploadToken = bin2hex(random_bytes(16));
+
+        // Create task first to get task ID
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'upload',
+            'description' => 'Config backup request',
+            'parameters' => [
+                'url' => '', // Will be set below
+                'file_type' => '3 Vendor Configuration File',
+                'username' => '',
+                'password' => '',
+                'upload_token' => $uploadToken,
+            ],
+            'status' => 'pending',
+        ]);
+
+        // Generate the upload URL - device will PUT file to this URL
+        // Use HTTP since some devices may not support HTTPS
+        $baseUrl = config('app.url');
+        // If using HTTPS, try to use HTTP variant for device uploads
+        if (str_starts_with($baseUrl, 'https://')) {
+            $httpUrl = str_replace('https://', 'http://', $baseUrl);
+        } else {
+            $httpUrl = $baseUrl;
+        }
+        // URL-encode the device ID (it may contain spaces)
+        $encodedDeviceId = urlencode($device->id);
+        $url = "{$httpUrl}/device-upload/{$encodedDeviceId}/{$task->id}?token={$uploadToken}";
+
+        // Update task with the URL
+        $task->update([
+            'parameters' => array_merge($task->parameters, ['url' => $url]),
+        ]);
+
+        Log::info('Config backup requested', [
+            'device_id' => $device->id,
+            'task_id' => $task->id,
+            'upload_url' => $url,
+        ]);
+
+        // Trigger connection request so device connects immediately
+        $this->triggerConnectionRequestForTask($device);
+
+        return response()->json([
+            'message' => 'Config backup request sent to device',
+            'task' => $task->fresh(),
+            'upload_url' => $url,
         ], 201);
     }
 
@@ -1121,7 +1265,190 @@ class DeviceController extends Controller
     public function getWifiConfig(string $id): JsonResponse
     {
         $device = Device::findOrFail($id);
+        $dataModel = $device->getDataModel();
 
+        if ($dataModel === 'TR-181') {
+            return $this->getWifiConfigTr181($device);
+        }
+
+        return $this->getWifiConfigTr098($device);
+    }
+
+    /**
+     * Get WiFi configuration for TR-181 devices
+     */
+    private function getWifiConfigTr181(Device $device): JsonResponse
+    {
+        $instances = [];
+
+        // Get radio information to map SSIDs to bands
+        $radioParams = $device->parameters()
+            ->where('name', 'LIKE', 'Device.WiFi.Radio.%')
+            ->get()
+            ->keyBy('name');
+
+        // Build radio band mapping
+        $radioBands = [];
+        foreach ($radioParams as $name => $param) {
+            if (preg_match('/Device\.WiFi\.Radio\.(\d+)\.OperatingFrequencyBand/', $name, $matches)) {
+                $radioBands[(int)$matches[1]] = $param->value;
+            }
+        }
+
+        // Get SSID parameters
+        $ssidParams = $device->parameters()
+            ->where('name', 'LIKE', 'Device.WiFi.SSID.%')
+            ->get();
+
+        // Get AccessPoint parameters
+        $apParams = $device->parameters()
+            ->where('name', 'LIKE', 'Device.WiFi.AccessPoint.%')
+            ->get();
+
+        // Organize SSIDs
+        foreach ($ssidParams as $param) {
+            if (preg_match('/Device\.WiFi\.SSID\.(\d+)\.(.+)/', $param->name, $matches)) {
+                $instance = (int) $matches[1];
+                $field = $matches[2];
+
+                if (!isset($instances[$instance])) {
+                    // SSIDs 1-4 typically map to Radio 1 (2.4GHz), 5-8 to Radio 2 (5GHz)
+                    $radioIndex = $instance <= 4 ? 1 : 2;
+                    $instances[$instance] = [
+                        'instance' => $instance,
+                        'band' => $radioBands[$radioIndex] ?? ($instance <= 4 ? '2.4GHz' : '5GHz'),
+                        'data_model' => 'TR-181',
+                    ];
+                }
+
+                switch ($field) {
+                    case 'SSID':
+                        $instances[$instance]['ssid'] = $param->value;
+                        break;
+                    case 'Enable':
+                        $instances[$instance]['enabled'] = ($param->value === '1' || strtolower($param->value) === 'true');
+                        break;
+                    case 'Status':
+                        $instances[$instance]['status'] = $param->value;
+                        break;
+                    case 'BSSID':
+                        $instances[$instance]['bssid'] = $param->value;
+                        break;
+                    case 'LowerLayers':
+                        // This tells us which radio the SSID is bound to
+                        if (preg_match('/Radio\.(\d+)/', $param->value, $radioMatch)) {
+                            $radioIdx = (int)$radioMatch[1];
+                            $instances[$instance]['radio'] = $radioIdx;
+                            $instances[$instance]['band'] = $radioBands[$radioIdx] ?? $instances[$instance]['band'];
+                        }
+                        break;
+                }
+            }
+        }
+
+        // Add AccessPoint info (security, etc.)
+        foreach ($apParams as $param) {
+            if (preg_match('/Device\.WiFi\.AccessPoint\.(\d+)\.(.+)/', $param->name, $matches)) {
+                $instance = (int) $matches[1];
+                $field = $matches[2];
+
+                if (!isset($instances[$instance])) {
+                    continue; // Skip if no matching SSID
+                }
+
+                switch ($field) {
+                    case 'Enable':
+                        $instances[$instance]['ap_enabled'] = ($param->value === '1' || strtolower($param->value) === 'true');
+                        break;
+                    case 'SSIDAdvertisementEnabled':
+                        $instances[$instance]['ssid_broadcast'] = ($param->value === '1' || strtolower($param->value) === 'true');
+                        break;
+                    case 'Security.ModeEnabled':
+                        $instances[$instance]['security_mode'] = $param->value;
+                        $instances[$instance]['security_type'] = $this->mapSecurityMode($param->value);
+                        break;
+                    case 'Security.KeyPassphrase':
+                        $instances[$instance]['password'] = $param->value;
+                        break;
+                    case 'MaxAssociatedDevices':
+                        $instances[$instance]['max_clients'] = (int) $param->value;
+                        break;
+                    case 'AssociatedDeviceNumberOfEntries':
+                        $instances[$instance]['connected_clients'] = (int) $param->value;
+                        break;
+                }
+            }
+        }
+
+        // Add radio info (channel, auto-channel, etc.)
+        foreach ($radioParams as $name => $param) {
+            if (preg_match('/Device\.WiFi\.Radio\.(\d+)\.(.+)/', $name, $matches)) {
+                $radioIdx = (int) $matches[1];
+                $field = $matches[2];
+
+                // Apply radio settings to all SSIDs on that radio
+                foreach ($instances as &$inst) {
+                    $instRadio = $inst['radio'] ?? ($inst['instance'] <= 4 ? 1 : 2);
+                    if ($instRadio !== $radioIdx) continue;
+
+                    switch ($field) {
+                        case 'Enable':
+                            $inst['radio_enabled'] = ($param->value === '1' || strtolower($param->value) === 'true');
+                            break;
+                        case 'AutoChannelEnable':
+                            $inst['auto_channel'] = ($param->value === '1' || strtolower($param->value) === 'true');
+                            break;
+                        case 'Channel':
+                            $inst['channel'] = (int) $param->value;
+                            break;
+                        case 'CurrentOperatingChannelBandwidth':
+                        case 'OperatingChannelBandwidth':
+                            $inst['channel_bandwidth'] = $param->value;
+                            break;
+                        case 'OperatingStandards':
+                            $inst['standard'] = $param->value;
+                            break;
+                        case 'TransmitPower':
+                            $inst['transmit_power'] = $param->value;
+                            break;
+                    }
+                }
+                unset($inst);
+            }
+        }
+
+        // Sort by instance number
+        ksort($instances);
+
+        return response()->json([
+            'device_id' => $device->id,
+            'data_model' => 'TR-181',
+            'wlan_configurations' => array_values($instances),
+        ]);
+    }
+
+    /**
+     * Map TR-181 security mode to simplified type
+     */
+    private function mapSecurityMode(string $mode): string
+    {
+        return match(strtolower($mode)) {
+            'none' => 'none',
+            'wep-64', 'wep-128' => 'wep',
+            'wpa-personal', 'wpa-psk' => 'wpa',
+            'wpa2-personal', 'wpa2-psk' => 'wpa2',
+            'wpa3-personal', 'wpa3-sae' => 'wpa3',
+            'wpa-wpa2-personal' => 'wpa/wpa2',
+            'wpa2-wpa3-personal' => 'wpa2/wpa3',
+            default => $mode,
+        };
+    }
+
+    /**
+     * Get WiFi configuration for TR-098 devices
+     */
+    private function getWifiConfigTr098(Device $device): JsonResponse
+    {
         // Get all WLAN configuration parameters
         $wlanParams = $device->parameters()
             ->where('name', 'LIKE', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.%')
@@ -1147,6 +1474,7 @@ class DeviceController extends Controller
                     $instances[$instance] = [
                         'instance' => $instance,
                         'band' => $instance >= 9 ? '5GHz' : '2.4GHz',
+                        'data_model' => 'TR-098',
                     ];
                 }
 
@@ -1199,6 +1527,7 @@ class DeviceController extends Controller
 
         return response()->json([
             'device_id' => $device->id,
+            'data_model' => 'TR-098',
             'wlan_configurations' => array_values($instances),
         ]);
     }
@@ -1260,21 +1589,134 @@ class DeviceController extends Controller
     public function remoteGui(string $id): JsonResponse
     {
         $device = Device::findOrFail($id);
+        $dataModel = $device->getDataModel();
 
-        // Parameters to query for remote GUI access
-        $parametersToQuery = [
-            'InternetGatewayDevice.User.1.Username',
-            'InternetGatewayDevice.User.1.Password',
-            'InternetGatewayDevice.UserInterface.RemoteAccess.Port',
-            'InternetGatewayDevice.UserInterface.RemoteAccess.Enable',
-            'InternetGatewayDevice.User.2.RemoteAccessCapable',
-        ];
+        // Nokia/Alcatel-Lucent OUIs for Beacon devices
+        $nokiaOuis = ['80AB4D', '80:AB:4D', '0C7C28'];
+        $isNokia = in_array(strtoupper($device->oui ?? ''), $nokiaOuis) ||
+                   stripos($device->manufacturer ?? '', 'Nokia') !== false ||
+                   stripos($device->manufacturer ?? '', 'Alcatel') !== false ||
+                   stripos($device->manufacturer ?? '', 'ALCL') !== false;
 
-        // Also need external IP address
-        $externalIp = $device->parameters()
-            ->where('name', 'LIKE', '%ExternalIPAddress%')
-            ->where('name', 'LIKE', '%WANIPConnection%')
-            ->first();
+        // Default values that will be returned
+        $port = null;
+        $username = null;
+        $externalIp = null;
+
+        // Parameters to query and enable parameters vary by device type
+        // Priority: Check data model first, then vendor-specific overrides
+        if ($isNokia && $dataModel === 'TR-181') {
+            // Nokia Beacon G6 with TR-181 data model - use Device. paths with Nokia vendor extensions
+            $parametersToQuery = [
+                'Device.Users.User.1.Username',
+                'Device.Users.User.1.Password',
+                'Device.UserInterface.RemoteAccess.Port',
+                'Device.UserInterface.RemoteAccess.Enable',
+                'Device.X_ALU_COM_RemoteGUI.Enable',
+                'Device.X_ALU_COM_RemoteGUI.Port',
+            ];
+            $enableParams = [
+                'Device.UserInterface.RemoteAccess.Enable' => [
+                    'value' => true,
+                    'type' => 'xsd:boolean',
+                ],
+            ];
+            // Nokia defaults
+            $port = 443;
+            $username = 'superadmin';
+
+            // Get external IP from Device.IP.Interface.2 (WAN interface)
+            $externalIpParam = $device->parameters()
+                ->where('name', 'LIKE', 'Device.IP.Interface.2.IPv4Address.%.IPAddress')
+                ->whereNotNull('value')
+                ->where('value', '!=', '')
+                ->where('value', 'NOT LIKE', '192.168.%')
+                ->where('value', 'NOT LIKE', '10.%')
+                ->where('value', 'NOT LIKE', '172.16.%')
+                ->first();
+            $externalIp = $externalIpParam ? $externalIpParam->value : null;
+
+        } elseif ($isNokia && $dataModel === 'TR-098') {
+            // Nokia Beacon with TR-098 data model - use IGD paths with Nokia vendor extensions
+            $parametersToQuery = [
+                'InternetGatewayDevice.X_Authentication.WebAccount.UserName',
+                'InternetGatewayDevice.X_Authentication.WebAccount.Password',
+                'InternetGatewayDevice.DeviceInfo.X_ALU-COM_ServiceManage.WanHttpsPort',
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_ALU-COM_WanAccessCfg.HttpsDisabled',
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress',
+            ];
+            // Enable HTTPS remote access (HttpsDisabled = false means enabled)
+            $enableParams = [
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_ALU-COM_WanAccessCfg.HttpsDisabled' => [
+                    'value' => false,
+                    'type' => 'xsd:boolean',
+                ],
+            ];
+            // Nokia defaults
+            $port = 443;
+            $username = 'superadmin';
+
+            // Get external IP from WANIPConnection
+            $externalIpParam = $device->parameters()
+                ->where('name', 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress')
+                ->first();
+            $externalIp = $externalIpParam ? $externalIpParam->value : null;
+
+        } elseif ($dataModel === 'TR-181') {
+            // Generic TR-181 devices (Calix, etc.)
+            $parametersToQuery = [
+                'Device.Users.User.1.Username',
+                'Device.Users.User.1.Password',
+                'Device.Users.User.2.Username',
+                'Device.Users.User.2.Password',
+                'Device.UserInterface.RemoteAccess.Port',
+                'Device.UserInterface.RemoteAccess.Enable',
+            ];
+            $enableParams = [
+                'Device.UserInterface.RemoteAccess.Enable' => [
+                    'value' => true,
+                    'type' => 'xsd:boolean',
+                ],
+            ];
+
+            // TR-181: External IP is on Device.IP.Interface.2 (WAN interface)
+            $externalIpParam = $device->parameters()
+                ->where('name', 'LIKE', 'Device.IP.Interface.2.IPv4Address.%.IPAddress')
+                ->whereNotNull('value')
+                ->where('value', '!=', '')
+                ->where('value', 'NOT LIKE', '192.168.%')
+                ->where('value', 'NOT LIKE', '10.%')
+                ->where('value', 'NOT LIKE', '172.16.%')
+                ->first();
+            $externalIp = $externalIpParam ? $externalIpParam->value : null;
+
+        } else {
+            // Generic TR-098 devices (SmartRG, etc.)
+            $parametersToQuery = [
+                'InternetGatewayDevice.User.1.Username',
+                'InternetGatewayDevice.User.1.Password',
+                'InternetGatewayDevice.UserInterface.RemoteAccess.Port',
+                'InternetGatewayDevice.UserInterface.RemoteAccess.Enable',
+                'InternetGatewayDevice.User.2.RemoteAccessCapable',
+            ];
+            $enableParams = [
+                'InternetGatewayDevice.UserInterface.RemoteAccess.Enable' => [
+                    'value' => true,
+                    'type' => 'xsd:boolean',
+                ],
+                'InternetGatewayDevice.User.2.RemoteAccessCapable' => [
+                    'value' => true,
+                    'type' => 'xsd:boolean',
+                ],
+            ];
+
+            // TR-098: External IP is in WANIPConnection
+            $externalIpParam = $device->parameters()
+                ->where('name', 'LIKE', '%ExternalIPAddress%')
+                ->where('name', 'LIKE', '%WANIPConnection%')
+                ->first();
+            $externalIp = $externalIpParam ? $externalIpParam->value : null;
+        }
 
         // Create task to query parameters and enable remote access
         $task = Task::create([
@@ -1289,17 +1731,12 @@ class DeviceController extends Controller
             'device_id' => $device->id,
             'task_type' => 'set_parameter_values',
             'status' => 'pending',
-            'parameters' => [
-                'InternetGatewayDevice.UserInterface.RemoteAccess.Enable' => [
-                    'value' => true,
-                    'type' => 'xsd:boolean',
-                ],
-                'InternetGatewayDevice.User.2.RemoteAccessCapable' => [
-                    'value' => true,
-                    'type' => 'xsd:boolean',
-                ],
-            ],
+            'parameters' => $enableParams,
         ]);
+
+        // Set the remote GUI enabled flag
+        $device->remote_gui_enabled_at = now();
+        $device->save();
 
         // Trigger connection request
         $this->connectionRequestService->sendConnectionRequest($device);
@@ -1307,7 +1744,10 @@ class DeviceController extends Controller
         return response()->json([
             'task' => $task,
             'enable_task' => $enableTask,
-            'external_ip' => $externalIp ? $externalIp->value : null,
+            'external_ip' => $externalIp,
+            'port' => $port,
+            'username' => $username,
+            'is_nokia' => $isNokia,
             'message' => 'Remote access is being enabled...',
         ]);
     }
@@ -1761,6 +2201,119 @@ class DeviceController extends Controller
     }
 
     /**
+     * Restore native device config file via TR-069 Download RPC
+     *
+     * This uses the device's native binary config file (from Upload RPC)
+     * which can restore all settings including WiFi passwords.
+     */
+    public function restoreNativeConfig(Request $request, string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $validated = $request->validate([
+            'task_id' => 'required|integer', // The upload task that has the config file
+        ]);
+
+        // Find the source upload task
+        $sourceTask = Task::where('id', $validated['task_id'])
+            ->where('device_id', $device->id)
+            ->where('task_type', 'upload')
+            ->where('status', 'completed')
+            ->first();
+
+        if (!$sourceTask) {
+            return response()->json([
+                'error' => 'Source config file not found or task not completed',
+            ], 404);
+        }
+
+        // Check that the file exists
+        $sourceFile = $sourceTask->progress_info['uploaded_file'] ?? null;
+        if (!$sourceFile || !Storage::disk('local')->exists($sourceFile)) {
+            return response()->json([
+                'error' => 'Config file not found on server',
+            ], 404);
+        }
+
+        // Generate download token
+        $downloadToken = bin2hex(random_bytes(16));
+
+        // Create config restore task (uses Download RPC)
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'config_restore',
+            'description' => 'Native config restore from uploaded file',
+            'parameters' => [
+                'source_file' => $sourceFile,
+                'source_task_id' => $sourceTask->id,
+                'download_token' => $downloadToken,
+                'file_type' => '3 Vendor Configuration File',
+                // URL will be set after we have the task ID
+            ],
+            'status' => 'pending',
+        ]);
+
+        // Now update with the full URL including task ID
+        $downloadUrl = url("/device-config/{$task->id}?token={$downloadToken}");
+        $task->update([
+            'parameters' => array_merge($task->parameters, [
+                'url' => $downloadUrl,
+            ]),
+        ]);
+
+        // Trigger connection request
+        $this->connectionRequestService->sendConnectionRequest($device);
+
+        Log::info('Native config restore initiated', [
+            'device_id' => $device->id,
+            'task_id' => $task->id,
+            'source_task_id' => $sourceTask->id,
+            'source_file' => $sourceFile,
+        ]);
+
+        return response()->json([
+            'task' => [
+                'id' => $task->id,
+                'status' => $task->status,
+            ],
+            'message' => 'Native config restore initiated - device will download and apply config file',
+            'source_file_size' => $sourceTask->progress_info['file_size'] ?? 'unknown',
+        ]);
+    }
+
+    /**
+     * Get list of available native config files for a device
+     */
+    public function getNativeConfigFiles(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        // Find all completed upload tasks for this device
+        $uploadTasks = Task::where('device_id', $device->id)
+            ->where('task_type', 'upload')
+            ->where('status', 'completed')
+            ->whereNotNull('progress_info->uploaded_file')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $configFiles = $uploadTasks->map(function ($task) {
+            return [
+                'task_id' => $task->id,
+                'uploaded_at' => $task->progress_info['uploaded_at'] ?? $task->created_at->toIso8601String(),
+                'file_size' => $task->progress_info['file_size'] ?? null,
+                'file_type' => $task->parameters['file_type'] ?? 'unknown',
+                'analysis' => $task->progress_info['analysis'] ?? null,
+                'description' => $task->description,
+            ];
+        });
+
+        return response()->json([
+            'config_files' => $configFiles,
+            'count' => $configFiles->count(),
+        ]);
+    }
+
+    /**
      * Update backup metadata (tags, notes, starred)
      */
     public function updateBackupMetadata(Request $request, string $id, int $backupId): JsonResponse
@@ -1830,7 +2383,7 @@ class DeviceController extends Controller
         }
 
         $dataModel = $device->getDataModel();
-        $isDevice2 = $dataModel === 'Device:2';
+        $isDevice2 = $dataModel === 'TR-181';
 
         if ($isDevice2) {
             // Device:2 model
@@ -1893,7 +2446,12 @@ class DeviceController extends Controller
                     }
                     return $mapping;
                 })
-                ->filter(function ($mapping) {
+                ->filter(function ($mapping) use ($isDevice2) {
+                    // TR-181 uses 'Enable', TR-098 uses 'PortMappingEnabled'
+                    if ($isDevice2) {
+                        return isset($mapping['Enable']) &&
+                            ($mapping['Enable'] === '1' || $mapping['Enable'] === 'true');
+                    }
                     return isset($mapping['PortMappingEnabled']) &&
                         $mapping['PortMappingEnabled'] === '1';
                 })
@@ -1902,6 +2460,7 @@ class DeviceController extends Controller
 
         return response()->json([
             'port_mappings' => $portMappings,
+            'data_model' => $dataModel,
             'active_wan_path' => $isSmartRG ? "WANDevice.{$wanDeviceIdx}.WANConnectionDevice.{$wanConnDeviceIdx}.WANIPConnection.{$wanConnIdx}" : null,
         ]);
     }
@@ -1917,7 +2476,10 @@ class DeviceController extends Controller
     {
         $device = Device::findOrFail($id);
 
-        // Detect manufacturer for device-specific handling
+        // Detect data model and manufacturer for device-specific handling
+        $dataModel = $device->getDataModel();
+        $isDevice2 = $dataModel === 'TR-181';
+
         $isSmartRG = strtolower($device->manufacturer) === 'smartrg' ||
             strtoupper(substr($device->oui ?? '', 0, 6)) === '3C9066' ||
             strtoupper($device->oui) === 'E82C6D';
@@ -1925,6 +2487,56 @@ class DeviceController extends Controller
         $isCalix = strtolower($device->manufacturer) === 'calix' ||
             strtoupper($device->oui) === 'D0768F';
 
+        // TR-181 devices (Nokia Beacon G6, some Calix models) use Device.NAT.PortMapping
+        if ($isDevice2) {
+            // Clear existing TR-181 port mapping parameters
+            $deletedCount = $device->parameters()
+                ->where('name', 'LIKE', 'Device.NAT.PortMapping.%')
+                ->where('name', 'NOT LIKE', '%NumberOfEntries')
+                ->delete();
+
+            Log::info('Cleared existing TR-181 port mapping parameters before refresh', [
+                'device_id' => $device->id,
+                'parameters_deleted' => $deletedCount,
+            ]);
+
+            // Task 1: Get the PortMappingNumberOfEntries
+            $countTask = Task::create([
+                'device_id' => $device->id,
+                'task_type' => 'get_params',
+                'status' => 'pending',
+                'parameters' => [
+                    'names' => ['Device.NAT.PortMappingNumberOfEntries'],
+                ],
+            ]);
+
+            // Task 2: Use GetParameterNames to discover all port mapping entries
+            Task::create([
+                'device_id' => $device->id,
+                'task_type' => 'get_parameter_names',
+                'status' => 'pending',
+                'parameters' => [
+                    'path' => 'Device.NAT.PortMapping.',
+                    'next_level' => false, // Get all sub-parameters recursively
+                ],
+            ]);
+
+            // Send connection request to trigger immediate processing
+            $this->connectionRequestService->sendConnectionRequest($device);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Port mapping refresh tasks created for TR-181 device',
+                'task' => [
+                    'id' => $countTask->id,
+                    'status' => $countTask->status,
+                ],
+                'data_model' => 'TR-181',
+                'cleared_parameters' => $deletedCount,
+            ]);
+        }
+
+        // TR-098 devices use InternetGatewayDevice path
         // Build list of WAN paths to check for SmartRG (they can have multiple WAN interfaces)
         $wanPaths = [];
 
@@ -2080,7 +2692,7 @@ class DeviceController extends Controller
         }
 
         $dataModel = $device->getDataModel();
-        $isDevice2 = $dataModel === 'Device:2';
+        $isDevice2 = $dataModel === 'TR-181';
 
         if ($isDevice2) {
             // Device:2 model
@@ -2109,52 +2721,105 @@ class DeviceController extends Controller
             $instance++;
         }
 
+        // Detect Nokia/Alcatel-Lucent for specific handling
+        // Nokia TR-098 devices need AddObject first (like SmartRG and TR-181)
+        $isNokia = str_starts_with(strtoupper($device->oui ?? ''), '0C7C28') ||
+            str_starts_with(strtoupper($device->oui ?? ''), '80AB4D') ||
+            stripos($device->manufacturer ?? '', 'Nokia') !== false ||
+            stripos($device->manufacturer ?? '', 'ALCL') !== false ||
+            stripos($device->manufacturer ?? '', 'Alcatel') !== false;
+
         // Handle "Both" protocol by creating two separate port mappings (TCP and UDP)
         $protocols = $validated['protocol'] === 'Both' ? ['TCP', 'UDP'] : [$validated['protocol']];
         $tasks = [];
 
         foreach ($protocols as $protocol) {
             // Build parameters for the new port mapping
-            // Use {instance} placeholder for SmartRG (will be replaced after AddObject returns the instance number)
-            $instancePlaceholder = $isSmartRG ? '{instance}' : $instance;
+            // Use {instance} placeholder for devices that use AddObject (TR-181, SmartRG, Nokia)
+            // The placeholder will be replaced with the actual instance number after AddObject returns
+            $instancePlaceholder = ($isDevice2 || $isSmartRG || $isNokia) ? '{instance}' : $instance;
 
-            $parameters = [
-                "{$portMappingPrefix}.{$instancePlaceholder}.PortMappingEnabled" => [
-                    'value' => true,
-                    'type' => 'xsd:boolean',
-                ],
-                "{$portMappingPrefix}.{$instancePlaceholder}.PortMappingDescription" => [
-                    'value' => $validated['description'] . ($validated['protocol'] === 'Both' ? " ({$protocol})" : ''),
+            // TR-181 uses different parameter names than TR-098
+            // TR-181: Enable, Description, Protocol
+            // TR-098: PortMappingEnabled, PortMappingDescription, PortMappingProtocol
+
+            if ($isDevice2) {
+                // TR-181 (Device:2) parameter names
+                $parameters = [
+                    "{$portMappingPrefix}.{$instancePlaceholder}.Enable" => [
+                        'value' => true,
+                        'type' => 'xsd:boolean',
+                    ],
+                    "{$portMappingPrefix}.{$instancePlaceholder}.Description" => [
+                        'value' => $validated['description'] . ($validated['protocol'] === 'Both' ? " ({$protocol})" : ''),
+                        'type' => 'xsd:string',
+                    ],
+                    "{$portMappingPrefix}.{$instancePlaceholder}.Protocol" => [
+                        'value' => $protocol,
+                        'type' => 'xsd:string',
+                    ],
+                    "{$portMappingPrefix}.{$instancePlaceholder}.ExternalPort" => [
+                        'value' => $validated['external_port'],
+                        'type' => 'xsd:unsignedInt',
+                    ],
+                    "{$portMappingPrefix}.{$instancePlaceholder}.InternalPort" => [
+                        'value' => $validated['internal_port'],
+                        'type' => 'xsd:unsignedInt',
+                    ],
+                    "{$portMappingPrefix}.{$instancePlaceholder}.InternalClient" => [
+                        'value' => $validated['internal_client'],
+                        'type' => 'xsd:string',
+                    ],
+                ];
+
+                // Set Interface to WAN interface for TR-181 devices
+                // Nokia Beacon G6: Device.IP.Interface.2 was sent successfully at 21:47:10
+                // (Status=0 returned, port forward visible in device GUI)
+                $parameters["{$portMappingPrefix}.{$instancePlaceholder}.Interface"] = [
+                    'value' => 'Device.IP.Interface.2',  // WAN interface
                     'type' => 'xsd:string',
-                ],
-                "{$portMappingPrefix}.{$instancePlaceholder}.PortMappingProtocol" => [
-                    'value' => $protocol,
-                    'type' => 'xsd:string',
-                ],
-                "{$portMappingPrefix}.{$instancePlaceholder}.ExternalPort" => [
-                    'value' => $validated['external_port'],
-                    'type' => 'xsd:unsignedInt',
-                ],
-                "{$portMappingPrefix}.{$instancePlaceholder}.InternalPort" => [
-                    'value' => $validated['internal_port'],
-                    'type' => 'xsd:unsignedInt',
-                ],
-                "{$portMappingPrefix}.{$instancePlaceholder}.InternalClient" => [
-                    'value' => $validated['internal_client'],
-                    'type' => 'xsd:string',
-                ],
-            ];
+                ];
+            } else {
+                // TR-098 (InternetGatewayDevice) parameter names
+                $parameters = [
+                    "{$portMappingPrefix}.{$instancePlaceholder}.PortMappingEnabled" => [
+                        'value' => true,
+                        'type' => 'xsd:boolean',
+                    ],
+                    "{$portMappingPrefix}.{$instancePlaceholder}.PortMappingDescription" => [
+                        'value' => $validated['description'] . ($validated['protocol'] === 'Both' ? " ({$protocol})" : ''),
+                        'type' => 'xsd:string',
+                    ],
+                    "{$portMappingPrefix}.{$instancePlaceholder}.PortMappingProtocol" => [
+                        'value' => $protocol,
+                        'type' => 'xsd:string',
+                    ],
+                    "{$portMappingPrefix}.{$instancePlaceholder}.ExternalPort" => [
+                        'value' => $validated['external_port'],
+                        'type' => 'xsd:unsignedInt',
+                    ],
+                    "{$portMappingPrefix}.{$instancePlaceholder}.InternalPort" => [
+                        'value' => $validated['internal_port'],
+                        'type' => 'xsd:unsignedInt',
+                    ],
+                    "{$portMappingPrefix}.{$instancePlaceholder}.InternalClient" => [
+                        'value' => $validated['internal_client'],
+                        'type' => 'xsd:string',
+                    ],
+                ];
+            }
 
             // Add ExternalPortEndRange only for non-SmartRG devices (SmartRG doesn't support it)
-            if (!$isSmartRG) {
+            if (!$isSmartRG && !$isDevice2) {
                 $parameters["{$portMappingPrefix}.{$instancePlaceholder}.ExternalPortEndRange"] = [
                     'value' => $validated['external_port'],
                     'type' => 'xsd:unsignedInt',
                 ];
             }
 
-            // SmartRG requires AddObject first to create the instance, then SetParameterValues
-            if ($isSmartRG) {
+            // TR-181 devices, SmartRG, and Nokia require AddObject first to create the instance
+            // The device allocates the instance number, then we set parameters
+            if ($isDevice2 || $isSmartRG || $isNokia) {
                 $task = Task::create([
                     'device_id' => $device->id,
                     'task_type' => 'add_object',
@@ -2166,7 +2831,7 @@ class DeviceController extends Controller
                     ],
                 ]);
             } else {
-                // Other devices - directly set parameters
+                // TR-098 devices (non-SmartRG, non-Nokia) - directly set parameters
                 $task = Task::create([
                     'device_id' => $device->id,
                     'task_type' => 'set_parameter_values',
@@ -2178,8 +2843,8 @@ class DeviceController extends Controller
 
             $tasks[] = $task;
 
-            // Increment instance for non-SmartRG devices when creating both TCP and UDP
-            if (!$isSmartRG) {
+            // Increment instance for TR-098 non-SmartRG/non-Nokia devices when creating both TCP and UDP
+            if (!$isDevice2 && !$isSmartRG && !$isNokia) {
                 $instance++;
             }
         }
@@ -2191,7 +2856,7 @@ class DeviceController extends Controller
             'task' => $tasks[0], // Return first task for backwards compatibility
             'tasks' => $tasks,
             'message' => count($tasks) > 1 ? 'Port mapping creation initiated (TCP and UDP)' : 'Port mapping creation initiated',
-            'instance' => $isSmartRG ? 'pending' : ($instance - count($tasks) + 1),
+            'instance' => ($isDevice2 || $isSmartRG || $isNokia) ? 'pending' : ($instance - count($tasks) + 1),
         ]);
     }
 
@@ -2240,7 +2905,7 @@ class DeviceController extends Controller
         }
 
         $dataModel = $device->getDataModel();
-        $isDevice2 = $dataModel === 'Device:2';
+        $isDevice2 = $dataModel === 'TR-181';
 
         if ($isDevice2) {
             // Device:2 model
@@ -2433,7 +3098,7 @@ class DeviceController extends Controller
     private function getWiFiDiagnosticParameterPath(Device $device, string $type): string
     {
         $dataModel = $device->getDataModel();
-        $isDevice2 = $dataModel === 'Device:2';
+        $isDevice2 = $dataModel === 'TR-181';
 
         if ($isDevice2) {
             // Device:2 model - standard TR-181 WiFi diagnostics
@@ -2484,7 +3149,7 @@ class DeviceController extends Controller
         $uploadUrl = $validated['upload_url'] ?? 'http://tr143.hay.net/handler.php';
 
         $dataModel = $device->getDataModel();
-        $isDevice2 = $dataModel === 'Device:2';
+        $isDevice2 = $dataModel === 'TR-181';
 
         // Detect SmartRG for combined parameter approach
         $isSmartRG = strtolower($device->manufacturer ?? '') === 'smartrg' ||
@@ -2734,7 +3399,7 @@ class DeviceController extends Controller
         $device = Device::findOrFail($id);
 
         $dataModel = $device->getDataModel();
-        $isDevice2 = $dataModel === 'Device:2';
+        $isDevice2 = $dataModel === 'TR-181';
 
         // Get download diagnostic parameters
         $downloadPrefix = $isDevice2
@@ -2848,18 +3513,28 @@ class DeviceController extends Controller
         }
 
         // Get the completion time for display
-        // Note: SmartRG devices report EOMTime with 'Z' suffix but the time is actually local time, not UTC
-        // We treat it as local time by stripping the timezone and using app timezone
+        // SmartRG/Sagemcom TR-098 devices report EOMTime with 'Z' suffix but time is actually local (bug)
+        // Nokia devices (both TR-098 and TR-181) report actual UTC time with 'Z' suffix (correct)
         $completedAt = null;
         if ($state === 'Complete') {
             $downloadEndTime = isset($downloadParams['EOMTime']) ? $downloadParams['EOMTime'] : null;
             $uploadEndTime = isset($uploadParams['EOMTime']) ? $uploadParams['EOMTime'] : null;
             $endTimeStr = $uploadEndTime ?? $downloadEndTime;
             if ($endTimeStr) {
-                // Strip timezone indicator and parse as local time
-                $timeWithoutTz = preg_replace('/[Z+-]\d{2}:\d{2}$/', '', $endTimeStr);
-                $timeWithoutTz = rtrim($timeWithoutTz, 'Z');
-                $endTime = \Carbon\Carbon::parse($timeWithoutTz, config('app.timezone'));
+                // Check if this is a SmartRG/Sagemcom device (they lie about the Z suffix)
+                $isSmartRG = str_contains(strtolower($device->manufacturer ?? ''), 'smartrg') ||
+                    str_contains(strtolower($device->manufacturer ?? ''), 'sagemcom') ||
+                    in_array(strtoupper($device->oui ?? ''), ['E82C6D']);
+
+                if ($isSmartRG && !$isDevice2) {
+                    // SmartRG TR-098 devices: Z suffix is a lie, treat as local time
+                    $timeWithoutTz = preg_replace('/[Z+-]\d{2}:\d{2}$/', '', $endTimeStr);
+                    $timeWithoutTz = rtrim($timeWithoutTz, 'Z');
+                    $endTime = \Carbon\Carbon::parse($timeWithoutTz, config('app.timezone'));
+                } else {
+                    // All other devices (Nokia, Calix, etc.): Z suffix means actual UTC
+                    $endTime = \Carbon\Carbon::parse($endTimeStr)->setTimezone(config('app.timezone'));
+                }
                 $completedAt = $endTime->toIso8601String();
             }
         }
@@ -2905,6 +3580,20 @@ class DeviceController extends Controller
             ->limit(50)
             ->get()
             ->map(function ($result) {
+                // Get the end time for display
+                $endTime = $result->upload_end_time ?? $result->download_end_time;
+                $completedAt = null;
+
+                if ($endTime) {
+                    // All device times were stored as UTC when parsed from the device's Z-suffixed timestamps
+                    // Convert from UTC to local timezone for display
+                    $completedAt = \Carbon\Carbon::createFromFormat(
+                        'Y-m-d H:i:s',
+                        $endTime->format('Y-m-d H:i:s'),
+                        'UTC'
+                    )->setTimezone(config('app.timezone'))->toIso8601String();
+                }
+
                 return [
                     'id' => $result->id,
                     'download_mbps' => (float) $result->download_speed_mbps,
@@ -2914,9 +3603,7 @@ class DeviceController extends Controller
                     'download_duration_ms' => $result->download_duration_ms,
                     'upload_duration_ms' => $result->upload_duration_ms,
                     'test_type' => $result->test_type,
-                    'completed_at' => $result->upload_end_time
-                        ? $result->upload_end_time->toIso8601String()
-                        : ($result->download_end_time ? $result->download_end_time->toIso8601String() : null),
+                    'completed_at' => $completedAt,
                     'created_at' => $result->created_at->toIso8601String(),
                 ];
             });
@@ -3292,5 +3979,729 @@ class DeviceController extends Controller
         return response()->json([
             'message' => 'Device deleted successfully',
         ]);
+    }
+
+    // =========================================================================
+    // TR-181 MIGRATION METHODS
+    // =========================================================================
+
+    /**
+     * Check if a device is eligible for TR-181 migration
+     */
+    public function checkMigrationEligibility(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+        $migrationService = new Tr181MigrationService();
+
+        $result = $migrationService->checkEligibility($device);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Get migration statistics for all Beacon G6 devices
+     */
+    public function getMigrationStats(): JsonResponse
+    {
+        $migrationService = new Tr181MigrationService();
+        $stats = $migrationService->getEligibleDeviceCount();
+
+        return response()->json($stats);
+    }
+
+    /**
+     * Start TR-181 migration for a device
+     */
+    public function startMigration(Request $request, string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+        $migrationService = new Tr181MigrationService();
+
+        $skipBackup = $request->boolean('skip_backup', false);
+        $result = $migrationService->createMigrationTasks($device, $skipBackup);
+
+        if (!$result['success']) {
+            return response()->json($result, 400);
+        }
+
+        // Send connection request to start migration immediately
+        if ($device->online) {
+            try {
+                $this->connectionRequestService->sendConnectionRequest($device);
+            } catch (\Exception $e) {
+                Log::warning("Failed to send connection request for migration: " . $e->getMessage());
+            }
+        }
+
+        return response()->json($result);
+    }
+
+    /**
+     * Verify migration status for a device
+     */
+    public function verifyMigration(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+        $migrationService = new Tr181MigrationService();
+
+        $result = $migrationService->verifyMigration($device);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Create WiFi fallback tasks if migration lost WiFi settings
+     */
+    public function createWifiFallback(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+        $migrationService = new Tr181MigrationService();
+
+        // Find the most recent backup
+        $backup = $device->configBackups()
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if (!$backup) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No backup found to restore WiFi settings from',
+            ], 400);
+        }
+
+        $result = $migrationService->createWifiFallbackTasks($device, $backup);
+
+        if (!$result['success']) {
+            return response()->json($result, 400);
+        }
+
+        // Send connection request to apply WiFi settings immediately
+        if ($device->online) {
+            try {
+                $this->connectionRequestService->sendConnectionRequest($device);
+            } catch (\Exception $e) {
+                Log::warning("Failed to send connection request for WiFi fallback: " . $e->getMessage());
+            }
+        }
+
+        return response()->json($result);
+    }
+
+    /**
+     * Get list of devices eligible for migration
+     */
+    public function getEligibleDevices(): JsonResponse
+    {
+        $migrationService = new Tr181MigrationService();
+
+        // Get all Beacon G6 devices
+        $devices = Device::where(function ($query) {
+            $query->whereIn('oui', Tr181MigrationService::NOKIA_OUIS)
+                  ->orWhere('product_class', 'like', '%Beacon G6%')
+                  ->orWhere('product_class', 'like', '%G-240W-F%');
+        })->get();
+
+        $results = [];
+        foreach ($devices as $device) {
+            $eligibility = $migrationService->checkEligibility($device);
+            $results[] = [
+                'id' => $device->id,
+                'serial_number' => $device->serial_number,
+                'product_class' => $device->product_class,
+                'firmware' => $device->software_version,
+                'data_model' => $device->getDataModel(),
+                'online' => $device->online,
+                'last_inform' => $device->last_inform?->toDateTimeString(),
+                'eligible' => $eligibility['eligible'],
+                'reasons' => $eligibility['reasons'],
+                'warnings' => $eligibility['warnings'],
+            ];
+        }
+
+        return response()->json([
+            'devices' => $results,
+            'total' => count($results),
+            'eligible_count' => count(array_filter($results, fn($d) => $d['eligible'])),
+        ]);
+    }
+
+    /**
+     * Get the current standard WiFi configuration for a device
+     * Returns the current SSID, password, and guest network status
+     */
+    public function getStandardWifiConfig(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+        $dataModel = $device->getDataModel();
+
+        // Detect Nokia devices
+        $nokiaOuis = ['80AB4D', '0C7C28'];
+        $isNokia = in_array(strtoupper($device->oui ?? ''), $nokiaOuis) ||
+            stripos($device->manufacturer ?? '', 'Nokia') !== false ||
+            stripos($device->manufacturer ?? '', 'Alcatel') !== false ||
+            stripos($device->manufacturer ?? '', 'ALCL') !== false;
+
+        // Get stored WiFi credentials (passwords not readable from device)
+        $storedCredentials = DeviceWifiCredential::where('device_id', $device->id)->first();
+
+        // Handle TR-098 Nokia Beacon G6 devices
+        if ($dataModel === 'TR-098' && $isNokia) {
+            // TR-098 Nokia uses InternetGatewayDevice.LANDevice.1.WLANConfiguration.{i}
+            // Instance 1 = Main 2.4GHz, Instance 5 = Main 5GHz (same SSID for band steering)
+            // Instance 4 = Guest 2.4GHz, Instance 8 = Guest 5GHz
+            $mainSsid = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID')->first();
+
+            // Check if guest network is enabled (instance 4 for 2.4GHz, 8 for 5GHz)
+            $guestEnabled24 = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.4.Enable')->first();
+            $guestEnabled5 = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.8.Enable')->first();
+            $guestEnabled = ($guestEnabled24 && strtolower($guestEnabled24->value) === 'true') ||
+                            ($guestEnabled5 && strtolower($guestEnabled5->value) === 'true');
+
+            // Get guest SSID
+            $guestSsid = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.4.SSID')->first();
+
+            // Check dedicated network status (instance 2 for dedicated 2.4GHz, 6 for dedicated 5GHz)
+            $dedicated24Enabled = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.Enable')->first();
+            $dedicated5Enabled = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.Enable')->first();
+
+            return response()->json([
+                'ssid' => $mainSsid?->value ?? '',
+                'password' => $storedCredentials?->main_password ?? '',
+                'guest_enabled' => $guestEnabled,
+                'guest_ssid' => $guestSsid?->value ?? '',
+                'guest_password' => $storedCredentials?->guest_password ?? '',
+                'dedicated_24ghz_enabled' => $dedicated24Enabled && strtolower($dedicated24Enabled->value) === 'true',
+                'dedicated_5ghz_enabled' => $dedicated5Enabled && strtolower($dedicated5Enabled->value) === 'true',
+                'data_model' => $dataModel,
+                'credentials_stored' => $storedCredentials !== null,
+                'credentials_set_by' => $storedCredentials?->set_by,
+                'credentials_updated_at' => $storedCredentials?->updated_at?->toIso8601String(),
+            ]);
+        }
+
+        // For non-Nokia TR-098 devices, WiFi config not supported yet
+        if ($dataModel !== 'TR-181') {
+            return response()->json([
+                'error' => 'Standard WiFi configuration is only supported for TR-181 devices and TR-098 Nokia Beacon G6',
+                'data_model' => $dataModel,
+            ], 400);
+        }
+
+        // TR-181 handling (existing code)
+        // Get the main SSID (SSID.1 for 2.4GHz, SSID.5 for 5GHz - they should match)
+        $mainSsid = $device->parameters()->where('name', 'Device.WiFi.SSID.1.SSID')->first();
+
+        // Nokia uses AP.4/AP.8 for guest, others use AP.3/AP.7
+        $guestAp24 = $isNokia ? 4 : 3;
+        $guestAp5 = $isNokia ? 8 : 7;
+
+        // Check if guest network is enabled from device params
+        $guestEnabled24 = $device->parameters()->where('name', "Device.WiFi.AccessPoint.{$guestAp24}.Enable")->first();
+        $guestEnabled5 = $device->parameters()->where('name', "Device.WiFi.AccessPoint.{$guestAp5}.Enable")->first();
+        $guestEnabled = ($guestEnabled24 && $guestEnabled24->value === '1') ||
+                        ($guestEnabled5 && $guestEnabled5->value === '1');
+
+        // Get guest SSID from device params
+        $guestSsid = $device->parameters()->where('name', "Device.WiFi.SSID.{$guestAp24}.SSID")->first();
+
+        // Check dedicated network status
+        $dedicated24Enabled = $device->parameters()->where('name', 'Device.WiFi.AccessPoint.2.Enable')->first();
+        $dedicated5Enabled = $device->parameters()->where('name', 'Device.WiFi.AccessPoint.6.Enable')->first();
+
+        return response()->json([
+            'ssid' => $mainSsid?->value ?? '',
+            // Passwords from stored credentials (device returns empty for security)
+            'password' => $storedCredentials?->main_password ?? '',
+            'guest_enabled' => $guestEnabled,
+            'guest_ssid' => $guestSsid?->value ?? '',
+            'guest_password' => $storedCredentials?->guest_password ?? '',
+            'dedicated_24ghz_enabled' => $dedicated24Enabled?->value === '1',
+            'dedicated_5ghz_enabled' => $dedicated5Enabled?->value === '1',
+            'data_model' => $dataModel,
+            // Credential metadata
+            'credentials_stored' => $storedCredentials !== null,
+            'credentials_set_by' => $storedCredentials?->set_by,
+            'credentials_updated_at' => $storedCredentials?->updated_at?->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * Apply standard WiFi configuration to a device
+     * Sets up: Main network (band-steered), dedicated 2.4/5GHz networks, and optional guest network
+     */
+    public function applyStandardWifiConfig(Request $request, string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+        $dataModel = $device->getDataModel();
+
+        // Detect Nokia devices
+        $nokiaOuis = ['80AB4D', '0C7C28'];
+        $isNokia = in_array(strtoupper($device->oui ?? ''), $nokiaOuis) ||
+            stripos($device->manufacturer ?? '', 'Nokia') !== false ||
+            stripos($device->manufacturer ?? '', 'Alcatel') !== false ||
+            stripos($device->manufacturer ?? '', 'ALCL') !== false;
+
+        // Check for supported device types
+        if ($dataModel !== 'TR-181' && !($dataModel === 'TR-098' && $isNokia)) {
+            return response()->json([
+                'error' => 'Standard WiFi configuration is only supported for TR-181 devices and TR-098 Nokia Beacon G6',
+                'data_model' => $dataModel,
+            ], 400);
+        }
+
+        $validated = $request->validate([
+            'ssid' => 'required|string|min:1|max:32',
+            'password' => 'required|string|min:8|max:63',
+            'enable_guest' => 'nullable|boolean',
+            'guest_password' => 'nullable|string|min:8|max:63',
+        ]);
+
+        $ssid = $validated['ssid'];
+        $password = $validated['password'];
+        $enableGuest = $validated['enable_guest'] ?? false;
+
+        // Generate a memorable guest password - two words + three digit number
+        // Format: "BlueSky472" - easy to say over the phone and remember
+        $adjectives = ['Happy', 'Sunny', 'Blue', 'Green', 'Quick', 'Bright', 'Cool', 'Swift', 'Lucky', 'Warm',
+                       'Golden', 'Silver', 'Brave', 'Calm', 'Fresh', 'Grand', 'Kind', 'Merry', 'Noble', 'Pure',
+                       'Rapid', 'Smart', 'Sweet', 'True', 'Wild', 'Gentle', 'Jolly', 'Lively', 'Proud', 'Quiet'];
+        $nouns = ['Sky', 'Star', 'Moon', 'Sun', 'Lake', 'River', 'Tree', 'Bird', 'Cloud', 'Wind',
+                  'Snow', 'Rain', 'Fire', 'Wave', 'Stone', 'Leaf', 'Rose', 'Pine', 'Oak', 'Bear',
+                  'Wolf', 'Hawk', 'Deer', 'Fox', 'Fish', 'Frog', 'Lion', 'Tiger', 'Eagle', 'Dove'];
+        $adjective = $adjectives[random_int(0, count($adjectives) - 1)];
+        $noun = $nouns[random_int(0, count($nouns) - 1)];
+        $number = random_int(100, 999);
+        $generatedGuestPassword = $adjective . $noun . $number;
+        $guestPassword = $validated['guest_password'] ?? $generatedGuestPassword;
+
+        // Handle TR-098 Nokia Beacon G6 devices
+        if ($dataModel === 'TR-098' && $isNokia) {
+            return $this->applyTr098NokiaWifiConfig($device, $ssid, $password, $enableGuest, $guestPassword, $validated);
+        }
+
+        // Use WPA3-Personal-Transition for better security while maintaining backwards compatibility
+        // WPA3-Personal-Transition allows both WPA3 and WPA2 clients to connect
+        $securityMode = 'WPA3-Personal-Transition';
+
+        // Build network configurations
+        // Nokia devices use SSID.4/AP.4 and SSID.8/AP.8 for guest networks (compatible with Nokia GUI/App)
+        // Other devices use SSID.3/AP.3 and SSID.7/AP.7 for guest networks
+        if ($isNokia) {
+            // Nokia "batch by radio" optimization:
+            // Group all 2.4GHz APs (1,2,3,4) in one task and all 5GHz APs (5,6,7,8) in another.
+            // This minimizes radio restarts - device should only restart each radio once.
+            // AP mapping: 1=Main 2.4GHz, 2=Dedicated 2.4GHz, 3=Unused, 4=Guest 2.4GHz
+            //             5=Main 5GHz,   6=Dedicated 5GHz,   7=Unused, 8=Guest 5GHz
+            $networks = [
+                'radio_24ghz' => [
+                    'description' => "WiFi: Configure all 2.4GHz networks",
+                    'params' => [
+                        // AP.1 - Main 2.4GHz (band-steered SSID)
+                        'Device.WiFi.SSID.1.SSID' => $ssid,
+                        'Device.WiFi.AccessPoint.1.Enable' => ['value' => true, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.1.SSIDAdvertisementEnabled' => ['value' => true, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.1.Security.ModeEnabled' => $securityMode,
+                        'Device.WiFi.AccessPoint.1.Security.KeyPassphrase' => $password,
+                        // AP.2 - Dedicated 2.4GHz
+                        'Device.WiFi.SSID.2.SSID' => $ssid . '-2.4GHz',
+                        'Device.WiFi.AccessPoint.2.Enable' => ['value' => true, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.2.SSIDAdvertisementEnabled' => ['value' => true, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.2.Security.ModeEnabled' => $securityMode,
+                        'Device.WiFi.AccessPoint.2.Security.KeyPassphrase' => $password,
+                        // AP.3 - Unused (disabled)
+                        'Device.WiFi.AccessPoint.3.Enable' => ['value' => false, 'type' => 'xsd:boolean'],
+                        // AP.4 - Guest 2.4GHz (Nokia GUI compatible)
+                        'Device.WiFi.SSID.4.SSID' => $ssid . '-Guest',
+                        'Device.WiFi.AccessPoint.4.Enable' => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.4.SSIDAdvertisementEnabled' => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.4.Security.ModeEnabled' => $securityMode,
+                        'Device.WiFi.AccessPoint.4.Security.KeyPassphrase' => $guestPassword,
+                        'Device.WiFi.AccessPoint.4.IsolationEnable' => ['value' => true, 'type' => 'xsd:boolean'],
+                    ],
+                ],
+                'radio_5ghz' => [
+                    'description' => "WiFi: Configure all 5GHz networks",
+                    'params' => [
+                        // AP.5 - Main 5GHz (band-steered SSID)
+                        'Device.WiFi.SSID.5.SSID' => $ssid,
+                        'Device.WiFi.AccessPoint.5.Enable' => ['value' => true, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.5.SSIDAdvertisementEnabled' => ['value' => true, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.5.Security.ModeEnabled' => $securityMode,
+                        'Device.WiFi.AccessPoint.5.Security.KeyPassphrase' => $password,
+                        // AP.6 - Dedicated 5GHz
+                        'Device.WiFi.SSID.6.SSID' => $ssid . '-5GHz',
+                        'Device.WiFi.AccessPoint.6.Enable' => ['value' => true, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.6.SSIDAdvertisementEnabled' => ['value' => true, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.6.Security.ModeEnabled' => $securityMode,
+                        'Device.WiFi.AccessPoint.6.Security.KeyPassphrase' => $password,
+                        // AP.7 - Unused (disabled)
+                        'Device.WiFi.AccessPoint.7.Enable' => ['value' => false, 'type' => 'xsd:boolean'],
+                        // AP.8 - Guest 5GHz (Nokia GUI compatible)
+                        'Device.WiFi.SSID.8.SSID' => $ssid . '-Guest',
+                        'Device.WiFi.AccessPoint.8.Enable' => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.8.SSIDAdvertisementEnabled' => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.8.Security.ModeEnabled' => $securityMode,
+                        'Device.WiFi.AccessPoint.8.Security.KeyPassphrase' => $guestPassword,
+                        'Device.WiFi.AccessPoint.8.IsolationEnable' => ['value' => true, 'type' => 'xsd:boolean'],
+                    ],
+                ],
+            ];
+        } else {
+            // Standard network mapping for non-Nokia devices:
+            // AP 1/5: Main (band-steered), AP 2: Dedicated 2.4GHz, AP 6: Dedicated 5GHz
+            // AP 3/7: Guest, AP 4/8: Disabled (unused)
+            $networks = [
+                'main' => [
+                    'description' => "WiFi: Configure main network \"{$ssid}\"",
+                    'params' => [
+                        'Device.WiFi.SSID.1.SSID' => $ssid,
+                        'Device.WiFi.AccessPoint.1.Enable' => ['value' => true, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.1.SSIDAdvertisementEnabled' => ['value' => true, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.1.Security.ModeEnabled' => $securityMode,
+                        'Device.WiFi.AccessPoint.1.Security.KeyPassphrase' => $password,
+                        'Device.WiFi.SSID.5.SSID' => $ssid,
+                        'Device.WiFi.AccessPoint.5.Enable' => ['value' => true, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.5.SSIDAdvertisementEnabled' => ['value' => true, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.5.Security.ModeEnabled' => $securityMode,
+                        'Device.WiFi.AccessPoint.5.Security.KeyPassphrase' => $password,
+                    ],
+                ],
+                'dedicated_24ghz' => [
+                    'description' => "WiFi: Configure 2.4GHz network \"{$ssid}-2.4GHz\"",
+                    'params' => [
+                        'Device.WiFi.SSID.2.SSID' => $ssid . '-2.4GHz',
+                        'Device.WiFi.AccessPoint.2.Enable' => ['value' => true, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.2.SSIDAdvertisementEnabled' => ['value' => true, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.2.Security.ModeEnabled' => $securityMode,
+                        'Device.WiFi.AccessPoint.2.Security.KeyPassphrase' => $password,
+                    ],
+                ],
+                'dedicated_5ghz' => [
+                    'description' => "WiFi: Configure 5GHz network \"{$ssid}-5GHz\"",
+                    'params' => [
+                        'Device.WiFi.SSID.6.SSID' => $ssid . '-5GHz',
+                        'Device.WiFi.AccessPoint.6.Enable' => ['value' => true, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.6.SSIDAdvertisementEnabled' => ['value' => true, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.6.Security.ModeEnabled' => $securityMode,
+                        'Device.WiFi.AccessPoint.6.Security.KeyPassphrase' => $password,
+                    ],
+                ],
+                'guest' => [
+                    'description' => "WiFi: Configure guest network \"{$ssid}-Guest\" (" . ($enableGuest ? 'enabled' : 'disabled') . ")",
+                    'params' => [
+                        'Device.WiFi.SSID.3.SSID' => $ssid . '-Guest',
+                        'Device.WiFi.AccessPoint.3.Enable' => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.3.SSIDAdvertisementEnabled' => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.3.Security.ModeEnabled' => $securityMode,
+                        'Device.WiFi.AccessPoint.3.Security.KeyPassphrase' => $guestPassword,
+                        'Device.WiFi.AccessPoint.3.IsolationEnable' => ['value' => true, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.SSID.7.SSID' => $ssid . '-Guest',
+                        'Device.WiFi.AccessPoint.7.Enable' => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.7.SSIDAdvertisementEnabled' => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.7.Security.ModeEnabled' => $securityMode,
+                        'Device.WiFi.AccessPoint.7.Security.KeyPassphrase' => $guestPassword,
+                        'Device.WiFi.AccessPoint.7.IsolationEnable' => ['value' => true, 'type' => 'xsd:boolean'],
+                    ],
+                ],
+                'disable_unused' => [
+                    'description' => 'WiFi: Disable unused networks',
+                    'params' => [
+                        'Device.WiFi.AccessPoint.4.Enable' => ['value' => false, 'type' => 'xsd:boolean'],
+                        'Device.WiFi.AccessPoint.8.Enable' => ['value' => false, 'type' => 'xsd:boolean'],
+                    ],
+                ],
+            ];
+        }
+
+        $tasks = [];
+        $isOneTaskPerSession = $this->isOneTaskPerSessionDevice($device);
+
+        if ($isNokia) {
+            // Nokia devices: Create separate tasks for each network to avoid firmware stall
+            // Tasks will be processed sequentially as the device checks in
+            $isFirstTask = true;
+            foreach ($networks as $networkKey => $network) {
+                $taskData = [
+                    'device_id' => $device->id,
+                    'task_type' => 'set_parameter_values',
+                    'description' => $network['description'],
+                    'parameters' => $network['params'],
+                    'status' => 'pending',
+                ];
+
+                // For one-task-per-session devices, mark subsequent tasks to wait
+                if ($isOneTaskPerSession && !$isFirstTask) {
+                    $taskData['progress_info'] = ['wait_for_next_session' => true];
+                }
+
+                $task = Task::create($taskData);
+                $tasks[] = $task;
+                $isFirstTask = false;
+            }
+        } else {
+            // Other devices: Single task with all parameters
+            $allParams = [];
+            foreach ($networks as $network) {
+                $allParams = array_merge($allParams, $network['params']);
+            }
+
+            $task = Task::create([
+                'device_id' => $device->id,
+                'task_type' => 'set_parameter_values',
+                'description' => "WiFi: Configure all networks (SSID: {$ssid})",
+                'parameters' => $allParams,
+                'status' => 'pending',
+            ]);
+            $tasks[] = $task;
+        }
+
+        // Trigger connection request
+        $this->connectionRequestService->sendConnectionRequest($device);
+
+        // Store WiFi credentials locally for support team visibility
+        // Passwords are not readable from the device (security feature), so we save them when set
+        DeviceWifiCredential::updateOrCreate(
+            ['device_id' => $device->id],
+            [
+                'ssid' => $ssid,
+                'main_password' => $password,
+                'guest_ssid' => $ssid . '-Guest',
+                'guest_password' => $guestPassword,
+                'guest_enabled' => $enableGuest,
+                'set_by' => auth()->user()?->name ?? 'System',
+            ]
+        );
+
+        $response = [
+            'message' => $isNokia
+                ? 'Standard WiFi configuration queued (2 tasks for Nokia device)'
+                : 'Standard WiFi configuration applied',
+            'tasks' => array_map(fn($t) => ['id' => $t->id, 'description' => $t->description], $tasks),
+            'task_count' => count($tasks),
+            'networks_configured' => [
+                'main' => $ssid,
+                'dedicated_24ghz' => $ssid . '-2.4GHz',
+                'dedicated_5ghz' => $ssid . '-5GHz',
+                'guest' => $enableGuest ? ($ssid . '-Guest') : 'disabled',
+            ],
+        ];
+
+        // Include the generated guest password so user can save it
+        // Only include if guest network is enabled and we generated the password (not user-provided)
+        if ($enableGuest && !isset($validated['guest_password'])) {
+            $response['guest_password'] = $guestPassword;
+        }
+
+        return response()->json($response, 201);
+    }
+
+    /**
+     * Apply WiFi configuration for TR-098 Nokia Beacon G6 devices
+     * TR-098 uses InternetGatewayDevice.LANDevice.1.WLANConfiguration.{i} structure
+     * Instance mapping: 1-4 = 2.4GHz networks, 5-8 = 5GHz networks
+     *   1/5 = Main (band-steered), 2/6 = Dedicated, 3/7 = Unused, 4/8 = Guest
+     */
+    private function applyTr098NokiaWifiConfig(
+        Device $device,
+        string $ssid,
+        string $password,
+        bool $enableGuest,
+        string $guestPassword,
+        array $validated
+    ): JsonResponse {
+        // TR-098 parameter path prefix
+        $prefix = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration';
+
+        // TR-098 uses BeaconType for security mode
+        // WPAand11i = WPA + WPA2 mixed mode (most compatible)
+        $beaconType = 'WPAand11i';
+
+        // Build network configurations grouped by radio (like TR-181 Nokia)
+        // This minimizes radio restarts
+        $networks = [
+            'radio_24ghz' => [
+                'description' => "WiFi: Configure all 2.4GHz networks",
+                'params' => [
+                    // Instance 1 - Main 2.4GHz (band-steered SSID)
+                    "{$prefix}.1.SSID" => $ssid,
+                    "{$prefix}.1.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.1.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.1.BeaconType" => $beaconType,
+                    "{$prefix}.1.PreSharedKey.1.KeyPassphrase" => $password,
+                    // Instance 2 - Dedicated 2.4GHz
+                    "{$prefix}.2.SSID" => $ssid . '-2.4GHz',
+                    "{$prefix}.2.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.2.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.2.BeaconType" => $beaconType,
+                    "{$prefix}.2.PreSharedKey.1.KeyPassphrase" => $password,
+                    // Instance 3 - Unused (disabled)
+                    "{$prefix}.3.Enable" => ['value' => false, 'type' => 'xsd:boolean'],
+                    // Instance 4 - Guest 2.4GHz
+                    "{$prefix}.4.SSID" => $ssid . '-Guest',
+                    "{$prefix}.4.Enable" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                    "{$prefix}.4.SSIDAdvertisementEnabled" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                    "{$prefix}.4.BeaconType" => $beaconType,
+                    "{$prefix}.4.PreSharedKey.1.KeyPassphrase" => $guestPassword,
+                ],
+            ],
+            'radio_5ghz' => [
+                'description' => "WiFi: Configure all 5GHz networks",
+                'params' => [
+                    // Instance 5 - Main 5GHz (band-steered SSID)
+                    "{$prefix}.5.SSID" => $ssid,
+                    "{$prefix}.5.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.5.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.5.BeaconType" => $beaconType,
+                    "{$prefix}.5.PreSharedKey.1.KeyPassphrase" => $password,
+                    // Instance 6 - Dedicated 5GHz
+                    "{$prefix}.6.SSID" => $ssid . '-5GHz',
+                    "{$prefix}.6.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.6.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.6.BeaconType" => $beaconType,
+                    "{$prefix}.6.PreSharedKey.1.KeyPassphrase" => $password,
+                    // Instance 7 - Unused (disabled)
+                    "{$prefix}.7.Enable" => ['value' => false, 'type' => 'xsd:boolean'],
+                    // Instance 8 - Guest 5GHz
+                    "{$prefix}.8.SSID" => $ssid . '-Guest',
+                    "{$prefix}.8.Enable" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                    "{$prefix}.8.SSIDAdvertisementEnabled" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                    "{$prefix}.8.BeaconType" => $beaconType,
+                    "{$prefix}.8.PreSharedKey.1.KeyPassphrase" => $guestPassword,
+                ],
+            ],
+        ];
+
+        $tasks = [];
+        $isOneTaskPerSession = $this->isOneTaskPerSessionDevice($device);
+
+        // Create separate tasks for each radio to avoid firmware stall
+        // For one-task-per-session devices, mark subsequent tasks to wait for next session
+        $isFirstTask = true;
+        foreach ($networks as $networkKey => $network) {
+            $taskData = [
+                'device_id' => $device->id,
+                'task_type' => 'set_parameter_values',
+                'description' => $network['description'],
+                'parameters' => $network['params'],
+                'status' => 'pending',
+            ];
+
+            // For one-task-per-session devices, mark subsequent tasks to wait
+            if ($isOneTaskPerSession && !$isFirstTask) {
+                $taskData['progress_info'] = ['wait_for_next_session' => true];
+            }
+
+            $task = Task::create($taskData);
+            $tasks[] = $task;
+            $isFirstTask = false;
+        }
+
+        // Trigger connection request
+        $this->connectionRequestService->sendConnectionRequest($device);
+
+        // Store WiFi credentials locally for support team visibility
+        DeviceWifiCredential::updateOrCreate(
+            ['device_id' => $device->id],
+            [
+                'ssid' => $ssid,
+                'main_password' => $password,
+                'guest_ssid' => $ssid . '-Guest',
+                'guest_password' => $guestPassword,
+                'guest_enabled' => $enableGuest,
+                'set_by' => auth()->user()?->name ?? 'System',
+            ]
+        );
+
+        $response = [
+            'message' => 'Standard WiFi configuration queued (2 tasks for TR-098 Nokia device)',
+            'tasks' => array_map(fn($t) => ['id' => $t->id, 'description' => $t->description], $tasks),
+            'task_count' => count($tasks),
+            'networks_configured' => [
+                'main' => $ssid,
+                'dedicated_24ghz' => $ssid . '-2.4GHz',
+                'dedicated_5ghz' => $ssid . '-5GHz',
+                'guest' => $enableGuest ? ($ssid . '-Guest') : 'disabled',
+            ],
+            'data_model' => 'TR-098',
+        ];
+
+        // Include the generated guest password so user can save it
+        if ($enableGuest && !isset($validated['guest_password'])) {
+            $response['guest_password'] = $guestPassword;
+        }
+
+        return response()->json($response, 201);
+    }
+
+    /**
+     * Toggle guest network on/off
+     */
+    public function toggleGuestNetwork(Request $request, string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+        $dataModel = $device->getDataModel();
+
+        // Detect Nokia devices
+        $nokiaOuis = ['80AB4D', '0C7C28'];
+        $isNokia = in_array(strtoupper($device->oui ?? ''), $nokiaOuis) ||
+            stripos($device->manufacturer ?? '', 'Nokia') !== false ||
+            stripos($device->manufacturer ?? '', 'Alcatel') !== false ||
+            stripos($device->manufacturer ?? '', 'ALCL') !== false;
+
+        // Check for supported device types
+        if ($dataModel !== 'TR-181' && !($dataModel === 'TR-098' && $isNokia)) {
+            return response()->json([
+                'error' => 'Guest network toggle is only supported for TR-181 devices and TR-098 Nokia Beacon G6',
+            ], 400);
+        }
+
+        $validated = $request->validate([
+            'enabled' => 'required|boolean',
+        ]);
+
+        $enabled = $validated['enabled'];
+
+        // Build parameter values based on data model
+        if ($dataModel === 'TR-098' && $isNokia) {
+            // TR-098 Nokia uses WLANConfiguration instances 4 (2.4GHz) and 8 (5GHz) for guest
+            $prefix = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration';
+            $values = [
+                "{$prefix}.4.Enable" => ['value' => $enabled, 'type' => 'xsd:boolean'],
+                "{$prefix}.4.SSIDAdvertisementEnabled" => ['value' => $enabled, 'type' => 'xsd:boolean'],
+                "{$prefix}.8.Enable" => ['value' => $enabled, 'type' => 'xsd:boolean'],
+                "{$prefix}.8.SSIDAdvertisementEnabled" => ['value' => $enabled, 'type' => 'xsd:boolean'],
+            ];
+        } else {
+            // TR-181: Nokia uses AP.4/AP.8 for guest, others use AP.3/AP.7
+            $guestAp24 = $isNokia ? 4 : 3;
+            $guestAp5 = $isNokia ? 8 : 7;
+            $values = [
+                "Device.WiFi.AccessPoint.{$guestAp24}.Enable" => ['value' => $enabled, 'type' => 'xsd:boolean'],
+                "Device.WiFi.AccessPoint.{$guestAp24}.SSIDAdvertisementEnabled" => ['value' => $enabled, 'type' => 'xsd:boolean'],
+                "Device.WiFi.AccessPoint.{$guestAp5}.Enable" => ['value' => $enabled, 'type' => 'xsd:boolean'],
+                "Device.WiFi.AccessPoint.{$guestAp5}.SSIDAdvertisementEnabled" => ['value' => $enabled, 'type' => 'xsd:boolean'],
+            ];
+        }
+
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'set_parameter_values',
+            'description' => 'WiFi: ' . ($enabled ? 'Enable' : 'Disable') . ' guest network',
+            'parameters' => $values,
+            'status' => 'pending',
+        ]);
+
+        $this->connectionRequestService->sendConnectionRequest($device);
+
+        // Update stored credentials
+        $storedCredentials = DeviceWifiCredential::where('device_id', $device->id)->first();
+        if ($storedCredentials) {
+            $storedCredentials->update(['guest_enabled' => $enabled]);
+        }
+
+        return response()->json([
+            'message' => 'Guest network ' . ($enabled ? 'enabled' : 'disabled'),
+            'task' => $task,
+        ], 201);
     }
 }

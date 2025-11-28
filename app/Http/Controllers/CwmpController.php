@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Device;
+use App\Models\DeviceEvent;
 use App\Models\DeviceType;
 use App\Models\CwmpSession;
 use App\Models\Task;
@@ -85,6 +86,7 @@ class CwmpController extends Controller
                 'TransferComplete' => $this->handleTransferCompleteResponse($parsed),
                 'AddObject' => $this->handleAddObjectResponse($parsed),
                 'DeleteObject' => $this->handleDeleteObjectResponse($parsed),
+                'Fault' => $this->handleFaultResponse($parsed, $xmlContent),
                 default => $this->cwmpService->createEmptyResponse(),
             };
 
@@ -204,37 +206,24 @@ class CwmpController extends Controller
 
         $device->save();
 
-        // Create initial auto-backup if not already created and device has parameters
-        // This happens on first TR-069 Inform to secure device data before any changes
-        if (!$device->initial_backup_created && $device->parameters()->count() > 0) {
-            $parameters = $device->parameters()
-                ->get()
-                ->mapWithKeys(function ($param) {
-                    return [$param->name => [
-                        'value' => $param->value,
-                        'type' => $param->type,
-                        'writable' => $param->writable,
-                    ]];
-                })
-                ->toArray();
+        // Store device ID in session for response handler matching
+        // This ensures responses are matched to the correct device's tasks
+        session(['cwmp_device_id' => $deviceId]);
 
-            $device->configBackups()->create([
-                'name' => 'Initial Auto Backup - ' . now()->format('Y-m-d H:i:s'),
-                'description' => 'Automatically created on first TR-069 connection to preserve device configuration',
-                'backup_data' => $parameters,
-                'is_auto' => true,
-                'parameter_count' => count($parameters),
-            ]);
-
-            $device->update([
-                'initial_backup_created' => true,
-                'last_backup_at' => now(),
-            ]);
-
-            Log::info('Auto-backup created on first Inform', [
+        // Auto-provision new devices and queue "Get Everything" for full backup
+        // The initial backup will be created after Get Everything completes (with all parameters)
+        if (!$device->auto_provisioned) {
+            $this->provisioningService->autoProvision($device, $parsed['events']);
+            $device->update(['auto_provisioned' => true]);
+            Log::info('Auto-provisioning triggered', [
                 'device_id' => $device->id,
-                'parameter_count' => count($parameters),
             ]);
+
+            // Queue "Get Everything" task to discover all parameters for initial backup
+            // This replaces the old immediate 8-parameter backup with a comprehensive one
+            if (!$device->initial_backup_created) {
+                $this->queueGetEverythingForInitialBackup($device);
+            }
         }
 
         // Fetch connection request credentials if missing
@@ -383,6 +372,68 @@ class CwmpController extends Controller
                             'minutes_since_sent' => $minutesSinceSent,
                         ]);
                     }
+                } elseif ($abandonedTask->task_type === 'set_parameter_values' &&
+                    is_array($abandonedTask->progress_info) &&
+                    ($abandonedTask->progress_info['follow_up_from_add_object'] ?? false)) {
+                    // Special handling for port mapping SetParameterValues follow-up tasks
+                    // Nokia Beacon G6 and similar devices may close the session and reconnect
+                    // instead of responding in the same session. Give more time before failing.
+                    $sentAt = $abandonedTask->sent_at ?? $abandonedTask->updated_at;
+                    $secondsSinceSent = $sentAt ? now()->diffInSeconds($sentAt) : 0;
+
+                    // Give 30 seconds before marking as failed (device may need multiple reconnects)
+                    if ($secondsSinceSent >= 30) {
+                        $abandonedTask->markAsFailed(
+                            'Port mapping configuration task timed out after ' . $secondsSinceSent . ' seconds. ' .
+                            'Device may have rejected the parameters or disconnected during configuration.'
+                        );
+
+                        Log::warning('Port mapping follow-up task timed out', [
+                            'device_id' => $device->id,
+                            'task_id' => $abandonedTask->id,
+                            'task_type' => $abandonedTask->task_type,
+                            'seconds_since_sent' => $secondsSinceSent,
+                        ]);
+                    } else {
+                        Log::info('Port mapping follow-up task still waiting for response', [
+                            'device_id' => $device->id,
+                            'task_id' => $abandonedTask->id,
+                            'task_type' => $abandonedTask->task_type,
+                            'seconds_since_sent' => $secondsSinceSent,
+                        ]);
+                    }
+                } elseif ($abandonedTask->task_type === 'set_parameter_values' &&
+                    $abandonedTask->description &&
+                    str_contains($abandonedTask->description, 'WiFi:')) {
+                    // Special handling for WiFi configuration tasks
+                    // TR-181 Nokia Beacon G6 devices take ~2.5 minutes per radio to apply WiFi changes
+                    // Device's periodic inform may fire during processing, creating a new session
+                    // Give WiFi tasks 3 minutes before triggering verification (matches timeout command)
+                    $sentAt = $abandonedTask->sent_at ?? $abandonedTask->updated_at;
+                    $minutesSinceSent = $sentAt ? now()->diffInMinutes($sentAt) : 0;
+
+                    if ($minutesSinceSent >= 3) {
+                        $abandonedTask->markAsFailed(
+                            'WiFi configuration task timed out after ' . $minutesSinceSent . ' minutes. ' .
+                            'Device did not respond to WiFi parameter changes.'
+                        );
+
+                        Log::warning('WiFi configuration task timed out', [
+                            'device_id' => $device->id,
+                            'task_id' => $abandonedTask->id,
+                            'task_type' => $abandonedTask->task_type,
+                            'description' => $abandonedTask->description,
+                            'minutes_since_sent' => $minutesSinceSent,
+                        ]);
+                    } else {
+                        Log::info('WiFi configuration task still processing', [
+                            'device_id' => $device->id,
+                            'task_id' => $abandonedTask->id,
+                            'task_type' => $abandonedTask->task_type,
+                            'description' => $abandonedTask->description,
+                            'minutes_since_sent' => $minutesSinceSent,
+                        ]);
+                    }
                 } else {
                     $abandonedTask->markAsFailed(
                         'Device started new TR-069 session without responding to command. ' .
@@ -412,6 +463,9 @@ class CwmpController extends Controller
             'events' => $parsed['events'],
             'param_count' => count($parsed['parameters']),
         ]);
+
+        // Log all events to device history
+        $this->logDeviceEvents($device, $parsed['events'], $request->ip(), $session->id);
 
         // Check for DIAGNOSTICS COMPLETE event and queue result retrieval
         foreach ($parsed['events'] as $event) {
@@ -482,11 +536,8 @@ class CwmpController extends Controller
      */
     private function handleGetParameterValuesResponse(array $parsed): string
     {
-        // Find the task that was sent (get_params, discover_troubleshooting, get_diagnostic_results, or verify_set_params)
-        $task = Task::where('status', 'sent')
-            ->whereIn('task_type', ['get_params', 'discover_troubleshooting', 'get_diagnostic_results', 'verify_set_params'])
-            ->orderBy('updated_at', 'desc')
-            ->first();
+        // Find the task that was sent (get_params, discover_troubleshooting, get_diagnostic_results, verify_set_params, or get_parameter_values)
+        $task = $this->findSentTaskForSession(['get_params', 'discover_troubleshooting', 'get_diagnostic_results', 'verify_set_params', 'get_parameter_values']);
 
         if ($task) {
             $device = $task->device;
@@ -606,6 +657,11 @@ class CwmpController extends Controller
                     'device_id' => $device->id,
                     'param_count' => count($parsed['parameters']),
                 ]);
+
+                // Check if this is a WiFi verification task
+                if ($this->isWifiVerificationTask($task)) {
+                    $this->processWifiVerification($task, $parsed['parameters']);
+                }
             }
         }
 
@@ -631,6 +687,9 @@ class CwmpController extends Controller
 
                 $nextTask->markAsSent();
                 return $this->generateRpcForTask($nextTask);
+            } else {
+                // No more tasks - check if we need to create initial backup
+                $this->createInitialBackupIfNeeded($device);
             }
         }
 
@@ -644,10 +703,7 @@ class CwmpController extends Controller
     private function handleGetParameterNamesResponse(array $parsed): string
     {
         // Find the task that was sent (get_parameter_names)
-        $task = Task::where('status', 'sent')
-            ->where('task_type', 'get_parameter_names')
-            ->orderBy('updated_at', 'desc')
-            ->first();
+        $task = $this->findSentTaskForSession(['get_parameter_names']);
 
         if ($task) {
             $device = $task->device;
@@ -726,10 +782,7 @@ class CwmpController extends Controller
     private function handleSetParameterValuesResponse(array $parsed): string
     {
         // Find the task that was sent (set_params, set_parameter_values, download/upload diagnostics, ping_diagnostics, traceroute_diagnostics, or wifi_scan)
-        $task = Task::where('status', 'sent')
-            ->whereIn('task_type', ['set_params', 'set_parameter_values', 'ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics', 'wifi_scan'])
-            ->orderBy('updated_at', 'desc')
-            ->first();
+        $task = $this->findSentTaskForSession(['set_params', 'set_parameter_values', 'ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics', 'wifi_scan']);
 
         if ($task) {
             if ($parsed['status'] === 0) {
@@ -787,6 +840,44 @@ class CwmpController extends Controller
                 $nextTask->markAsSent();
                 return $this->generateRpcForTask($nextTask);
             }
+
+            // No immediate next task, but check if there are tasks waiting for next session
+            // If so, schedule a connection request after a delay to wake up the device
+            $waitingTasks = $task->device->tasks()
+                ->where('status', 'pending')
+                ->whereNotNull('progress_info')
+                ->get()
+                ->filter(function ($t) {
+                    return is_array($t->progress_info) && ($t->progress_info['wait_for_next_session'] ?? false);
+                });
+
+            if ($waitingTasks->isNotEmpty()) {
+                Log::info('Tasks waiting for next session, scheduling connection request', [
+                    'device_id' => $task->device->id,
+                    'waiting_task_count' => $waitingTasks->count(),
+                ]);
+
+                // Dispatch a delayed connection request (4 second delay)
+                // This ensures the task ages past the 3-second window before the device reconnects
+                $deviceId = $task->device_id;
+                $connectionRequestService = $this->connectionRequestService;
+                dispatch(function () use ($deviceId, $connectionRequestService) {
+                    try {
+                        $device = Device::find($deviceId);
+                        if ($device) {
+                            $connectionRequestService->sendConnectionRequest($device);
+                            Log::info('Delayed connection request sent for waiting tasks', [
+                                'device_id' => $device->id,
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('Failed to send delayed connection request', [
+                            'device_id' => $deviceId,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                })->delay(now()->addSeconds(4));
+            }
         }
 
         // No more tasks - end session
@@ -798,10 +889,7 @@ class CwmpController extends Controller
      */
     private function handleRebootResponse(array $parsed): string
     {
-        $task = Task::where('status', 'sent')
-            ->where('task_type', 'reboot')
-            ->orderBy('updated_at', 'desc')
-            ->first();
+        $task = $this->findSentTaskForSession(['reboot']);
 
         if ($task) {
             $task->markAsCompleted();
@@ -810,7 +898,7 @@ class CwmpController extends Controller
             // Queue a task to refresh uptime after reboot completes
             $device = $task->device;
             $dataModel = $device->getDataModel();
-            $uptimeParam = $dataModel === 'Device:2'
+            $uptimeParam = $dataModel === 'TR-181'
                 ? 'Device.DeviceInfo.UpTime'
                 : 'InternetGatewayDevice.DeviceInfo.UpTime';
 
@@ -837,10 +925,7 @@ class CwmpController extends Controller
      */
     private function handleFactoryResetResponse(array $parsed): string
     {
-        $task = Task::where('status', 'sent')
-            ->where('task_type', 'factory_reset')
-            ->orderBy('updated_at', 'desc')
-            ->first();
+        $task = $this->findSentTaskForSession(['factory_reset']);
 
         if ($task) {
             $task->markAsCompleted();
@@ -856,10 +941,7 @@ class CwmpController extends Controller
      */
     private function handleTransferCompleteResponse(array $parsed): string
     {
-        $task = Task::where('status', 'sent')
-            ->whereIn('task_type', ['download', 'upload'])
-            ->orderBy('updated_at', 'desc')
-            ->first();
+        $task = $this->findSentTaskForSession(['download', 'upload', 'config_restore']);
 
         if ($task) {
             $faultCode = $parsed['fault_code'] ?? 0;
@@ -899,10 +981,7 @@ class CwmpController extends Controller
      */
     private function handleAddObjectResponse(array $parsed): string
     {
-        $task = Task::where('status', 'sent')
-            ->where('task_type', 'add_object')
-            ->orderBy('updated_at', 'desc')
-            ->first();
+        $task = $this->findSentTaskForSession(['add_object']);
 
         if ($task) {
             $instanceNumber = $parsed['instance_number'] ?? null;
@@ -992,10 +1071,7 @@ class CwmpController extends Controller
      */
     private function handleDeleteObjectResponse(array $parsed): string
     {
-        $task = Task::where('status', 'sent')
-            ->where('task_type', 'delete_object')
-            ->orderBy('updated_at', 'desc')
-            ->first();
+        $task = $this->findSentTaskForSession(['delete_object']);
 
         if ($task) {
             $status = $parsed['status'] ?? 1;
@@ -1053,6 +1129,86 @@ class CwmpController extends Controller
     }
 
     /**
+     * Handle SOAP Fault response from device
+     * This is sent when the device cannot execute a command (invalid parameters, etc.)
+     */
+    private function handleFaultResponse(array $parsed, string $xmlContent): string
+    {
+        // Parse the fault details from the XML
+        $faultCode = 'Unknown';
+        $faultString = 'Unknown fault';
+        $parameterFaults = [];
+
+        // Extract fault information using regex (simpler than full XML parsing)
+        if (preg_match('/<FaultCode>(\d+)<\/FaultCode>/', $xmlContent, $m)) {
+            $faultCode = $m[1];
+        }
+        if (preg_match('/<FaultString>([^<]+)<\/FaultString>/', $xmlContent, $m)) {
+            $faultString = $m[1];
+        }
+
+        // Extract SetParameterValuesFault entries (for parameter-specific errors)
+        if (preg_match_all('/<SetParameterValuesFault>.*?<ParameterName>([^<]+)<\/ParameterName>.*?<FaultCode>(\d+)<\/FaultCode>.*?<FaultString>([^<]+)<\/FaultString>.*?<\/SetParameterValuesFault>/s', $xmlContent, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $parameterFaults[] = [
+                    'parameter' => $match[1],
+                    'code' => $match[2],
+                    'message' => $match[3],
+                ];
+            }
+        }
+
+        Log::warning('SOAP Fault received from device', [
+            'fault_code' => $faultCode,
+            'fault_string' => $faultString,
+            'parameter_faults' => $parameterFaults,
+        ]);
+
+        // Find the most recent 'sent' task for this device and mark it as failed
+        $deviceId = $this->getSessionDeviceId();
+        $query = Task::where('status', 'sent')
+            ->orderBy('updated_at', 'desc');
+
+        if ($deviceId) {
+            $query->where('device_id', $deviceId);
+        }
+
+        $task = $query->first();
+
+        if ($task) {
+            $errorMessage = "SOAP Fault {$faultCode}: {$faultString}";
+
+            if (!empty($parameterFaults)) {
+                $paramErrors = array_map(function ($pf) {
+                    return "{$pf['parameter']} ({$pf['code']}: {$pf['message']})";
+                }, $parameterFaults);
+                $errorMessage .= ' - Invalid parameters: ' . implode(', ', $paramErrors);
+            }
+
+            $task->markAsFailed($errorMessage);
+
+            Log::warning('Task failed due to SOAP Fault', [
+                'task_id' => $task->id,
+                'task_type' => $task->task_type,
+                'device_id' => $task->device_id,
+                'error' => $errorMessage,
+            ]);
+
+            // Check for more pending tasks (other tasks may still work)
+            if ($task->device) {
+                $nextTask = $this->getNextPendingTask($task->device);
+
+                if ($nextTask) {
+                    $nextTask->markAsSent();
+                    return $this->generateRpcForTask($nextTask);
+                }
+            }
+        }
+
+        return $this->cwmpService->createEmptyResponse();
+    }
+
+    /**
      * Generate RPC message for a task
      */
     private function generateRpcForTask(Task $task): string
@@ -1060,6 +1216,10 @@ class CwmpController extends Controller
         return match ($task->task_type) {
             'get_params', 'discover_troubleshooting', 'get_diagnostic_results', 'verify_set_params' => $this->cwmpService->createGetParameterValues(
                 $task->parameters['names'] ?? []
+            ),
+            // get_parameter_values: parameters is a flat array of parameter names
+            'get_parameter_values' => $this->cwmpService->createGetParameterValues(
+                $task->parameters ?? []
             ),
             'get_parameter_names' => $this->cwmpService->createGetParameterNames(
                 $task->parameters['path'] ?? 'InternetGatewayDevice.',
@@ -1096,6 +1256,12 @@ class CwmpController extends Controller
                 $task->parameters['username'] ?? '',
                 $task->parameters['password'] ?? ''
             ),
+            'config_restore' => $this->cwmpService->createDownload(
+                $task->parameters['url'] ?? '',
+                $task->parameters['file_type'] ?? '3 Vendor Configuration File',
+                $task->parameters['username'] ?? '',
+                $task->parameters['password'] ?? ''
+            ),
             'ping_diagnostics' => $this->generatePingDiagnostics($task),
             'traceroute_diagnostics' => $this->generateTracerouteDiagnostics($task),
             'add_object' => $this->cwmpService->createAddObject(
@@ -1114,7 +1280,8 @@ class CwmpController extends Controller
     private function generatePingDiagnostics(Task $task): string
     {
         $dataModel = $task->device->getDataModel();
-        $prefix = $dataModel === 'Device:2' ? 'Device.IP.Diagnostics.IPPingDiagnostics' : 'InternetGatewayDevice.IPPingDiagnostics';
+        // TR-181 uses Device.IP.Diagnostics.IPPing (not IPPingDiagnostics)
+        $prefix = $dataModel === 'TR-181' ? 'Device.IP.Diagnostics.IPPing' : 'InternetGatewayDevice.IPPingDiagnostics';
 
         $parameters = [
             "{$prefix}.DiagnosticsState" => 'Requested',
@@ -1138,7 +1305,8 @@ class CwmpController extends Controller
     private function generateTracerouteDiagnostics(Task $task): string
     {
         $dataModel = $task->device->getDataModel();
-        $prefix = $dataModel === 'Device:2' ? 'Device.IP.Diagnostics.TraceRouteDiagnostics' : 'InternetGatewayDevice.TraceRouteDiagnostics';
+        // TR-181 uses Device.IP.Diagnostics.TraceRoute (not TraceRouteDiagnostics)
+        $prefix = $dataModel === 'TR-181' ? 'Device.IP.Diagnostics.TraceRoute' : 'InternetGatewayDevice.TraceRouteDiagnostics';
 
         $parameters = [
             "{$prefix}.DiagnosticsState" => 'Requested',
@@ -1179,7 +1347,8 @@ class CwmpController extends Controller
         $taskType = $diagnosticTask->task_type;
 
         if ($taskType === 'ping_diagnostics') {
-            $prefix = $dataModel === 'Device:2' ? 'Device.IP.Diagnostics.IPPingDiagnostics' : 'InternetGatewayDevice.IPPingDiagnostics';
+            // TR-181 uses Device.IP.Diagnostics.IPPing (not IPPingDiagnostics)
+            $prefix = $dataModel === 'TR-181' ? 'Device.IP.Diagnostics.IPPing' : 'InternetGatewayDevice.IPPingDiagnostics';
             $parameters = [
                 "{$prefix}.DiagnosticsState",
                 "{$prefix}.SuccessCount",
@@ -1189,7 +1358,8 @@ class CwmpController extends Controller
                 "{$prefix}.MaximumResponseTime",
             ];
         } elseif ($taskType === 'traceroute_diagnostics') {
-            $prefix = $dataModel === 'Device:2' ? 'Device.IP.Diagnostics.TraceRouteDiagnostics' : 'InternetGatewayDevice.TraceRouteDiagnostics';
+            // TR-181 uses Device.IP.Diagnostics.TraceRoute (not TraceRouteDiagnostics)
+            $prefix = $dataModel === 'TR-181' ? 'Device.IP.Diagnostics.TraceRoute' : 'InternetGatewayDevice.TraceRouteDiagnostics';
             $parameters = [
                 "{$prefix}.DiagnosticsState",
                 "{$prefix}.ResponseTime",
@@ -1197,7 +1367,7 @@ class CwmpController extends Controller
                 "{$prefix}.RouteHops.",  // Partial path query to get all hop entries
             ];
         } elseif ($taskType === 'download_diagnostics') {
-            $prefix = $dataModel === 'Device:2' ? 'Device.IP.Diagnostics.DownloadDiagnostics' : 'InternetGatewayDevice.DownloadDiagnostics';
+            $prefix = $dataModel === 'TR-181' ? 'Device.IP.Diagnostics.DownloadDiagnostics' : 'InternetGatewayDevice.DownloadDiagnostics';
             $parameters = [
                 "{$prefix}.DiagnosticsState",
                 "{$prefix}.ROMTime",
@@ -1209,7 +1379,7 @@ class CwmpController extends Controller
                 "{$prefix}.TCPOpenResponseTime",
             ];
         } elseif ($taskType === 'upload_diagnostics') {
-            $prefix = $dataModel === 'Device:2' ? 'Device.IP.Diagnostics.UploadDiagnostics' : 'InternetGatewayDevice.UploadDiagnostics';
+            $prefix = $dataModel === 'TR-181' ? 'Device.IP.Diagnostics.UploadDiagnostics' : 'InternetGatewayDevice.UploadDiagnostics';
             $parameters = [
                 "{$prefix}.DiagnosticsState",
                 "{$prefix}.ROMTime",
@@ -1442,7 +1612,7 @@ class CwmpController extends Controller
     private function getWiFiDiagnosticParameterPath(Device $device, string $type): string
     {
         $dataModel = $device->getDataModel();
-        $isDevice2 = $dataModel === 'Device:2';
+        $isDevice2 = $dataModel === 'TR-181';
 
         if ($isDevice2) {
             // Device:2 model - standard TR-181 WiFi diagnostics
@@ -1616,6 +1786,96 @@ class CwmpController extends Controller
     }
 
     /**
+     * Create initial backup if Get Everything has completed and backup doesn't exist yet
+     */
+    private function createInitialBackupIfNeeded(Device $device): void
+    {
+        // Skip if initial backup already exists
+        if ($device->initial_backup_created) {
+            return;
+        }
+
+        // Only create backup if we have a meaningful number of parameters
+        // (more than just the 8 from Inform)
+        $paramCount = $device->parameters()->count();
+        if ($paramCount < 50) {
+            return;
+        }
+
+        // Create the full initial backup
+        $parameters = $device->parameters()
+            ->get()
+            ->mapWithKeys(function ($param) {
+                return [$param->name => [
+                    'value' => $param->value,
+                    'type' => $param->type,
+                    'writable' => $param->writable,
+                ]];
+            })
+            ->toArray();
+
+        $device->configBackups()->create([
+            'name' => 'Initial Backup - ' . now()->format('Y-m-d H:i:s'),
+            'description' => 'Automatically created on first TR-069 connection to preserve device configuration',
+            'backup_data' => $parameters,
+            'is_auto' => true,
+            'parameter_count' => count($parameters),
+        ]);
+
+        $device->update([
+            'initial_backup_created' => true,
+            'last_backup_at' => now(),
+        ]);
+
+        Log::info('Initial backup created after Get Everything completed', [
+            'device_id' => $device->id,
+            'parameter_count' => count($parameters),
+        ]);
+    }
+
+    /**
+     * Queue "Get Everything" task to discover all parameters for initial backup
+     */
+    private function queueGetEverythingForInitialBackup(Device $device): void
+    {
+        // Check if already has a pending get_parameter_names task
+        $existingTask = $device->tasks()
+            ->where('task_type', 'get_parameter_names')
+            ->whereIn('status', ['pending', 'sent'])
+            ->exists();
+
+        if ($existingTask) {
+            Log::info('Skipping Get Everything - task already exists', [
+                'device_id' => $device->id,
+            ]);
+            return;
+        }
+
+        // Determine data model root
+        $dataModel = $device->getDataModel();
+        $root = $dataModel === 'TR-181' ? 'Device.' : 'InternetGatewayDevice.';
+
+        // Create the discovery task
+        Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'get_parameter_names',
+            'description' => 'Initial parameter discovery for backup',
+            'parameters' => [
+                'path' => $root,
+                'next_level' => false, // Get ALL parameters recursively
+                'for_initial_backup' => true, // Flag to trigger backup creation when complete
+            ],
+            'status' => 'pending',
+        ]);
+
+        Log::info('Queued Get Everything for initial backup', [
+            'device_id' => $device->id,
+            'data_model' => $dataModel,
+            'root' => $root,
+        ]);
+    }
+
+    /**
      * Find the correct PortMapping parameter path for a device
      * Returns the full path like: InternetGatewayDevice.WANDevice.2.WANConnectionDevice.2.WANIPConnection.6.PortMapping
      */
@@ -1646,6 +1906,330 @@ class CwmpController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Log all events from an Inform to device event history
+     */
+    private function logDeviceEvents(Device $device, array $events, string $sourceIp, int $sessionId): void
+    {
+        foreach ($events as $event) {
+            $eventCode = $event['code'] ?? 'unknown';
+            $commandKey = $event['command_key'] ?? null;
+
+            // Build details array for special events
+            $details = [];
+
+            // For TRANSFER COMPLETE, include the command key for correlation
+            if ($eventCode === '7 TRANSFER COMPLETE' && $commandKey) {
+                $details['command_key'] = $commandKey;
+                $this->handleTransferComplete($device, $commandKey);
+            }
+
+            // For DIAGNOSTICS COMPLETE, note which diagnostic completed
+            if ($eventCode === '8 DIAGNOSTICS COMPLETE' && $commandKey) {
+                $details['command_key'] = $commandKey;
+            }
+
+            // For VALUE CHANGE, we could log which parameter changed if available
+            if ($eventCode === '4 VALUE CHANGE') {
+                // The parameter name is in the command_key for some devices
+                if ($commandKey) {
+                    $details['parameter'] = $commandKey;
+                }
+            }
+
+            DeviceEvent::create([
+                'device_id' => $device->id,
+                'event_code' => $eventCode,
+                'event_type' => DeviceEvent::normalizeEventCode($eventCode),
+                'command_key' => $commandKey,
+                'details' => !empty($details) ? $details : null,
+                'source_ip' => $sourceIp,
+                'session_id' => (string) $sessionId,
+            ]);
+        }
+
+        Log::debug('Device events logged', [
+            'device_id' => $device->id,
+            'event_count' => count($events),
+        ]);
+    }
+
+    /**
+     * Handle TRANSFER COMPLETE event - update firmware status, mark tasks complete
+     */
+    private function handleTransferComplete(Device $device, string $commandKey): void
+    {
+        // Find the task that initiated this transfer
+        $task = $device->tasks()
+            ->where('command_key', $commandKey)
+            ->whereIn('task_type', ['download', 'firmware_upgrade'])
+            ->whereIn('status', ['sent', 'in_progress'])
+            ->first();
+
+        if ($task) {
+            $task->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+                'result' => ['transfer_complete' => true, 'completed_at' => now()->toIso8601String()],
+            ]);
+
+            Log::info('Transfer complete - task marked as completed', [
+                'device_id' => $device->id,
+                'task_id' => $task->id,
+                'task_type' => $task->task_type,
+                'command_key' => $commandKey,
+            ]);
+
+            // Queue a task to refresh device info (get updated software version)
+            Task::create([
+                'device_id' => $device->id,
+                'task_type' => 'get_parameter_values',
+                'description' => 'Refresh device info after firmware upgrade',
+                'status' => 'pending',
+                'parameters' => $device->getDataModel() === 'TR-181'
+                    ? ['Device.DeviceInfo.SoftwareVersion', 'Device.DeviceInfo.HardwareVersion']
+                    : ['InternetGatewayDevice.DeviceInfo.SoftwareVersion', 'InternetGatewayDevice.DeviceInfo.HardwareVersion'],
+            ]);
+        } else {
+            Log::info('Transfer complete event received (no matching task)', [
+                'device_id' => $device->id,
+                'command_key' => $commandKey,
+            ]);
+        }
+    }
+
+    /**
+     * Get the current session device ID for task matching
+     * Returns the device ID stored during Inform handling
+     */
+    private function getSessionDeviceId(): ?string
+    {
+        return session('cwmp_device_id');
+    }
+
+    /**
+     * Find a sent task for the current session device
+     * This prevents matching tasks from other concurrent device sessions
+     */
+    private function findSentTaskForSession(array $taskTypes): ?Task
+    {
+        $deviceId = $this->getSessionDeviceId();
+
+        // First try: If we have a device ID from the session, use it
+        if ($deviceId) {
+            $task = Task::where('status', 'sent')
+                ->where('device_id', $deviceId)
+                ->whereIn('task_type', $taskTypes)
+                ->orderBy('updated_at', 'desc')
+                ->first();
+
+            if ($task) {
+                return $task;
+            }
+        }
+
+        // Fallback: Try to find device by IP address (for long-running operations
+        // where session may have been overwritten by other concurrent devices)
+        $clientIp = request()->ip();
+        if ($clientIp) {
+            // Look up device by last known IP
+            $device = Device::where('ip_address', $clientIp)->first();
+
+            if ($device) {
+                $task = Task::where('status', 'sent')
+                    ->where('device_id', $device->id)
+                    ->whereIn('task_type', $taskTypes)
+                    ->orderBy('updated_at', 'desc')
+                    ->first();
+
+                if ($task) {
+                    Log::info('Found task via IP fallback', [
+                        'device_id' => $device->id,
+                        'task_id' => $task->id,
+                        'ip' => $clientIp,
+                    ]);
+                    return $task;
+                }
+            }
+        }
+
+        // Last resort: Return most recent sent task of matching types
+        // This is less safe but prevents stuck tasks
+        return Task::where('status', 'sent')
+            ->whereIn('task_type', $taskTypes)
+            ->orderBy('updated_at', 'desc')
+            ->first();
+    }
+
+    /**
+     * Check if this is a WiFi verification task
+     */
+    private function isWifiVerificationTask(Task $task): bool
+    {
+        if ($task->task_type !== 'get_params') {
+            return false;
+        }
+
+        // Check if progress_info contains verification_for_task_id
+        if (is_array($task->progress_info) && isset($task->progress_info['verification_for_task_id'])) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Process WiFi verification results
+     * Compare actual values with expected values and update original task status
+     */
+    private function processWifiVerification(Task $verificationTask, array $actualParams): void
+    {
+        $originalTaskId = $verificationTask->progress_info['verification_for_task_id'] ?? null;
+        $expectedValues = $verificationTask->progress_info['expected_values'] ?? [];
+
+        if (!$originalTaskId) {
+            Log::warning('WiFi verification task missing original task ID', [
+                'verification_task_id' => $verificationTask->id,
+            ]);
+            return;
+        }
+
+        $originalTask = Task::find($originalTaskId);
+        if (!$originalTask) {
+            Log::warning('WiFi verification: Original task not found', [
+                'verification_task_id' => $verificationTask->id,
+                'original_task_id' => $originalTaskId,
+            ]);
+            return;
+        }
+
+        // Compare expected vs actual values
+        $matched = 0;
+        $mismatched = 0;
+        $missing = 0;
+        $skipped = 0;
+        $mismatches = [];
+
+        // Write-only parameters that return empty/masked values - skip these in verification
+        $writeOnlyPatterns = ['Passphrase', 'Password', 'PreSharedKey', 'Key.'];
+
+        foreach ($expectedValues as $paramName => $expectedData) {
+            $expectedValue = is_array($expectedData) ? ($expectedData['value'] ?? $expectedData) : $expectedData;
+
+            // Check if this is a write-only parameter (passwords, etc.)
+            $isWriteOnly = false;
+            foreach ($writeOnlyPatterns as $pattern) {
+                if (str_contains($paramName, $pattern)) {
+                    $isWriteOnly = true;
+                    break;
+                }
+            }
+
+            if (isset($actualParams[$paramName])) {
+                $actualValue = $actualParams[$paramName]['value'] ?? $actualParams[$paramName];
+
+                // Skip write-only parameters (they return empty for security)
+                if ($isWriteOnly && (empty($actualValue) || $actualValue === '')) {
+                    $skipped++;
+                    continue;
+                }
+
+                // Normalize for comparison (handle boolean strings, etc.)
+                $normalizedExpected = $this->normalizeValueForComparison($expectedValue);
+                $normalizedActual = $this->normalizeValueForComparison($actualValue);
+
+                if ($normalizedExpected === $normalizedActual) {
+                    $matched++;
+                } else {
+                    $mismatched++;
+                    $mismatches[$paramName] = [
+                        'expected' => $expectedValue,
+                        'actual' => $actualValue,
+                    ];
+                }
+            } else {
+                $missing++;
+            }
+        }
+
+        $total = $matched + $mismatched + $missing;
+        $successRate = $total > 0 ? round(($matched / $total) * 100, 1) : 0;
+
+        // Consider it verified if 80%+ of parameters match
+        // (some params like passwords may not be readable)
+        $verified = $successRate >= 80;
+
+        if ($verified) {
+            $skippedNote = $skipped > 0 ? ", {$skipped} write-only skipped" : '';
+            $originalTask->update([
+                'status' => 'completed',
+                'result' => json_encode([
+                    'verified' => true,
+                    'message' => "WiFi settings verified successfully ({$successRate}% match{$skippedNote})",
+                    'matched' => $matched,
+                    'mismatched' => $mismatched,
+                    'missing' => $missing,
+                    'skipped' => $skipped,
+                    'verification_task_id' => $verificationTask->id,
+                ]),
+            ]);
+
+            Log::info('WiFi verification successful', [
+                'original_task_id' => $originalTaskId,
+                'verification_task_id' => $verificationTask->id,
+                'success_rate' => $successRate,
+                'matched' => $matched,
+                'mismatched' => $mismatched,
+                'missing' => $missing,
+                'skipped' => $skipped,
+            ]);
+        } else {
+            $skippedNote = $skipped > 0 ? ", {$skipped} write-only skipped" : '';
+            $originalTask->update([
+                'status' => 'failed',
+                'result' => json_encode([
+                    'verified' => false,
+                    'message' => "WiFi settings verification failed ({$successRate}% match{$skippedNote})",
+                    'matched' => $matched,
+                    'mismatched' => $mismatched,
+                    'missing' => $missing,
+                    'skipped' => $skipped,
+                    'mismatches' => $mismatches,
+                    'verification_task_id' => $verificationTask->id,
+                ]),
+            ]);
+
+            Log::warning('WiFi verification failed', [
+                'original_task_id' => $originalTaskId,
+                'verification_task_id' => $verificationTask->id,
+                'success_rate' => $successRate,
+                'matched' => $matched,
+                'mismatched' => $mismatched,
+                'missing' => $missing,
+                'skipped' => $skipped,
+                'mismatches' => $mismatches,
+            ]);
+        }
+    }
+
+    /**
+     * Normalize values for comparison (handle boolean strings, etc.)
+     */
+    private function normalizeValueForComparison($value): string
+    {
+        $strValue = (string) $value;
+
+        // Normalize boolean strings
+        if (in_array(strtolower($strValue), ['true', '1', 'yes', 'on'])) {
+            return 'true';
+        }
+        if (in_array(strtolower($strValue), ['false', '0', 'no', 'off'])) {
+            return 'false';
+        }
+
+        return $strValue;
     }
 }
 
