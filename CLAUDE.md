@@ -1,7 +1,7 @@
 # CLAUDE.md - Project Context & Current State
 
-**Last Updated**: November 28, 2025
-**Current Focus**: TR-181 Nokia Beacon G6 WiFi task handling, task timeout verification system
+**Last Updated**: December 1, 2025
+**Current Focus**: Calix TR-098 WiFi Standard Setup with dedicated networks, auto-refresh on task completion
 
 ## Current Status
 
@@ -1079,5 +1079,222 @@ pending → sent → (timeout) → verifying → completed/failed
 - Default: 2-minute timeout
 
 **Recommended**: Set TR-181 Beacon G6 periodic inform to 900 seconds (15 minutes) to prevent interruptions during WiFi processing.
+
+---
+
+## Recent Updates (December 1, 2025)
+
+### Calix TR-098 Standard WiFi Setup ✅
+
+**Complete WiFi configuration for Calix TR-098 devices via Standard WiFi Setup:**
+
+**Features Implemented**:
+1. **RadioEnabled Control** - Now properly enables radios (was causing "disabled" display)
+2. **Dedicated Network Support** - Creates `{ssid}-2.4GHz` and `{ssid}-5GHz` SSIDs
+3. **Performance Optimizations** - Disables AirtimeFairness and MulticastForward on primary
+4. **Password Refresh** - Reads back `X_000631_KeyPassphrase` to update displayed password
+5. **Auto Page Refresh** - Page automatically reloads when WiFi tasks complete
+
+**Instance Configuration**:
+- Instance 1: Primary 2.4GHz (band-steered)
+- Instance 2: Guest 2.4GHz (with client isolation)
+- Instance 3: Dedicated 2.4GHz (`{ssid}-2.4GHz`)
+- Instance 9: Primary 5GHz (band-steered)
+- Instance 10: Guest 5GHz (with client isolation)
+- Instance 12: Dedicated 5GHz (`{ssid}-5GHz`)
+
+**Files Modified**:
+- `app/Http/Controllers/Api/DeviceController.php`:
+  - `getStandardWifiConfig()` - Added dedicated network detection
+  - `applyTr098CalixWifiConfig()` - Added dedicated networks and RadioEnabled
+- `resources/views/device-tabs/wifi.blade.php` - Display actual dedicated SSIDs
+- `resources/views/components/task-manager.blade.php` - WiFi task completion detection
+- `resources/views/dashboard/device.blade.php` - WiFi refresh event listener
+
+---
+
+## Recent Updates (November 29, 2025)
+
+### Speed Test Implementation for Calix Devices ✅
+
+**Download Speed Test via TR-069 Download RPC**:
+- Uses TR-069 Download RPC to transfer a test file from a speed test server
+- Calculates speed from file size and transfer duration in TransferComplete response
+- Works reliably on all Calix devices tested
+
+**Implementation Details**:
+- **File**: 10MB test file from speedtest.tele2.net
+- **URL**: `http://speedtest.tele2.net/10MB.zip`
+- **Calculation**: `(file_size_bytes * 8) / duration_seconds / 1_000_000 = Mbps`
+
+**Test Results**:
+- Calix 844E (CXNK0083217F): **104.86 Mbps** download measured successfully
+
+**Upload Speed Test - NOT SUPPORTED on Calix**:
+- Attempted implementing upload speed test via TR-069 Upload RPC
+- **Finding**: Calix devices do NOT support Upload RPC
+- Device ignores the Upload command and starts a new CWMP session
+- Code updated to show "Not supported" for upload speed on Calix devices
+
+**Files Modified**:
+- `app/Http/Controllers/Api/DeviceController.php`:
+  - `startDownloadRpcSpeedTest()` - Creates download task, skips upload for Calix
+  - `getDownloadRpcSpeedTestStatus()` - Returns download results only
+- `app/Http/Controllers/CwmpController.php`:
+  - `handleTransferComplete()` - Extracts file_size from progress_info for speed calculation
+
+**Key Code**:
+```php
+// Calix OUI detection for upload exclusion
+$calixOuis = ['D0768F', '00236A', '0021D8', '50C7BF', '487746'];
+$isCalix = strtolower($device->manufacturer ?? '') === 'calix' ||
+    in_array(strtoupper($device->oui ?? ''), $calixOuis);
+
+// Speed calculation from TransferComplete
+$fileSizeBytes = $progressInfo['file_size'] ?? 10 * 1024 * 1024; // Default 10MB
+$speedMbps = ($fileSizeBytes * 8) / $durationSeconds / 1_000_000;
+```
+
+---
+
+### Session Management Bug Fix ✅
+
+**Problem**: SOAP faults from one device could incorrectly fail tasks belonging to a different device when `deviceId` was null in the session.
+
+**Root Cause**: `handleFaultResponse()` was failing tasks without verifying the device ID matched.
+
+**Solution**: Added device ID validation before failing any task:
+```php
+$deviceId = $this->getSessionDeviceId();
+if (!$deviceId) {
+    Log::warning('Cannot associate SOAP Fault with a device - no device ID in session');
+    return $this->cwmpService->createEmptyResponse();
+}
+```
+
+**File Modified**: `app/Http/Controllers/CwmpController.php` lines 1226-1237
+
+---
+
+### Calix WiFi Password Reveal Feature ✅
+
+**Discovery**: Calix devices expose WiFi passwords in clear text via the `X_000631_KeyPassphrase` parameter (both TR-098 and TR-181).
+
+**Implementation**:
+- Added eye icon toggle button to WiFi password fields for Calix devices
+- Password displayed in placeholder when revealed (not in the input value to avoid accidental changes)
+- Green hint text: "Current password available - click eye to reveal"
+
+**Calix OUI Detection**:
+```php
+$calixOuis = ['D0768F', '00236A', '0021D8', '50C7BF', '487746', '000631', 'CCBE59', '60DB98'];
+$isCalix = in_array(strtoupper($device->oui ?? ''), $calixOuis) ||
+    strtolower($device->manufacturer ?? '') === 'calix';
+```
+
+**Files Modified**:
+- `resources/views/device-tabs/wifi.blade.php`:
+  - Added Calix detection logic
+  - Passes `isCalix` flag to wifi-card partial
+- `resources/views/device-tabs/partials/wifi-card-tr181.blade.php`:
+  - Added Alpine.js toggle for password visibility
+  - Eye icon button (show/hide) appears only for Calix devices with passwords
+  - Password shown in placeholder when revealed
+
+**UI Behavior**:
+- Default: Password field shows "Leave blank to keep current"
+- Eye icon click: Reveals current password in placeholder
+- Works for both 2.4GHz and 5GHz SSIDs
+- Supports both TR-098 and TR-181 Calix devices
+
+---
+
+### Device Status Verification
+
+**Current Offline Devices** (verified Nov 29, 2025):
+| Serial Number | Model | Manufacturer | Last Seen |
+|---------------|-------|--------------|-----------|
+| CP2144TE03324 | 844E-1 | Calix | 2025-11-28 10:42 |
+| CXNK01CB5D4E | 854G-1 | Calix | 2025-11-28 06:17 |
+| CXNK01D73C26 | 844G-1 | Calix | 2025-11-27 08:23 |
+| CXNK022C9D84 | GS4220E | Calix | 2025-11-27 08:13 |
+| 80AB4D30B35C | Beacon 6 | Nokia | 2025-11-27 16:58 |
+| 0C7C28BD4CB4 | Beacon 6 | Nokia | 2025-11-27 17:04 |
+| 0C7C2889A4A0 | Beacon 6 | Nokia | 2025-11-27 17:07 |
+| S518072009 | SR505N | Sagemcom | 2025-11-27 16:36 |
+| S515081011 | SR515ac | Sagemcom | 2025-11-28 06:03 |
+
+**Online Devices**: 5 devices actively connected
+- CXNK0083217F (Calix 844E-1) - Used for speed test and WiFi testing
+
+---
+
+### Calix TR-181 WiFi Parameter Structure
+
+**Key WiFi Parameters** (discovered from CXNK0083217F):
+```
+Device.WiFi.Radio.1.Enable = true (2.4GHz radio)
+Device.WiFi.Radio.2.Enable = true (5GHz radio)
+Device.WiFi.SSID.1.Enable = true (Primary 2.4GHz)
+Device.WiFi.SSID.2.Enable = true (Primary 5GHz)
+Device.WiFi.SSID.3.Enable = false (Guest 2.4GHz)
+Device.WiFi.SSID.4.Enable = false (Guest 5GHz)
+Device.WiFi.AccessPoint.1.Security.KeyPassphrase = <password>
+Device.WiFi.AccessPoint.1.Security.ModeEnabled = WPA2-Personal
+```
+
+**SSID Mapping**:
+- SSID 1 → Radio 1 (2.4GHz) - Main network
+- SSID 2 → Radio 2 (5GHz) - Main network
+- SSID 3 → Radio 1 (2.4GHz) - Guest network
+- SSID 4 → Radio 2 (5GHz) - Guest network
+- SSID 5-8 → Additional SSIDs (typically disabled)
+
+**Calix-Specific Vendor Parameters**:
+- `X_000631_KeyPassphrase` - WiFi password in clear text (READ-ONLY)
+- `X_000631_OperatingChannelBandwidth` - Channel bandwidth setting
+- `X_000631_AirtimeFairness` - Legacy feature, should be disabled for better performance
+- `X_000631_MulticastForwardEnable` - Legacy feature, should be disabled
+
+---
+
+### Calix TR-098 WiFi Parameter Structure
+
+**Instance Mapping** (InternetGatewayDevice.LANDevice.1.WLANConfiguration.{i}):
+
+| Instance | Band | Network Type | Description |
+|----------|------|--------------|-------------|
+| 1 | 2.4GHz | Primary | Band-steered main network |
+| 2 | 2.4GHz | Guest | Guest network with client isolation |
+| 3 | 2.4GHz | Dedicated | 2.4GHz-only SSID (`{ssid}-2.4GHz`) |
+| 4-8 | 2.4GHz | Additional | Typically disabled |
+| 9 | 5GHz | Primary | Band-steered main network |
+| 10 | 5GHz | Guest | Guest network with client isolation |
+| 11 | 5GHz | Additional | Typically disabled |
+| 12 | 5GHz | Dedicated | 5GHz-only SSID (`{ssid}-5GHz`) |
+| 13-16 | 5GHz | Additional | Typically disabled |
+
+**Key Parameters per Instance**:
+```
+{prefix}.{i}.RadioEnabled = 1/0 (master switch for radio)
+{prefix}.{i}.Enable = 1/0 (enable this SSID)
+{prefix}.{i}.SSID = "NetworkName"
+{prefix}.{i}.SSIDAdvertisementEnabled = 1/0 (broadcast SSID)
+{prefix}.{i}.BeaconType = "WPAand11i" (WPA/WPA2)
+{prefix}.{i}.PreSharedKey.1.KeyPassphrase = "password" (WRITE)
+{prefix}.{i}.PreSharedKey.1.X_000631_KeyPassphrase = "password" (READ-ONLY)
+{prefix}.{i}.X_000631_IntraSsidIsolation = 1/0 (client isolation for guest)
+```
+
+**Standard WiFi Setup Creates**:
+1. **Primary Network** - Same SSID on instances 1 & 9 (band-steered)
+2. **Dedicated 2.4GHz** - Instance 3 with `{ssid}-2.4GHz`
+3. **Dedicated 5GHz** - Instance 12 with `{ssid}-5GHz`
+4. **Guest Network** - Instances 2 & 10 with `{ssid}-Guest` (if enabled)
+
+**Performance Optimizations Applied**:
+- `X_000631_AirtimeFairness = false` (disabled on primary)
+- `X_000631_MulticastForwardEnable = false` (disabled on primary)
+- `X_000631_IntraSsidIsolation = true` (enabled on guest for security)
 
 ---

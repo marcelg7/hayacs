@@ -202,10 +202,14 @@ function taskManager(deviceId) {
                             this.dispatchedTasks = new Set();
                         }
                         if (!this.dispatchedTasks.has(task.id)) {
-                            // Check if it's a recently completed task (within last 10 seconds)
-                            const isRecent = task.elapsed <= 10 ||
-                                (task.completed_at && (Date.now() - new Date(task.completed_at).getTime()) < 10000);
+                            // Check if it's a recently completed task (within last 30 seconds for WiFi tasks)
+                            const taskAge = task.completed_at ? (Date.now() - new Date(task.completed_at).getTime()) / 1000 : task.elapsed;
+                            const isWiFiTask = task.description && (task.description.includes('WiFi:') || task.description.includes('wifi'));
+                            const maxAge = isWiFiTask ? 30 : 10; // Give WiFi tasks more time to trigger refresh
+                            const isRecent = taskAge <= maxAge;
+
                             if (isRecent && task.status === 'completed') {
+                                console.log('Processing recent task:', task.id, task.description, 'age:', taskAge, 'maxAge:', maxAge);
                                 this.checkAndDispatchTaskEvents(task);
                                 this.dispatchedTasks.add(task.id);
                             }
@@ -314,6 +318,18 @@ function taskManager(deviceId) {
             if (isQueryTask) {
                 console.log('Dispatching query-completed event for task:', task.id, task.description);
                 window.dispatchEvent(new CustomEvent('query-completed', {
+                    detail: { taskId: task.id, description: task.description }
+                }));
+            }
+
+            // Check for WiFi configuration refresh task - refresh page to show updated radio status
+            // Trigger on: WiFi: Refresh (the refresh task) or WiFi: Configure (set_parameter_values when config completes)
+            const isWiFiRefreshTask = task.description.includes('WiFi: Refresh');
+            const isWiFiConfigTask = task.description.includes('WiFi: Configure') && task.task_type === 'set_parameter_values';
+
+            if (isWiFiRefreshTask || isWiFiConfigTask) {
+                console.log('WiFi task completed - dispatching wifi-refresh-completed event for task:', task.id, task.description, task.task_type);
+                window.dispatchEvent(new CustomEvent('wifi-refresh-completed', {
                     detail: { taskId: task.id, description: task.description }
                 }));
             }

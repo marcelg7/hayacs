@@ -11,8 +11,13 @@
             stripos($device->manufacturer ?? '', 'Alcatel') !== false ||
             stripos($device->manufacturer ?? '', 'ALCL') !== false;
 
-        // Show Standard WiFi Setup for TR-181 devices OR TR-098 Nokia devices
-        $showStandardWifiSetup = $isDevice2 || ($dataModel === 'TR-098' && $isNokia);
+        // Detect Calix devices - they expose passwords in clear text via X_000631_KeyPassphrase
+        $calixOuis = ['D0768F', '00236A', '0021D8', '50C7BF', '487746', '000631', 'CCBE59', '60DB98'];
+        $isCalix = in_array(strtoupper($device->oui ?? ''), $calixOuis) ||
+            strtolower($device->manufacturer ?? '') === 'calix';
+
+        // Show Standard WiFi Setup for TR-181 devices, TR-098 Nokia devices, OR TR-098 Calix devices
+        $showStandardWifiSetup = $isDevice2 || ($dataModel === 'TR-098' && ($isNokia || $isCalix));
 
         $wlanConfigs = [];
         $wifi24Ghz = [];
@@ -386,11 +391,11 @@
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-4 pt-4 border-t border-gray-200 dark:border-{{ $colors['border'] }}">
                         <div>
                             <span class="text-gray-500 dark:text-{{ $colors['text-muted'] }}">2.4GHz Dedicated:</span>
-                            <p class="font-mono text-gray-900 dark:text-{{ $colors['text'] }}" x-text="currentConfig.dedicated_24ghz_enabled ? (currentConfig.ssid + '-2.4GHz') : 'Disabled'"></p>
+                            <p class="font-mono text-gray-900 dark:text-{{ $colors['text'] }}" x-text="currentConfig.dedicated_24ghz_enabled ? (currentConfig.dedicated_24ghz_ssid || currentConfig.ssid + '-2.4GHz') : 'Disabled'"></p>
                         </div>
                         <div>
                             <span class="text-gray-500 dark:text-{{ $colors['text-muted'] }}">5GHz Dedicated:</span>
-                            <p class="font-mono text-gray-900 dark:text-{{ $colors['text'] }}" x-text="currentConfig.dedicated_5ghz_enabled ? (currentConfig.ssid + '-5GHz') : 'Disabled'"></p>
+                            <p class="font-mono text-gray-900 dark:text-{{ $colors['text'] }}" x-text="currentConfig.dedicated_5ghz_enabled ? (currentConfig.dedicated_5ghz_ssid || currentConfig.ssid + '-5GHz') : 'Disabled'"></p>
                         </div>
                     </div>
                 </div>
@@ -565,7 +570,7 @@
         <div class="border-t border-gray-200 dark:border-{{ $colors['border'] }} p-4">
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             @foreach($wifi24Ghz as $config)
-                @include('device-tabs.partials.wifi-card-tr181', ['config' => $config, 'band' => '2.4GHz', 'device' => $device, 'colors' => $colors, 'isDevice2' => $isDevice2])
+                @include('device-tabs.partials.wifi-card-tr181', ['config' => $config, 'band' => '2.4GHz', 'device' => $device, 'colors' => $colors, 'isDevice2' => $isDevice2, 'isCalix' => $isCalix])
             @endforeach
             </div>
         </div>
@@ -637,7 +642,7 @@
         <div class="border-t border-gray-200 dark:border-{{ $colors['border'] }} p-4">
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             @foreach($wifi5Ghz as $config)
-                @include('device-tabs.partials.wifi-card-tr181', ['config' => $config, 'band' => '5GHz', 'device' => $device, 'colors' => $colors, 'isDevice2' => $isDevice2])
+                @include('device-tabs.partials.wifi-card-tr181', ['config' => $config, 'band' => '5GHz', 'device' => $device, 'colors' => $colors, 'isDevice2' => $isDevice2, 'isCalix' => $isCalix])
             @endforeach
             </div>
         </div>

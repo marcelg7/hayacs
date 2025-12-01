@@ -1734,8 +1734,8 @@ class DeviceController extends Controller
             'parameters' => $enableParams,
         ]);
 
-        // Set the remote GUI enabled flag
-        $device->remote_gui_enabled_at = now();
+        // Set the remote support expiry time (1 hour from now)
+        $device->remote_support_expires_at = now()->addHour();
         $device->save();
 
         // Trigger connection request
@@ -2357,10 +2357,19 @@ class DeviceController extends Controller
             strtoupper($device->oui) === 'E82C6D';
 
         if ($isCalix) {
-            // Calix uses WANDevice.3.WANConnectionDevice.1.WANIPConnection.2
-            $wanDeviceIdx = 3;
-            $wanConnDeviceIdx = 1;
-            $wanConnIdx = 2;
+            // Calix: Find the active WAN connection dynamically
+            // Different Calix models use different WANIPConnection indices (e.g., 2, 14)
+            $activeWan = $this->findActiveWanConnection($device);
+            if ($activeWan) {
+                $wanDeviceIdx = $activeWan['wanDevice'];
+                $wanConnDeviceIdx = $activeWan['wanConnDevice'];
+                $wanConnIdx = $activeWan['wanConn'];
+            } else {
+                // Fallback to common Calix path
+                $wanDeviceIdx = 3;
+                $wanConnDeviceIdx = 1;
+                $wanConnIdx = 2;
+            }
         } elseif ($isSmartRG) {
             // SmartRG: Find the active WAN connection dynamically
             // Look for WANIPConnection with ConnectionStatus=Connected and valid ExternalIPAddress
@@ -2666,10 +2675,19 @@ class DeviceController extends Controller
             strtoupper($device->oui) === 'E82C6D';
 
         if ($isCalix) {
-            // Calix uses WANDevice.3.WANConnectionDevice.1.WANIPConnection.2
-            $wanDeviceIdx = 3;
-            $wanConnDeviceIdx = 1;
-            $wanConnIdx = 2;
+            // Calix: Find the active WAN connection dynamically
+            // Different Calix models use different WANIPConnection indices (e.g., 2, 14)
+            $activeWan = $this->findActiveWanConnection($device);
+            if ($activeWan) {
+                $wanDeviceIdx = $activeWan['wanDevice'];
+                $wanConnDeviceIdx = $activeWan['wanConnDevice'];
+                $wanConnIdx = $activeWan['wanConn'];
+            } else {
+                // Fallback to common Calix path
+                $wanDeviceIdx = 3;
+                $wanConnDeviceIdx = 1;
+                $wanConnIdx = 2;
+            }
         } elseif ($isSmartRG) {
             // SmartRG: Find the active WAN connection dynamically
             // Look for WANIPConnection with ConnectionStatus=Connected and valid ExternalIPAddress
@@ -2737,7 +2755,7 @@ class DeviceController extends Controller
             // Build parameters for the new port mapping
             // Use {instance} placeholder for devices that use AddObject (TR-181, SmartRG, Nokia)
             // The placeholder will be replaced with the actual instance number after AddObject returns
-            $instancePlaceholder = ($isDevice2 || $isSmartRG || $isNokia) ? '{instance}' : $instance;
+            $instancePlaceholder = ($isDevice2 || $isSmartRG || $isNokia || $isCalix) ? '{instance}' : $instance;
 
             // TR-181 uses different parameter names than TR-098
             // TR-181: Enable, Description, Protocol
@@ -2817,9 +2835,9 @@ class DeviceController extends Controller
                 ];
             }
 
-            // TR-181 devices, SmartRG, and Nokia require AddObject first to create the instance
+            // TR-181 devices, SmartRG, Nokia, and Calix require AddObject first to create the instance
             // The device allocates the instance number, then we set parameters
-            if ($isDevice2 || $isSmartRG || $isNokia) {
+            if ($isDevice2 || $isSmartRG || $isNokia || $isCalix) {
                 $task = Task::create([
                     'device_id' => $device->id,
                     'task_type' => 'add_object',
@@ -2843,8 +2861,8 @@ class DeviceController extends Controller
 
             $tasks[] = $task;
 
-            // Increment instance for TR-098 non-SmartRG/non-Nokia devices when creating both TCP and UDP
-            if (!$isDevice2 && !$isSmartRG && !$isNokia) {
+            // Increment instance for TR-098 devices that don't use AddObject when creating both TCP and UDP
+            if (!$isDevice2 && !$isSmartRG && !$isNokia && !$isCalix) {
                 $instance++;
             }
         }
@@ -2856,7 +2874,7 @@ class DeviceController extends Controller
             'task' => $tasks[0], // Return first task for backwards compatibility
             'tasks' => $tasks,
             'message' => count($tasks) > 1 ? 'Port mapping creation initiated (TCP and UDP)' : 'Port mapping creation initiated',
-            'instance' => ($isDevice2 || $isSmartRG || $isNokia) ? 'pending' : ($instance - count($tasks) + 1),
+            'instance' => ($isDevice2 || $isSmartRG || $isNokia || $isCalix) ? 'pending' : ($instance - count($tasks) + 1),
         ]);
     }
 
@@ -2879,10 +2897,19 @@ class DeviceController extends Controller
             strtoupper($device->oui) === 'E82C6D';
 
         if ($isCalix) {
-            // Calix uses WANDevice.3.WANConnectionDevice.1.WANIPConnection.2
-            $wanDeviceIdx = 3;
-            $wanConnDeviceIdx = 1;
-            $wanConnIdx = 2;
+            // Calix: Find the active WAN connection dynamically
+            // Different Calix models use different WANIPConnection indices (e.g., 2, 14)
+            $activeWan = $this->findActiveWanConnection($device);
+            if ($activeWan) {
+                $wanDeviceIdx = $activeWan['wanDevice'];
+                $wanConnDeviceIdx = $activeWan['wanConnDevice'];
+                $wanConnIdx = $activeWan['wanConn'];
+            } else {
+                // Fallback to common Calix path
+                $wanDeviceIdx = 3;
+                $wanConnDeviceIdx = 1;
+                $wanConnIdx = 2;
+            }
         } elseif ($isSmartRG) {
             // SmartRG: Find the active WAN connection dynamically
             // Look for WANIPConnection with ConnectionStatus=Connected and valid ExternalIPAddress
@@ -3131,7 +3158,7 @@ class DeviceController extends Controller
     }
 
     /**
-     * Start TR-143 SpeedTest (Download and Upload diagnostics)
+     * Start SpeedTest - uses TR-143 diagnostics where available, falls back to Download RPC
      */
     public function startSpeedTest(Request $request, string $id): JsonResponse
     {
@@ -3144,6 +3171,18 @@ class DeviceController extends Controller
         ]);
 
         $testType = $validated['test_type'];
+
+        // Check if device supports TR-143 diagnostics
+        // Calix devices don't expose DownloadDiagnostics/UploadDiagnostics via TR-069
+        // Known Calix OUIs: D0768F, 00236A, 0021D8, 50C7BF, 487746
+        $isCalix = strtolower($device->manufacturer ?? '') === 'calix' ||
+            in_array(strtoupper($device->oui ?? ''), ['D0768F', '00236A', '0021D8', '50C7BF', '487746']);
+
+        // Use Download RPC method for Calix (no TR-143 support)
+        if ($isCalix) {
+            return $this->startDownloadRpcSpeedTest($device, $testType);
+        }
+
         // Use Hay's TR-143 speedtest server
         $downloadUrl = $validated['download_url'] ?? 'http://tr143.hay.net/download.zip';
         $uploadUrl = $validated['upload_url'] ?? 'http://tr143.hay.net/handler.php';
@@ -3392,11 +3431,72 @@ class DeviceController extends Controller
     }
 
     /**
+     * Start speed test using Download RPC for devices without TR-143 support (e.g., Calix)
+     * Download: Downloads a test file to the device and measures transfer time.
+     * Note: Calix devices do not support Upload RPC, so only download testing is available.
+     */
+    private function startDownloadRpcSpeedTest(Device $device, string $testType): JsonResponse
+    {
+        // Download RPC speed test - uses a 25MB test file for good timing resolution
+        $fileSize = 26214400; // 25MB
+        $downloadUrl = 'http://hayacs.hay.net/device-config/25MB.bin';
+
+        $tasks = [];
+
+        if ($testType === 'download' || $testType === 'both') {
+            $task = Task::create([
+                'device_id' => $device->id,
+                'task_type' => 'download',
+                'description' => 'Speed test - 25MB download',
+                'status' => 'pending',
+                'parameters' => [
+                    'url' => $downloadUrl,
+                    'file_type' => '3 Vendor Log File',
+                    'file_size' => $fileSize,
+                    'username' => '',
+                    'password' => '',
+                    'description' => 'Speed test - 25MB download',
+                ],
+            ]);
+            $tasks[] = $task;
+        }
+
+        // Note: Calix devices don't support Upload RPC - they ignore the command
+        // Upload speed testing is not available for these devices
+        if ($testType === 'upload') {
+            return response()->json([
+                'error' => 'Upload speed test not supported for Calix devices',
+                'message' => 'Calix devices do not support the TR-069 Upload RPC. Only download speed testing is available.',
+            ], 400);
+        }
+
+        // Trigger connection request
+        $this->triggerConnectionRequestForTask($device);
+
+        return response()->json([
+            'tasks' => $tasks,
+            'message' => 'Speed test initiated (Download RPC method)',
+            'test_type' => 'download',
+            'method' => 'download_rpc',
+            'note' => 'Calix devices only support download speed testing (no Upload RPC support)',
+        ]);
+    }
+
+    /**
      * Get SpeedTest status and results
      */
     public function getSpeedTestStatus(string $id): JsonResponse
     {
         $device = Device::findOrFail($id);
+
+        // Check if this is a Calix device (uses Download RPC method)
+        // Known Calix OUIs: D0768F, 00236A, 0021D8, 50C7BF, 487746
+        $isCalix = strtolower($device->manufacturer ?? '') === 'calix' ||
+            in_array(strtoupper($device->oui ?? ''), ['D0768F', '00236A', '0021D8', '50C7BF', '487746']);
+
+        if ($isCalix) {
+            return $this->getDownloadRpcSpeedTestStatus($device);
+        }
 
         $dataModel = $device->getDataModel();
         $isDevice2 = $dataModel === 'TR-181';
@@ -3564,6 +3664,116 @@ class DeviceController extends Controller
                 'test_bytes_sent' => $uploadParams['TestBytesSent'] ?? null,
                 'total_bytes_sent' => $uploadParams['TotalBytesSent'] ?? null,
                 'speed_bps' => $uploadSpeedBps,
+            ],
+        ]);
+    }
+
+    /**
+     * Get Download RPC speed test status for Calix devices
+     */
+    private function getDownloadRpcSpeedTestStatus(Device $device): JsonResponse
+    {
+        // Look for the most recent download task with "Speed test" in the description
+        $downloadTask = $device->tasks()
+            ->where('task_type', 'download')
+            ->where('description', 'LIKE', '%Speed test%')
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if (!$downloadTask) {
+            return response()->json([
+                'state' => null,
+                'completed_at' => null,
+                'results' => [
+                    'download' => null,
+                    'upload' => null,
+                ],
+                'method' => 'download_rpc',
+            ]);
+        }
+
+        // Determine download state and speed
+        $downloadState = null;
+        $downloadSpeedBps = null;
+        $downloadSpeedMbps = null;
+        $downloadCompletedAt = null;
+
+        $downloadState = match ($downloadTask->status) {
+            'pending', 'sent' => 'InProgress',
+            'completed' => 'Completed',
+            'failed' => 'Error',
+            default => null,
+        };
+
+        if ($downloadTask->status === 'completed' && isset($downloadTask->result['speed_mbps'])) {
+            $downloadSpeedMbps = $downloadTask->result['speed_mbps'];
+            $downloadSpeedBps = $downloadSpeedMbps * 1000000;
+            $downloadCompletedAt = $downloadTask->completed_at;
+        }
+
+        // Determine overall state (download only for Calix - no upload support)
+        $state = match ($downloadState) {
+            'InProgress' => 'InProgress',
+            'Completed' => 'Complete',
+            'Error' => 'Error',
+            default => null,
+        };
+
+        $completedAt = $downloadCompletedAt;
+
+        // Save to SpeedTestResult history if test is complete and not already saved
+        if ($state === 'Complete' && $downloadSpeedMbps) {
+            $existingResult = SpeedTestResult::where('device_id', $device->id)
+                ->where('created_at', '>=', $downloadTask->created_at)
+                ->where('test_type', 'download_rpc')
+                ->first();
+
+            if (!$existingResult) {
+                SpeedTestResult::create([
+                    'device_id' => $device->id,
+                    'download_speed_mbps' => $downloadSpeedMbps,
+                    'upload_speed_mbps' => null, // Calix doesn't support Upload RPC
+                    'download_bytes' => $downloadTask->parameters['file_size'] ?? null,
+                    'upload_bytes' => null,
+                    'download_duration_ms' => isset($downloadTask->result['transfer_duration_seconds'])
+                        ? $downloadTask->result['transfer_duration_seconds'] * 1000 : null,
+                    'upload_duration_ms' => null,
+                    'download_state' => $downloadState,
+                    'upload_state' => null,
+                    'download_start_time' => isset($downloadTask->result['start_time'])
+                        ? \Carbon\Carbon::parse($downloadTask->result['start_time']) : null,
+                    'download_end_time' => isset($downloadTask->result['complete_time'])
+                        ? \Carbon\Carbon::parse($downloadTask->result['complete_time']) : null,
+                    'upload_start_time' => null,
+                    'upload_end_time' => null,
+                    'test_type' => 'download_rpc',
+                ]);
+            }
+        }
+
+        return response()->json([
+            'state' => $state,
+            'completed_at' => $completedAt?->toIso8601String(),
+            'results' => [
+                'download' => $downloadSpeedBps,
+                'upload' => null, // Calix doesn't support Upload RPC
+            ],
+            'method' => 'download_rpc',
+            'download_task_id' => $downloadTask->id,
+            'note' => 'Calix devices only support download speed testing (no Upload RPC support)',
+            // Include detailed info from task results
+            'download' => [
+                'state' => $downloadState,
+                'start_time' => $downloadTask->result['start_time'] ?? null,
+                'end_time' => $downloadTask->result['complete_time'] ?? null,
+                'file_size' => $downloadTask->parameters['file_size'] ?? null,
+                'transfer_duration_seconds' => $downloadTask->result['transfer_duration_seconds'] ?? null,
+                'speed_mbps' => $downloadSpeedMbps,
+                'speed_bps' => $downloadSpeedBps,
+            ],
+            'upload' => [
+                'state' => null,
+                'note' => 'Not supported on Calix devices',
             ],
         ]);
     }
@@ -4141,8 +4351,64 @@ class DeviceController extends Controller
             stripos($device->manufacturer ?? '', 'Alcatel') !== false ||
             stripos($device->manufacturer ?? '', 'ALCL') !== false;
 
+        // Detect Calix devices
+        $calixOuis = ['D0768F', '00236A', '0021D8', '50C7BF', '487746', '000631', 'CCBE59', '60DB98'];
+        $isCalix = in_array(strtoupper($device->oui ?? ''), $calixOuis) ||
+            strtolower($device->manufacturer ?? '') === 'calix';
+
         // Get stored WiFi credentials (passwords not readable from device)
         $storedCredentials = DeviceWifiCredential::where('device_id', $device->id)->first();
+
+        // Handle TR-098 Calix devices
+        if ($dataModel === 'TR-098' && $isCalix) {
+            // Calix TR-098 uses InternetGatewayDevice.LANDevice.1.WLANConfiguration.{i}
+            // Instance 1 = Primary 2.4GHz (band-steered), Instance 9 = Primary 5GHz (band-steered)
+            // Instance 2 = Guest 2.4GHz, Instance 10 = Guest 5GHz
+            // Instance 3 = Dedicated 2.4GHz only, Instance 12 = Dedicated 5GHz only
+            $mainSsid24 = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID')->first();
+            $mainSsid5 = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.SSID')->first();
+
+            // Check if guest networks are enabled
+            $guestEnabled24 = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.Enable')->first();
+            $guestEnabled5 = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.10.Enable')->first();
+            $guestEnabled = ($guestEnabled24 && $guestEnabled24->value === '1') ||
+                            ($guestEnabled5 && $guestEnabled5->value === '1');
+
+            // Get guest SSID
+            $guestSsid = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.SSID')->first();
+
+            // Check if dedicated networks are enabled (instance 3 for 2.4GHz, instance 12 for 5GHz)
+            $dedicated24Enabled = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.3.Enable')->first();
+            $dedicated5Enabled = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.12.Enable')->first();
+
+            // Get dedicated SSIDs
+            $dedicated24Ssid = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.3.SSID')->first();
+            $dedicated5Ssid = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.12.SSID')->first();
+
+            // Calix exposes passwords in clear text via X_000631_KeyPassphrase
+            $mainPassword24 = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.X_000631_KeyPassphrase')->first();
+            $guestPassword = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.PreSharedKey.1.X_000631_KeyPassphrase')->first();
+
+            return response()->json([
+                'ssid' => $mainSsid24?->value ?? '',
+                'ssid_5ghz' => $mainSsid5?->value ?? '',
+                // Calix provides password in clear text, fall back to stored credentials
+                'password' => $mainPassword24?->value ?? $storedCredentials?->main_password ?? '',
+                'guest_enabled' => $guestEnabled,
+                'guest_ssid' => $guestSsid?->value ?? '',
+                'guest_password' => $guestPassword?->value ?? $storedCredentials?->guest_password ?? '',
+                // Calix dedicated networks: instance 3 = 2.4GHz, instance 12 = 5GHz
+                'dedicated_24ghz_enabled' => $dedicated24Enabled && $dedicated24Enabled->value === '1',
+                'dedicated_24ghz_ssid' => $dedicated24Ssid?->value ?? '',
+                'dedicated_5ghz_enabled' => $dedicated5Enabled && $dedicated5Enabled->value === '1',
+                'dedicated_5ghz_ssid' => $dedicated5Ssid?->value ?? '',
+                'data_model' => $dataModel,
+                'device_type' => 'Calix',
+                'credentials_stored' => $storedCredentials !== null,
+                'credentials_set_by' => $storedCredentials?->set_by,
+                'credentials_updated_at' => $storedCredentials?->updated_at?->toIso8601String(),
+            ]);
+        }
 
         // Handle TR-098 Nokia Beacon G6 devices
         if ($dataModel === 'TR-098' && $isNokia) {
@@ -4241,10 +4507,15 @@ class DeviceController extends Controller
             stripos($device->manufacturer ?? '', 'Alcatel') !== false ||
             stripos($device->manufacturer ?? '', 'ALCL') !== false;
 
+        // Detect Calix devices
+        $calixOuis = ['D0768F', '00236A', '0021D8', '50C7BF', '487746', '000631', 'CCBE59', '60DB98'];
+        $isCalix = in_array(strtoupper($device->oui ?? ''), $calixOuis) ||
+            strtolower($device->manufacturer ?? '') === 'calix';
+
         // Check for supported device types
-        if ($dataModel !== 'TR-181' && !($dataModel === 'TR-098' && $isNokia)) {
+        if ($dataModel !== 'TR-181' && !($dataModel === 'TR-098' && ($isNokia || $isCalix))) {
             return response()->json([
-                'error' => 'Standard WiFi configuration is only supported for TR-181 devices and TR-098 Nokia Beacon G6',
+                'error' => 'Standard WiFi configuration is only supported for TR-181 devices, TR-098 Nokia Beacon G6, and TR-098 Calix devices',
                 'data_model' => $dataModel,
             ], 400);
         }
@@ -4277,6 +4548,11 @@ class DeviceController extends Controller
         // Handle TR-098 Nokia Beacon G6 devices
         if ($dataModel === 'TR-098' && $isNokia) {
             return $this->applyTr098NokiaWifiConfig($device, $ssid, $password, $enableGuest, $guestPassword, $validated);
+        }
+
+        // Handle TR-098 Calix devices
+        if ($dataModel === 'TR-098' && $isCalix) {
+            return $this->applyTr098CalixWifiConfig($device, $ssid, $password, $enableGuest, $guestPassword, $validated);
         }
 
         // Use WPA3-Personal-Transition for better security while maintaining backwards compatibility
@@ -4634,6 +4910,199 @@ class DeviceController extends Controller
     }
 
     /**
+     * Apply WiFi configuration for TR-098 Calix devices
+     * TR-098 Calix uses InternetGatewayDevice.LANDevice.1.WLANConfiguration.{i} structure
+     * Instance mapping:
+     *   1 = Primary 2.4GHz, 2 = Guest 2.4GHz, 3-8 = Operator reserved
+     *   9 = Primary 5GHz, 10 = Guest 5GHz, 11-16 = Operator/IPTV/Backhaul
+     */
+    private function applyTr098CalixWifiConfig(
+        Device $device,
+        string $ssid,
+        string $password,
+        bool $enableGuest,
+        string $guestPassword,
+        array $validated
+    ): JsonResponse {
+        // TR-098 parameter path prefix
+        $prefix = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration';
+
+        // Calix uses 11i for WPA2-only, WPAand11i for WPA/WPA2 mixed mode
+        // Using WPAand11i for maximum compatibility
+        $beaconType = 'WPAand11i';
+
+        // Calix uses the STANDARD KeyPassphrase for SETTING passwords
+        // Note: X_000631_KeyPassphrase is READ-ONLY (returns the actual password in clear text)
+        // For WRITING, we must use the standard PreSharedKey.1.KeyPassphrase parameter
+        $passwordParam = 'PreSharedKey.1.KeyPassphrase';
+
+        // Build network configurations grouped by radio
+        // Calix structure: 1-8 = 2.4GHz radio, 9-16 = 5GHz radio
+        // RadioEnabled is the master switch that controls whether the radio is actually on
+        // Instance mapping:
+        //   1 = Primary 2.4GHz (band-steered), 9 = Primary 5GHz (band-steered)
+        //   2 = Guest 2.4GHz, 10 = Guest 5GHz
+        //   3 = Dedicated 2.4GHz only, 12 = Dedicated 5GHz only
+        $networks = [
+            'radio_24ghz' => [
+                'description' => "WiFi: Configure 2.4GHz networks (Primary + Guest + Dedicated)",
+                'params' => [
+                    // Instance 1 - Primary 2.4GHz (band-steered)
+                    "{$prefix}.1.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.1.SSID" => $ssid,
+                    "{$prefix}.1.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.1.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.1.BeaconType" => $beaconType,
+                    "{$prefix}.1.{$passwordParam}" => $password,
+                    // Disable legacy features that hurt performance on modern networks
+                    "{$prefix}.1.X_000631_AirtimeFairness" => ['value' => false, 'type' => 'xsd:boolean'],
+                    "{$prefix}.1.X_000631_MulticastForwardEnable" => ['value' => false, 'type' => 'xsd:boolean'],
+                    // Instance 2 - Guest 2.4GHz
+                    "{$prefix}.2.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.2.SSID" => $ssid . '-Guest',
+                    "{$prefix}.2.Enable" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                    "{$prefix}.2.SSIDAdvertisementEnabled" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                    "{$prefix}.2.BeaconType" => $beaconType,
+                    "{$prefix}.2.{$passwordParam}" => $guestPassword,
+                    // Enable client isolation on guest network
+                    "{$prefix}.2.X_000631_IntraSsidIsolation" => ['value' => true, 'type' => 'xsd:boolean'],
+                    // Instance 3 - Dedicated 2.4GHz only
+                    "{$prefix}.3.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.3.SSID" => $ssid . '-2.4GHz',
+                    "{$prefix}.3.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.3.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.3.BeaconType" => $beaconType,
+                    "{$prefix}.3.{$passwordParam}" => $password,
+                ],
+            ],
+            'radio_5ghz' => [
+                'description' => "WiFi: Configure 5GHz networks (Primary + Guest + Dedicated)",
+                'params' => [
+                    // Instance 9 - Primary 5GHz (band-steered)
+                    "{$prefix}.9.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.9.SSID" => $ssid,
+                    "{$prefix}.9.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.9.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.9.BeaconType" => $beaconType,
+                    "{$prefix}.9.{$passwordParam}" => $password,
+                    // Instance 10 - Guest 5GHz
+                    "{$prefix}.10.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.10.SSID" => $ssid . '-Guest',
+                    "{$prefix}.10.Enable" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                    "{$prefix}.10.SSIDAdvertisementEnabled" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                    "{$prefix}.10.BeaconType" => $beaconType,
+                    "{$prefix}.10.{$passwordParam}" => $guestPassword,
+                    // Enable client isolation on guest network
+                    "{$prefix}.10.X_000631_IntraSsidIsolation" => ['value' => true, 'type' => 'xsd:boolean'],
+                    // Instance 12 - Dedicated 5GHz only
+                    "{$prefix}.12.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.12.SSID" => $ssid . '-5GHz',
+                    "{$prefix}.12.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.12.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+                    "{$prefix}.12.BeaconType" => $beaconType,
+                    "{$prefix}.12.{$passwordParam}" => $password,
+                ],
+            ],
+        ];
+
+        $tasks = [];
+        $isOneTaskPerSession = $this->isOneTaskPerSessionDevice($device);
+
+        // Create separate tasks for each radio to minimize disruption
+        $isFirstTask = true;
+        foreach ($networks as $networkKey => $network) {
+            $taskData = [
+                'device_id' => $device->id,
+                'task_type' => 'set_parameter_values',
+                'description' => $network['description'],
+                'parameters' => $network['params'],
+                'status' => 'pending',
+            ];
+
+            // For one-task-per-session devices, mark subsequent tasks to wait
+            if ($isOneTaskPerSession && !$isFirstTask) {
+                $taskData['progress_info'] = ['wait_for_next_session' => true];
+            }
+
+            $task = Task::create($taskData);
+            $tasks[] = $task;
+            $isFirstTask = false;
+        }
+
+        // Queue a refresh task to update the UI after WiFi config is applied
+        // This reads back the WiFi parameters so the GUI shows the new settings
+        // Note: X_000631_KeyPassphrase is the READ-ONLY parameter that exposes passwords in clear text
+        $refreshParams = [
+            // Primary 2.4GHz (instance 1)
+            "{$prefix}.1.RadioEnabled", "{$prefix}.1.Status", "{$prefix}.1.SSID", "{$prefix}.1.Enable",
+            "{$prefix}.1.X_000631_AirtimeFairness", "{$prefix}.1.X_000631_MulticastForwardEnable",
+            "{$prefix}.1.PreSharedKey.1.X_000631_KeyPassphrase",
+            // Guest 2.4GHz (instance 2)
+            "{$prefix}.2.RadioEnabled", "{$prefix}.2.Status", "{$prefix}.2.SSID", "{$prefix}.2.Enable",
+            "{$prefix}.2.PreSharedKey.1.X_000631_KeyPassphrase",
+            // Dedicated 2.4GHz (instance 3)
+            "{$prefix}.3.RadioEnabled", "{$prefix}.3.Status", "{$prefix}.3.SSID", "{$prefix}.3.Enable",
+            "{$prefix}.3.PreSharedKey.1.X_000631_KeyPassphrase",
+            // Primary 5GHz (instance 9)
+            "{$prefix}.9.RadioEnabled", "{$prefix}.9.Status", "{$prefix}.9.SSID", "{$prefix}.9.Enable",
+            "{$prefix}.9.PreSharedKey.1.X_000631_KeyPassphrase",
+            // Guest 5GHz (instance 10)
+            "{$prefix}.10.RadioEnabled", "{$prefix}.10.Status", "{$prefix}.10.SSID", "{$prefix}.10.Enable",
+            "{$prefix}.10.PreSharedKey.1.X_000631_KeyPassphrase",
+            // Dedicated 5GHz (instance 12)
+            "{$prefix}.12.RadioEnabled", "{$prefix}.12.Status", "{$prefix}.12.SSID", "{$prefix}.12.Enable",
+            "{$prefix}.12.PreSharedKey.1.X_000631_KeyPassphrase",
+        ];
+        $refreshTask = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'get_parameter_values',
+            'description' => 'WiFi: Refresh parameters after configuration',
+            'parameters' => ['names' => $refreshParams],
+            'status' => 'pending',
+        ]);
+        $tasks[] = $refreshTask;
+
+        // Trigger connection request
+        $this->connectionRequestService->sendConnectionRequest($device);
+
+        // Store WiFi credentials locally for support team visibility
+        // Calix exposes passwords, but we store them for consistency
+        DeviceWifiCredential::updateOrCreate(
+            ['device_id' => $device->id],
+            [
+                'ssid' => $ssid,
+                'main_password' => $password,
+                'guest_ssid' => $ssid . '-Guest',
+                'guest_password' => $guestPassword,
+                'guest_enabled' => $enableGuest,
+                'set_by' => auth()->user()?->name ?? 'System',
+            ]
+        );
+
+        $response = [
+            'message' => 'Standard WiFi configuration queued (3 tasks: 2.4GHz config, 5GHz config, refresh)',
+            'tasks' => array_map(fn($t) => ['id' => $t->id, 'description' => $t->description], $tasks),
+            'task_count' => count($tasks),
+            'networks_configured' => [
+                'primary' => $ssid . ' (band-steered)',
+                'dedicated_24ghz' => $ssid . '-2.4GHz',
+                'dedicated_5ghz' => $ssid . '-5GHz',
+                'guest' => $enableGuest ? ($ssid . '-Guest') : 'disabled',
+            ],
+            'data_model' => 'TR-098',
+            'device_type' => 'Calix',
+            'note' => 'Calix creates: main band-steered SSID, dedicated 2.4GHz/5GHz SSIDs, and optional guest with client isolation. UI will refresh automatically.',
+        ];
+
+        // Include the generated guest password so user can save it
+        if ($enableGuest && !isset($validated['guest_password'])) {
+            $response['guest_password'] = $guestPassword;
+        }
+
+        return response()->json($response, 201);
+    }
+
+    /**
      * Toggle guest network on/off
      */
     public function toggleGuestNetwork(Request $request, string $id): JsonResponse
@@ -4702,6 +5171,135 @@ class DeviceController extends Controller
         return response()->json([
             'message' => 'Guest network ' . ($enabled ? 'enabled' : 'disabled'),
             'task' => $task,
+        ], 201);
+    }
+
+    // =========================================================================
+    // Remote Support Password Management (Nokia Beacon G6)
+    // =========================================================================
+
+    /**
+     * Get remote support status for a device
+     */
+    public function getRemoteSupportStatus(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        if (!$device->isNokiaBeacon()) {
+            return response()->json([
+                'supported' => false,
+                'message' => 'Remote support password management is only available for Nokia Beacon G6 devices',
+            ]);
+        }
+
+        return response()->json([
+            'supported' => true,
+            'is_active' => $device->isRemoteSupportActive(),
+            'expires_at' => $device->remote_support_expires_at?->toIso8601String(),
+            'time_remaining' => $device->getRemoteSupportTimeRemaining(),
+            'enabled_by' => $device->remoteSupportEnabledBy?->name,
+            'password_suffix' => $device->password_suffix ? '****' . substr($device->password_suffix, -4) : null,
+        ]);
+    }
+
+    /**
+     * Enable remote support - sets password to known support password for 1 hour
+     */
+    public function enableRemoteSupport(Request $request, string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        if (!$device->isNokiaBeacon()) {
+            return response()->json([
+                'error' => 'Remote support password management is only available for Nokia Beacon G6 devices',
+            ], 400);
+        }
+
+        $validated = $request->validate([
+            'duration_minutes' => 'nullable|integer|min:15|max:480', // 15 min to 8 hours
+        ]);
+
+        $durationMinutes = $validated['duration_minutes'] ?? 60;
+        $userId = auth()->id();
+
+        $task = $device->enableRemoteSupport($userId, $durationMinutes);
+
+        if (!$task) {
+            return response()->json([
+                'error' => 'Failed to create password change task',
+            ], 500);
+        }
+
+        // Send connection request to apply immediately
+        $this->connectionRequestService->sendConnectionRequest($device);
+
+        return response()->json([
+            'message' => 'Remote support enabled',
+            'task_id' => $task->id,
+            'expires_at' => $device->fresh()->remote_support_expires_at->toIso8601String(),
+            'duration_minutes' => $durationMinutes,
+            'password' => Device::getSupportPassword(),
+        ], 201);
+    }
+
+    /**
+     * Disable remote support - resets password to device-specific password
+     */
+    public function disableRemoteSupport(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        if (!$device->isNokiaBeacon()) {
+            return response()->json([
+                'error' => 'Remote support password management is only available for Nokia Beacon G6 devices',
+            ], 400);
+        }
+
+        $task = $device->disableRemoteSupport();
+
+        if (!$task) {
+            return response()->json([
+                'error' => 'Failed to create password reset task',
+            ], 500);
+        }
+
+        // Send connection request to apply immediately
+        $this->connectionRequestService->sendConnectionRequest($device);
+
+        return response()->json([
+            'message' => 'Remote support disabled - password will be reset to device-specific value',
+            'task_id' => $task->id,
+        ]);
+    }
+
+    /**
+     * Set the initial device-specific password (for manual provisioning)
+     */
+    public function setInitialPassword(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        if (!$device->isNokiaBeacon()) {
+            return response()->json([
+                'error' => 'Password management is only available for Nokia Beacon G6 devices',
+            ], 400);
+        }
+
+        $task = $device->setInitialPassword();
+
+        if (!$task) {
+            return response()->json([
+                'error' => 'Failed to create password set task',
+            ], 500);
+        }
+
+        // Send connection request to apply immediately
+        $this->connectionRequestService->sendConnectionRequest($device);
+
+        return response()->json([
+            'message' => 'Initial password task created',
+            'task_id' => $task->id,
+            'password_format' => '{SerialNumber}_{RandomSuffix}_stay$away',
         ], 201);
     }
 }

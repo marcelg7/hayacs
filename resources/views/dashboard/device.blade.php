@@ -70,6 +70,27 @@
                 window.location.reload();
             }, 500);
         });
+
+        // Listen for WiFi refresh completion - refresh page to show updated radio status
+        window.addEventListener('wifi-refresh-completed', (event) => {
+            const taskId = event.detail?.taskId;
+            if (!taskId) return;
+
+            // Check if we already refreshed for this task
+            const refreshedKey = `wifiRefreshed_${taskId}`;
+            if (sessionStorage.getItem(refreshedKey)) {
+                console.log('Already refreshed for WiFi task', taskId);
+                return;
+            }
+
+            console.log('WiFi refresh completed, reloading page for task', taskId);
+            sessionStorage.setItem(refreshedKey, 'true');
+
+            // Reload page after a short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+        });
     },
 
     startTaskTracking(message, taskId) {
