@@ -70,13 +70,19 @@ class Task extends Model
     /**
      * Mark task as failed
      */
-    public function markAsFailed(string $error): void
+    public function markAsFailed(string $error, ?array $result = null): void
     {
-        $this->update([
+        $updateData = [
             'status' => 'failed',
             'error' => $error,
             'completed_at' => now(),
-        ]);
+        ];
+
+        if ($result !== null) {
+            $updateData['result'] = $result;
+        }
+
+        $this->update($updateData);
     }
 
     /**

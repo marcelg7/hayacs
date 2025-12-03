@@ -55,6 +55,7 @@
                         <div class="flex-1">
                             <div class="flex items-center space-x-2 mb-1">
                                 <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                <span class="text-xs font-medium text-blue-600 dark:text-blue-400" x-text="'#' + tasks.active.id"></span>
                                 <span class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="tasks.active.description"></span>
                             </div>
                             <div class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
@@ -339,12 +340,16 @@ function taskManager(deviceId) {
             const total = (this.tasks.active ? 1 : 0) + this.tasks.queued_total;
             // Show elapsed time from active task, or from first queued task if no active task
             let elapsed = 0;
+            let taskId = null;
             if (this.tasks.active) {
                 elapsed = this.tasks.active.elapsed;
+                taskId = this.tasks.active.id;
             } else if (this.tasks.queued && this.tasks.queued.length > 0) {
                 elapsed = this.tasks.queued[0].elapsed;
+                taskId = this.tasks.queued[0].id;
             }
-            return `${total} ${total === 1 ? 'task' : 'tasks'}  •  ${this.formatTime(elapsed)}`;
+            const taskIdStr = taskId ? `#${taskId}` : '';
+            return `${taskIdStr} ${total} ${total === 1 ? 'task' : 'tasks'}  •  ${this.formatTime(elapsed)}`;
         },
 
         formatTime(seconds) {

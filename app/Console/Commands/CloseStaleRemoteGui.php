@@ -35,9 +35,10 @@ class CloseStaleRemoteGui extends Command
 
         $this->info("Finding devices with remote GUI enabled for more than {$minutes} minutes...");
 
-        // Find all devices with remote_gui_enabled_at older than the threshold
-        $devices = Device::whereNotNull('remote_gui_enabled_at')
-            ->where('remote_gui_enabled_at', '<', now()->subMinutes($minutes))
+        // Find all devices with remote_support_expires_at that has passed
+        // The expires_at column already contains the expiry time, so we check if it's in the past
+        $devices = Device::whereNotNull('remote_support_expires_at')
+            ->where('remote_support_expires_at', '<', now())
             ->get();
 
         if ($devices->isEmpty()) {
@@ -49,8 +50,8 @@ class CloseStaleRemoteGui extends Command
 
         $closed = 0;
         foreach ($devices as $device) {
-            $enabledAt = $device->remote_gui_enabled_at;
-            $duration = $enabledAt->diffForHumans();
+            $expiresAt = $device->remote_support_expires_at;
+            $duration = $expiresAt->diffForHumans();
 
             $this->line("  - {$device->id} (open since {$duration})");
 
@@ -60,11 +61,8 @@ class CloseStaleRemoteGui extends Command
 
             // Determine the disable parameters based on device type
             $dataModel = $device->getDataModel();
-            $nokiaOuis = ['80AB4D', '80:AB:4D', '0C7C28'];
-            $isNokia = in_array(strtoupper($device->oui ?? ''), $nokiaOuis) ||
-                       stripos($device->manufacturer ?? '', 'Nokia') !== false ||
-                       stripos($device->manufacturer ?? '', 'Alcatel') !== false ||
-                       stripos($device->manufacturer ?? '', 'ALCL') !== false;
+            // Use centralized manufacturer detection from Device model
+            $isNokia = $device->isNokia();
 
             $disableParams = [];
 
@@ -111,7 +109,7 @@ class CloseStaleRemoteGui extends Command
             ]);
 
             // Clear the flag
-            $device->remote_gui_enabled_at = null;
+            $device->remote_support_expires_at = null;
             $device->save();
 
             // Trigger connection request to apply the change

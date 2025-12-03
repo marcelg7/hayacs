@@ -4,17 +4,9 @@
         $dataModel = $device->getDataModel();
         $isDevice2 = $dataModel === 'TR-181';
 
-        // Detect Nokia devices for TR-098 Standard WiFi Setup support
-        $nokiaOuis = ['80AB4D', '0C7C28'];
-        $isNokia = in_array(strtoupper($device->oui ?? ''), $nokiaOuis) ||
-            stripos($device->manufacturer ?? '', 'Nokia') !== false ||
-            stripos($device->manufacturer ?? '', 'Alcatel') !== false ||
-            stripos($device->manufacturer ?? '', 'ALCL') !== false;
-
-        // Detect Calix devices - they expose passwords in clear text via X_000631_KeyPassphrase
-        $calixOuis = ['D0768F', '00236A', '0021D8', '50C7BF', '487746', '000631', 'CCBE59', '60DB98'];
-        $isCalix = in_array(strtoupper($device->oui ?? ''), $calixOuis) ||
-            strtolower($device->manufacturer ?? '') === 'calix';
+        // Use centralized manufacturer detection from Device model
+        $isNokia = $device->isNokia();
+        $isCalix = $device->isCalix();
 
         // Show Standard WiFi Setup for TR-181 devices, TR-098 Nokia devices, OR TR-098 Calix devices
         $showStandardWifiSetup = $isDevice2 || ($dataModel === 'TR-098' && ($isNokia || $isCalix));
@@ -185,6 +177,253 @@
             }
         }
     @endphp
+
+    {{-- SSH WiFi Passwords Section (Nokia Devices with SSH credentials) --}}
+    @if($isNokia)
+    <div class="bg-white dark:bg-{{ $colors['card'] }} shadow overflow-hidden sm:rounded-lg mb-6" x-data="{
+        loading: false,
+        wifiConfigs: [],
+        hasSshCredentials: false,
+        credentialsVerified: false,
+        showPasswords: false,
+        extractedAt: null,
+        error: null,
+
+        async init() {
+            await this.loadWifiConfigs();
+        },
+
+        async loadWifiConfigs() {
+            try {
+                const deviceId = encodeURIComponent('{{ $device->id }}');
+                const response = await fetch(`/api/devices/${deviceId}/wifi-configs`);
+                if (response.ok) {
+                    const data = await response.json();
+                    this.wifiConfigs = data.data || [];
+                    this.hasSshCredentials = data.has_ssh_credentials;
+                    this.credentialsVerified = data.credentials_verified;
+                }
+            } catch (error) {
+                console.error('Error loading WiFi configs:', error);
+            }
+        },
+
+        async loadPasswords() {
+            this.loading = true;
+            this.error = null;
+            try {
+                const deviceId = encodeURIComponent('{{ $device->id }}');
+                const response = await fetch(`/api/devices/${deviceId}/wifi-passwords`);
+                if (response.ok) {
+                    const data = await response.json();
+                    this.wifiConfigs = data.data || [];
+                    this.extractedAt = data.extracted_at;
+                    this.showPasswords = true;
+                } else {
+                    const errorData = await response.json();
+                    this.error = errorData.error || 'Failed to load passwords';
+                }
+            } catch (error) {
+                this.error = 'Error: ' + error.message;
+            }
+            this.loading = false;
+        },
+
+        async extractWifiConfig() {
+            this.loading = true;
+            this.error = null;
+            try {
+                const deviceId = encodeURIComponent('{{ $device->id }}');
+                const response = await fetch(`/api/devices/${deviceId}/extract-wifi-config`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(data.message + '\\nNetworks found: ' + data.networks_found);
+                    await this.loadWifiConfigs();
+                    await this.loadPasswords();
+                } else {
+                    const errorData = await response.json();
+                    this.error = errorData.error || 'Extraction failed';
+                }
+            } catch (error) {
+                this.error = 'Error: ' + error.message;
+            }
+            this.loading = false;
+        },
+
+        async testSsh() {
+            this.loading = true;
+            this.error = null;
+            try {
+                const deviceId = encodeURIComponent('{{ $device->id }}');
+                const response = await fetch(`/api/devices/${deviceId}/test-ssh`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('SSH connection successful!');
+                    this.credentialsVerified = true;
+                } else {
+                    this.error = data.error || 'SSH connection failed';
+                }
+            } catch (error) {
+                this.error = 'Error: ' + error.message;
+            }
+            this.loading = false;
+        }
+    }">
+        <div class="px-4 py-4 sm:px-6 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                    </svg>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-{{ $colors['text'] }}">WiFi Passwords (SSH)</h3>
+                        <p class="text-xs text-gray-600 dark:text-{{ $colors['text-muted'] }}">
+                            Retrieved via SSH from device - use for support calls
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <template x-if="!hasSshCredentials">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                            No SSH Credentials
+                        </span>
+                    </template>
+                    <template x-if="hasSshCredentials && !credentialsVerified">
+                        <button @click="testSsh()" :disabled="loading" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400">
+                            <svg x-show="loading" class="animate-spin -ml-0.5 mr-1.5 h-3 w-3" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                            Test SSH
+                        </button>
+                    </template>
+                    <template x-if="hasSshCredentials && credentialsVerified">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            SSH Verified
+                        </span>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-6 py-5 border-t border-gray-200 dark:border-{{ $colors['border'] }}">
+            {{-- Error Message --}}
+            <template x-if="error">
+                <div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <p class="text-sm text-red-700 dark:text-red-400" x-text="error"></p>
+                </div>
+            </template>
+
+            {{-- No WiFi Configs Yet --}}
+            <template x-if="wifiConfigs.length === 0 && !showPasswords">
+                <div class="text-center py-6">
+                    <svg class="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path>
+                    </svg>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-{{ $colors['text-muted'] }}">
+                        No WiFi passwords retrieved yet
+                    </p>
+                    <button x-show="hasSshCredentials" @click="extractWifiConfig()" :disabled="loading"
+                            class="mt-3 inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700 disabled:bg-gray-400">
+                        <svg x-show="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        <svg x-show="!loading" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                        Extract via SSH
+                    </button>
+                </div>
+            </template>
+
+            {{-- WiFi Configs Available - Show Reveal Button --}}
+            <template x-if="wifiConfigs.length > 0 && !showPasswords">
+                <div class="text-center py-4">
+                    <p class="text-sm text-gray-600 dark:text-{{ $colors['text-muted'] }} mb-3">
+                        <span class="font-medium" x-text="wifiConfigs.length"></span> WiFi networks stored
+                    </p>
+                    <button @click="loadPasswords()" :disabled="loading"
+                            class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700 disabled:bg-gray-400">
+                        <svg x-show="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        <svg x-show="!loading" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        Reveal WiFi Passwords
+                    </button>
+                </div>
+            </template>
+
+            {{-- Password Display --}}
+            <template x-if="showPasswords && wifiConfigs.length > 0">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-xs text-gray-500 dark:text-{{ $colors['text-muted'] }}">
+                            Extracted: <span x-text="extractedAt ? new Date(extractedAt).toLocaleString() : 'Unknown'"></span>
+                        </p>
+                        <div class="flex space-x-2">
+                            <button @click="extractWifiConfig()" :disabled="loading"
+                                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                Re-extract
+                            </button>
+                            <button @click="showPasswords = false"
+                                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                                </svg>
+                                Hide
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <template x-for="wifi in wifiConfigs" :key="wifi.interface">
+                            <div class="p-4 bg-gray-50 dark:bg-{{ $colors['bg'] }} rounded-lg border border-gray-200 dark:border-{{ $colors['border'] }}">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium text-gray-900 dark:text-{{ $colors['text'] }}" x-text="wifi.ssid"></span>
+                                    <span class="text-xs px-2 py-0.5 rounded"
+                                          :class="{
+                                              'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400': wifi.band === '2.4GHz',
+                                              'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400': wifi.band === '5GHz'
+                                          }"
+                                          x-text="wifi.band"></span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <code class="text-sm font-mono bg-white dark:bg-gray-800 px-2 py-1 rounded border dark:border-gray-600" x-text="wifi.password || '(no password)'"></code>
+                                    <button @click="navigator.clipboard.writeText(wifi.password); $el.textContent = 'Copied!'; setTimeout(() => $el.textContent = 'Copy', 1500)"
+                                            class="ml-2 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400">Copy</button>
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-{{ $colors['text-muted'] }}" x-text="wifi.network_type"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+    @endif
 
     @if($showStandardWifiSetup)
     {{-- Standard WiFi Setup Section for TR-181 and TR-098 Nokia Devices --}}

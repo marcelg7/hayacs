@@ -6,6 +6,7 @@ use App\Models\Device;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DashboardController extends Controller
 {
@@ -14,10 +15,22 @@ class DashboardController extends Controller
      */
     public function index(): View
     {
+        // Calculate online/offline counts dynamically based on last_inform timestamp
+        // A device is considered online if it informed within 2x its periodic inform interval (min 15 minutes)
+        // Default interval is 10 minutes (600 seconds), so default grace period is 20 minutes
+        $defaultGraceMinutes = 20;
+        $onlineCutoff = now()->subMinutes($defaultGraceMinutes);
+
+        $totalDevices = Device::count();
+        $onlineDevices = Device::whereNotNull('last_inform')
+            ->where('last_inform', '>=', $onlineCutoff)
+            ->count();
+        $offlineDevices = $totalDevices - $onlineDevices;
+
         $stats = [
-            'total_devices' => Device::count(),
-            'online_devices' => Device::where('online', true)->count(),
-            'offline_devices' => Device::where('online', false)->count(),
+            'total_devices' => $totalDevices,
+            'online_devices' => $onlineDevices,
+            'offline_devices' => $offlineDevices,
             'pending_tasks' => Task::where('status', 'pending')->count(),
             'completed_tasks' => Task::where('status', 'completed')->count(),
             'failed_tasks' => Task::where('status', 'failed')->count(),
@@ -39,13 +52,85 @@ class DashboardController extends Controller
     /**
      * Show all devices
      */
-    public function devices(): View
+    public function devices(Request $request): View
     {
-        $devices = Device::with('subscriber')
-            ->orderBy('last_inform', 'desc')
-            ->paginate(20);
+        $query = Device::with('subscriber');
 
-        return view('dashboard.devices', compact('devices'));
+        // Apply search filter
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('id', 'like', "%{$search}%")
+                    ->orWhere('serial_number', 'like', "%{$search}%")
+                    ->orWhere('ip_address', 'like', "%{$search}%")
+                    ->orWhereHas('subscriber', function ($sq) use ($search) {
+                        $sq->where('name', 'like', "%{$search}%")
+                            ->orWhere('account', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Apply manufacturer filter
+        if ($manufacturer = $request->get('manufacturer')) {
+            $query->where('manufacturer', $manufacturer);
+        }
+
+        // Apply model filter
+        if ($model = $request->get('model')) {
+            $query->where('model_name', $model);
+        }
+
+        // Apply product class filter
+        if ($productClass = $request->get('product_class')) {
+            $query->where('product_class', $productClass);
+        }
+
+        // Apply status filter
+        if ($status = $request->get('status')) {
+            $graceMinutes = 20;
+            $onlineCutoff = now()->subMinutes($graceMinutes);
+            if ($status === 'online') {
+                $query->whereNotNull('last_inform')
+                    ->where('last_inform', '>=', $onlineCutoff);
+            } elseif ($status === 'offline') {
+                $query->where(function ($q) use ($onlineCutoff) {
+                    $q->whereNull('last_inform')
+                        ->orWhere('last_inform', '<', $onlineCutoff);
+                });
+            }
+        }
+
+        // Apply sorting
+        $sortBy = $request->get('sort', 'last_inform');
+        $sortDir = $request->get('dir', 'desc');
+        $allowedSorts = ['id', 'manufacturer', 'model_name', 'serial_number', 'last_inform', 'software_version'];
+        if (in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortDir === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->orderBy('last_inform', 'desc');
+        }
+
+        $devices = $query->paginate(50)->withQueryString();
+
+        // Get filter options
+        $manufacturers = Device::select('manufacturer')
+            ->distinct()
+            ->whereNotNull('manufacturer')
+            ->orderBy('manufacturer')
+            ->pluck('manufacturer');
+
+        $models = Device::select('model_name')
+            ->distinct()
+            ->whereNotNull('model_name')
+            ->orderBy('model_name')
+            ->pluck('model_name');
+
+        $productClasses = Device::select('product_class')
+            ->distinct()
+            ->whereNotNull('product_class')
+            ->orderBy('product_class')
+            ->pluck('product_class');
+
+        return view('dashboard.devices', compact('devices', 'manufacturers', 'models', 'productClasses'));
     }
 
     /**
@@ -74,5 +159,114 @@ class DashboardController extends Controller
             ->paginate(50, ['*'], 'events_page');
 
         return view('dashboard.device', compact('device', 'parameters', 'tasks', 'sessions', 'events'));
+    }
+
+    /**
+     * Export devices as CSV
+     */
+    public function exportDevices(Request $request): StreamedResponse
+    {
+        $query = Device::with('subscriber');
+
+        // Apply the same filters as the devices list
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('id', 'like', "%{$search}%")
+                    ->orWhere('serial_number', 'like', "%{$search}%")
+                    ->orWhere('ip_address', 'like', "%{$search}%")
+                    ->orWhereHas('subscriber', function ($sq) use ($search) {
+                        $sq->where('name', 'like', "%{$search}%")
+                            ->orWhere('account', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($manufacturer = $request->get('manufacturer')) {
+            $query->where('manufacturer', $manufacturer);
+        }
+
+        if ($model = $request->get('model')) {
+            $query->where('model_name', $model);
+        }
+
+        if ($productClass = $request->get('product_class')) {
+            $query->where('product_class', $productClass);
+        }
+
+        if ($status = $request->get('status')) {
+            $graceMinutes = 20;
+            $onlineCutoff = now()->subMinutes($graceMinutes);
+            if ($status === 'online') {
+                $query->whereNotNull('last_inform')
+                    ->where('last_inform', '>=', $onlineCutoff);
+            } elseif ($status === 'offline') {
+                $query->where(function ($q) use ($onlineCutoff) {
+                    $q->whereNull('last_inform')
+                        ->orWhere('last_inform', '<', $onlineCutoff);
+                });
+            }
+        }
+
+        $sortBy = $request->get('sort', 'last_inform');
+        $sortDir = $request->get('dir', 'desc');
+        $allowedSorts = ['id', 'manufacturer', 'model_name', 'serial_number', 'last_inform', 'software_version'];
+        if (in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortDir === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->orderBy('last_inform', 'desc');
+        }
+
+        $filename = 'devices-' . now()->format('Y-m-d-His') . '.csv';
+
+        $response = new StreamedResponse(function () use ($query) {
+            $handle = fopen('php://output', 'w');
+
+            // CSV header
+            fputcsv($handle, [
+                'Device ID',
+                'Subscriber',
+                'Subscriber Account',
+                'Manufacturer',
+                'Model',
+                'Product Class',
+                'Serial Number',
+                'Software Version',
+                'IP Address',
+                'Status',
+                'Last Inform',
+                'Created At',
+            ]);
+
+            // Stream data in chunks
+            $query->chunk(500, function ($devices) use ($handle) {
+                $graceMinutes = 20;
+                $onlineCutoff = now()->subMinutes($graceMinutes);
+
+                foreach ($devices as $device) {
+                    $isOnline = $device->last_inform && $device->last_inform >= $onlineCutoff;
+                    fputcsv($handle, [
+                        $device->id,
+                        $device->subscriber?->name ?? '',
+                        $device->subscriber?->account ?? '',
+                        $device->manufacturer ?? '',
+                        $device->model_name ?? '',
+                        $device->product_class ?? '',
+                        $device->serial_number ?? '',
+                        $device->software_version ?? '',
+                        $device->ip_address ?? '',
+                        $isOnline ? 'Online' : 'Offline',
+                        $device->last_inform?->format('Y-m-d H:i:s') ?? 'Never',
+                        $device->created_at?->format('Y-m-d H:i:s') ?? '',
+                    ]);
+                }
+            });
+
+            fclose($handle);
+        });
+
+        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
+
+        return $response;
     }
 }

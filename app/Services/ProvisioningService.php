@@ -110,6 +110,18 @@ class ProvisioningService
                 'params' => array_keys($standardConfig),
             ]);
         }
+
+        // Set initial device-specific password for Nokia Beacon G6 devices
+        if ($device->isNokiaBeacon()) {
+            $passwordTask = $device->setInitialPassword();
+            if ($passwordTask) {
+                Log::info('Created initial password task for Nokia Beacon', [
+                    'device_id' => $device->id,
+                    'task_id' => $passwordTask->id,
+                    'password_format' => '{SerialNumber}_{Suffix}_stay$away',
+                ]);
+            }
+        }
     }
 
     /**
@@ -214,6 +226,7 @@ class ProvisioningService
 
     /**
      * Get standard configuration based on data model
+     * Returns parameters with proper TR-069 types for SetParameterValues RPC
      */
     private function getStandardConfiguration(Device $device): array
     {
@@ -224,23 +237,32 @@ class ProvisioningService
         $crUsername = config('cwmp.connection_request_username', 'admin');
         $crPassword = config('cwmp.connection_request_password', 'admin');
 
-        // Check if this is a Nokia/Alcatel-Lucent device
-        $nokiaOuis = ['80AB4D', '0C7C28'];
-        $isNokia = in_array(strtoupper($device->oui ?? ''), $nokiaOuis) ||
-            stripos($device->manufacturer ?? '', 'Nokia') !== false ||
-            stripos($device->manufacturer ?? '', 'Alcatel') !== false ||
-            stripos($device->manufacturer ?? '', 'ALCL') !== false;
+        // Check if this is a Nokia/Alcatel-Lucent device using centralized detection
+        $isNokia = $device->isNokia();
 
         if ($dataModel === 'TR-098') {
             // Base TR-098 config - management server settings
+            // Must include proper types for strict devices like Calix 844E
             $config = [
                 // Enable periodic inform every 5 minutes
-                'InternetGatewayDevice.ManagementServer.PeriodicInformEnable' => '1',
-                'InternetGatewayDevice.ManagementServer.PeriodicInformInterval' => '300',
+                'InternetGatewayDevice.ManagementServer.PeriodicInformEnable' => [
+                    'value' => '1',
+                    'type' => 'xsd:boolean',
+                ],
+                'InternetGatewayDevice.ManagementServer.PeriodicInformInterval' => [
+                    'value' => '300',
+                    'type' => 'xsd:unsignedInt',
+                ],
 
-                // Set connection request credentials
-                'InternetGatewayDevice.ManagementServer.ConnectionRequestUsername' => $crUsername,
-                'InternetGatewayDevice.ManagementServer.ConnectionRequestPassword' => $crPassword,
+                // Set connection request credentials (strings)
+                'InternetGatewayDevice.ManagementServer.ConnectionRequestUsername' => [
+                    'value' => $crUsername,
+                    'type' => 'xsd:string',
+                ],
+                'InternetGatewayDevice.ManagementServer.ConnectionRequestPassword' => [
+                    'value' => $crPassword,
+                    'type' => 'xsd:string',
+                ],
             ];
 
             // Nokia Beacon G6 TR-098 uses different time parameter paths
@@ -254,22 +276,46 @@ class ProvisioningService
                 ]);
             } else {
                 // Standard TR-098 NTP configuration
-                $config['InternetGatewayDevice.Time.Enable'] = '1';
-                $config['InternetGatewayDevice.Time.NTPServer1'] = 'ntp.hay.net';
+                $config['InternetGatewayDevice.Time.Enable'] = [
+                    'value' => '1',
+                    'type' => 'xsd:boolean',
+                ];
+                $config['InternetGatewayDevice.Time.NTPServer1'] = [
+                    'value' => 'ntp.hay.net',
+                    'type' => 'xsd:string',
+                ];
             }
         } else { // TR-181
             $config = [
                 // Enable periodic inform every 5 minutes
-                'Device.ManagementServer.PeriodicInformEnable' => 'true',
-                'Device.ManagementServer.PeriodicInformInterval' => '300',
+                'Device.ManagementServer.PeriodicInformEnable' => [
+                    'value' => 'true',
+                    'type' => 'xsd:boolean',
+                ],
+                'Device.ManagementServer.PeriodicInformInterval' => [
+                    'value' => '300',
+                    'type' => 'xsd:unsignedInt',
+                ],
 
-                // Set connection request credentials
-                'Device.ManagementServer.ConnectionRequestUsername' => $crUsername,
-                'Device.ManagementServer.ConnectionRequestPassword' => $crPassword,
+                // Set connection request credentials (strings)
+                'Device.ManagementServer.ConnectionRequestUsername' => [
+                    'value' => $crUsername,
+                    'type' => 'xsd:string',
+                ],
+                'Device.ManagementServer.ConnectionRequestPassword' => [
+                    'value' => $crPassword,
+                    'type' => 'xsd:string',
+                ],
 
                 // NTP configuration
-                'Device.Time.Enable' => 'true',
-                'Device.Time.NTPServer1' => 'ntp.hay.net',
+                'Device.Time.Enable' => [
+                    'value' => 'true',
+                    'type' => 'xsd:boolean',
+                ],
+                'Device.Time.NTPServer1' => [
+                    'value' => 'ntp.hay.net',
+                    'type' => 'xsd:string',
+                ],
             ];
         }
 

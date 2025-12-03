@@ -1,0 +1,107 @@
+
+Packet Received on Port 1111 - Tue, 02 Dec 2025 18:43:25.223
+CPE Manager IP Address=172.24.1.70
+Connection ID=1189175
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Content-Type: text/xml; charset=utf-8
+SOAPAction: ""
+User-Agent: gSoap 2.8.30 / Dimark client v.4.8 [9347]
+X-HTTPS-Protocol: TLSv1.3
+X-Forwarded-For: 104.247.100.144, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3118
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-2"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">CPE_1011</cwmp:ID>
+    <cwmp:SessionTimeout>30</cwmp:SessionTimeout>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>Calix</Manufacturer>
+        <OUI>60db98</OUI>
+        <ProductClass>GigaSpire</ProductClass>
+        <SerialNumber>CXNK00A9276C</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>6 CONNECTION REQUEST</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-12-02T13:43:25-05:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[12]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.5[](Baseline:1, EthernetLAN:1, Time:1, IPPing:1, DeviceAssociation:1, WiFiLAN:1, UDPConnReq:1, TraceRoute:1)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">3000286512</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">23.4.0.1.128</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://104.247.100.144:60002/2iV3102L</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.AliasBasedAddressing</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">104.247.100.144</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.X_000631_WANIPv6Connection.1.X_000631_ExternalIPv6Address</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.ExosMesh.WapHostInfo.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">192.168.1.1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.GatewayInfo.SerialNumber</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Tue, 02 Dec 2025 18:43:25.228
+CPE Manager IP Address=172.24.1.70
+Connection ID=1189175
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Digest     realm="TR069_ip-172-24-1-70",      qop="auth",      nonce="19ae06065ac45DE78",      opaque="2a513ba1"
+WWW-Authenticate: Basic realm="TR069_ip-172-24-1-70"
+Connection: close
+Content-Type: text/plain
+Content-Length: 0
+

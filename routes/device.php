@@ -23,3 +23,9 @@ Route::match(['put', 'post'], '/device-upload/{deviceId}/{taskId}', [DeviceUploa
 // Devices GET config files from this endpoint. Token in URL provides security.
 Route::get('/device-config/{taskId}', [DeviceUploadController::class, 'serveConfigFile'])
     ->name('device.config.serve');
+
+// Static migration files endpoint (for TR-181 pre-config files)
+// Serves files from storage/app/public/migration/ directory
+Route::get('/device-config/migration/{filename}', [DeviceUploadController::class, 'serveMigrationFile'])
+    ->name('device.config.migration')
+    ->where('filename', '.*');

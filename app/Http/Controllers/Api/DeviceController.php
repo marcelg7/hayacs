@@ -27,34 +27,12 @@ class DeviceController extends Controller
 
     /**
      * Check if a device only processes one TR-069 RPC per CWMP session.
-     * SmartRG/Sagemcom and Nokia Beacon devices have this limitation.
+     * SmartRG/Sagemcom devices have this limitation.
      * When multiple tasks are queued, only the first executes in each session.
      */
     private function isOneTaskPerSessionDevice(Device $device): bool
     {
-        // SmartRG/Sagemcom OUIs
-        $smartRgOuis = ['E82C6D'];
-
-        // Nokia/Alcatel-Lucent OUIs
-        $nokiaOuis = ['80AB4D', '0C7C28'];
-
-        $oui = strtoupper($device->oui ?? '');
-        $manufacturer = strtolower($device->manufacturer ?? '');
-
-        // Check SmartRG by OUI or manufacturer
-        if (in_array($oui, $smartRgOuis) || $manufacturer === 'smartrg' || $manufacturer === 'sagemcom') {
-            return true;
-        }
-
-        // Check Nokia by OUI or manufacturer
-        if (in_array($oui, $nokiaOuis) ||
-            strpos($manufacturer, 'nokia') !== false ||
-            strpos($manufacturer, 'alcatel') !== false ||
-            strpos($manufacturer, 'alcl') !== false) {
-            return true;
-        }
-
-        return false;
+        return $device->isOneTaskPerSession();
     }
 
     /**
@@ -1591,12 +1569,8 @@ class DeviceController extends Controller
         $device = Device::findOrFail($id);
         $dataModel = $device->getDataModel();
 
-        // Nokia/Alcatel-Lucent OUIs for Beacon devices
-        $nokiaOuis = ['80AB4D', '80:AB:4D', '0C7C28'];
-        $isNokia = in_array(strtoupper($device->oui ?? ''), $nokiaOuis) ||
-                   stripos($device->manufacturer ?? '', 'Nokia') !== false ||
-                   stripos($device->manufacturer ?? '', 'Alcatel') !== false ||
-                   stripos($device->manufacturer ?? '', 'ALCL') !== false;
+        // Check if this is a Nokia device using centralized detection
+        $isNokia = $device->isNokia();
 
         // Default values that will be returned
         $port = null;
@@ -3174,9 +3148,7 @@ class DeviceController extends Controller
 
         // Check if device supports TR-143 diagnostics
         // Calix devices don't expose DownloadDiagnostics/UploadDiagnostics via TR-069
-        // Known Calix OUIs: D0768F, 00236A, 0021D8, 50C7BF, 487746
-        $isCalix = strtolower($device->manufacturer ?? '') === 'calix' ||
-            in_array(strtoupper($device->oui ?? ''), ['D0768F', '00236A', '0021D8', '50C7BF', '487746']);
+        $isCalix = $device->isCalix();
 
         // Use Download RPC method for Calix (no TR-143 support)
         if ($isCalix) {
@@ -3191,8 +3163,7 @@ class DeviceController extends Controller
         $isDevice2 = $dataModel === 'TR-181';
 
         // Detect SmartRG for combined parameter approach
-        $isSmartRG = strtolower($device->manufacturer ?? '') === 'smartrg' ||
-            strtoupper($device->oui ?? '') === 'E82C6D';
+        $isSmartRG = $device->isSmartRG();
 
         $tasks = [];
 
@@ -3490,11 +3461,7 @@ class DeviceController extends Controller
         $device = Device::findOrFail($id);
 
         // Check if this is a Calix device (uses Download RPC method)
-        // Known Calix OUIs: D0768F, 00236A, 0021D8, 50C7BF, 487746
-        $isCalix = strtolower($device->manufacturer ?? '') === 'calix' ||
-            in_array(strtoupper($device->oui ?? ''), ['D0768F', '00236A', '0021D8', '50C7BF', '487746']);
-
-        if ($isCalix) {
+        if ($device->isCalix()) {
             return $this->getDownloadRpcSpeedTestStatus($device);
         }
 
@@ -3622,9 +3589,7 @@ class DeviceController extends Controller
             $endTimeStr = $uploadEndTime ?? $downloadEndTime;
             if ($endTimeStr) {
                 // Check if this is a SmartRG/Sagemcom device (they lie about the Z suffix)
-                $isSmartRG = str_contains(strtolower($device->manufacturer ?? ''), 'smartrg') ||
-                    str_contains(strtolower($device->manufacturer ?? ''), 'sagemcom') ||
-                    in_array(strtoupper($device->oui ?? ''), ['E82C6D']);
+                $isSmartRG = $device->isSmartRG();
 
                 if ($isSmartRG && !$isDevice2) {
                     // SmartRG TR-098 devices: Z suffix is a lie, treat as local time
@@ -4205,6 +4170,15 @@ class DeviceController extends Controller
 
         $result = $migrationService->checkEligibility($device);
 
+        // Add SSH WiFi config availability info
+        $result['ssh_wifi_configs'] = $migrationService->checkSshWifiConfigsAvailable($device);
+
+        // Add recommendation if SSH configs aren't available
+        if (!$result['ssh_wifi_configs']['has_passwords'] && $result['eligible']) {
+            $result['recommendations'] = $result['recommendations'] ?? [];
+            $result['recommendations'][] = 'Extract WiFi config via SSH before migration to preserve WiFi passwords. TR-069 backups have masked passwords.';
+        }
+
         return response()->json($result);
     }
 
@@ -4261,13 +4235,41 @@ class DeviceController extends Controller
 
     /**
      * Create WiFi fallback tasks if migration lost WiFi settings
+     * Prefers SSH-extracted configs (has plaintext passwords) over TR-069 backup (masked passwords)
      */
     public function createWifiFallback(string $id): JsonResponse
     {
         $device = Device::findOrFail($id);
         $migrationService = new Tr181MigrationService();
 
-        // Find the most recent backup
+        // Check if we have SSH-extracted WiFi configs with passwords (preferred)
+        $sshCheck = $migrationService->checkSshWifiConfigsAvailable($device);
+
+        if ($sshCheck['has_passwords']) {
+            // Use SSH-extracted configs (these have actual plaintext passwords)
+            $result = $migrationService->createWifiFallbackFromSshConfigs($device);
+
+            if ($result['success']) {
+                // Send connection request to apply WiFi settings immediately
+                if ($device->online) {
+                    try {
+                        $this->connectionRequestService->sendConnectionRequest($device);
+                    } catch (\Exception $e) {
+                        Log::warning("Failed to send connection request for WiFi fallback: " . $e->getMessage());
+                    }
+                }
+
+                return response()->json(array_merge($result, [
+                    'source' => 'ssh_extracted',
+                    'note' => 'Used SSH-extracted WiFi configs with actual passwords',
+                ]));
+            }
+
+            // If SSH method failed, fall through to backup method
+            Log::info("SSH WiFi fallback failed, trying backup method: " . $result['message']);
+        }
+
+        // Fallback to TR-069 backup method (passwords may be masked)
         $backup = $device->configBackups()
             ->orderBy('created_at', 'desc')
             ->first();
@@ -4275,7 +4277,7 @@ class DeviceController extends Controller
         if (!$backup) {
             return response()->json([
                 'success' => false,
-                'message' => 'No backup found to restore WiFi settings from',
+                'message' => 'No backup found and no SSH-extracted WiFi configs available',
             ], 400);
         }
 
@@ -4294,7 +4296,10 @@ class DeviceController extends Controller
             }
         }
 
-        return response()->json($result);
+        return response()->json(array_merge($result, [
+            'source' => 'tr069_backup',
+            'warning' => 'Used TR-069 backup - WiFi passwords may be masked. Consider using SSH extraction for this device.',
+        ]));
     }
 
     /**
@@ -4344,17 +4349,9 @@ class DeviceController extends Controller
         $device = Device::findOrFail($id);
         $dataModel = $device->getDataModel();
 
-        // Detect Nokia devices
-        $nokiaOuis = ['80AB4D', '0C7C28'];
-        $isNokia = in_array(strtoupper($device->oui ?? ''), $nokiaOuis) ||
-            stripos($device->manufacturer ?? '', 'Nokia') !== false ||
-            stripos($device->manufacturer ?? '', 'Alcatel') !== false ||
-            stripos($device->manufacturer ?? '', 'ALCL') !== false;
-
-        // Detect Calix devices
-        $calixOuis = ['D0768F', '00236A', '0021D8', '50C7BF', '487746', '000631', 'CCBE59', '60DB98'];
-        $isCalix = in_array(strtoupper($device->oui ?? ''), $calixOuis) ||
-            strtolower($device->manufacturer ?? '') === 'calix';
+        // Use centralized manufacturer detection from Device model
+        $isNokia = $device->isNokia();
+        $isCalix = $device->isCalix();
 
         // Get stored WiFi credentials (passwords not readable from device)
         $storedCredentials = DeviceWifiCredential::where('device_id', $device->id)->first();
@@ -4500,17 +4497,9 @@ class DeviceController extends Controller
         $device = Device::findOrFail($id);
         $dataModel = $device->getDataModel();
 
-        // Detect Nokia devices
-        $nokiaOuis = ['80AB4D', '0C7C28'];
-        $isNokia = in_array(strtoupper($device->oui ?? ''), $nokiaOuis) ||
-            stripos($device->manufacturer ?? '', 'Nokia') !== false ||
-            stripos($device->manufacturer ?? '', 'Alcatel') !== false ||
-            stripos($device->manufacturer ?? '', 'ALCL') !== false;
-
-        // Detect Calix devices
-        $calixOuis = ['D0768F', '00236A', '0021D8', '50C7BF', '487746', '000631', 'CCBE59', '60DB98'];
-        $isCalix = in_array(strtoupper($device->oui ?? ''), $calixOuis) ||
-            strtolower($device->manufacturer ?? '') === 'calix';
+        // Detect Nokia and Calix devices using centralized detection
+        $isNokia = $device->isNokia();
+        $isCalix = $device->isCalix();
 
         // Check for supported device types
         if ($dataModel !== 'TR-181' && !($dataModel === 'TR-098' && ($isNokia || $isCalix))) {
@@ -5110,12 +5099,8 @@ class DeviceController extends Controller
         $device = Device::findOrFail($id);
         $dataModel = $device->getDataModel();
 
-        // Detect Nokia devices
-        $nokiaOuis = ['80AB4D', '0C7C28'];
-        $isNokia = in_array(strtoupper($device->oui ?? ''), $nokiaOuis) ||
-            stripos($device->manufacturer ?? '', 'Nokia') !== false ||
-            stripos($device->manufacturer ?? '', 'Alcatel') !== false ||
-            stripos($device->manufacturer ?? '', 'ALCL') !== false;
+        // Detect Nokia devices using centralized detection
+        $isNokia = $device->isNokia();
 
         // Check for supported device types
         if ($dataModel !== 'TR-181' && !($dataModel === 'TR-098' && $isNokia)) {
@@ -5301,5 +5286,195 @@ class DeviceController extends Controller
             'task_id' => $task->id,
             'password_format' => '{SerialNumber}_{RandomSuffix}_stay$away',
         ], 201);
+    }
+
+    // =========================================================================
+    // WiFi Configuration & Password Management (SSH-extracted)
+    // =========================================================================
+
+    /**
+     * Get WiFi configurations for a device (without passwords)
+     */
+    public function wifiConfigs(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $configs = $device->wifiConfigs()
+            ->orderByRaw("FIELD(band, '2.4GHz', '5GHz', '6GHz')")
+            ->orderBy('interface_name')
+            ->get()
+            ->map(function ($config) {
+                return [
+                    'id' => $config->id,
+                    'interface_name' => $config->interface_name,
+                    'radio' => $config->radio,
+                    'band' => $config->band,
+                    'ssid' => $config->ssid,
+                    'has_password' => !empty($config->password_encrypted),
+                    'encryption' => $config->encryption,
+                    'hidden' => $config->hidden,
+                    'enabled' => $config->enabled,
+                    'network_type' => $config->network_type,
+                    'is_mesh_backhaul' => $config->is_mesh_backhaul,
+                    'max_clients' => $config->max_clients,
+                    'client_isolation' => $config->client_isolation,
+                    'wps_enabled' => $config->wps_enabled,
+                    'mac_address' => $config->mac_address,
+                    'extracted_at' => $config->extracted_at?->toIso8601String(),
+                    'extraction_method' => $config->extraction_method,
+                ];
+            });
+
+        return response()->json([
+            'data' => $configs,
+            'total' => $configs->count(),
+            'has_ssh_credentials' => $device->hasSshCredentials(),
+            'credentials_verified' => $device->sshCredentials?->verified ?? false,
+        ]);
+    }
+
+    /**
+     * Get WiFi passwords for support display
+     * Only returns customer-facing networks (not backhaul)
+     */
+    public function wifiPasswords(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        // Check if device has WiFi configs
+        if (!$device->hasWifiConfigs()) {
+            return response()->json([
+                'error' => 'No WiFi configuration available for this device',
+                'hint' => 'Run SSH extraction first to retrieve WiFi passwords',
+            ], 404);
+        }
+
+        $passwords = $device->wifiConfigs()
+            ->customerFacing()
+            ->enabled()
+            ->orderByRaw("FIELD(band, '2.4GHz', '5GHz', '6GHz')")
+            ->get()
+            ->map(function ($config) {
+                return [
+                    'ssid' => $config->ssid,
+                    'password' => $config->getPassword(),
+                    'band' => $config->band,
+                    'network_type' => $config->network_type,
+                    'interface' => $config->interface_name,
+                ];
+            });
+
+        Log::info('WiFi passwords retrieved for support', [
+            'device_id' => $device->id,
+            'networks' => $passwords->count(),
+            'user' => auth()->user()?->email ?? 'system',
+        ]);
+
+        return response()->json([
+            'data' => $passwords,
+            'extracted_at' => $device->wifiConfigs()->first()?->extracted_at?->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * Trigger SSH extraction of WiFi configuration
+     */
+    public function extractWifiConfig(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        // Check if device has SSH credentials
+        if (!$device->hasSshCredentials()) {
+            return response()->json([
+                'error' => 'No SSH credentials configured for this device',
+                'hint' => 'Import SSH credentials from Nokia spreadsheet first',
+            ], 400);
+        }
+
+        $credentials = $device->sshCredentials;
+        if (!$credentials->isComplete()) {
+            return response()->json([
+                'error' => 'SSH credentials incomplete (missing shell password)',
+            ], 400);
+        }
+
+        try {
+            $service = app(\App\Services\NokiaSshService::class);
+            $wifiConfigs = $service->extractWifiConfig($device);
+
+            return response()->json([
+                'message' => 'WiFi configuration extracted successfully',
+                'networks_found' => count($wifiConfigs),
+                'data' => collect($wifiConfigs)->map(function ($config) {
+                    return [
+                        'ssid' => $config->ssid,
+                        'band' => $config->band,
+                        'network_type' => $config->network_type,
+                        'enabled' => $config->enabled,
+                    ];
+                }),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('WiFi extraction failed', [
+                'device_id' => $device->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'error' => 'WiFi extraction failed',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Test SSH connection to device
+     */
+    public function testSshConnection(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        if (!$device->hasSshCredentials()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'No SSH credentials configured for this device',
+            ]);
+        }
+
+        $service = app(\App\Services\NokiaSshService::class);
+        $result = $service->testConnection($device);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Get SSH credential status for a device
+     */
+    public function sshCredentialStatus(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+        $credentials = $device->sshCredentials;
+
+        if (!$credentials) {
+            return response()->json([
+                'has_credentials' => false,
+                'message' => 'No SSH credentials configured',
+            ]);
+        }
+
+        return response()->json([
+            'has_credentials' => true,
+            'username' => $credentials->ssh_username,
+            'port' => $credentials->ssh_port,
+            'has_ssh_password' => $credentials->hasSshAccess(),
+            'has_shell_password' => $credentials->hasShellAccess(),
+            'is_complete' => $credentials->isComplete(),
+            'verified' => $credentials->verified,
+            'last_ssh_success' => $credentials->last_ssh_success?->toIso8601String(),
+            'last_ssh_failure' => $credentials->last_ssh_failure?->toIso8601String(),
+            'last_error' => $credentials->last_error,
+            'credential_source' => $credentials->credential_source,
+            'imported_at' => $credentials->imported_at?->toIso8601String(),
+        ]);
     }
 }

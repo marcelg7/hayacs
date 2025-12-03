@@ -10,6 +10,7 @@
             <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">ID</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Type</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Description</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Status</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Created</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Completed</th>
@@ -27,6 +28,9 @@
                     @if(($task->task_type === 'ping_diagnostics' || $task->task_type === 'traceroute_diagnostics') && $task->result)
                         <span class="ml-2 text-blue-600 dark:text-blue-400">▼</span>
                     @endif
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}" title="{{ $task->description }}">
+                    {{ $task->description ? Str::limit($task->description, 50) : '-' }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     @if($task->status === 'pending')
@@ -59,7 +63,7 @@
             </tr>
             @if(($task->task_type === 'ping_diagnostics' || $task->task_type === 'traceroute_diagnostics') && $task->result)
             <tr x-show="expandedTask === {{ $task->id }}" x-cloak class="bg-gray-50 dark:bg-{{ $colors['bg'] }}">
-                <td colspan="5" class="px-6 py-4">
+                <td colspan="6" class="px-6 py-4">
                     <div class="bg-white dark:bg-{{ $colors['card'] }} rounded-lg p-4 shadow-sm">
                         <h4 class="font-semibold text-gray-900 dark:text-{{ $colors['text'] }} mb-3">Diagnostic Results</h4>
                         @if($task->task_type === 'ping_diagnostics')
@@ -193,7 +197,7 @@
             @endif
             @empty
             <tr>
-                <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}">No tasks found.</td>
+                <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}">No tasks found.</td>
             </tr>
             @endforelse
         </tbody>

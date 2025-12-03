@@ -23,3 +23,7 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 database/database.sqlite
+
+# Large binary files (speedtest, device-config)
+/public/speedtest/*.bin
+/public/device-config/*.bin

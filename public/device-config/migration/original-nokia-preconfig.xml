@@ -1,0 +1,426 @@
+PREEGEB101                                                                                          0000666 0000000 0000000 00000104110 15111636756 007176  0                                                                                                    ustar                                                                                                                                                                                                                                                          <!--file_type=pre_update_remote-->
+<!--
+[READ ME]
+(1) this file is based on file:3HH-10684-8314-DFZZA-01P01-AONT Pre-Config file for Customer NOVUS -- EGEA.xlsx
+-->
+<PreConfigurationRemote. n="PreConfigurationRemote" t="staticObject" ver="0.0.3" new_opid="EGEB">
+	<GENERIC. n="GENERIC" a="static">
+		<Generic_set. n="genericwan_setting" a="static">
+			<GlobalHguDn t="string" ml="12" v="true" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_GlobalHguDns"/>
+			<GlobalPPPConLost t="string" ml="12" v="false" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_GlobalPPPConLost"/>
+			<GlobalPolicyRouting t="string" ml="12" v="true" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_GlobalPolicyRouting"/>
+			<MinAddress t="string" ml="32" v="192.168.1.64" dburi="InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MinAddress"/>
+			<MaxAddress t="string" ml="32" v="192.168.1.253" dburi="InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MaxAddress"/>
+			<DHCPLeaseTime t="string" ml="32" v="86400" dburi="InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPLeaseTime"/>
+			<IPInterfaceIPAddress t="string" ml="32" v="192.168.1.254" dburi="InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceIPAddress"/>
+			<TCPMSSRules t="string" ml="2" v="0" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_TCPMSSRules"/>
+			<IpFilter t="string" ml="2" v="1" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_IpFilter"/>
+			<MacFilter t="string" ml="2" v="1" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_MacFilter"/>
+			<DosProtection t="string" ml="2" v="1" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_DosProtection"/>
+			<PortForwarding t="string" ml="2" v="1" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_PortForwarding"/>
+			<FwLevel t="string" ml="2" v="1" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_FwLevel"/>
+			<DMZ t="string" ml="2" v="1" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_DMZ"/>
+			<StartIgmpProxyOnInternetWan t="string" ml="12" v="false" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_StartIgmpProxyOnInternetWan"/>
+			<TransferPPPOEtoIPOEHeader t="string" ml="12" v="false" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_TransferPPPOEtoIPOEHeader"/>
+			<ButtonResetFlag t="string" ml="12" v="11" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_ButtonResetFlag"/>
+			<!--<TelnetEnable rw="RW" t="boolean" v="true" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.TelnetEnable"/>-->
+			<WlanUserMaximum rw="RW" t="unsignedInt" v="32" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_WlanUserMaximum"/>
+			<X_ASB_COM_KeyParameterEnable dv="true" rw="RW" t="boolean" v="true" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_KeyParameterEnable"/>
+			<LoopbackDetectionEnable rw="RW" t="boolean" v="false" dburi="InternetGatewayDevice.LANDevice.1.X_CT-COM_LoopbackDetection.LoopbackEnable"/>
+			<X_CT-COM_MWBAND_Mode rw="RW" t="int" v="0" dburi="InternetGatewayDevice.Services.X_CT-COM_MWBAND.Mode"/>
+			<WLAN1_ChannelWidth dv="0" rw="RW" t="unsignedInt" v="0" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_CT-COM_ChannelWidth"/>
+			<ManufacturerOUI t="string" ml="12" v="" fri="MACAddress" dburi="InternetGatewayDevice.DeviceInfo.ManufacturerOUI"/>
+			<EnabledForInternet rw="RW" t="boolean" v="1" dburi="InternetGatewayDevice.WANDevice.1.WANCommonInterfaceConfig.EnabledForInternet"/>
+			<ExecEnvNumberOfEntries  t="unsignedInt" v="1" dburi="InternetGatewayDevice.SoftwareModules.ExecEnvNumberOfEntries"/>
+			<X_ALU-COM_CertificationCheckEnable  t="boolean" v="false" dburi="InternetGatewayDevice.SoftwareModules.X_ALU-COM_CertificationCheckEnable"/>
+            <X_ALU-COM_DefaultVersionPreferred  t="boolean" v="true" dburi="InternetGatewayDevice.SoftwareModules.X_ALU-COM_DefaultVersionPreferred"/>
+            <X_ASB_COM_Onboarding_ClientAuthKey t="string" v="3C84HbQH0ZhapttfPBtJeAjgrkjvfzL2FsB7b1vut"  dburi="InternetGatewayDevice.X_ALU-COM_Wifi.X_ASB_COM_Onboarding_ClientAuthKey"/>
+		</Generic_set.>
+		<EXECENV_1. n="EXECENV_1" a="dynamic" dburi="InternetGatewayDevice.SoftwareModules.ExecEnv.%d.">
+			<Name t="string" ml="32" v="NOS" dburi="Name"/>
+			<AllocatedMemory  t="int" v="81920" dburi="AllocatedMemory"/>
+			<AvailableMemory  t="int" v="81920" dburi="AvailableMemory"/>
+			<AllocatedDiskSpace  t="int" v="32768" dburi="AllocatedDiskSpace"/>
+			<AvailableDiskSpace  t="int" v="32768" dburi="AvailableDiskSpace"/>
+			<X_ALU-COM_AllocatedCPU  t="int" v="30" dburi="X_ALU-COM_AllocatedCPU"/>
+			<X_ALU-COM_AvailableCPU  t="int" v="30" dburi="X_ALU-COM_AvailableCPU"/>
+		</EXECENV_1.>
+	</GENERIC.>
+    <EGEB. n="EGEB" a="static">
+        <Basic. n="basic_setting" a="static">
+            <oui t="string" ml="8" v="D0542D" fri="" dburi="*DEL*"/>
+            <ManufacturerOUI t="string" ml="12" v="0C7C28" dburi="InternetGatewayDevice.DeviceInfo.ManufacturerOUI"/>
+            <ProvisioningCode t="string" ml="12" v="EGEB" dburi="InternetGatewayDevice.DeviceInfo.ProvisioningCode"/>
+            <TelnetEnable v="true" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.TelnetEnable"/>
+        </Basic.>
+        <InternetGatewayDevice.  a="static">
+            <X_ASB_COM_Language v="eng" dburi="InternetGatewayDevice.X_ASB_COM_Language"/>
+        </InternetGatewayDevice.>
+        <IPInterface_1.  a="static">
+            <IPInterfaceIPAddress v="192.168.1.1" dburi="InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceIPAddress"/>
+            <IPInterfaceSubnetMask v="255.255.255.0" dburi="InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceSubnetMask"/>
+        </IPInterface_1.>
+        <Account.  a="static">
+            <Enable v="true" dburi="InternetGatewayDevice.X_Authentication.Account.Enable"/>
+            <UserName v="admin" dburi="InternetGatewayDevice.X_Authentication.Account.UserName"/>
+            <AccountPwd v="%10p" fri="genpwd_longpasswd" dburi="InternetGatewayDevice.X_Authentication.Account.Password" WEBHotreset="true"/>
+        </Account.>
+        <WebAccount.  a="static">
+            <Enable v="true" dburi="InternetGatewayDevice.X_Authentication.WebAccount.Enable"/>
+            <UserName v="superadmin" dburi="InternetGatewayDevice.X_Authentication.WebAccount.UserName"/>
+            <WebAccountPwd v="%12p" fri="genpwd_sha256_customized" dburi="InternetGatewayDevice.X_Authentication.WebAccount.Password"/>
+        </WebAccount.>
+        <X_ASB_COM_VOIPCfgType.  a="static">
+            <type v="TR069" dburi="InternetGatewayDevice.X_ASB_COM_VOIPCfgType.type"/>
+        </X_ASB_COM_VOIPCfgType.>
+        <X_CT-COM_IPProtocolVersion.  a="static">
+            <Mode v="3" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_IPProtocolVersion.Mode"/>
+        </X_CT-COM_IPProtocolVersion.>
+        <WANConnectionDevice_1. a="dynamic" dburi="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.%d." dtype="IP">
+            <ConnectionType v="IP_Routed" dburi="WANIPConnection.%d.ConnectionType"/>
+            <X_CT-COM_IPMode v="1" dburi="WANIPConnection.%d.X_CT-COM_IPMode"/>
+            <Enable v="true" dburi="WANIPConnection.%d.Enable"/>
+            <NATEnabled v="true" dburi="WANIPConnection.%d.NATEnabled"/>
+            <X_CT-COM_ServiceList v="TR069,INTERNET" dburi="WANIPConnection.%d.X_CT-COM_ServiceList"/>
+            <X_ALU-COM_Mode v="0" dburi="WANEthernetLinkConfig.X_ALU-COM_Mode"/>
+            <X_ALU-COM_VLANIDMark v="0" dburi="WANEthernetLinkConfig.X_ALU-COM_VLANIDMark"/>
+            <X_ALU-COM_802-1pMark v="0" dburi="WANEthernetLinkConfig.X_ALU-COM_802-1pMark"/>
+            <AddressingType v="DHCP" dburi="WANIPConnection.%d.AddressingType"/>
+            <InterfaceMtu v="1500" dburi="WANIPConnection.%d.InterfaceMtu"/>
+            <Enable v="true" dburi="WANIPConnection.%d.DHCPClient.SentDHCPOption.1.Enable"/>
+            <Value v="Nokia Beacon G6" dburi="WANIPConnection.%d.DHCPClient.SentDHCPOption.1.Value"/>
+            <Enable v="false" dburi="WANIPConnection.%d.DHCPClient.SentDHCPOption.2.Enable"/>
+            <Enable v="false" dburi="WANIPConnection.%d.DHCPClient.SentDHCPOption.3.Enable"/>
+            <X_CT-COM_IPMode v="0" dburi="WANIPConnection.%d.X_ALU-COM_DhcpcWaitTime"/>
+            <Name v="Internet" dburi="WANIPConnection.%d.Name"/>
+            <X_ALU-COM_WanNameType v="Fixed" dburi="WANIPConnection.%d.X_ALU-COM_WanNameType"/>
+            <HttpDisabled v="true" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.HttpDisabled"/>
+            <HttpsDisabled v="true" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.HttpsDisabled"/>
+            <TelnetDisabled v="true" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.TelnetDisabled"/>
+            <SshDisabled v="true" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.SshDisabled"/>
+            <Tr69Disabled v="false" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.Tr69Disabled"/>
+            <IcmpEchoReqDisabled v="false" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.IcmpEchoReqDisabled"/>
+            <TrustedNetworkEnable v="false" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.TrustedNetworkEnable"/>
+            <HttpTrusted v="false" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.HttpTrusted"/>
+            <HttpsTrusted v="false" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.HttpsTrusted"/>
+            <TelnetTrusted v="false" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.TelnetTrusted"/>
+            <SshTrusted v="false" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.SshTrusted"/>
+            <Tr69Trusted v="false" dburi="WANIPConnection.1.X_ALU-COM_WanAccessCfg.Tr69Trusted"/>
+            <IcmpEchoReqTrusted v="false" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.IcmpEchoReqTrusted"/>
+            <DDNSCfgEnabled v="false" dburi="WANIPConnection.%d.X_CT-COM_DDNSConfiguration.1.DDNSCfgEnabled"/>
+            <DDNSDomainName v="" dburi="WANIPConnection.%d.X_CT-COM_DDNSConfiguration.1.DDNSDomainName"/>
+            <DDNSUsername v="" dburi="WANIPConnection.%d.X_CT-COM_DDNSConfiguration.1.DDNSUsername"/>
+            <DDNSPassword v="" dburi="WANIPConnection.%d.X_CT-COM_DDNSConfiguration.1.DDNSPassword"/>
+            <DDNSProvider v="" dburi="WANIPConnection.%d.X_CT-COM_DDNSConfiguration.1.DDNSProvider"/>
+            <ExcludeIPAddress v="" dburi="WANIPConnection.%d.X_ASB_COM_DmzIpHostCfg.ExcludeIPAddress"/>
+            <DmzEnabled v="false" dburi="WANIPConnection.%d.X_ASB_COM_DmzIpHostCfg.DmzEnabled"/>
+            <InternalClient v="" dburi="WANIPConnection.%d.X_ASB_COM_DmzIpHostCfg.InternalClient"/>
+        </WANConnectionDevice_1.>
+        <WANConnectionDevice_2. a="dynamic" dburi="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.%d." dtype="IP">
+            <ConnectionType v="IP_Routed" dburi="WANIPConnection.%d.ConnectionType"/>
+            <X_CT-COM_IPMode v="1" dburi="WANIPConnection.%d.X_CT-COM_IPMode"/>
+            <Enable v="false" dburi="WANIPConnection.%d.Enable"/>
+            <NATEnabled v="true" dburi="WANIPConnection.%d.NATEnabled"/>
+            <X_CT-COM_ServiceList v="OTHER" dburi="WANIPConnection.%d.X_CT-COM_ServiceList"/>
+            <X_ALU-COM_Mode v="2" dburi="WANEthernetLinkConfig.X_ALU-COM_Mode"/>
+            <X_ALU-COM_VLANIDMark v="75" dburi="WANEthernetLinkConfig.X_ALU-COM_VLANIDMark"/>
+            <X_ALU-COM_802-1pMark v="4" dburi="WANEthernetLinkConfig.X_ALU-COM_802-1pMark"/>
+            <AddressingType v="DHCP" dburi="WANIPConnection.%d.AddressingType"/>
+            <InterfaceMtu v="1500" dburi="WANIPConnection.%d.InterfaceMtu"/>
+            <Enable v="false" dburi="WANIPConnection.%d.DHCPClient.SentDHCPOption.1.Enable"/>
+            <Value v="" dburi="WANIPConnection.%d.DHCPClient.SentDHCPOption.1.Value"/>
+            <HttpDisabled v="true" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.HttpDisabled"/>
+            <HttpsDisabled v="true" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.HttpsDisabled"/>
+            <TelnetDisabled v="true" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.TelnetDisabled"/>
+            <SshDisabled v="true" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.SshDisabled"/>
+            <Tr69Disabled v="true" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.Tr69Disabled"/>
+            <IcmpEchoReqDisabled v="false" dburi="WANIPConnection.%d.X_ALU-COM_WanAccessCfg.IcmpEchoReqDisabled"/>
+        </WANConnectionDevice_2.>
+        <EthPort_1.  a="static">
+            <isTr069Domain v="true" dburi="InternetGatewayDevice.X_ASB_COM_EthPort.EthPort.1.isTr069Domain"/>
+        </EthPort_1.>
+        <EthPort_2.  a="static">
+            <isTr069Domain v="true" dburi="InternetGatewayDevice.X_ASB_COM_EthPort.EthPort.2.isTr069Domain"/>
+        </EthPort_2.>
+        <EthPort_3.  a="static">
+            <isTr069Domain v="true" dburi="InternetGatewayDevice.X_ASB_COM_EthPort.EthPort.3.isTr069Domain"/>
+        </EthPort_3.>
+        <LANEthernetInterfaceConfig_1.  a="static">
+            <Enable v="true" dburi="InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Enable"/>
+        </LANEthernetInterfaceConfig_1.>
+        <LANEthernetInterfaceConfig_2.  a="static">
+            <Enable v="true" dburi="InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.2.Enable"/>
+        </LANEthernetInterfaceConfig_2.>
+        <LANEthernetInterfaceConfig_3.  a="static">
+            <Enable v="true" dburi="InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.3.Enable"/>
+        </LANEthernetInterfaceConfig_3.>
+        <LANHostConfigManagement.  a="static">
+            <DHCPServerEnable v="true" dburi="InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPServerEnable"/>
+            <MinAddress v="192.168.1.64" dburi="InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MinAddress"/>
+            <MaxAddress v="192.168.1.253" dburi="InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MaxAddress"/>
+            <SubnetMask v="255.255.255.0" dburi="InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.SubnetMask"/>
+            <DHCPLeaseTime v="86400" dburi="InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPLeaseTime"/>
+            <DNSServers v="" dburi="InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DNSServers"/>
+        </LANHostConfigManagement.>
+        <ManagementServer.  a="static">
+		    <URL v="https://acs.nokia.net:7754" dburi="InternetGatewayDevice.ManagementServer.URL"/>
+            <Username v="admin" dburi="InternetGatewayDevice.ManagementServer.Username"/>
+            <ManagementServerPassword v="admin" dburi="InternetGatewayDevice.ManagementServer.Password"/>
+            <ConnectionRequestUsername v="itms" dburi="InternetGatewayDevice.ManagementServer.ConnectionRequestUsername"/>
+            <ConnectionRequestPassword v="itms" dburi="InternetGatewayDevice.ManagementServer.ConnectionRequestPassword"/>
+            <PeriodicInformEnable v="true" dburi="InternetGatewayDevice.ManagementServer.PeriodicInformEnable"/>
+            <PeriodicInformInterval v="3600" dburi="InternetGatewayDevice.ManagementServer.PeriodicInformInterval"/>
+            <ConnectionRequestURL v="http://12.34.56.78:7547" dburi="InternetGatewayDevice.ManagementServer.ConnectionRequestURL"/>
+            <X_ALU-COM_EnableServerCertValidation v="true" dburi="InternetGatewayDevice.ManagementServer.X_ALU-COM_EnableServerCertValidation"/>
+            <X_ASB_COM_TR181Enabled v="true" dburi="InternetGatewayDevice.ManagementServer.X_ASB_COM_TR181Enabled"/>
+            <X_ALU_COM_XMPP_Enable v="true" dburi="InternetGatewayDevice.ManagementServer.X_ALU_COM_XMPP_Enable"/>
+            <X_ASB-COM_Option43Enable v="OPTION43_ON" dburi="InternetGatewayDevice.ManagementServer.X_ASB-COM_Option43Enable"/>
+        </ManagementServer.>
+        <X_ASB_COM_PreConfig.  a="static">
+            <X_ASB_COM_WlanRegion v="ca" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_WlanRegion"/>
+            <X_ASB_COM_WlanRegionWithHighPriority v="true" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_WlanRegionWithHighPriority"/>
+            <X_ASB_COM_WanPortMappingDisable v="1" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_WanPortMappingDisable"/>
+            <X_ASB_COM_TransferPPPOEtoIPOEHeader v="false" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_TransferPPPOEtoIPOEHeader"/>
+            <X_ASB_COM_EnableIgmpPacketIsolation v="true" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_EnableIgmpPacketIsolation"/>
+        </X_ASB_COM_PreConfig.>
+        <X_ALU-COM_LanAccessCfg.  a="static">
+            <HttpDisabled v="false" dburi="InternetGatewayDevice.X_ALU-COM_LanAccessCfg.HttpDisabled"/>
+            <HttpsDisabled v="false" dburi="InternetGatewayDevice.X_ALU-COM_LanAccessCfg.HttpsDisabled"/>
+            <TelnetDisabled v="true" dburi="InternetGatewayDevice.X_ALU-COM_LanAccessCfg.TelnetDisabled"/>
+            <SshDisabled v="false" dburi="InternetGatewayDevice.X_ALU-COM_LanAccessCfg.SshDisabled"/>
+            <IcmpEchoReqDisabled v="false" dburi="InternetGatewayDevice.X_ALU-COM_LanAccessCfg.IcmpEchoReqDisabled"/>
+        </X_ALU-COM_LanAccessCfg.>
+        <TrustedNetwork_1. a="dynamic" dburi="InternetGatewayDevice.TrustedNetwork.1." >
+            <SourceIPRangeStart v="" dburi="SourceIPRangeStart"/>
+            <SourceIPRangeEnd v="" dburi="SourceIPRangeEnd"/>
+        </TrustedNetwork_1.>
+        <Firewall.  a="static">
+            <Config v="Low" dburi="InternetGatewayDevice.Firewall.Config"/>
+        </Firewall.>
+        <X_ASB_COM_DoSProtectionEnableCfg.  a="static">
+            <Enable v="true" dburi="InternetGatewayDevice.X_ASB_COM_DoSProtectionEnableCfg.Enable"/>
+        </X_ASB_COM_DoSProtectionEnableCfg.>
+        <X_CT-COM_ALGAbility.  a="static">
+            <H323Enable v="false" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ALGAbility.H323Enable"/>
+            <RTSPEnable v="false" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ALGAbility.RTSPEnable"/>
+            <IPSECEnable v="true" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ALGAbility.IPSECEnable"/>
+            <SIPEnable v="false" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ALGAbility.SIPEnable"/>
+            <L2TPEnable v="true" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ALGAbility.L2TPEnable"/>
+            <FTPEnable v="false" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ALGAbility.FTPEnable"/>
+            <TFTPEnable v="false" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ALGAbility.TFTPEnable"/>
+            <PPTPEnable v="true" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ALGAbility.PPTPEnable"/>
+        </X_CT-COM_ALGAbility.>
+        <PasswordRule.  a="static">
+            <Enable v="false" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.PasswordRule.Enable"/>
+        </PasswordRule.>
+        <Time.  a="static">
+            <Enable v="true" dburi="InternetGatewayDevice.Time.Enable"/>
+            <NTPServer1 v="time.nist.gov" dburi="InternetGatewayDevice.Time.NTPServer1"/>
+            <NTPServer2 v="ntp1.tummy.com" dburi="InternetGatewayDevice.Time.NTPServer2"/>
+            <NTPServer3 v="pool.ntp.org" dburi="InternetGatewayDevice.Time.NTPServer3"/>
+            <NTPServer4 v="" dburi="InternetGatewayDevice.Time.NTPServer4"/>
+            <NTPServer5 v="" dburi="InternetGatewayDevice.Time.NTPServer5"/>
+            <X_CT-COM_NTPSyncInterval v="0" dburi="InternetGatewayDevice.Time.X_CT-COM_NTPSyncInterval"/>
+            <LocalTimeZone v="-08:00" dburi="InternetGatewayDevice.Time.LocalTimeZone"/>
+            <LocalTimeZoneName v="Pacific Time, Tijuana" dburi="InternetGatewayDevice.Time.LocalTimeZoneName"/>
+            <X_CT-COM_NTPServerType v="0" dburi="InternetGatewayDevice.Time.X_CT-COM_NTPServerType"/>
+        </Time.>
+        <X_CT-COM_UPNP.  a="static">
+            <Enable v="false" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_UPNP.Enable"/>
+        </X_CT-COM_UPNP.>
+        <DnsInfo_1. a="dynamic" dburi="InternetGatewayDevice.X_ASB_COM_AppCfg.DnsProxyCfg.X_ASB_STATIC_DNS.DnsInfo.1." >
+            <domainName v="webgui.nokiawifi.com" dburi="domainName"/>
+            <domainAddr v="192.168.1.1" dburi="domainAddr"/>
+        </DnsInfo_1.>
+        <DnsProxyCfg.  a="static">
+            <Enable v="true" dburi="InternetGatewayDevice.X_ASB_COM_AppCfg.DnsProxyCfg.Enable"/>
+        </DnsProxyCfg.>
+        <X_CT-COM_IPv6Config.  a="static">
+            <IPv6DNSConfigType v="HGWProxy" dburi="InternetGatewayDevice.LANDevice.1.X_CT-COM_IPv6Config.IPv6DNSConfigType"/>
+        </X_CT-COM_IPv6Config.>
+        <X_ALU-COM_SpeedTest.  a="static">
+            <Mode v="None" dburi="InternetGatewayDevice.X_ALU-COM_SpeedTest.Mode"/>
+        </X_ALU-COM_SpeedTest.>
+        <X_ALU-COM_Ookla.  a="static">
+            <ConfigURL v="" dburi="InternetGatewayDevice.X_ALU-COM_Ookla.ConfigURL"/>
+        </X_ALU-COM_Ookla.>
+        <UploadDiagnostics.  a="static">
+            <NumberOfConnections v="4" dburi="InternetGatewayDevice.UploadDiagnostics.NumberOfConnections"/>
+        </UploadDiagnostics.>
+        <DownloadDiagnostics.  a="static">
+            <NumberOfConnections v="4" dburi="InternetGatewayDevice.DownloadDiagnostics.NumberOfConnections"/>
+        </DownloadDiagnostics.>
+        <DHCPPOOL_1. n="DHCPPOOL_1" a="dynamic" dburi="InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPConditionalServingPool.1." >
+            <Enable v="false" dburi="Enable"/>
+            <VendorClassID v="" dburi="VendorClassID"/>
+            <AssociatedConnection v="" dburi="AssociatedConnection"/>
+            <MinAddress v="" dburi="MinAddress"/>
+        </DHCPPOOL_1.>
+        <Forwarding_1. a="dynamic" dburi="InternetGatewayDevice.Layer3Forwarding.Forwarding.1." >
+            <DestIPAddress v="" dburi="DestIPAddress"/>
+            <DestSubnetMask v="" dburi="DestSubnetMask"/>
+            <Interface v="" dburi="Interface"/>
+        </Forwarding_1.>
+        <Forwarding_2. a="dynamic" dburi="InternetGatewayDevice.Layer3Forwarding.Forwarding.2." >
+            <DestIPAddress v="" dburi="DestIPAddress"/>
+            <DestSubnetMask v="" dburi="DestSubnetMask"/>
+            <Interface v="" dburi="Interface"/>
+        </Forwarding_2.>
+        <Forwarding_3. a="dynamic" dburi="InternetGatewayDevice.Layer3Forwarding.Forwarding.3." >
+            <DestIPAddress v="" dburi="DestIPAddress"/>
+            <DestSubnetMask v="" dburi="DestSubnetMask"/>
+            <Interface v="" dburi="Interface"/>
+        </Forwarding_3.>
+        <Classification_1. n="Classification_1" a="dynamic" dburi="InternetGatewayDevice.QueueManagement.Classification.1.">
+            <ClassificationEnable v="false" dburi="ClassificationEnable"/>
+        </Classification_1.>
+        <Classification_2. n="Classification_2" a="dynamic" dburi="InternetGatewayDevice.QueueManagement.Classification.2.">
+            <ClassificationEnable v="false" dburi="ClassificationEnable"/>
+        </Classification_2.>
+        <Classification_3. n="Classification_3" a="dynamic" dburi="InternetGatewayDevice.QueueManagement.Classification.3.">
+            <ClassificationEnable v="false" dburi="ClassificationEnable"/>
+        </Classification_3.>
+        <Classification_4. n="Classification_4" a="dynamic" dburi="InternetGatewayDevice.QueueManagement.Classification.4.">
+            <ClassificationEnable v="false" dburi="ClassificationEnable"/>
+        </Classification_4.>
+        <Classification_5. n="Classification_5" a="dynamic" dburi="InternetGatewayDevice.QueueManagement.Classification.5.">
+            <ClassificationEnable v="false" dburi="ClassificationEnable"/>
+        </Classification_5.>
+        <Classification_6. n="Classification_6" a="dynamic" dburi="InternetGatewayDevice.QueueManagement.Classification.6.">
+            <ClassificationEnable v="false" dburi="ClassificationEnable"/>
+        </Classification_6.>
+        <Classification_7. n="Classification_7" a="dynamic" dburi="InternetGatewayDevice.QueueManagement.Classification.7.">
+            <ClassificationEnable v="false" dburi="ClassificationEnable"/>
+        </Classification_7.>
+        <X_ALU-COM_Wifi.  a="static">
+            <WorkMode v="RGW" dburi="InternetGatewayDevice.X_ALU-COM_Wifi.WorkMode"/>
+            <WorkRole v="Controller" dburi="InternetGatewayDevice.X_ALU-COM_Wifi.WorkRole"/>
+            <RootApMode v="RGW" dburi="InternetGatewayDevice.X_ALU-COM_Wifi.RootApMode"/>
+        </X_ALU-COM_Wifi.>
+        <X_ALU-COM_SwMgnt.  a="static">
+            <X_ALU-COM_Enable v="true" dburi="InternetGatewayDevice.X_ALU-COM_Wifi.X_ALU-COM_SwMgnt.X_ALU-COM_Enable"/>
+        </X_ALU-COM_SwMgnt.>
+        <X_ASB_COM_BOENGAgent.  a="static">
+            <Enable v="true" dburi="InternetGatewayDevice.X_ALU-COM_Wifi.X_ASB_COM_BOENGAgent.Enable"/>
+        </X_ASB_COM_BOENGAgent.>
+        <RemoteMobileAccess.  a="static">
+            <URL v="https://edge.narlat.wifi.nokia.com" dburi="InternetGatewayDevice.X_ALU-COM_NWCC.RemoteMobileAccess.URL"/>
+        </RemoteMobileAccess.>
+        <X_CT-COM_ServiceManage.  a="static">
+            <ManagementIdleDisconnectTime v="300" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.ManagementIdleDisconnectTime"/>
+            <FtpEnable v="false" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.FtpEnable"/>
+            <FtpUserName v="" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.FtpUserName"/>
+            <FtpPassword v="" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.FtpPassword"/>
+            <SftpEnable v="false" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.SftpEnable"/>
+            <SftpRemoteAccessEnable v="false" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.SftpRemoteAccessEnable"/>
+            <SftpUserName v="" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.SftpUserName"/>
+            <SftpPassword v="" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.SftpPassword"/>
+            <UsbPrinterEnable v="false" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.UsbPrinterEnable"/>
+            <UsbPrinterUserName v="" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.UsbPrinterUserName"/>
+            <UsbPrinterPassword v="" dburi="InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.UsbPrinterPassword"/>
+        </X_CT-COM_ServiceManage.>
+        <X_ASB_COM_IGMPCfg.  a="static">
+            <IgmpDsMulticastPriority v="5" dburi="InternetGatewayDevice.X_ASB_COM_IGMPCfg.IgmpDsMulticastPriority"/>
+        </X_ASB_COM_IGMPCfg.>
+        <WLAN_1.  a="static">
+            <RadioEnabled v="true" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.RadioEnabled"/>
+            <Standard v="b,g,n,ax" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Standard"/>
+            <AutoChannelEnable v="true" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AutoChannelEnable"/>
+            <TransmitPower v="100" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TransmitPower"/>
+            <X_CT-COM_ChannelWidth v="2" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_CT-COM_ChannelWidth"/>
+            <X_ASB_COM_OperatingChannelBandwidth v="Auto" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_ASB_COM_OperatingChannelBandwidth"/>
+            <X_ASB_COM_MuMimoEnable v="true" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_ASB_COM_MuMimoEnable"/>
+            <Enable v="true" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Enable"/>
+            <SSID v="NOKIA-%4M" fri="genssidfmt" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID"/>
+            <X_ASB_COM_routeMode v="2" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_ASB_COM_routeMode"/>
+            <SSIDAdvertisementEnabled v="true" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSIDAdvertisementEnabled"/>
+            <WPAAuthenticationMode v="PSKAuthentication" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WPAAuthenticationMode" WiFiHotreset="true"/>
+            <BeaconType v="11i" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.BeaconType" WiFiHotreset="true"/>
+            <WPAEncryptionModes v="AESEncryption" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WPAEncryptionModes" WiFiHotreset="true"/>
+            <PreSharedKey v="%10p" fri="genpwd_longpasswd" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.PreSharedKey" WiFiHotreset="true"/>
+            <WPSEnable v="1" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.WPSEnable"/>
+            <IsolationEnable v="false" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.IsolationEnable"/>
+        </WLAN_1.>
+        <WLAN_2. a="dynamic" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.%d." dtype="WLAN">
+            <Enable v="false" dburi="Enable"/>
+            <SSID v="NOKIA-%4M-2" fri="genssidfmt" dburi="SSID"/>
+            <X_ASB_COM_routeMode v="2" dburi="X_ASB_COM_routeMode"/>
+            <WPAAuthenticationMode v="PSKAuthentication" dburi="WPAAuthenticationMode"/>
+            <BeaconType v="11i" dburi="BeaconType"/>
+            <WPAEncryptionModes v="AESEncryption" dburi="WPAEncryptionModes"/>
+            <PreSharedKey v="12345678" dburi="PreSharedKey.1.PreSharedKey"/>
+            <WPSEnable v="0" dburi="WPSEnable"/>
+        </WLAN_2.>
+        <WLAN_3. a="dynamic" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.%d." dtype="WLAN">
+            <Enable v="false" dburi="Enable"/>
+            <SSID v="NOKIA-%4M-3" fri="genssidfmt" dburi="SSID"/>
+            <X_ASB_COM_routeMode v="2" dburi="X_ASB_COM_routeMode"/>
+            <WPAAuthenticationMode v="PSKAuthentication" dburi="WPAAuthenticationMode"/>
+            <BeaconType v="11i" dburi="BeaconType"/>
+            <WPAEncryptionModes v="AESEncryption" dburi="WPAEncryptionModes"/>
+            <PreSharedKey v="12345678" dburi="PreSharedKey.1.PreSharedKey"/>
+            <WPSEnable v="0" dburi="WPSEnable"/>
+        </WLAN_3.>
+        <WLAN_4. a="dynamic" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.%d." dtype="WLAN">
+            <Enable v="false" dburi="Enable"/>
+            <SSID v="NOKIA-%4M-4" fri="genssidfmt" dburi="SSID"/>
+            <X_ASB_COM_routeMode v="2" dburi="X_ASB_COM_routeMode"/>
+            <WPAAuthenticationMode v="PSKAuthentication" dburi="WPAAuthenticationMode"/>
+            <BeaconType v="11i" dburi="BeaconType"/>
+            <WPAEncryptionModes v="AESEncryption" dburi="WPAEncryptionModes"/>
+            <PreSharedKey v="12345678" dburi="PreSharedKey.1.PreSharedKey"/>
+            <WPSEnable v="0" dburi="WPSEnable"/>
+        </WLAN_4.>
+        <WLAN_5. a="dynamic" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.5." >
+            <RadioEnabled v="true" dburi="RadioEnabled"/>
+            <Standard v="a,n,ac,ax" dburi="Standard"/>
+            <AutoChannelEnable v="true" dburi="AutoChannelEnable"/>
+            <TransmitPower v="100" dburi="TransmitPower"/>
+            <X_CT-COM_ChannelWidth v="2" dburi="X_CT-COM_ChannelWidth"/>
+            <X_ASB_COM_OperatingChannelBandwidth v="Auto" dburi="X_ASB_COM_OperatingChannelBandwidth"/>
+            <X_ASB_COM_MuMimoEnable v="true" dburi="X_ASB_COM_MuMimoEnable"/>
+            <Enable v="true" dburi="Enable"/>
+            <SSID v="NOKIA-%4M" fri="genssidfmt" dburi="SSID"/>
+            <X_ASB_COM_routeMode v="2" dburi="X_ASB_COM_routeMode"/>
+            <SSIDAdvertisementEnabled v="true" dburi="SSIDAdvertisementEnabled"/>
+            <WPAAuthenticationMode v="PSKAuthentication" dburi="WPAAuthenticationMode" WiFiHotreset="true"/>
+            <BeaconType v="11i" dburi="BeaconType" WiFiHotreset="true"/>
+            <WPAEncryptionModes v="AESEncryption" dburi="WPAEncryptionModes" WiFiHotreset="true"/>
+            <PreSharedKey v="%10p" fri="genpwd_longpasswd" dburi="PreSharedKey.1.PreSharedKey" WiFiHotreset="true"/>
+            <WPSEnable v="1" dburi="WPSEnable"/>
+            <IsolationEnable v="false" dburi="IsolationEnable"/>
+			<X_ALU-COM_LimitedAutoChannelEnabled v="true" dburi="X_ALU-COM_LimitedAutoChannelEnabled"/>
+        </WLAN_5.>
+        <WLAN_6. a="dynamic" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.6." >
+            <Enable v="false" dburi="Enable"/>
+            <SSID v="NOKIA-%4M-2" fri="genssidfmt" dburi="SSID"/>
+            <X_ASB_COM_routeMode v="2" dburi="X_ASB_COM_routeMode"/>
+            <WPAAuthenticationMode v="PSKAuthentication" dburi="WPAAuthenticationMode"/>
+            <BeaconType v="11i" dburi="BeaconType"/>
+            <WPAEncryptionModes v="AESEncryption" dburi="WPAEncryptionModes"/>
+            <PreSharedKey v="12345678" dburi="PreSharedKey.1.PreSharedKey"/>
+            <WPSEnable v="0" dburi="WPSEnable"/>
+        </WLAN_6.>
+        <WLAN_7. a="dynamic" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.7." >
+            <Enable v="false" dburi="Enable"/>
+            <SSID v="NOKIA-%4M-3" fri="genssidfmt" dburi="SSID"/>
+            <X_ASB_COM_routeMode v="2" dburi="X_ASB_COM_routeMode"/>
+            <WPAAuthenticationMode v="PSKAuthentication" dburi="WPAAuthenticationMode"/>
+            <BeaconType v="11i" dburi="BeaconType"/>
+            <WPAEncryptionModes v="AESEncryption" dburi="WPAEncryptionModes"/>
+            <PreSharedKey v="12345678" dburi="PreSharedKey.1.PreSharedKey"/>
+            <WPSEnable v="0" dburi="WPSEnable"/>
+        </WLAN_7.>
+        <WLAN_8. a="dynamic" dburi="InternetGatewayDevice.LANDevice.1.WLANConfiguration.8." >
+            <Enable v="false" dburi="Enable"/>
+            <SSID v="NOKIA-%4M-IPTV" fri="genssidfmt" dburi="SSID"/>
+            <X_ASB_COM_routeMode v="2" dburi="X_ASB_COM_routeMode"/>
+            <WPAAuthenticationMode v="PSKAuthentication" dburi="WPAAuthenticationMode"/>
+            <BeaconType v="11i" dburi="BeaconType"/>
+            <WPAEncryptionModes v="AESEncryption" dburi="WPAEncryptionModes"/>
+            <PreSharedKey v="%10p" fri="genpwd_longpasswd" dburi="PreSharedKey.1.PreSharedKey"/>
+            <WPSEnable v="0" dburi="WPSEnable"/>
+            <X_ASB_COM_EnableRTSCTS v="1" dburi="X_ASB_COM_EnableRTSCTS"/>
+        </WLAN_8.>
+    </EGEB.>
+</PreConfigurationRemote.>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        

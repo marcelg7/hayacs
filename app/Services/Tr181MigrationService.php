@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Device;
 use App\Models\DeviceType;
+use App\Models\DeviceWifiConfig;
 use App\Models\Firmware;
 use App\Models\Task;
 use App\Models\ConfigBackup;
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\Storage;
  * 1. Device must be Nokia Beacon G6 (product_class check)
  * 2. Device must be running TR-181-capable firmware (3FE49996IJMK14)
  * 3. Device must currently be on TR-098 data model
- * 4. ConfigMigration flag must be set BEFORE applying pre-config file
+ * 4. SSH WiFi configs should be extracted BEFORE migration (preserves plaintext passwords)
  */
 class Tr181MigrationService
 {
@@ -33,12 +34,9 @@ class Tr181MigrationService
     const BEACON_G6_PRODUCT_CLASSES = ['Beacon G6', 'G-240W-F', 'Beacon6'];
 
     /**
-     * Nokia OUIs (Organizationally Unique Identifiers)
-     * 80AB4D - Nokia Corporation (most common for Beacon devices)
-     * 0C7C28 - Nokia (Alcatel-Lucent brand)
-     * D0542D - Nokia (older devices)
+     * Nokia OUIs - use the centralized list from Device model
+     * @see \App\Models\Device::NOKIA_OUIS
      */
-    const NOKIA_OUIS = ['80AB4D', '0C7C28', 'D0542D'];
 
     /**
      * Parameter paths for migration
@@ -47,9 +45,17 @@ class Tr181MigrationService
     const TR181_ENABLED_PARAM = 'InternetGatewayDevice.ManagementServer.X_ASB_COM_TR181Enabled';
 
     /**
-     * Pre-config file for Hay ACS
+     * Pre-config file for TR-181 migration
+     * This simpler file only changes OperatorID to EGEB to trigger TR-181 mode
+     * Important: Device keeps same OUI - no device ID change!
      */
-    const PRECONFIG_FILE = 'beacon-g6-pre-config-hayacs-tr181.xml';
+    const PRECONFIG_FILE = 'PREEGEBOPR';
+
+    /**
+     * External URL for the preconfig file (hosted on hay.net for compatibility)
+     * Files served from hayacs.hay.net fail on Nokia devices, but hay.net works
+     */
+    const PRECONFIG_EXTERNAL_URL = 'https://hay.net/PREEGEBOPR';
 
     /**
      * Check if a device is eligible for TR-181 migration
@@ -97,12 +103,10 @@ class Tr181MigrationService
             $warnings[] = "Device has {$pendingTasks} pending task(s). Migration will queue after existing tasks.";
         }
 
-        // Check 7: Check if ConfigMigration parameter exists (if we have parameter data)
-        $configMigrationExists = $device->parameters()
-            ->where('name', 'like', '%X_ALU-COM_ConfigMigration%')
-            ->exists();
-        if (!$configMigrationExists && $device->parameters()->count() > 0) {
-            $warnings[] = "ConfigMigration parameter not found in device parameters. Will attempt to set anyway.";
+        // Check 7: Check if SSH WiFi configs are extracted (important for WiFi preservation)
+        $sshWifiCheck = $this->checkSshWifiConfigsAvailable($device);
+        if (!$sshWifiCheck['has_passwords']) {
+            $warnings[] = "IMPORTANT: Extract WiFi config via SSH before migration! TR-069 backups have masked passwords.";
         }
 
         $eligible = empty($reasons);
@@ -130,8 +134,8 @@ class Tr181MigrationService
     {
         $deviceOui = strtoupper($device->oui);
 
-        // Check OUI first (most reliable)
-        if (in_array($deviceOui, self::NOKIA_OUIS)) {
+        // Check OUI first (most reliable) - use centralized Device model OUI list
+        if (in_array($deviceOui, Device::NOKIA_OUIS)) {
             // Also verify product class contains Beacon G6 indicators
             foreach (self::BEACON_G6_PRODUCT_CLASSES as $productClass) {
                 if (stripos($device->product_class, $productClass) !== false) {
@@ -192,7 +196,7 @@ class Tr181MigrationService
     public function getEligibleDeviceCount(): array
     {
         $beaconG6Devices = Device::where(function ($query) {
-            $query->whereIn('oui', self::NOKIA_OUIS)
+            $query->whereIn('oui', Device::NOKIA_OUIS)
                   ->orWhere('product_class', 'like', '%Beacon G6%')
                   ->orWhere('product_class', 'like', '%G-240W-F%');
         })->get();
@@ -227,12 +231,14 @@ class Tr181MigrationService
     }
 
     /**
-     * Create migration tasks for a device
+     * Create migration preparation tasks for a device
      *
-     * Task sequence:
-     * 1. Harvest all parameters (backup)
-     * 2. Set ConfigMigration = 1
-     * 3. Push pre-config file (triggers TR-181 switch)
+     * Nokia Beacon G6 TR-098 to TR-181 migration process:
+     * 1. Extract WiFi config via SSH (preserves plaintext passwords) - do this first!
+     * 2. Create parameter backup via TR-069
+     * 3. Push pre-config file (triggers factory reset + TR-181 switch)
+     * 4. Device reconnects with TR-181 data model
+     * 5. Restore WiFi settings from SSH-extracted config
      *
      * @param Device $device
      * @param bool $skipBackup Skip parameter harvest if recent backup exists
@@ -251,10 +257,13 @@ class Tr181MigrationService
             ];
         }
 
-        $tasks = [];
-        $taskOrder = 1;
+        // Check if we have SSH WiFi configs (critical for WiFi preservation)
+        $sshWifiCheck = $this->checkSshWifiConfigsAvailable($device);
 
-        // Task 1: Harvest all parameters (unless skipped)
+        $tasks = [];
+        $warnings = $eligibility['warnings'];
+
+        // Task 1: Create TR-069 parameter backup (unless skipped)
         if (!$skipBackup) {
             $harvestTask = Task::create([
                 'device_id' => $device->id,
@@ -268,31 +277,10 @@ class Tr181MigrationService
                 'created_at' => now(),
             ]);
             $tasks[] = $harvestTask;
-            $taskOrder++;
         }
 
-        // Task 2: Set ConfigMigration = 1
-        $configMigrationTask = Task::create([
-            'device_id' => $device->id,
-            'type' => 'set_parameter_values',
-            'status' => 'pending',
-            'parameters' => [
-                'parameters' => [
-                    [
-                        'name' => self::CONFIG_MIGRATION_PARAM,
-                        'value' => '1',
-                        'type' => 'xsd:string',
-                    ],
-                ],
-                'purpose' => 'tr181_migration_config_flag',
-                'migration_step' => $taskOrder,
-            ],
-            'created_at' => now(),
-        ]);
-        $tasks[] = $configMigrationTask;
-        $taskOrder++;
-
-        // Task 3: Push pre-config file
+        // Task 2: Push pre-config file to trigger TR-181 migration
+        // The pre-config file causes the device to factory reset and switch to TR-181
         $preconfigUrl = $this->getPreconfigFileUrl();
         $preconfigTask = Task::create([
             'device_id' => $device->id,
@@ -302,11 +290,19 @@ class Tr181MigrationService
                 'url' => $preconfigUrl,
                 'file_type' => '3 Vendor Configuration File',
                 'purpose' => 'tr181_migration_preconfig',
-                'migration_step' => $taskOrder,
+                'migration_step' => 2,
+                'note' => 'Pre-config file triggers factory reset and TR-181 data model switch',
             ],
             'created_at' => now(),
         ]);
         $tasks[] = $preconfigTask;
+
+        // Add warning about WiFi if SSH configs not extracted
+        if (!$sshWifiCheck['has_passwords']) {
+            $warnings[] = 'WARNING: No SSH WiFi configs extracted! WiFi passwords will be lost after migration. Extract WiFi config via SSH before proceeding.';
+        } else {
+            $warnings[] = "WiFi preservation ready: {$sshWifiCheck['password_count']} networks with passwords will be restored after migration.";
+        }
 
         // Tag the device as migration in progress
         $device->update([
@@ -317,29 +313,38 @@ class Tr181MigrationService
             'device_id' => $device->id,
             'task_count' => count($tasks),
             'task_ids' => array_map(fn($t) => $t->id, $tasks),
+            'ssh_wifi_available' => $sshWifiCheck['has_passwords'],
+            'preconfig_url' => $preconfigUrl,
         ]);
 
         return [
             'success' => true,
             'tasks' => $tasks,
-            'message' => 'Migration tasks created successfully. ' . count($tasks) . ' tasks queued.',
-            'warnings' => $eligibility['warnings'],
+            'message' => 'Migration tasks created. ' . count($tasks) . ' tasks queued. Pre-config will trigger TR-181 switch.',
+            'warnings' => $warnings,
+            'ssh_wifi_status' => $sshWifiCheck,
+            'preconfig_url' => $preconfigUrl,
+            'next_steps' => [
+                'Pre-config file will be pushed to device',
+                'Device will factory reset and reconnect with TR-181 data model',
+                'WiFi settings will need to be restored from SSH-extracted config',
+                'Monitor device for reconnection (may take 2-5 minutes after reset)',
+            ],
         ];
     }
 
     /**
      * Get the URL for the pre-config file
+     *
+     * Uses external hay.net URL because files served from hayacs.hay.net fail
+     * on Nokia devices with "file corrupted or unusable" error (9018).
+     * The hay.net URL has been tested and works for TR-181 migration.
      */
     public function getPreconfigFileUrl(): string
     {
-        // The pre-config file should be served from a URL accessible by the device
-        // Use HTTP since TR-069 devices may not support HTTPS with cert validation
-        $baseUrl = config('app.url');
-
-        // Force HTTP for device downloads (many TR-069 devices don't support HTTPS)
-        $httpUrl = str_replace('https://', 'http://', $baseUrl);
-
-        return $httpUrl . '/storage/migration/' . self::PRECONFIG_FILE;
+        // Use the external URL that's known to work with Nokia devices
+        // Files from hayacs.hay.net fail, but hay.net works
+        return self::PRECONFIG_EXTERNAL_URL;
     }
 
     /**
@@ -501,6 +506,207 @@ class Tr181MigrationService
             'success' => true,
             'task' => $task,
             'message' => 'WiFi fallback task created with ' . count($parametersToSet) . ' parameters',
+        ];
+    }
+
+    /**
+     * Get TR-181 WiFi parameter mapping for SSH-extracted configs
+     * Maps UCI interface names to TR-181 parameter paths
+     */
+    public function getSshToTr181WifiMapping(): array
+    {
+        return [
+            // 5GHz Primary (ath0 -> SSID.1/Radio.1/AccessPoint.1)
+            'ath0' => [
+                'ssid_path' => 'Device.WiFi.SSID.1.SSID',
+                'enable_path' => 'Device.WiFi.SSID.1.Enable',
+                'passphrase_path' => 'Device.WiFi.AccessPoint.1.Security.KeyPassphrase',
+                'hidden_path' => 'Device.WiFi.AccessPoint.1.SSIDAdvertisementEnabled',
+            ],
+            // 2.4GHz Primary (ath1 -> SSID.2/Radio.2/AccessPoint.2)
+            'ath1' => [
+                'ssid_path' => 'Device.WiFi.SSID.2.SSID',
+                'enable_path' => 'Device.WiFi.SSID.2.Enable',
+                'passphrase_path' => 'Device.WiFi.AccessPoint.2.Security.KeyPassphrase',
+                'hidden_path' => 'Device.WiFi.AccessPoint.2.SSIDAdvertisementEnabled',
+            ],
+            // 5GHz Secondary (ath01)
+            'ath01' => [
+                'ssid_path' => 'Device.WiFi.SSID.3.SSID',
+                'enable_path' => 'Device.WiFi.SSID.3.Enable',
+                'passphrase_path' => 'Device.WiFi.AccessPoint.3.Security.KeyPassphrase',
+                'hidden_path' => 'Device.WiFi.AccessPoint.3.SSIDAdvertisementEnabled',
+            ],
+            // 2.4GHz Secondary (ath11)
+            'ath11' => [
+                'ssid_path' => 'Device.WiFi.SSID.4.SSID',
+                'enable_path' => 'Device.WiFi.SSID.4.Enable',
+                'passphrase_path' => 'Device.WiFi.AccessPoint.4.Security.KeyPassphrase',
+                'hidden_path' => 'Device.WiFi.AccessPoint.4.SSIDAdvertisementEnabled',
+            ],
+            // 5GHz Guest (ath03)
+            'ath03' => [
+                'ssid_path' => 'Device.WiFi.SSID.5.SSID',
+                'enable_path' => 'Device.WiFi.SSID.5.Enable',
+                'passphrase_path' => 'Device.WiFi.AccessPoint.5.Security.KeyPassphrase',
+                'hidden_path' => 'Device.WiFi.AccessPoint.5.SSIDAdvertisementEnabled',
+            ],
+            // 2.4GHz Guest (ath13)
+            'ath13' => [
+                'ssid_path' => 'Device.WiFi.SSID.6.SSID',
+                'enable_path' => 'Device.WiFi.SSID.6.Enable',
+                'passphrase_path' => 'Device.WiFi.AccessPoint.6.Security.KeyPassphrase',
+                'hidden_path' => 'Device.WiFi.AccessPoint.6.SSIDAdvertisementEnabled',
+            ],
+        ];
+    }
+
+    /**
+     * Create WiFi fallback tasks using SSH-extracted WiFi configs
+     * This is more reliable than TR-069 backup because it has actual plaintext passwords
+     *
+     * @param Device $device The post-migration TR-181 device
+     * @param Device|null $oldDevice The pre-migration TR-098 device (if different ID due to OUI change)
+     * @return array
+     */
+    public function createWifiFallbackFromSshConfigs(Device $device, ?Device $oldDevice = null): array
+    {
+        // Look for SSH-extracted WiFi configs from the device (or old device if OUI changed)
+        $sourceDevice = $oldDevice ?? $device;
+
+        $wifiConfigs = DeviceWifiConfig::where('device_id', $sourceDevice->id)
+            ->customerFacing()  // primary, secondary, guest - not backhaul
+            ->enabled()
+            ->whereNotNull('password_encrypted')
+            ->get();
+
+        if ($wifiConfigs->isEmpty()) {
+            return [
+                'success' => false,
+                'message' => 'No SSH-extracted WiFi configs with passwords found for device',
+                'source_device_id' => $sourceDevice->id,
+            ];
+        }
+
+        $mapping = $this->getSshToTr181WifiMapping();
+        $parametersToSet = [];
+        $networksRestored = [];
+
+        foreach ($wifiConfigs as $config) {
+            $interfaceName = $config->interface_name;
+
+            if (!isset($mapping[$interfaceName])) {
+                Log::debug("No TR-181 mapping for interface {$interfaceName}, skipping");
+                continue;
+            }
+
+            $paths = $mapping[$interfaceName];
+            $password = $config->getPassword();
+
+            // Set SSID
+            if (!empty($config->ssid)) {
+                $parametersToSet[] = [
+                    'name' => $paths['ssid_path'],
+                    'value' => $config->ssid,
+                    'type' => 'xsd:string',
+                ];
+            }
+
+            // Set password
+            if (!empty($password)) {
+                $parametersToSet[] = [
+                    'name' => $paths['passphrase_path'],
+                    'value' => $password,
+                    'type' => 'xsd:string',
+                ];
+            }
+
+            // Set enabled state
+            $parametersToSet[] = [
+                'name' => $paths['enable_path'],
+                'value' => $config->enabled ? 'true' : 'false',
+                'type' => 'xsd:boolean',
+            ];
+
+            // Set hidden state (inverted - SSIDAdvertisementEnabled = !hidden)
+            $parametersToSet[] = [
+                'name' => $paths['hidden_path'],
+                'value' => $config->hidden ? 'false' : 'true',
+                'type' => 'xsd:boolean',
+            ];
+
+            $networksRestored[] = [
+                'interface' => $interfaceName,
+                'ssid' => $config->ssid,
+                'band' => $config->band,
+                'type' => $config->network_type,
+            ];
+        }
+
+        if (empty($parametersToSet)) {
+            return [
+                'success' => false,
+                'message' => 'No mappable WiFi parameters found in SSH configs',
+            ];
+        }
+
+        // Create task to set all WiFi parameters
+        $task = Task::create([
+            'device_id' => $device->id,
+            'type' => 'set_parameter_values',
+            'status' => 'pending',
+            'parameters' => [
+                'parameters' => $parametersToSet,
+                'purpose' => 'tr181_migration_wifi_fallback_ssh',
+                'source_device_id' => $sourceDevice->id,
+                'networks_restored' => $networksRestored,
+            ],
+            'created_at' => now(),
+        ]);
+
+        // Mark the SSH configs as migrated
+        DeviceWifiConfig::where('device_id', $sourceDevice->id)
+            ->whereIn('interface_name', array_column($networksRestored, 'interface'))
+            ->update([
+                'migrated_to_tr181' => true,
+                'migrated_at' => now(),
+            ]);
+
+        Log::info("TR-181 WiFi fallback task created from SSH configs for device {$device->serial_number}", [
+            'device_id' => $device->id,
+            'source_device_id' => $sourceDevice->id,
+            'task_id' => $task->id,
+            'parameter_count' => count($parametersToSet),
+            'networks_restored' => count($networksRestored),
+        ]);
+
+        return [
+            'success' => true,
+            'task' => $task,
+            'message' => 'WiFi fallback task created from SSH-extracted configs',
+            'parameter_count' => count($parametersToSet),
+            'networks_restored' => $networksRestored,
+        ];
+    }
+
+    /**
+     * Check if device has SSH-extracted WiFi configs available for fallback
+     *
+     * @param Device $device
+     * @return array{has_configs: bool, config_count: int, has_passwords: bool}
+     */
+    public function checkSshWifiConfigsAvailable(Device $device): array
+    {
+        $configs = $device->wifiConfigs()->customerFacing()->get();
+        $withPasswords = $configs->filter(fn($c) => !empty($c->password_encrypted))->count();
+
+        return [
+            'has_configs' => $configs->count() > 0,
+            'config_count' => $configs->count(),
+            'has_passwords' => $withPasswords > 0,
+            'password_count' => $withPasswords,
+            'extraction_method' => $configs->first()?->extraction_method,
+            'extracted_at' => $configs->first()?->extracted_at?->toDateTimeString(),
         ];
     }
 

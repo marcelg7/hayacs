@@ -10,6 +10,7 @@ use App\Models\Task;
 use App\Services\ConnectionRequestService;
 use App\Services\CwmpService;
 use App\Services\ProvisioningService;
+use App\Services\WorkflowExecutionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +20,8 @@ class CwmpController extends Controller
     public function __construct(
         private CwmpService $cwmpService,
         private ProvisioningService $provisioningService,
-        private ConnectionRequestService $connectionRequestService
+        private ConnectionRequestService $connectionRequestService,
+        private WorkflowExecutionService $workflowExecutionService
     ) {}
 
     /**
@@ -51,9 +53,14 @@ class CwmpController extends Controller
                 return $this->handleEmptyPost($request);
             }
 
+            // Extract session info (cwmp:ID, CWMP namespace) before parsing
+            // This is needed for proper response generation with matching namespace/ID
+            $this->cwmpService->extractSessionInfo($xmlContent);
+
             // Determine message type and parse accordingly
             // Check for Response in element name (handles both <Response> and <Response/>)
-            $isResponse = str_contains($xmlContent, 'Response');
+            // Also check for TransferComplete which doesn't contain "Response" but is still a response
+            $isResponse = str_contains($xmlContent, 'Response') || str_contains($xmlContent, 'TransferComplete');
 
             if ($isResponse) {
                 $parsed = $this->cwmpService->parseResponse($xmlContent);
@@ -78,6 +85,7 @@ class CwmpController extends Controller
             // Handle based on method
             $responseXml = match ($parsed['method']) {
                 'Inform' => $this->handleInform($request, $parsed),
+                'GetRPCMethods' => $this->handleGetRPCMethodsRequest(),
                 'GetParameterValues' => $this->handleGetParameterValuesResponse($parsed),
                 'GetParameterNames' => $this->handleGetParameterNamesResponse($parsed),
                 'SetParameterValues' => $this->handleSetParameterValuesResponse($parsed),
@@ -446,6 +454,9 @@ class CwmpController extends Controller
                         'task_type' => $abandonedTask->task_type,
                         'events' => $parsed['events'],
                     ]);
+
+                    // Notify workflow service about task failure
+                    $this->workflowExecutionService->onTaskCompleted($abandonedTask);
                 }
             }
         }
@@ -478,6 +489,9 @@ class CwmpController extends Controller
         // Auto-provision device based on events and rules
         $this->provisioningService->autoProvision($device, $parsed['events']);
 
+        // Trigger on_connect workflows for this device
+        $this->triggerOnConnectWorkflows($device);
+
         // ALWAYS send InformResponse first (TR-069 spec requirement)
         // RPCs will be sent after device acknowledges with empty POST
         return $this->cwmpService->createInformResponse($parsed['max_envelopes']);
@@ -491,10 +505,20 @@ class CwmpController extends Controller
         Log::info('Empty POST received from device', ['ip' => $request->ip()]);
 
         // Find the most recent device from this IP address
+        // First try with recent inform (within 5 minutes)
         $device = Device::where('ip_address', $request->ip())
             ->where('last_inform', '>=', now()->subMinutes(5))
             ->orderBy('last_inform', 'desc')
             ->first();
+
+        // If not found, try with longer window (30 minutes) for devices that
+        // send empty POSTs without a preceding Inform (e.g., Calix GigaSpire)
+        if (!$device) {
+            $device = Device::where('ip_address', $request->ip())
+                ->where('last_inform', '>=', now()->subMinutes(30))
+                ->orderBy('last_inform', 'desc')
+                ->first();
+        }
 
         if (!$device) {
             Log::warning('Empty POST from unknown device', ['ip' => $request->ip()]);
@@ -513,6 +537,10 @@ class CwmpController extends Controller
             // Mark task as sent
             $pendingTask->markAsSent();
 
+            // Set device context for proper CWMP namespace selection
+            // This ensures we use CWMP 1.2 for Calix/Nokia devices even without session info
+            $this->cwmpService->setDeviceContext($device);
+
             // Generate and send RPC
             $rpcXml = $this->generateRpcForTask($pendingTask);
 
@@ -529,6 +557,18 @@ class CwmpController extends Controller
         // No pending tasks - end session
         Log::info('No pending tasks - ending CWMP session', ['device_id' => $device->id]);
         return response('', 204)->header('Content-Type', 'text/xml; charset=utf-8');
+    }
+
+    /**
+     * Handle GetRPCMethods request from device
+     * Some devices (e.g., Calix GigaSpire) send GetRPCMethods to query ACS capabilities
+     * before they will accept RPC commands from the ACS.
+     */
+    private function handleGetRPCMethodsRequest(): string
+    {
+        Log::info('Device requested GetRPCMethods - responding with supported methods');
+
+        return $this->cwmpService->createGetRPCMethodsResponse();
     }
 
     /**
@@ -653,6 +693,9 @@ class CwmpController extends Controller
                 // Mark task as completed
                 $task->markAsCompleted($parsed['parameters']);
 
+                // Notify workflow service about task completion
+                $this->workflowExecutionService->onTaskCompleted($task);
+
                 Log::info('GetParameterValues completed', [
                     'device_id' => $device->id,
                     'param_count' => count($parsed['parameters']),
@@ -686,6 +729,8 @@ class CwmpController extends Controller
                 }
 
                 $nextTask->markAsSent();
+                // Set device context for proper CWMP namespace
+                $this->cwmpService->setDeviceContext($device);
                 return $this->generateRpcForTask($nextTask);
             } else {
                 // No more tasks - check if we need to create initial backup
@@ -764,10 +809,13 @@ class CwmpController extends Controller
 
         // Check for more pending tasks (with proper ordering)
         if ($task && $task->device) {
-            $nextTask = $this->getNextPendingTask($task->device);
+            $device = $task->device;
+            $nextTask = $this->getNextPendingTask($device);
 
             if ($nextTask) {
                 $nextTask->markAsSent();
+                // Set device context for proper CWMP namespace
+                $this->cwmpService->setDeviceContext($device);
                 return $this->generateRpcForTask($nextTask);
             }
         }
@@ -794,7 +842,8 @@ class CwmpController extends Controller
                         'task_type' => $task->task_type,
                     ]);
                 } else {
-                    $task->markAsCompleted(['status' => $parsed['status']]);
+                    // Use workflow-aware completion
+                    $this->completeTaskWithWorkflowNotification($task, ['status' => $parsed['status']]);
                     Log::info('SetParameterValues completed', ['device_id' => $task->device_id]);
 
                     // If this was a port mapping configuration, save the parameters to database
@@ -834,10 +883,13 @@ class CwmpController extends Controller
 
         // Check for more pending tasks (with proper ordering)
         if ($task && $task->device) {
-            $nextTask = $this->getNextPendingTask($task->device);
+            $device = $task->device;
+            $nextTask = $this->getNextPendingTask($device);
 
             if ($nextTask) {
                 $nextTask->markAsSent();
+                // Set device context for proper CWMP namespace
+                $this->cwmpService->setDeviceContext($device);
                 return $this->generateRpcForTask($nextTask);
             }
 
@@ -892,7 +944,7 @@ class CwmpController extends Controller
         $task = $this->findSentTaskForSession(['reboot']);
 
         if ($task) {
-            $task->markAsCompleted();
+            $this->completeTaskWithWorkflowNotification($task);
             Log::info('Reboot command sent', ['device_id' => $task->device_id]);
 
             // Queue a task to refresh uptime after reboot completes
@@ -928,7 +980,7 @@ class CwmpController extends Controller
         $task = $this->findSentTaskForSession(['factory_reset']);
 
         if ($task) {
-            $task->markAsCompleted();
+            $this->completeTaskWithWorkflowNotification($task);
             Log::info('FactoryReset command sent', ['device_id' => $task->device_id]);
         }
 
@@ -946,29 +998,81 @@ class CwmpController extends Controller
         if ($task) {
             $faultCode = $parsed['fault_code'] ?? 0;
             $faultString = $parsed['fault_string'] ?? '';
+            $startTime = $parsed['start_time'] ?? null;
+            $completeTime = $parsed['complete_time'] ?? null;
+
+            // Calculate transfer speed if we have timing data and file size
+            // For downloads: file_size is in parameters (known before transfer)
+            // For uploads: file_size is in progress_info (set by DeviceUploadController when file is received)
+            $speedMbps = null;
+            $transferDuration = null;
+            $fileSizeBytes = $task->parameters['file_size']
+                ?? $task->progress_info['file_size']
+                ?? null;
+
+            if ($startTime && $completeTime && $fileSizeBytes) {
+                try {
+                    $start = new \DateTime($startTime);
+                    $complete = new \DateTime($completeTime);
+                    $transferDuration = $complete->getTimestamp() - $start->getTimestamp();
+                    if ($transferDuration > 0) {
+                        $fileSizeBytes = (int) $fileSizeBytes;
+                        $speedBps = ($fileSizeBytes * 8) / $transferDuration; // bits per second
+                        $speedMbps = round($speedBps / 1000000, 2); // Megabits per second
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Failed to parse transfer times', ['error' => $e->getMessage()]);
+                }
+            }
+
+            // Build result data
+            $resultData = [
+                'fault_code' => $faultCode,
+                'fault_string' => $faultString,
+                'start_time' => $startTime,
+                'complete_time' => $completeTime,
+                'transfer_duration_seconds' => $transferDuration,
+                'speed_mbps' => $speedMbps,
+            ];
 
             if ($faultCode === 0) {
-                $task->markAsCompleted([
-                    'fault_code' => $faultCode,
-                    'start_time' => $parsed['start_time'] ?? null,
-                    'complete_time' => $parsed['complete_time'] ?? null,
-                ]);
+                $task->markAsCompleted($resultData);
 
                 Log::info('Transfer completed successfully', [
                     'device_id' => $task->device_id,
                     'task_type' => $task->task_type,
-                    'start_time' => $parsed['start_time'] ?? null,
-                    'complete_time' => $parsed['complete_time'] ?? null,
+                    'start_time' => $startTime,
+                    'complete_time' => $completeTime,
+                    'speed_mbps' => $speedMbps,
                 ]);
             } else {
-                $task->markAsFailed("Transfer failed (FaultCode {$faultCode}): {$faultString}");
+                // For speed tests with validation errors, mark as completed (file was transferred but rejected)
+                // Only count validation errors like "Invalid image format", not connection failures
+                $isSpeedTest = str_contains($task->parameters['description'] ?? '', 'Speed test');
+                $isValidationError = str_contains($faultString, 'Invalid') || str_contains($faultString, 'format');
+                $hasReasonableSpeed = $speedMbps !== null && $speedMbps < 2000; // Sanity check: less than 2 Gbps
 
-                Log::warning('Transfer failed', [
-                    'device_id' => $task->device_id,
-                    'task_type' => $task->task_type,
-                    'fault_code' => $faultCode,
-                    'fault_string' => $faultString,
-                ]);
+                if ($isSpeedTest && $isValidationError && $hasReasonableSpeed && $transferDuration > 0) {
+                    $resultData['note'] = 'Speed test successful - validation error ignored';
+                    $task->markAsCompleted($resultData);
+
+                    Log::info('Speed test completed (validation error ignored)', [
+                        'device_id' => $task->device_id,
+                        'speed_mbps' => $speedMbps,
+                        'fault_code' => $faultCode,
+                        'fault_string' => $faultString,
+                    ]);
+                } else {
+                    $task->markAsFailed("Transfer failed (FaultCode {$faultCode}): {$faultString}", $resultData);
+
+                    Log::warning('Transfer failed', [
+                        'device_id' => $task->device_id,
+                        'task_type' => $task->task_type,
+                        'fault_code' => $faultCode,
+                        'fault_string' => $faultString,
+                        'speed_mbps' => $speedMbps,
+                    ]);
+                }
             }
         }
 
@@ -1055,10 +1159,13 @@ class CwmpController extends Controller
 
         // Check for more pending tasks
         if ($task && $task->device) {
-            $nextTask = $this->getNextPendingTask($task->device);
+            $device = $task->device;
+            $nextTask = $this->getNextPendingTask($device);
 
             if ($nextTask) {
                 $nextTask->markAsSent();
+                // Set device context for proper CWMP namespace
+                $this->cwmpService->setDeviceContext($device);
                 return $this->generateRpcForTask($nextTask);
             }
         }
@@ -1117,10 +1224,13 @@ class CwmpController extends Controller
 
         // Check for more pending tasks
         if ($task && $task->device) {
-            $nextTask = $this->getNextPendingTask($task->device);
+            $device = $task->device;
+            $nextTask = $this->getNextPendingTask($device);
 
             if ($nextTask) {
                 $nextTask->markAsSent();
+                // Set device context for proper CWMP namespace
+                $this->cwmpService->setDeviceContext($device);
                 return $this->generateRpcForTask($nextTask);
             }
         }
@@ -1165,43 +1275,77 @@ class CwmpController extends Controller
         ]);
 
         // Find the most recent 'sent' task for this device and mark it as failed
+        // Try session-based lookup first, then fall back to IP-based lookup
         $deviceId = $this->getSessionDeviceId();
-        $query = Task::where('status', 'sent')
-            ->orderBy('updated_at', 'desc');
+        $task = null;
 
         if ($deviceId) {
-            $query->where('device_id', $deviceId);
+            $task = Task::where('status', 'sent')
+                ->where('device_id', $deviceId)
+                ->orderBy('updated_at', 'desc')
+                ->first();
         }
 
-        $task = $query->first();
+        // Fallback: Try to find device by IP address if session didn't work
+        if (!$task) {
+            $clientIp = request()->ip();
+            if ($clientIp) {
+                $device = Device::where('ip_address', $clientIp)->first();
+                if ($device) {
+                    $task = Task::where('status', 'sent')
+                        ->where('device_id', $device->id)
+                        ->orderBy('updated_at', 'desc')
+                        ->first();
 
-        if ($task) {
-            $errorMessage = "SOAP Fault {$faultCode}: {$faultString}";
-
-            if (!empty($parameterFaults)) {
-                $paramErrors = array_map(function ($pf) {
-                    return "{$pf['parameter']} ({$pf['code']}: {$pf['message']})";
-                }, $parameterFaults);
-                $errorMessage .= ' - Invalid parameters: ' . implode(', ', $paramErrors);
-            }
-
-            $task->markAsFailed($errorMessage);
-
-            Log::warning('Task failed due to SOAP Fault', [
-                'task_id' => $task->id,
-                'task_type' => $task->task_type,
-                'device_id' => $task->device_id,
-                'error' => $errorMessage,
-            ]);
-
-            // Check for more pending tasks (other tasks may still work)
-            if ($task->device) {
-                $nextTask = $this->getNextPendingTask($task->device);
-
-                if ($nextTask) {
-                    $nextTask->markAsSent();
-                    return $this->generateRpcForTask($nextTask);
+                    if ($task) {
+                        Log::info('Found task for SOAP Fault via IP fallback', [
+                            'device_id' => $device->id,
+                            'task_id' => $task->id,
+                            'ip' => $clientIp,
+                        ]);
+                    }
                 }
+            }
+        }
+
+        if (!$task) {
+            Log::warning('Cannot associate SOAP Fault with a task - no device ID in session and IP fallback failed', [
+                'fault_code' => $faultCode,
+                'fault_string' => $faultString,
+                'ip' => request()->ip(),
+            ]);
+            return $this->cwmpService->createEmptyResponse();
+        }
+
+        // Task found - mark it as failed with detailed error message
+        $errorMessage = "SOAP Fault {$faultCode}: {$faultString}";
+
+        if (!empty($parameterFaults)) {
+            $paramErrors = array_map(function ($pf) {
+                return "{$pf['parameter']} ({$pf['code']}: {$pf['message']})";
+            }, $parameterFaults);
+            $errorMessage .= ' - Invalid parameters: ' . implode(', ', $paramErrors);
+        }
+
+        $task->markAsFailed($errorMessage);
+
+        Log::warning('Task failed due to SOAP Fault', [
+            'task_id' => $task->id,
+            'task_type' => $task->task_type,
+            'device_id' => $task->device_id,
+            'error' => $errorMessage,
+        ]);
+
+        // Check for more pending tasks (other tasks may still work)
+        if ($task->device) {
+            $device = $task->device;
+            $nextTask = $this->getNextPendingTask($device);
+
+            if ($nextTask) {
+                $nextTask->markAsSent();
+                // Set device context for proper CWMP namespace
+                $this->cwmpService->setDeviceContext($device);
+                return $this->generateRpcForTask($nextTask);
             }
         }
 
@@ -1217,9 +1361,9 @@ class CwmpController extends Controller
             'get_params', 'discover_troubleshooting', 'get_diagnostic_results', 'verify_set_params' => $this->cwmpService->createGetParameterValues(
                 $task->parameters['names'] ?? []
             ),
-            // get_parameter_values: parameters is a flat array of parameter names
+            // get_parameter_values: parameters can be flat array or have 'names' key
             'get_parameter_values' => $this->cwmpService->createGetParameterValues(
-                $task->parameters ?? []
+                $task->parameters['names'] ?? $task->parameters ?? []
             ),
             'get_parameter_names' => $this->cwmpService->createGetParameterNames(
                 $task->parameters['path'] ?? 'InternetGatewayDevice.',
@@ -1654,6 +1798,27 @@ class CwmpController extends Controller
         $destructiveTaskTypes = ['reboot', 'factory_reset'];
         $diagnosticTaskTypes = ['ping_diagnostics', 'traceroute_diagnostics', 'download_diagnostics', 'upload_diagnostics', 'wifi_scan'];
 
+        // Check for tasks that were 'sent' very recently but device sent GetRPCMethods instead of responding
+        // These tasks need to be resent (they were marked 'sent' in the last 30 seconds)
+        $recentlySentTask = $device->tasks()
+            ->where('status', 'sent')
+            ->where('updated_at', '>=', now()->subSeconds(30))
+            ->whereNotIn('task_type', $diagnosticTaskTypes) // Don't resend diagnostics as they may still be processing
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        if ($recentlySentTask) {
+            Log::info('Resending recently sent task (device may have sent GetRPCMethods first)', [
+                'device_id' => $device->id,
+                'task_id' => $recentlySentTask->id,
+                'task_type' => $recentlySentTask->task_type,
+                'sent_seconds_ago' => $recentlySentTask->updated_at->diffInSeconds(now()),
+            ]);
+            // Reset to pending so markAsSent() works correctly
+            $recentlySentTask->update(['status' => 'pending']);
+            return $recentlySentTask;
+        }
+
         // Check if there are diagnostic tasks waiting for completion (in 'sent' status)
         $hasPendingDiagnostics = $device->tasks()
             ->where('status', 'sent')
@@ -1982,6 +2147,9 @@ class CwmpController extends Controller
                 'command_key' => $commandKey,
             ]);
 
+            // Notify workflow execution service of task completion
+            $this->workflowExecutionService->onTaskCompleted($task);
+
             // Queue a task to refresh device info (get updated software version)
             Task::create([
                 'device_id' => $device->id,
@@ -2185,6 +2353,9 @@ class CwmpController extends Controller
                 'missing' => $missing,
                 'skipped' => $skipped,
             ]);
+
+            // Notify workflow execution service of task completion
+            $this->workflowExecutionService->onTaskCompleted($originalTask);
         } else {
             $skippedNote = $skipped > 0 ? ", {$skipped} write-only skipped" : '';
             $originalTask->update([
@@ -2230,6 +2401,105 @@ class CwmpController extends Controller
         }
 
         return $strValue;
+    }
+
+    /**
+     * Complete a task and notify workflow execution service
+     * Also queues a device refresh for workflow tasks
+     */
+    private function completeTaskWithWorkflowNotification(Task $task, ?array $result = null): void
+    {
+        $task->markAsCompleted($result);
+
+        // Notify workflow execution service
+        $this->workflowExecutionService->onTaskCompleted($task);
+
+        // If this task was part of a workflow, queue a device refresh
+        $execution = \App\Models\WorkflowExecution::where('task_id', $task->id)->first();
+        if ($execution) {
+            $device = $task->device;
+            if ($device) {
+                // Queue a refresh to get updated device info
+                Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'get_parameter_values',
+                    'description' => 'Refresh device after workflow task',
+                    'status' => 'pending',
+                    'parameters' => $this->getDeviceRefreshParameters($device),
+                ]);
+
+                Log::info('Queued device refresh after workflow task completion', [
+                    'device_id' => $device->id,
+                    'task_id' => $task->id,
+                    'workflow_id' => $execution->group_workflow_id,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Get parameters for a device refresh based on data model
+     */
+    private function getDeviceRefreshParameters(Device $device): array
+    {
+        $dataModel = $device->getDataModel();
+
+        if ($dataModel === 'TR-181') {
+            return [
+                'Device.DeviceInfo.SoftwareVersion',
+                'Device.DeviceInfo.HardwareVersion',
+                'Device.DeviceInfo.UpTime',
+                'Device.ManagementServer.PeriodicInformInterval',
+            ];
+        }
+
+        return [
+            'InternetGatewayDevice.DeviceInfo.SoftwareVersion',
+            'InternetGatewayDevice.DeviceInfo.HardwareVersion',
+            'InternetGatewayDevice.DeviceInfo.UpTime',
+            'InternetGatewayDevice.ManagementServer.PeriodicInformInterval',
+        ];
+    }
+
+    /**
+     * Trigger on_connect workflows for a device
+     * Creates tasks for any active workflows with schedule_type='on_connect' that match this device
+     */
+    private function triggerOnConnectWorkflows(Device $device): void
+    {
+        // Find active on_connect workflows
+        $workflows = \App\Models\GroupWorkflow::where('schedule_type', 'on_connect')
+            ->where('is_active', true)
+            ->where('status', 'active')
+            ->get();
+
+        if ($workflows->isEmpty()) {
+            return;
+        }
+
+        foreach ($workflows as $workflow) {
+            // Check if device matches this workflow's group
+            if (!$workflow->deviceGroup->matchesDevice($device)) {
+                continue;
+            }
+
+            // Check if workflow can run for this device (handles dependencies and run_once_per_device)
+            if (!$workflow->canRunForDevice($device)) {
+                continue;
+            }
+
+            // Execute the workflow for this device
+            $task = $this->workflowExecutionService->executeForDevice($workflow, $device);
+
+            if ($task) {
+                Log::info('On-connect workflow triggered', [
+                    'device_id' => $device->id,
+                    'workflow_id' => $workflow->id,
+                    'workflow_name' => $workflow->name,
+                    'task_id' => $task->id,
+                ]);
+            }
+        }
     }
 }
 

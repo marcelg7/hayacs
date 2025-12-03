@@ -1,0 +1,777 @@
+Packet Received on Port 1111 - Wed, 03 Dec 2025 13:15:42.348
+CPE Manager IP Address=172.24.1.70
+Connection ID=44198
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Content-Type: text/xml; charset=utf-8
+SOAPAction: ""
+User-Agent: gSoap 2.8.30 / Dimark client v.4.8 [9347]
+X-HTTPS-Protocol: TLSv1.3
+X-Forwarded-For: 163.182.250.8, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3432
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-2"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">CPE_1000</cwmp:ID>
+    <cwmp:SessionTimeout>30</cwmp:SessionTimeout>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>Calix</Manufacturer>
+        <OUI>f885f9</OUI>
+        <ProductClass>GigaSpire</ProductClass>
+        <SerialNumber>CXNK0107FEDD</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>0 BOOTSTRAP</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-12-03T07:15:42-06:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[14]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.5[](Baseline:1, EthernetLAN:1, Time:1, IPPing:1, DeviceAssociation:1, WiFiLAN:1, UDPConnReq:1, TraceRoute:1)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">3000286516</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">23.4.0.1.128</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://163.182.250.8:60002/870Yg210</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.AliasBasedAddressing</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.1.WANCommonInterfaceConfig.WANAccessType</Name>
+          <Value xsi:type="xsd:string">Ethernet</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">163.182.250.8</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.X_000631_WANIPv6Connection.1.X_000631_ExternalIPv6Address</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.ExosMesh.WapHostInfo.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">192.168.1.1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.UpnpCfg.NATEnable</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.GatewayInfo.SerialNumber</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 03 Dec 2025 13:15:42.351
+CPE Manager IP Address=172.24.1.70
+Connection ID=44198
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Digest     realm="TR069_ip-172-24-1-70",      qop="auth",      nonce="19ae45ab98e45DE78",      opaque="5c192d4d"
+WWW-Authenticate: Basic realm="TR069_ip-172-24-1-70"
+Connection: close
+Content-Type: text/plain
+Content-Length: 0
+
+
+Packet Received on Port 1111 - Wed, 03 Dec 2025 13:15:42.498
+CPE Manager IP Address=172.24.3.201
+Connection ID=36574
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Digest algorithm=MD5, realm="TR069_ip-172-24-1-70", username="acs-user-d30UJ", nonce="19ae45ab98e45DE78", uri="/hay", qop="auth", nc=00000001, cnonce="693037feca53abd2dbf1", response="a88202cb56d6974bb7ce7b71b463f597", opaque="5c192d4d"
+Content-Type: text/xml; charset=utf-8
+SOAPAction: ""
+User-Agent: gSoap 2.8.30 / Dimark client v.4.8 [9347]
+X-HTTPS-Protocol: TLSv1.3
+X-Forwarded-For: 163.182.250.8, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3387
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-2"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">CPE_1001</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>Calix</Manufacturer>
+        <OUI>f885f9</OUI>
+        <ProductClass>GigaSpire</ProductClass>
+        <SerialNumber>CXNK0107FEDD</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>0 BOOTSTRAP</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-12-03T07:15:42-06:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[14]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.5[](Baseline:1, EthernetLAN:1, Time:1, IPPing:1, DeviceAssociation:1, WiFiLAN:1, UDPConnReq:1, TraceRoute:1)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">3000286516</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">23.4.0.1.128</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://163.182.250.8:60002/870Yg210</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.AliasBasedAddressing</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.1.WANCommonInterfaceConfig.WANAccessType</Name>
+          <Value xsi:type="xsd:string">Ethernet</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">163.182.250.8</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.X_000631_WANIPv6Connection.1.X_000631_ExternalIPv6Address</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.ExosMesh.WapHostInfo.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">192.168.1.1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.UpnpCfg.NATEnable</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.GatewayInfo.SerialNumber</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 03 Dec 2025 13:15:42.531
+CPE Manager IP Address=172.24.3.201
+Connection ID=36574
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 528
+Connection: close
+Set-Cookie: SessionId=CpeMgr172.24.3.201.CpeSN.CXNK0107FEDD-36574; Path=/hay
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-2"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">CPE_1001</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:InformResponse>
+      <MaxEnvelopes>1</MaxEnvelopes>
+    </cwmp:InformResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Wed, 03 Dec 2025 13:15:42.599
+CPE Manager IP Address=172.24.3.201
+Connection ID=36577
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Digest algorithm=MD5, realm="TR069_ip-172-24-1-70", username="acs-user-d30UJ", nonce="19ae45ab98e45DE78", uri="/hay", qop="auth", nc=00000002, cnonce="693037feca54722fe83a", response="c4e872cc3374cb36f5059c843b2c2ec1", opaque="5c192d4d"
+Content-Type: text/xml; charset=utf-8
+Cookie: SessionId=CpeMgr172.24.3.201.CpeSN.CXNK0107FEDD-36574;$Path="/hay";$Domain="tr069.nisc-uss.coop" AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA42C13BF4E9AF67551B46A737991A38650865EBD745857C69373F8F0E491077966775566C5AED9949C980D7B66C4F01F651A4D528BD47691AC73851EDD7D5D4157B;$Path="/hay";$Domain="tr069.nisc-uss.coop"
+SOAPAction: ""
+User-Agent: gSoap 2.8.30 / Dimark client v.4.8 [9347]
+X-HTTPS-Protocol: TLSv1.3
+X-Forwarded-For: 163.182.250.8, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 498
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-2"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">CPE_1002</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:GetRPCMethods/>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 03 Dec 2025 13:15:42.601
+CPE Manager IP Address=172.24.3.201
+Connection ID=36577
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 1299
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">CPE_1002</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:GetRPCMethodsResponse>
+      <MethodList SOAP-ENC:arrayType="xsd:string[22]">
+        <string>AddObject</string>
+        <string>AutonomousDUStateChangeComplete</string>
+        <string>AutonomousTransferComplete</string>
+        <string>ChangeDUState</string>
+        <string>DeleteObject</string>
+        <string>Download</string>
+        <string>DUStateChangeComplete</string>
+        <string>FactoryReset</string>
+        <string>GetParameterAttributes</string>
+        <string>GetParameterNames</string>
+        <string>GetParameterValues</string>
+        <string>GetQueuedTransfers</string>
+        <string>GetRPCMethods</string>
+        <string>Inform</string>
+        <string>Reboot</string>
+        <string>RequestDownload</string>
+        <string>ScheduleInform</string>
+        <string>SetParameterAttributes</string>
+        <string>SetParameterValues</string>
+        <string>TransferComplete</string>
+        <string>Upload</string>
+        <string>X_000B23_DeleteQueuedTransfer</string>
+      </MethodList>
+    </cwmp:GetRPCMethodsResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Wed, 03 Dec 2025 13:15:42.636
+CPE Manager IP Address=172.24.3.201
+Connection ID=36575
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Digest algorithm=MD5, realm="TR069_ip-172-24-1-70", username="acs-user-d30UJ", nonce="19ae45ab98e45DE78", uri="/hay", qop="auth", nc=00000003, cnonce="693037feca559dc842e3", response="5b346da14c6da12bed0f9eb97a71dbf1", opaque="5c192d4d"
+Cookie: SessionId=CpeMgr172.24.3.201.CpeSN.CXNK0107FEDD-36574;$Path="/hay";$Domain="tr069.nisc-uss.coop" AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA42C13BF4E9AF67551B46A737991A38650865EBD745857C69373F8F0E491077966775566C5AED9949C980D7B66C4F01F651A4D528BD47691AC73851EDD7D5D4157B;$Path="/hay";$Domain="tr069.nisc-uss.coop"
+User-Agent: gSoap 2.8.30 / Dimark client v.4.8 [9347]
+X-HTTPS-Protocol: TLSv1.3
+X-Forwarded-For: 163.182.250.8, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 0
+
+
+Packet Sent - Wed, 03 Dec 2025 13:15:42.799
+CPE Manager IP Address=172.24.3.201
+Connection ID=36575
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 1341
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:cwmp="urn:dslforum-org:cwmp-1-2"
+  xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap-env:Header>
+    <cwmp:ID soap-env:mustUnderstand="1">11779</cwmp:ID>
+  </soap-env:Header>
+  <soap-env:Body>
+    <cwmp:SetParameterValues>
+      <ParameterList soap-enc:arrayType="cwmp:ParameterValueStruct[5]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.User.1.Password</Name>
+          <Value xsi:type="xsd:string">8a1485be</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.User.2.Password</Name>
+          <Value xsi:type="xsd:string">keepOut-72863!!!</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UserInterface.RemoteAccess.Enable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.User.2.RemoteAccessCapable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UserInterface.RemoteAccess.Port</Name>
+          <Value xsi:type="xsd:unsignedInt">8080</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+      <ParameterKey/>
+    </cwmp:SetParameterValues>
+  </soap-env:Body>
+</soap-env:Envelope>
+
+Packet Received on Port 1111 - Wed, 03 Dec 2025 13:15:42.843
+CPE Manager IP Address=172.24.3.201
+Connection ID=36578
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Digest algorithm=MD5, realm="TR069_ip-172-24-1-70", username="acs-user-d30UJ", nonce="19ae45ab98e45DE78", uri="/hay", qop="auth", nc=00000004, cnonce="693037feca567fdea5eb", response="699ac329dbcd63a85c026bbdaacf3ce5", opaque="5c192d4d"
+Content-Type: text/xml; charset=utf-8
+Cookie: SessionId=CpeMgr172.24.3.201.CpeSN.CXNK0107FEDD-36574;$Path="/hay";$Domain="tr069.nisc-uss.coop" AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA42C13BF4E9AF67551B46A737991A38650865EBD745857C69373F8F0E491077966775566C5AED9949C980D7B66C4F01F651A4D528BD47691AC73851EDD7D5D4157B;$Path="/hay";$Domain="tr069.nisc-uss.coop"
+SOAPAction: 
+User-Agent: gSoap 2.8.30 / Dimark client v.4.8 [9347]
+X-HTTPS-Protocol: TLSv1.3
+X-Forwarded-For: 163.182.250.8, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 539
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-2"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">11779</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:SetParameterValuesResponse>
+      <Status>0</Status>
+    </cwmp:SetParameterValuesResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 03 Dec 2025 13:15:42.962
+CPE Manager IP Address=172.24.3.201
+Connection ID=36578
+HTTP/1.1 204 No Content
+Content-Type: text/plain
+Content-Length: 0
+Connection: close
+
+
+Packet Received on Port 1111 - Wed, 03 Dec 2025 13:15:45.260
+CPE Manager IP Address=172.24.1.70
+Connection ID=44227
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Content-Type: text/xml; charset=utf-8
+SOAPAction: ""
+User-Agent: gSoap 2.8.30 / Dimark client v.4.8 [9347]
+X-HTTPS-Protocol: TLSv1.3
+X-Forwarded-For: 163.182.250.8, 3.21.59.74
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3266
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-2"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">CPE_1003</cwmp:ID>
+    <cwmp:SessionTimeout>30</cwmp:SessionTimeout>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>Calix</Manufacturer>
+        <OUI>f885f9</OUI>
+        <ProductClass>GigaSpire</ProductClass>
+        <SerialNumber>CXNK0107FEDD</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>6 CONNECTION REQUEST</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-12-03T07:15:45-06:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[13]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.5[](Baseline:1, EthernetLAN:1, Time:1, IPPing:1, DeviceAssociation:1, WiFiLAN:1, UDPConnReq:1, TraceRoute:1)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">3000286516</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">23.4.0.1.128</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://163.182.250.8:60002/870Yg210</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.AliasBasedAddressing</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">163.182.250.8</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.X_000631_WANIPv6Connection.1.X_000631_ExternalIPv6Address</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.ExosMesh.WapHostInfo.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">192.168.1.1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.UpnpCfg.NATEnable</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.GatewayInfo.SerialNumber</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 03 Dec 2025 13:15:45.263
+CPE Manager IP Address=172.24.1.70
+Connection ID=44227
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Digest     realm="TR069_ip-172-24-1-70",      qop="auth",      nonce="19ae45ac4ef45DE78",      opaque="cb73326"
+WWW-Authenticate: Basic realm="TR069_ip-172-24-1-70"
+Connection: close
+Content-Type: text/plain
+Content-Length: 0
+
+
+Packet Received on Port 1111 - Wed, 03 Dec 2025 13:15:45.409
+CPE Manager IP Address=172.24.3.170
+Connection ID=33384
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Digest algorithm=MD5, realm="TR069_ip-172-24-1-70", username="acs-user-d30UJ", nonce="19ae45ac4ef45DE78", uri="/hay", qop="auth", nc=00000001, cnonce="69303801ca57bc256596", response="2fef1587b97d7eaaae1a4912f582bd96", opaque="cb73326"
+Content-Type: text/xml; charset=utf-8
+SOAPAction: ""
+User-Agent: gSoap 2.8.30 / Dimark client v.4.8 [9347]
+X-HTTPS-Protocol: TLSv1.3
+X-Forwarded-For: 163.182.250.8, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 3221
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-2"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">CPE_1004</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:Inform>
+      <DeviceId>
+        <Manufacturer>Calix</Manufacturer>
+        <OUI>f885f9</OUI>
+        <ProductClass>GigaSpire</ProductClass>
+        <SerialNumber>CXNK0107FEDD</SerialNumber>
+      </DeviceId>
+      <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+        <EventStruct>
+          <EventCode>6 CONNECTION REQUEST</EventCode>
+          <CommandKey/>
+        </EventStruct>
+      </Event>
+      <MaxEnvelopes>1</MaxEnvelopes>
+      <CurrentTime>2025-12-03T07:15:45-06:00</CurrentTime>
+      <RetryCount>0</RetryCount>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[13]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceSummary</Name>
+          <Value xsi:type="xsd:string">InternetGatewayDevice:1.5[](Baseline:1, EthernetLAN:1, Time:1, IPPing:1, DeviceAssociation:1, WiFiLAN:1, UDPConnReq:1, TraceRoute:1)</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.HardwareVersion</Name>
+          <Value xsi:type="xsd:string">3000286516</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
+          <Value xsi:type="xsd:string">23.4.0.1.128</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.SpecVersion</Name>
+          <Value xsi:type="xsd:string">1.0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ParameterKey</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.ConnectionRequestURL</Name>
+          <Value xsi:type="xsd:string">http://163.182.250.8:60002/870Yg210</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.ManagementServer.AliasBasedAddressing</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">163.182.250.8</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.X_000631_WANIPv6Connection.1.X_000631_ExternalIPv6Address</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.ExosMesh.WapHostInfo.ExternalIPAddress</Name>
+          <Value xsi:type="xsd:string">192.168.1.1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.UpnpCfg.NATEnable</Name>
+          <Value xsi:type="xsd:boolean">1</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.X_000631_Device.GatewayInfo.SerialNumber</Name>
+          <Value xsi:type="xsd:string"/>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:Inform>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 03 Dec 2025 13:15:45.435
+CPE Manager IP Address=172.24.3.170
+Connection ID=33384
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 528
+Connection: close
+Set-Cookie: SessionId=CpeMgr172.24.3.170.CpeSN.CXNK0107FEDD-33384; Path=/hay
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-2"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">CPE_1004</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:InformResponse>
+      <MaxEnvelopes>1</MaxEnvelopes>
+    </cwmp:InformResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Received on Port 1111 - Wed, 03 Dec 2025 13:15:45.507
+CPE Manager IP Address=172.24.3.170
+Connection ID=33385
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Digest algorithm=MD5, realm="TR069_ip-172-24-1-70", username="acs-user-d30UJ", nonce="19ae45ac4ef45DE78", uri="/hay", qop="auth", nc=00000002, cnonce="69303801ca58b56415e8", response="c381dfd208c53eec852c7bf0df11781e", opaque="cb73326"
+Cookie: SessionId=CpeMgr172.24.3.170.CpeSN.CXNK0107FEDD-33384;$Path="/hay";$Domain="tr069.nisc-uss.coop" AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA427CD37C44DFE84B7C7A74D6B3F3FB919CAFF31C04BDCB1957009303B8B2816885750814683D3FE3A298F28E56080C13AA7998B3819BD21F5B203A931A8E6D00B4;$Path="/hay";$Domain="tr069.nisc-uss.coop"
+User-Agent: gSoap 2.8.30 / Dimark client v.4.8 [9347]
+X-HTTPS-Protocol: TLSv1.3
+X-Forwarded-For: 163.182.250.8, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 0
+
+
+Packet Sent - Wed, 03 Dec 2025 13:15:45.617
+CPE Manager IP Address=172.24.3.170
+Connection ID=33385
+HTTP/1.1 200 OK
+Content-Type: text/xml
+Content-Length: 994
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope xmlns:cwmp="urn:dslforum-org:cwmp-1-2"
+  xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap-env:Header>
+    <cwmp:ID soap-env:mustUnderstand="1">10123</cwmp:ID>
+  </soap-env:Header>
+  <soap-env:Body>
+    <cwmp:GetParameterValues>
+      <ParameterNames soap-enc:arrayType="xsd:string[7]">
+        <string>InternetGatewayDevice.User.1.Username</string>
+        <string>InternetGatewayDevice.User.1.Password</string>
+        <string>InternetGatewayDevice.User.2.Username</string>
+        <string>InternetGatewayDevice.User.2.Password</string>
+        <string>InternetGatewayDevice.UserInterface.RemoteAccess.Enable</string>
+        <string>InternetGatewayDevice.User.2.RemoteAccessCapable</string>
+        <string>InternetGatewayDevice.UserInterface.RemoteAccess.Port</string>
+      </ParameterNames>
+    </cwmp:GetParameterValues>
+  </soap-env:Body>
+</soap-env:Envelope>
+
+Packet Received on Port 1111 - Wed, 03 Dec 2025 13:15:45.655
+CPE Manager IP Address=172.24.3.170
+Connection ID=33387
+POST /hay HTTP/1.1
+host: tr069.nisc-uss.coop:17547
+Authorization: Digest algorithm=MD5, realm="TR069_ip-172-24-1-70", username="acs-user-d30UJ", nonce="19ae45ac4ef45DE78", uri="/hay", qop="auth", nc=00000003, cnonce="69303801ca592df50203", response="4a4122fc7cfd1eb77642fa98f44ac1c1", opaque="cb73326"
+Content-Type: text/xml; charset=utf-8
+Cookie: SessionId=CpeMgr172.24.3.170.CpeSN.CXNK0107FEDD-33384;$Path="/hay";$Domain="tr069.nisc-uss.coop" AWSELB=B7559783160EAF499797344D3930AAFFA8B310FA427CD37C44DFE84B7C7A74D6B3F3FB919CAFF31C04BDCB1957009303B8B2816885750814683D3FE3A298F28E56080C13AA7998B3819BD21F5B203A931A8E6D00B4;$Path="/hay";$Domain="tr069.nisc-uss.coop"
+SOAPAction: 
+User-Agent: gSoap 2.8.30 / Dimark client v.4.8 [9347]
+X-HTTPS-Protocol: TLSv1.3
+X-Forwarded-For: 163.182.250.8, 3.23.249.214
+X-Forwarded-Port: 17547
+X-Forwarded-Proto: https
+Connection: keep-alive
+Content-Length : 1620
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-2"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">10123</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:GetParameterValuesResponse>
+      <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[7]">
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.User.1.Username</Name>
+          <Value xsi:type="xsd:string">admin</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.User.1.Password</Name>
+          <Value xsi:type="xsd:string">8a1485be</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.User.2.Username</Name>
+          <Value xsi:type="xsd:string">support</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.User.2.Password</Name>
+          <Value xsi:type="xsd:string">keepOut-72863!!!</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UserInterface.RemoteAccess.Enable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.User.2.RemoteAccessCapable</Name>
+          <Value xsi:type="xsd:boolean">0</Value>
+        </ParameterValueStruct>
+        <ParameterValueStruct>
+          <Name>InternetGatewayDevice.UserInterface.RemoteAccess.Port</Name>
+          <Value xsi:type="xsd:unsignedInt">8080</Value>
+        </ParameterValueStruct>
+      </ParameterList>
+    </cwmp:GetParameterValuesResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+Packet Sent - Wed, 03 Dec 2025 13:15:45.857
+CPE Manager IP Address=172.24.3.170
+Connection ID=33387
+HTTP/1.1 204 No Content
+Content-Type: text/plain
+Content-Length: 0
+Connection: close

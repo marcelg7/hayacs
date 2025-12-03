@@ -12,20 +12,162 @@ class CwmpService
     private const SOAP_ENC = 'http://schemas.xmlsoap.org/soap/encoding/';
     private const XSD = 'http://www.w3.org/2001/XMLSchema';
     private const XSI = 'http://www.w3.org/2001/XMLSchema-instance';
+    private const CWMP_1_0 = 'urn:dslforum-org:cwmp-1-0';
+    private const CWMP_1_1 = 'urn:dslforum-org:cwmp-1-1';
+    private const CWMP_1_2 = 'urn:dslforum-org:cwmp-1-2';
+
+    // Default to CWMP 1.0 for backward compatibility
     private const CWMP = 'urn:dslforum-org:cwmp-1-0';
+
+    // Session state - stores cwmp:ID and namespace from device's message
+    private ?string $sessionCwmpId = null;
+    private ?string $sessionCwmpNamespace = null;
+
+    // Current device context for namespace fallback
+    private ?\App\Models\Device $currentDevice = null;
+
+    /**
+     * Extract session info (cwmp:ID and CWMP namespace) from incoming XML
+     * This should be called before parseInform/parseResponse to capture session state
+     */
+    public function extractSessionInfo(string $xml): void
+    {
+        $dom = new DOMDocument();
+        @$dom->loadXML($xml);
+
+        // Find the CWMP namespace used by the device
+        $root = $dom->documentElement;
+        if ($root) {
+            // Check for cwmp namespace declaration
+            foreach (['cwmp', 'CWMP'] as $prefix) {
+                $ns = $root->lookupNamespaceUri($prefix);
+                if ($ns && str_starts_with($ns, 'urn:dslforum-org:cwmp-1-')) {
+                    $this->sessionCwmpNamespace = $ns;
+                    break;
+                }
+            }
+
+            // Also check attributes for namespace
+            if (!$this->sessionCwmpNamespace) {
+                foreach ($root->attributes as $attr) {
+                    if (str_starts_with($attr->nodeValue, 'urn:dslforum-org:cwmp-1-')) {
+                        $this->sessionCwmpNamespace = $attr->nodeValue;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Extract cwmp:ID from SOAP Header
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('soap', self::SOAP_ENV);
+        $xpath->registerNamespace('soapenv', 'http://schemas.xmlsoap.org/soap/envelope/');
+
+        // Try different namespace prefixes for Header and ID
+        $idQueries = [
+            '//*[local-name()="Header"]/*[local-name()="ID"]',
+            '//soap:Header//*[local-name()="ID"]',
+            '//soapenv:Header//*[local-name()="ID"]',
+        ];
+
+        foreach ($idQueries as $query) {
+            $idNode = $xpath->query($query)->item(0);
+            if ($idNode && $idNode->nodeValue) {
+                $this->sessionCwmpId = $idNode->nodeValue;
+                break;
+            }
+        }
+    }
+
+    /**
+     * Set the current device context for namespace fallback
+     * This should be called before creating RPC requests when device is known
+     */
+    public function setDeviceContext(?\App\Models\Device $device): void
+    {
+        $this->currentDevice = $device;
+    }
+
+    /**
+     * Get the CWMP namespace to use for responses
+     * Priority: 1. Session namespace (from device's message)
+     *           2. Device-based default (Calix = CWMP 1.2)
+     *           3. Default CWMP 1.0
+     */
+    public function getCwmpNamespace(): string
+    {
+        // First, use session namespace if available (from device's Inform)
+        if ($this->sessionCwmpNamespace) {
+            return $this->sessionCwmpNamespace;
+        }
+
+        // Second, check device context and use appropriate default
+        if ($this->currentDevice) {
+            // Calix devices use CWMP 1.2
+            if ($this->currentDevice->isCalix()) {
+                return self::CWMP_1_2;
+            }
+            // Nokia devices also use CWMP 1.2
+            if ($this->currentDevice->isNokia()) {
+                return self::CWMP_1_2;
+            }
+        }
+
+        // Default to CWMP 1.0 for backward compatibility
+        return self::CWMP;
+    }
+
+    /**
+     * Get the cwmp:ID to echo back in responses
+     */
+    public function getSessionCwmpId(): ?string
+    {
+        return $this->sessionCwmpId;
+    }
+
+    /**
+     * Set session info directly (used when restoring from session storage)
+     */
+    public function setSessionInfo(?string $cwmpId, ?string $cwmpNamespace): void
+    {
+        $this->sessionCwmpId = $cwmpId;
+        $this->sessionCwmpNamespace = $cwmpNamespace;
+    }
+
+    /**
+     * Generate a new unique ID for ACS-initiated requests
+     * Uses incrementing counter format like USS does
+     */
+    private static int $acsIdCounter = 0;
+
+    public function generateAcsId(): string
+    {
+        if (self::$acsIdCounter === 0) {
+            // Initialize with a random starting point
+            self::$acsIdCounter = random_int(100000, 999999);
+        }
+        return (string) self::$acsIdCounter++;
+    }
 
     /**
      * Parse incoming SOAP/XML message from CPE device
      */
     public function parseInform(string $xml): array
     {
+        // Extract session info before parsing
+        $this->extractSessionInfo($xml);
+
         $dom = new DOMDocument();
         $dom->loadXML($xml);
         $xpath = new DOMXPath($dom);
 
-        // Register namespaces
+        // Register namespaces - register both CWMP 1.0 and the device's namespace
         $xpath->registerNamespace('soap', self::SOAP_ENV);
-        $xpath->registerNamespace('cwmp', self::CWMP);
+        $xpath->registerNamespace('cwmp', $this->getCwmpNamespace());
+        // Also register cwmp10/11/12 for explicit version queries if needed
+        $xpath->registerNamespace('cwmp10', self::CWMP_1_0);
+        $xpath->registerNamespace('cwmp11', self::CWMP_1_1);
+        $xpath->registerNamespace('cwmp12', self::CWMP_1_2);
 
         $result = [
             'method' => null,
@@ -215,23 +357,16 @@ class CwmpService
 
     /**
      * Create InformResponse
+     * Echoes back the device's cwmp:ID from the Inform message (per TR-069 spec)
      */
     public function createInformResponse(int $maxEnvelopes = 1): string
     {
         $dom = new DOMDocument('1.0', 'UTF-8');
         $dom->formatOutput = true;
 
-        // Create SOAP Envelope
-        $envelope = $dom->createElementNS(self::SOAP_ENV, 'soap:Envelope');
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:soap', self::SOAP_ENV);
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xsd', self::XSD);
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xsi', self::XSI);
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:cwmp', self::CWMP);
-        $dom->appendChild($envelope);
-
-        // Create SOAP Body
-        $body = $dom->createElement('soap:Body');
-        $envelope->appendChild($body);
+        // Create SOAP Envelope with cwmp:ID echoed back (isResponse = true)
+        $envelope = $this->createSoapEnvelope($dom, null, true);
+        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
 
         // Create InformResponse
         $informResponse = $dom->createElement('cwmp:InformResponse');
@@ -261,7 +396,7 @@ class CwmpService
 
         // Create ParameterNames array
         $paramNamesArray = $dom->createElement('ParameterNames');
-        $paramNamesArray->setAttribute('soapenc:arrayType', 'xsd:string[' . count($parameterNames) . ']');
+        $paramNamesArray->setAttribute('SOAP-ENC:arrayType', 'xsd:string[' . count($parameterNames) . ']');
         $getParams->appendChild($paramNamesArray);
 
         foreach ($parameterNames as $name) {
@@ -325,7 +460,7 @@ class CwmpService
 
         // Create ParameterList
         $paramList = $dom->createElement('ParameterList');
-        $paramList->setAttribute('soapenc:arrayType', 'cwmp:ParameterValueStruct[' . count($parameters) . ']');
+        $paramList->setAttribute('SOAP-ENC:arrayType', 'cwmp:ParameterValueStruct[' . count($parameters) . ']');
         $setParams->appendChild($paramList);
 
         foreach ($parameters as $name => $value) {
@@ -555,32 +690,127 @@ class CwmpService
     }
 
     /**
-     * Helper: Create SOAP Envelope structure
+     * Create GetRPCMethodsResponse for devices that request ACS capabilities
+     * Per TR-069, the ACS must respond with the list of RPC methods it supports
+     *
+     * IMPORTANT: This response MUST use cwmp-1-0 namespace, not the device's namespace.
+     * USS (NISC's ACS) uses cwmp-1-0 for GetRPCMethodsResponse regardless of device.
+     * GigaSpire devices require this exact format or they wait 5 minutes before continuing.
+     *
+     * This method builds a USS-compatible response with matching SOAP prefix style.
      */
-    private function createSoapEnvelope(DOMDocument $dom, bool $includeId = false): DOMElement
+    public function createGetRPCMethodsResponse(): string
     {
-        $envelope = $dom->createElementNS(self::SOAP_ENV, 'soap:Envelope');
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:soap', self::SOAP_ENV);
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:soapenc', self::SOAP_ENC);
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xsd', self::XSD);
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xsi', self::XSI);
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:cwmp', self::CWMP);
-        $dom->appendChild($envelope);
+        // Get the cwmp:ID to echo back
+        $cwmpId = $this->sessionCwmpId ?: 'ACS_1';
 
-        // Create SOAP Header (optionally with cwmp:ID)
-        // Note: cwmp:ID disabled by default as some devices (e.g., Calix 844E) reject it
-        if ($includeId) {
-            $header = $dom->createElementNS(self::SOAP_ENV, 'soap:Header');
-            $envelope->appendChild($header);
+        // List of all methods the ACS supports (matching USS's 22 methods)
+        $methods = [
+            'AddObject',
+            'AutonomousDUStateChangeComplete',
+            'AutonomousTransferComplete',
+            'ChangeDUState',
+            'DeleteObject',
+            'Download',
+            'DUStateChangeComplete',
+            'FactoryReset',
+            'GetParameterAttributes',
+            'GetParameterNames',
+            'GetParameterValues',
+            'GetQueuedTransfers',
+            'GetRPCMethods',
+            'Inform',
+            'Reboot',
+            'RequestDownload',
+            'ScheduleInform',
+            'SetParameterAttributes',
+            'SetParameterValues',
+            'TransferComplete',
+            'Upload',
+            'X_000B23_DeleteQueuedTransfer',
+        ];
 
-            // Add cwmp:ID element (required for CPE to correlate requests/responses)
-            $id = $dom->createElement('cwmp:ID', '1');
-            $id->setAttribute('soap:mustUnderstand', '1');
-            $header->appendChild($id);
+        $methodCount = count($methods);
+
+        // Build method list XML
+        $methodListXml = '';
+        foreach ($methods as $method) {
+            $methodListXml .= "        <string>{$method}</string>\n";
         }
 
+        // Build response matching USS format exactly:
+        // - Uses SOAP-ENV: and SOAP-ENC: prefixes (uppercase)
+        // - Uses cwmp-1-0 namespace (NOT cwmp-1-2)
+        // - Uses SOAP-ENC:arrayType attribute
+        $response = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">{$cwmpId}</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:GetRPCMethodsResponse>
+      <MethodList SOAP-ENC:arrayType="xsd:string[{$methodCount}]">
+{$methodListXml}      </MethodList>
+    </cwmp:GetRPCMethodsResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+XML;
+
+        return $response;
+    }
+
+    /**
+     * Helper: Create SOAP Envelope structure
+     *
+     * @param DOMDocument $dom The DOM document
+     * @param string|null $cwmpId The cwmp:ID to use. If null, generates a new one for ACS requests
+     * @param bool $isResponse If true, echoes back the session cwmp:ID (for InformResponse, etc.)
+     */
+    private function createSoapEnvelope(DOMDocument $dom, ?string $cwmpId = null, bool $isResponse = false): DOMElement
+    {
+        // Use the device's CWMP namespace if available, otherwise default
+        $cwmpNamespace = $this->getCwmpNamespace();
+
+        // Use USS-compatible SOAP prefix format (SOAP-ENV, SOAP-ENC uppercase with hyphens)
+        // USS uses uppercase, matching the SOAP 1.1 standard conventions
+        // This is critical for GigaSpire GS4220E devices to process commands properly
+        $envelope = $dom->createElementNS(self::SOAP_ENV, 'SOAP-ENV:Envelope');
+        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:SOAP-ENC', self::SOAP_ENC);
+        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:SOAP-ENV', self::SOAP_ENV);
+        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:cwmp', $cwmpNamespace);
+        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xsd', self::XSD);
+        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xsi', self::XSI);
+        $dom->appendChild($envelope);
+
+        // Determine the ID to use
+        if ($isResponse && $this->sessionCwmpId) {
+            // For responses, echo back the device's ID
+            $idValue = $this->sessionCwmpId;
+        } elseif ($cwmpId !== null) {
+            // Use provided ID
+            $idValue = $cwmpId;
+        } else {
+            // Generate a new ID for ACS-initiated requests
+            $idValue = $this->generateAcsId();
+        }
+
+        // Always include SOAP Header with cwmp:ID (like USS does)
+        // This is critical for GigaSpire devices to process commands
+        $header = $dom->createElementNS(self::SOAP_ENV, 'SOAP-ENV:Header');
+        $envelope->appendChild($header);
+
+        // Add cwmp:ID element with mustUnderstand="1"
+        $id = $dom->createElement('cwmp:ID', $idValue);
+        $id->setAttribute('SOAP-ENV:mustUnderstand', '1');
+        $header->appendChild($id);
+
         // Create SOAP Body
-        $body = $dom->createElementNS(self::SOAP_ENV, 'soap:Body');
+        $body = $dom->createElementNS(self::SOAP_ENV, 'SOAP-ENV:Body');
         $envelope->appendChild($body);
 
         return $envelope;

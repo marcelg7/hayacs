@@ -10,10 +10,13 @@
              lastUpdate: null,
              history: [],
              chart: null,
+             testMethod: null,
+             testNote: null,
 
              async startTest() {
                  this.testing = true;
                  this.testState = 'Requested';
+                 this.testNote = null;
                  try {
                      const response = await fetch('/api/devices/{{ $device->id }}/speedtest', {
                          method: 'POST',
@@ -26,6 +29,9 @@
                      });
                      const data = await response.json();
                      if (response.ok) {
+                         // Store test method and note for UI display
+                         this.testMethod = data.method || 'tr143';
+                         this.testNote = data.note || null;
                          // Trigger task manager indicator
                          if (data.tasks && data.tasks.length > 0) {
                              window.dispatchEvent(new CustomEvent('task-started', {
@@ -91,6 +97,8 @@
                      this.testState = data.state;
                      this.testResults = data.results;
                      this.completedAt = data.completed_at;
+                     this.testMethod = data.method || 'tr143';
+                     this.testNote = data.note || null;
                      this.lastUpdate = new Date().toLocaleTimeString();
                  } catch (error) {
                      console.error('Error refreshing results:', error);
@@ -307,10 +315,20 @@
                         </div>
                         <div class="ml-4">
                             <p class="text-sm font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }}">Upload Speed</p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-{{ $colors['text'] }}" x-text="formatSpeed(testResults?.upload)"></p>
+                            <template x-if="testMethod === 'download_rpc' && !testResults?.upload">
+                                <p class="text-lg text-gray-400 dark:text-{{ $colors['text-muted'] }}">Not supported</p>
+                            </template>
+                            <template x-if="testMethod !== 'download_rpc' || testResults?.upload">
+                                <p class="text-2xl font-bold text-gray-900 dark:text-{{ $colors['text'] }}" x-text="formatSpeed(testResults?.upload)"></p>
+                            </template>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Note for devices without upload support -->
+            <div x-show="testNote" class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
+                <p class="text-sm text-yellow-700 dark:text-yellow-300" x-text="testNote"></p>
             </div>
         </div>
 

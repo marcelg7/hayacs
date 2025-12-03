@@ -24,7 +24,12 @@
       "Bash(do php:*)",
       "Bash(done)",
       "Bash(cat:*)",
-      "Bash(sudo grep:*)"
+      "Bash(sudo grep:*)",
+      "Bash(timeout 5 bash -c 'echo > /dev/tcp/163.182.233.166/22')",
+      "Bash(sudo chmod:*)",
+      "Bash(xxd:*)",
+      "Bash(sudo ls:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

@@ -249,7 +249,10 @@ function analyticsData() {
 
         async loadFleetAnalytics() {
             try {
-                const response = await fetch(`/api/analytics/fleet?range=${this.timeRange}`);
+                const response = await fetch(`/analytics/fleet?range=${this.timeRange}`, {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' }
+                });
                 this.fleetData = await response.json();
 
                 // Render charts
@@ -265,7 +268,10 @@ function analyticsData() {
 
         async loadTaskPerformance() {
             try {
-                const response = await fetch(`/api/analytics/task-performance?range=${this.timeRange}`);
+                const response = await fetch(`/analytics/task-performance?range=${this.timeRange}`, {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' }
+                });
                 this.taskData = await response.json();
 
                 this.$nextTick(() => {
@@ -278,7 +284,10 @@ function analyticsData() {
 
         async loadSpeedTestResults() {
             try {
-                const response = await fetch(`/api/analytics/speedtest-results?range=${this.timeRange}`);
+                const response = await fetch(`/analytics/speedtest-results?range=${this.timeRange}`, {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' }
+                });
                 this.speedTestData = await response.json();
 
                 this.$nextTick(() => {
@@ -291,7 +300,10 @@ function analyticsData() {
 
         async loadDeviceHealth() {
             try {
-                const response = await fetch(`/api/analytics/device-health?range=${this.timeRange}`);
+                const response = await fetch(`/analytics/device-health?range=${this.timeRange}`, {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' }
+                });
                 this.healthData = await response.json();
 
                 this.$nextTick(() => {

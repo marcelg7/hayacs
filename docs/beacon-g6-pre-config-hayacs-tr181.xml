@@ -15,7 +15,7 @@ Key Parameters Changed for Hay ACS:
 
 Created: 2025-11-27
 -->
-<PreConfigurationRemote. n="PreConfigurationRemote" t="staticObject" ver="0.0.3" new_opid="HAYACS">
+<PreConfigurationRemote. n="PreConfigurationRemote" t="staticObject" ver="0.0.3" new_opid="EGEB">
 	<GENERIC. n="GENERIC" a="static">
 		<Generic_set. n="genericwan_setting" a="static">
 			<GlobalHguDn t="string" ml="12" v="true" dburi="InternetGatewayDevice.X_ASB_COM_PreConfig.X_ASB_COM_GlobalHguDns"/>

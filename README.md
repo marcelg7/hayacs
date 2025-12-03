@@ -64,6 +64,19 @@ A complete TR-069/CWMP Auto Configuration Server (ACS) implementation built with
 - 📡 **Enhanced Refresh** - Comprehensive device data retrieval
   - Surpasses USS capabilities
   - Troubleshooting data collection
+- 🔐 **Remote Support** - Temporary SSH access for Nokia Beacon G6
+  - Set device-specific temporary passwords via TR-069
+  - Automatic password reset after session expiration
+  - Configurable 1-24 hour sessions
+- 📊 **Speed Testing** - Download speed measurement via TR-069
+  - Uses TR-069 Download RPC for accurate measurements
+  - Real-time progress tracking
+- 📝 **Log Management** - Automated log rotation and compression
+  - Daily rotation with xz compression (84%+ size reduction)
+  - Configurable retention and max file sizes
+- 🔄 **Device Groups & Workflows** - Batch operations (in progress)
+  - Dynamic group membership by model/firmware
+  - Scheduled and triggered operations
 
 ### Web Interface
 - 📊 **Dashboard** - Overview of devices, statistics, and recent activity

@@ -4,12 +4,8 @@
         $dataModel = $device->getDataModel();
         $isDevice2 = $dataModel === 'TR-181';
 
-        // Detect Nokia/ALCL devices for TR-098 specific handling
-        $nokiaOuis = ['80AB4D', '0C7C28'];
-        $isNokia = in_array(strtoupper($device->oui ?? ''), $nokiaOuis) ||
-            stripos($device->manufacturer ?? '', 'Nokia') !== false ||
-            stripos($device->manufacturer ?? '', 'Alcatel') !== false ||
-            stripos($device->manufacturer ?? '', 'ALCL') !== false;
+        // Use centralized manufacturer detection from Device model
+        $isNokia = $device->isNokia();
         $isTr098Nokia = !$isDevice2 && $isNokia;
 
         // Helper function to get parameter value with LIKE

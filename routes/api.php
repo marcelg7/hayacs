@@ -119,4 +119,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/devices/{id}/migration/start', [DeviceController::class, 'startMigration']);
     Route::get('/devices/{id}/migration/verify', [DeviceController::class, 'verifyMigration']);
     Route::post('/devices/{id}/migration/wifi-fallback', [DeviceController::class, 'createWifiFallback']);
+
+    // Remote Support Password Management (Nokia Beacon G6)
+    Route::get('/devices/{id}/remote-support', [DeviceController::class, 'getRemoteSupportStatus']);
+    Route::post('/devices/{id}/remote-support/enable', [DeviceController::class, 'enableRemoteSupport']);
+    Route::post('/devices/{id}/remote-support/disable', [DeviceController::class, 'disableRemoteSupport']);
+    Route::post('/devices/{id}/set-initial-password', [DeviceController::class, 'setInitialPassword']);
+
+    // SSH-Based WiFi Configuration & Password Extraction (Nokia Beacon G6)
+    Route::get('/devices/{id}/wifi-configs', [DeviceController::class, 'wifiConfigs']);
+    Route::get('/devices/{id}/wifi-passwords', [DeviceController::class, 'wifiPasswords']);
+    Route::post('/devices/{id}/extract-wifi-config', [DeviceController::class, 'extractWifiConfig']);
+    Route::post('/devices/{id}/test-ssh', [DeviceController::class, 'testSshConnection']);
+    Route::get('/devices/{id}/ssh-credentials', [DeviceController::class, 'sshCredentialStatus']);
 });

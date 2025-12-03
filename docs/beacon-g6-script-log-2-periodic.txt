@@ -1,0 +1,468 @@
+
+Status = -1
+ScriptLog:
+2025-12-01 10:38:44 EST INFO: Inform Message Event Codes: 2 PERIODIC
+2025-12-01 10:38:44 EST INFO: Retrieving the following parameters to cache:
+2025-12-01 10:38:44 EST INFO: -- InternetGatewayDevice.Time.
+2025-12-01 10:38:44 EST INFO: -- InternetGatewayDevice.Layer3Forwarding.
+2025-12-01 10:38:44 EST INFO: -- InternetGatewayDevice.DeviceInfo.
+2025-12-01 10:38:44 EST INFO: -- InternetGatewayDevice.ManagementServer.
+2025-12-01 10:38:44 EST INFO: -- InternetGatewayDevice.LANDevice.
+2025-12-01 10:38:44 EST INFO: -- InternetGatewayDevice.WANDevice.
+2025-12-01 10:38:44 EST INFO: -- InternetGatewayDevice.UserInterface.
+2025-12-01 10:38:44 EST INFO: -- InternetGatewayDevice.X_Authentication.
+2025-12-01 10:38:44 EST INFO: -- InternetGatewayDevice.X_ALU-COM_BeaconInfo.
+2025-12-01 10:38:44 EST INFO: Sending RPC Request=GetParameterValuesCmd
+2025-12-01 10:38:49 EST INFO: Received RPC Response=GetParameterValuesResponseCmd
+2025-12-01 10:38:49 EST INFO: Sending RPC Request=EmptyCmd
+2025-12-01 10:38:49 EST INFO: --+ Executing Child Groovy Script [MapperGet_Generic_mgmtSrvr_beaconG6]
+2025-12-01 10:38:49 EST INFO: Using GPV Response from Parent Script
+2025-12-01 10:38:49 EST INFO: +-- Child Groovy Script [MapperGet_Generic_mgmtSrvr_beaconG6] Execution Complete
+2025-12-01 10:38:49 EST INFO: --+ Executing Child Groovy Script [MapperGet_GenericIGD_1x_wan]
+2025-12-01 10:38:50 EST INFO: Using GPV Response from Parent Script
+2025-12-01 10:38:50 EST INFO: +-- Child Groovy Script [MapperGet_GenericIGD_1x_wan] Execution Complete
+2025-12-01 10:38:50 EST INFO: --+ Executing Child Groovy Script [MapperGet_Generic_lan]
+2025-12-01 10:38:50 EST INFO: Using GPV Response from Parent Script
+2025-12-01 10:38:50 EST INFO: +-- Child Groovy Script [MapperGet_Generic_lan] Execution Complete
+2025-12-01 10:38:50 EST INFO: --+ Executing Child Groovy Script [MapperGet_Generic_connectedDevices]
+2025-12-01 10:38:50 EST INFO: Using GPV Response from Parent Script
+2025-12-01 10:38:50 EST INFO: +-- Child Groovy Script [MapperGet_Generic_connectedDevices] Execution Complete
+2025-12-01 10:38:50 EST INFO: --+ Executing Child Groovy Script [MapperGet_GenericIGD_1x_wifi]
+2025-12-01 10:38:50 EST INFO: Using GPV Response from Parent Script
+2025-12-01 10:38:50 EST INFO: +-- Child Groovy Script [MapperGet_GenericIGD_1x_wifi] Execution Complete
+2025-12-01 10:38:50 EST INFO: --+ Executing Child Groovy Script [MapperGet_GenericIGD_1x_wifi]
+2025-12-01 10:38:50 EST INFO: Using GPV Response from Parent Script
+2025-12-01 10:38:50 EST INFO: +-- Child Groovy Script [MapperGet_GenericIGD_1x_wifi] Execution Complete
+2025-12-01 10:38:50 EST INFO: --+ Executing Child Groovy Script [MapperGet_Generic_portMapping]
+2025-12-01 10:38:50 EST INFO: Using GPV Response from Parent Script
+2025-12-01 10:38:50 EST INFO: +-- Child Groovy Script [MapperGet_Generic_portMapping] Execution Complete
+2025-12-01 10:38:50 EST INFO: --+ Executing Child Groovy Script [MapperGet_Generic_upnp]
+2025-12-01 10:38:50 EST INFO: Using GPV Response from Parent Script
+2025-12-01 10:38:50 EST INFO: +-- Child Groovy Script [MapperGet_Generic_upnp] Execution Complete
+2025-12-01 10:38:50 EST INFO: --+ Executing Child Groovy Script [MapperGet_Generic_dmz]
+2025-12-01 10:38:50 EST INFO: Using GPV Response from Parent Script
+2025-12-01 10:38:50 EST INFO: +-- Child Groovy Script [MapperGet_Generic_dmz] Execution Complete
+2025-12-01 10:38:50 EST INFO: --+ Executing Child Groovy Script [MapperGet_Generic_wanDailyDataUsage]
+2025-12-01 10:38:51 EST INFO: Processing 25 day(s) worth of WAN Daily Data Usage History
+2025-12-01 10:38:51 EST INFO: No WAN History Data from 2025-10-28 to 2025-10-30 for device
+2025-12-01 10:38:51 EST INFO: No WAN History Data from 2025-10-31 to 2025-11-02 for device
+2025-12-01 10:38:51 EST INFO: No WAN History Data from 2025-11-03 to 2025-11-05 for device
+2025-12-01 10:38:51 EST INFO: No WAN History Data from 2025-11-10 to 2025-11-12 for device
+2025-12-01 10:38:51 EST INFO: No WAN History Data from 2025-11-13 to 2025-11-15 for device
+2025-12-01 10:38:51 EST INFO: No WAN History Data from 2025-11-18 to 2025-11-20 for device
+2025-12-01 10:38:51 EST INFO: No WAN History Data from 2025-11-21 to 2025-11-23 for device
+2025-12-01 10:38:51 EST INFO: No WAN History Data from 2025-11-24 to 2025-11-26 for device
+2025-12-01 10:38:51 EST INFO: +-- Child Groovy Script [MapperGet_Generic_wanDailyDataUsage] Execution Complete
+2025-12-01 10:38:51 EST INFO: --+ Executing Child Groovy Script [MapperGet_GenericIGD_1x_interfaceStatus]
+2025-12-01 10:38:51 EST INFO: Using GPV Response from Parent Script
+2025-12-01 10:38:51 EST INFO: +-- Child Groovy Script [MapperGet_GenericIGD_1x_interfaceStatus] Execution Complete
+2025-12-01 10:38:51 EST INFO: --+ Executing Child Groovy Script [MapperGet_Nokia_deviceGuiAccess]
+2025-12-01 10:38:51 EST INFO: Using GPV Response from Parent Script
+2025-12-01 10:38:51 EST INFO: +-- Child Groovy Script [MapperGet_Nokia_deviceGuiAccess] Execution Complete
+2025-12-01 10:38:51 EST INFO: --+ Executing Child Groovy Script [MapperGet_Generic_deviceInfo]
+2025-12-01 10:38:51 EST INFO: Using GPV Response from Parent Script
+2025-12-01 10:38:51 EST INFO: +-- Child Groovy Script [MapperGet_Generic_deviceInfo] Execution Complete
+2025-12-01 10:38:51 EST INFO: --+ Executing Child Groovy Script [MapperGet_Generic_subscriberInfo]
+2025-12-01 10:38:51 EST INFO: +-- Child Groovy Script [MapperGet_Generic_subscriberInfo] Execution Complete
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.acsUrl=https://tr069.nisc-uss.coop:17547/hay
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.acsUser=acs-user-d30UJ
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.acsPass=
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.piEnabled=true
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.piInterval=86400
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.piTime=
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.connReqUrl=http://45.59.97.245:7547
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.connReqUser=admin
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.connReqPass=admin
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.natDetected=false
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.stunEnabled=false
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.stunServerAddr=
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.stunServerPort=0
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.stunMaxKeepAlive=0
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.stunMinKeepAlive=0
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.udpConnReqAddr=
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.stunUser=
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.mgmtSrvr.stunPass=
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.wan.name=Internet
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.wan.status=Connected
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.wan.addrType=DHCP
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.wan.ipAddr=45.59.97.245
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.wan.wanIpAddr=45.59.97.245
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.wan.connType=IP_Routed
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.wan.natEnabled=true
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.wan.subnet=255.255.255.0
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.wan.gateway=23.155.129.1
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.wan.dnsType=Dynamic
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.wan.dns1=163.182.253.99
+2025-12-01 10:38:51 EST INFO: Alarm Param: DeviceFeatureSet.wan.dns2=163.182.253.101
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.wan.dns3=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.wan.upTime=6 Day(s), 0 Hour(s), 0 Min(s), 25 Sec(s)
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.wan.bytesReceived=2457555273
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.wan.bytesSent=51437459
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.lan.dhcpEnabled=true
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.lan.gatewayIp=192.168.1.1
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.lan.subnet=255.255.255.0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.lan.minIpAddr=192.168.1.64
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.lan.maxIpAddr=192.168.1.253
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.lan.leaseTime=86400
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.lan.dns1=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.lan.dns2=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.lan.dns3=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.lan.macFilterEnable=false
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].active=true
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].ipAddr=192.168.1.64
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].ipV6Addr=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].ipV6LinkLocalAddr=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].addrSource=DHCP
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].interfaceType=802.11
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].interfaceName=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].macAddr=00:03:e6:f4:f6:8d
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].apMacAddr=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].lanCpeId=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].vendor=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].hostName=Unknown_00:03:e6:f4:f6:8d
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].leaseTime=43848
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].nickName=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].deviceType=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].orderNum=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].hideDevice=false
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].isPaused=false
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].downlinkRate=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].uplinkRate=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].signalStrength=-70
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].band=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].ssid=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].standard=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].channel=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].autoChannel=false
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].maxRate=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].reservedIp=false
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].bytesReceived=362478901
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].bytesSent=3174804404
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].packetsDropped=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[00:03:e6:f4:f6:8d].packetsRetransmitted=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].active=true
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].ipAddr=192.168.1.67
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].ipV6Addr=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].ipV6LinkLocalAddr=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].addrSource=DHCP
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].interfaceType=802.11
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].interfaceName=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].macAddr=28:74:f5:ff:f3:e1
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].apMacAddr=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].lanCpeId=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].vendor=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].hostName=Nokia WiFi Beacon 2
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].leaseTime=43637
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].nickName=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].deviceType=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].orderNum=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].hideDevice=false
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].isPaused=false
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].downlinkRate=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].uplinkRate=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].signalStrength=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].band=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].ssid=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].standard=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].channel=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].autoChannel=false
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].maxRate=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].reservedIp=false
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].bytesReceived=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].bytesSent=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].packetsDropped=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:f3:e1].packetsRetransmitted=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].active=true
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].ipAddr=192.168.1.66
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].ipV6Addr=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].ipV6LinkLocalAddr=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].addrSource=DHCP
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].interfaceType=802.11
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].interfaceName=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].macAddr=28:74:f5:ff:ed:f1
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].apMacAddr=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].lanCpeId=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].vendor=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].hostName=Nokia WiFi Beacon 2
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].leaseTime=43638
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].nickName=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].deviceType=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].orderNum=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].hideDevice=false
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].isPaused=false
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].downlinkRate=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].uplinkRate=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].signalStrength=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].band=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].ssid=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].standard=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].channel=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].autoChannel=false
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].maxRate=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].reservedIp=false
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].bytesReceived=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].bytesSent=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].packetsDropped=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[28:74:f5:ff:ed:f1].packetsRetransmitted=0
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].active=true
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].ipAddr=192.168.1.93
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].ipV6Addr=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].ipV6LinkLocalAddr=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].addrSource=Static
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].interfaceType=802.11
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].interfaceName=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].macAddr=9c:8c:6e:5d:8f:3b
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].apMacAddr=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].lanCpeId=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].vendor=
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].hostName=Samsung
+2025-12-01 10:38:52 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].leaseTime=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].nickName=
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].deviceType=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].orderNum=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].hideDevice=false
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].isPaused=false
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].downlinkRate=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].uplinkRate=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].signalStrength=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].band=
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].ssid=
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].standard=
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].channel=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].autoChannel=false
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].maxRate=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].reservedIp=false
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].bytesReceived=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].bytesSent=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].packetsDropped=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.[9c:8c:6e:5d:8f:3b].packetsRetransmitted=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.connectedDevices.numDevicesWithWeakSignal=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.bssid=f8:9b:6e:24:8b:1b
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.ssid=Scotchmer
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.passphrase=********
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.securityType=Mixed WPA2/WPA
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.ssidEnabled=true
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.hideSsid=false
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.radioEnabled=true
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.channelBandwidth=Auto
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.channel=11
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.autoChannel=true
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.standard=b,g,n,ax
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.maxRate=Auto
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.numConnectedDevices=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.wifiAnalyzerEnabled=false
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.transmitPower=100
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.uapsdEnable=false
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.wmmEnable=false
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.macFilterEnable=false
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_24G.countryCode=
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.bssid=f8:9b:6e:24:8b:1c
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.ssid=Scotchmer
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.passphrase=********
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.securityType=Mixed WPA2/WPA
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.ssidEnabled=true
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.hideSsid=false
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.radioEnabled=true
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.channelBandwidth=Auto
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.channel=52
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.autoChannel=true
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.standard=a,n,ac,ax
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.maxRate=Auto
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.numConnectedDevices=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.wifiAnalyzerEnabled=false
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.transmitPower=100
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.uapsdEnable=false
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.wmmEnable=false
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.macFilterEnable=false
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wifi_50G.countryCode=
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.dmz.enabled=false
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.dmz.dmzIpAddr=
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[0].megaBytesReceived=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[0].megaBytesSent=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[0].date=2025-10-30
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[1].megaBytesReceived=3473.3447
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[1].megaBytesSent=169.05705
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[1].date=2025-10-30
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[2].megaBytesReceived=416.87537
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[2].megaBytesSent=8.920188
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[2].date=2025-10-31
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[3].megaBytesReceived=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[3].megaBytesSent=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[3].date=2025-11-02
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[4].megaBytesReceived=792.3267
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[4].megaBytesSent=16.883333
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[4].date=2025-11-02
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[5].megaBytesReceived=379.4976
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[5].megaBytesSent=7.775009
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[5].date=2025-11-03
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[6].megaBytesReceived=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[6].megaBytesSent=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[6].date=2025-11-05
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[7].megaBytesReceived=775.9326
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[7].megaBytesSent=15.836552
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[7].date=2025-11-05
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[8].megaBytesReceived=2131.6584
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[8].megaBytesSent=7.8417683
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[8].date=2025-11-06
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[9].megaBytesReceived=390.16046
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[9].megaBytesSent=7.771022
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[9].date=2025-11-07
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[10].megaBytesReceived=390.11322
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[10].megaBytesSent=7.800761
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[10].date=2025-11-08
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[11].megaBytesReceived=378.83572
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[11].megaBytesSent=7.9076853
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[11].date=2025-11-09
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[12].megaBytesReceived=373.29092
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[12].megaBytesSent=7.584362
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[12].date=2025-11-10
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[13].megaBytesReceived=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[13].megaBytesSent=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[13].date=2025-11-12
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[14].megaBytesReceived=803.84784
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[14].megaBytesSent=7.7721186
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[14].date=2025-11-12
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[15].megaBytesReceived=377.47757
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[15].megaBytesSent=7.2295704
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[15].date=2025-11-13
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[16].megaBytesReceived=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[16].megaBytesSent=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[16].date=2025-11-15
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[17].megaBytesReceived=3792.3528
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[17].megaBytesSent=739.7306
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[17].date=2025-11-15
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[18].megaBytesReceived=495.3515
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[18].megaBytesSent=932.0955
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[18].date=2025-11-16
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[19].megaBytesReceived=1323.9657
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[19].megaBytesSent=2136.8281
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[19].date=2025-11-17
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[20].megaBytesReceived=391.22333
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[20].megaBytesSent=7.4987717
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[20].date=2025-11-18
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[21].megaBytesReceived=0
+2025-12-01 10:38:53 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[21].megaBytesSent=0
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[21].date=2025-11-20
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[22].megaBytesReceived=2682.9504
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[22].megaBytesSent=14.653111
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[22].date=2025-11-20
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[23].megaBytesReceived=380.37967
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[23].megaBytesSent=7.1300774
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[23].date=2025-11-21
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[24].megaBytesReceived=0
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[24].megaBytesSent=0
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[24].date=2025-11-23
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[25].megaBytesReceived=759.50214
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[25].megaBytesSent=14.305501
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[25].date=2025-11-23
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[26].megaBytesReceived=388.35162
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[26].megaBytesSent=7.1439447
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[26].date=2025-11-24
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[27].megaBytesReceived=0
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[27].megaBytesSent=0
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[27].date=2025-11-26
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[28].megaBytesReceived=276.94055
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[28].megaBytesSent=1916.863
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[28].date=2025-11-26
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[29].megaBytesReceived=387.34937
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[29].megaBytesSent=8.171133
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[29].date=2025-11-27
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[30].megaBytesReceived=386.93546
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[30].megaBytesSent=8.294341
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[30].date=2025-11-28
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[31].megaBytesReceived=400.52032
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[31].megaBytesSent=8.285049
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.wanDailyDataUsage.[31].date=2025-11-29
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[LAN1].type=LAN
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[LAN1].name=LAN1
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[LAN1].status=Down
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[LAN1].dataRate=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[LAN2].type=LAN
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[LAN2].name=LAN2
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[LAN2].status=Down
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[LAN2].dataRate=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[LAN3].type=LAN
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[LAN3].name=LAN3
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[LAN3].status=Down
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[LAN3].dataRate=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[Ethernet WAN].type=WAN
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[Ethernet WAN].name=Ethernet WAN
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[Ethernet WAN].status=Up
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[Ethernet WAN].dataRate=2500 Mbps
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[DSL].type=WAN
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[DSL].name=DSL
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[DSL].status=Down
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.interfaceStatus.[DSL].dataRate=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceGuiAccess.accessType=LAN_ONLY
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceGuiAccess.remoteAccessProtocol=https
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceGuiAccess.remoteAccessResource=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceGuiAccess.remoteAccessPort=443
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceGuiAccess.su_username=superadmin
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceGuiAccess.su_password=********
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceGuiAccess.std_username=admin
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceGuiAccess.std_password=********
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.vendor=ALCL
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.oui=80AB4D
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.productClass=Beacon G6
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.serialNumber=ALCLF952DDD5
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.modelName=Nokia WiFi Beacon G6
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.desc=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.hwVersion=3FE49949ABBA
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.swVersion=3FE49996IJMK14
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.addHwVersion=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.addSwVersion=May-16-2020.18:32:20
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.fwVersion=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.provCode=EGEA
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.firstUsed=2025-11-25T15:37:43Z
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.upTime=518501
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.configFileVersion=001
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.timeZone=-05:00
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.ntpServer1=ntp.hay.net
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.ntpServer2=ntp1.tummy.com
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.ntpServer3=pool.ntp.org
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.ntpServer4=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.ntpServer5=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.wanMacAddress=f8:9b:6e:24:8b:16
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.lanMacAddress=fe:9b:6e:24:8b:14
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.extIpAddress=45.59.97.245
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.publicIpAddress=45.59.97.245
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.createTime=2024-03-05 01:34:42 EST
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.equipmentType=Gateway
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.userField1=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.userField2=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.userField3=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.userField4=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.nickName=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.informDayCnt=1
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.bootInformDayCnt=0
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.cpeDomainName=hay
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.resourceNameDomainName=hay
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.deviceInfo.defaultSwVersion=3FE49996IJMK14
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.emailAddress=10207883_9991001938@58502.com
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.customerId=10207883
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.ispUserId=9991001938
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.firstName=J
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.lastName=SCOTCHMER
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.displayAddress=74297 HOMESTEAD HEIGHTS DR, BLUEWATER ON N0M2T0
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.address=74297 HOMESTEAD HEIGHTS DR
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.address2=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.city=BLUEWATER
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.state=ON
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.postalCode=N0M2T0
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.country=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.phoneNumber=5192364583
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.contactEmailAddress=scotchmer@hay.net
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.userField1=Internet 100 (100 x 100)
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.userField2=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.userField3=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.userField4=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.wlanSsid=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.wlanPassword=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.hubbLocationId=
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.geoLatitude=43.486860
+2025-12-01 10:38:54 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.geoLongitude=-81.711533
+2025-12-01 10:38:55 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.downloadSpeed=100.0
+2025-12-01 10:38:55 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.uploadSpeed=100.0
+2025-12-01 10:38:55 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.cafTestLocation=false
+2025-12-01 10:38:55 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.cafTestLocationActive=false
+2025-12-01 10:38:55 EST INFO: Alarm Param: DeviceFeatureSet.subscriberInfo.fccReportingLocation=false

@@ -275,16 +275,34 @@ class SearchController extends Controller
 
     /**
      * Search parameters by name or value
+     * Uses fulltext search on name for fast parameter name lookup
+     * Falls back to LIKE for value searches (less common, but still needed)
      */
     private function searchParameters(string $query, int $limit)
     {
-        return Parameter::where(function ($q) use ($query) {
-            $q->where('name', 'LIKE', "%{$query}%")
-              ->orWhere('value', 'LIKE', "%{$query}%");
-        })
-        ->orderBy('device_id')
-        ->limit($limit)
-        ->get();
+        // Sanitize query for fulltext search - remove special characters
+        $fulltextQuery = preg_replace('/[^\w\s\.]/', '', $query);
+
+        // Use fulltext search for parameter names (much faster than LIKE)
+        // Also search by value using indexed prefix search
+        return Parameter::select(['id', 'device_id', 'name', 'value'])
+            ->where(function ($q) use ($fulltextQuery, $query) {
+                // Fulltext search on name - handles partial word matches with *
+                if (strlen($fulltextQuery) >= 3) {
+                    $q->whereRaw(
+                        "MATCH(name) AGAINST(? IN BOOLEAN MODE)",
+                        ["*{$fulltextQuery}*"]
+                    );
+                } else {
+                    // For very short queries, use LIKE with prefix on name (uses index)
+                    $q->where('name', 'LIKE', "%{$query}%");
+                }
+            })
+            // Also search exact value matches (uses prefix index)
+            ->orWhere('value', $query)
+            ->orderBy('device_id')
+            ->limit($limit)
+            ->get();
     }
 
     /**

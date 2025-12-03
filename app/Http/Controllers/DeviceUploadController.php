@@ -372,4 +372,44 @@ class DeviceUploadController extends Controller
             ->header('Content-Type', 'application/octet-stream')
             ->header('Content-Length', strlen($content));
     }
+
+    /**
+     * Serve static migration files (e.g., TR-181 pre-config files)
+     * These are publicly accessible via HTTP without authentication
+     * Used by TR-069 Download RPC for migration operations
+     */
+    public function serveMigrationFile(Request $request, string $filename): Response
+    {
+        // Sanitize filename - only allow alphanumeric, dash, underscore, dot
+        $filename = preg_replace('/[^a-zA-Z0-9._-]/', '', $filename);
+
+        // Build path to migration file
+        $filePath = storage_path('app/public/migration/' . $filename);
+
+        if (!file_exists($filePath)) {
+            Log::warning('Migration file not found', ['filename' => $filename]);
+            return response('File not found', 404);
+        }
+
+        $content = file_get_contents($filePath);
+
+        Log::info('Migration file served', [
+            'filename' => $filename,
+            'size' => strlen($content),
+            'ip' => $request->ip(),
+        ]);
+
+        // Determine content type based on extension
+        $extension = pathinfo($filename, PATHINFO_EXTENSION);
+        $contentType = match ($extension) {
+            'xml' => 'application/xml',
+            'bin' => 'application/octet-stream',
+            default => 'application/octet-stream',
+        };
+
+        return response($content)
+            ->header('Content-Type', $contentType)
+            ->header('Content-Length', strlen($content))
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
 }

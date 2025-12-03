@@ -85,53 +85,69 @@ class AnalyticsController extends Controller
 
         $period = $this->getPeriodFromRange($range);
 
-        // Query actual tasks for detailed analytics
-        $tasksQuery = Task::query()
+        // Base query builder
+        $baseQuery = Task::query()
             ->where('created_at', '>=', $period['start']);
 
         if ($deviceId) {
-            $tasksQuery->where('device_id', $deviceId);
+            $baseQuery->where('device_id', $deviceId);
         }
 
         if ($taskType) {
-            $tasksQuery->where('task_type', $taskType);
+            $baseQuery->where('task_type', $taskType);
         }
 
-        $tasks = $tasksQuery->get();
+        // Overall statistics using database aggregates (memory efficient)
+        $stats = (clone $baseQuery)
+            ->select([
+                DB::raw('COUNT(*) as total'),
+                DB::raw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as successful"),
+                DB::raw("SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed"),
+            ])
+            ->first();
 
-        // Overall statistics
-        $totalTasks = $tasks->count();
-        $successfulTasks = $tasks->where('status', 'completed')->count();
-        $failedTasks = $tasks->where('status', 'failed')->count();
+        $totalTasks = $stats->total ?? 0;
+        $successfulTasks = $stats->successful ?? 0;
+        $failedTasks = $stats->failed ?? 0;
         $successRate = $totalTasks > 0 ? round(($successfulTasks / $totalTasks) * 100, 2) : 0;
 
-        // Task type breakdown
-        $taskTypeBreakdown = $tasks->groupBy('task_type')->map(function ($group, $type) {
-            $total = $group->count();
-            $successful = $group->where('status', 'completed')->count();
-            $failed = $group->where('status', 'failed')->count();
+        // Task type breakdown using database aggregates
+        $taskTypeBreakdown = (clone $baseQuery)
+            ->select([
+                'task_type',
+                DB::raw('COUNT(*) as total'),
+                DB::raw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as successful"),
+                DB::raw("SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed"),
+            ])
+            ->groupBy('task_type')
+            ->orderByDesc('total')
+            ->get()
+            ->map(function ($item) {
+                $total = $item->total;
+                $successful = $item->successful;
+                return [
+                    'task_type' => $item->task_type,
+                    'total' => $total,
+                    'successful' => $successful,
+                    'failed' => $item->failed,
+                    'success_rate' => $total > 0 ? round(($successful / $total) * 100, 2) : 0,
+                ];
+            });
 
-            return [
-                'task_type' => $type,
-                'total' => $total,
-                'successful' => $successful,
-                'failed' => $failed,
-                'success_rate' => $total > 0 ? round(($successful / $total) * 100, 2) : 0,
-                'avg_execution_time_ms' => round($group->where('status', 'completed')->avg(function ($task) {
-                    return $task->updated_at && $task->created_at
-                        ? $task->created_at->diffInMilliseconds($task->updated_at)
-                        : null;
-                })),
-            ];
-        })->values();
-
-        // Most common errors
-        $commonErrors = $tasks->where('status', 'failed')
+        // Most common errors (limited query to reduce memory)
+        $commonErrors = (clone $baseQuery)
+            ->where('status', 'failed')
+            ->whereNotNull('result')
+            ->select('result')
+            ->limit(500)
+            ->get()
             ->filter(function ($task) {
-                return isset($task->result['error']);
+                $result = is_string($task->result) ? json_decode($task->result, true) : $task->result;
+                return isset($result['error']);
             })
             ->groupBy(function ($task) {
-                return $task->result['error'] ?? 'Unknown error';
+                $result = is_string($task->result) ? json_decode($task->result, true) : $task->result;
+                return $result['error'] ?? 'Unknown error';
             })
             ->map(function ($group, $error) {
                 return [
@@ -143,18 +159,33 @@ class AnalyticsController extends Controller
             ->values()
             ->take(10);
 
-        // Chart data - tasks over time
+        // Chart data - tasks over time using database aggregates
         $interval = $this->getIntervalFromRange($range);
-        $chartData = $tasks->groupBy(function ($task) use ($interval) {
-            return $task->created_at->format($interval);
-        })->map(function ($group) {
-            return [
-                'timestamp' => $group->first()->created_at->toIso8601String(),
-                'total' => $group->count(),
-                'successful' => $group->where('status', 'completed')->count(),
-                'failed' => $group->where('status', 'failed')->count(),
-            ];
-        })->values();
+        $dateFormat = match ($range) {
+            '24h', '7d' => '%Y-%m-%d %H:00:00',
+            '30d', '90d' => '%Y-%m-%d',
+            '1y' => '%Y-%m-01',
+            default => '%Y-%m-%d %H:00:00',
+        };
+
+        $chartData = (clone $baseQuery)
+            ->select([
+                DB::raw("DATE_FORMAT(created_at, '{$dateFormat}') as time_bucket"),
+                DB::raw('COUNT(*) as total'),
+                DB::raw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as successful"),
+                DB::raw("SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed"),
+            ])
+            ->groupBy('time_bucket')
+            ->orderBy('time_bucket')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'timestamp' => Carbon::parse($item->time_bucket)->toIso8601String(),
+                    'total' => $item->total,
+                    'successful' => $item->successful,
+                    'failed' => $item->failed,
+                ];
+            });
 
         return response()->json([
             'range' => $range,
@@ -309,7 +340,7 @@ class AnalyticsController extends Controller
         $period = $this->getPeriodFromRange($range);
 
         $query = SpeedTestResult::query()
-            ->where('diagnostics_state', 'Completed')
+            ->where('download_state', 'Completed')
             ->where('created_at', '>=', $period['start'])
             ->orderBy('created_at', 'asc');
 
@@ -324,19 +355,15 @@ class AnalyticsController extends Controller
             return [
                 'timestamp' => $result->created_at->toIso8601String(),
                 'device_id' => $result->device_id,
-                'download_mbps' => $result->download_speed_mbps,
-                'upload_mbps' => $result->upload_speed_mbps,
-                'latency_ms' => $result->latency_ms,
-                'jitter_ms' => $result->jitter_ms,
-                'packet_loss_percent' => $result->packet_loss_percent,
+                'download_mbps' => round($result->download_speed_mbps ?? 0, 2),
+                'upload_mbps' => round($result->upload_speed_mbps ?? 0, 2),
+                'latency_ms' => 0, // Not stored in current schema
             ];
         });
 
         // Statistics
-        $avgDownload = round($results->avg('download_speed_kbps') / 1000, 2);
-        $avgUpload = round($results->avg('upload_speed_kbps') / 1000, 2);
-        $avgLatency = round($results->avg('latency_ms'), 2);
-        $avgJitter = round($results->avg('jitter_ms'), 2);
+        $avgDownload = round($results->avg('download_speed_mbps') ?? 0, 2);
+        $avgUpload = round($results->avg('upload_speed_mbps') ?? 0, 2);
 
         return response()->json([
             'range' => $range,
@@ -344,8 +371,8 @@ class AnalyticsController extends Controller
             'total_tests' => $results->count(),
             'avg_download_mbps' => $avgDownload,
             'avg_upload_mbps' => $avgUpload,
-            'avg_latency_ms' => $avgLatency,
-            'avg_jitter_ms' => $avgJitter,
+            'avg_latency_ms' => 0,
+            'avg_jitter_ms' => 0,
             'chart_data' => $chartData,
         ]);
     }
