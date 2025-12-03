@@ -293,7 +293,8 @@ class DeviceController extends Controller
         $dataModel = $device->getDataModel();
 
         // Stage 1: Create discovery task to find instance numbers
-        $discoveryParams = $this->buildDiscoveryParameters($dataModel);
+        // Pass device for manufacturer-specific handling (some devices don't support partial paths)
+        $discoveryParams = $this->buildDiscoveryParameters($dataModel, $device);
 
         $task = Task::create([
             'device_id' => $device->id,
@@ -320,10 +321,30 @@ class DeviceController extends Controller
     /**
      * Build discovery parameters to find WAN, WiFi, and Host instances
      * Enhanced to query full device trees for better coverage and vendor extensions
+     *
+     * Note: Some devices (Calix TR-098, Nokia Beacon G6 TR-098) do NOT support
+     * GetParameterValues with partial paths (ending with .). For these devices,
+     * we must use explicit full parameter names instead.
      */
-    private function buildDiscoveryParameters(string $dataModel): array
+    private function buildDiscoveryParameters(string $dataModel, ?Device $device = null): array
     {
         $isDevice2 = $dataModel === 'TR-181';
+
+        // Check if this device supports partial path queries
+        // Calix TR-098 and Nokia Beacon G6 TR-098 do NOT support partial paths
+        $isCalix = $device && (
+            strtolower($device->manufacturer ?? '') === 'calix' ||
+            strtoupper($device->oui ?? '') === 'CCBE59' ||
+            strtoupper($device->oui ?? '') === 'D0768F'
+        );
+
+        // Nokia Beacon G6 in TR-098 mode (OUI 80AB4D) doesn't support partial paths
+        $isNokiaTR098 = $device && !$isDevice2 && (
+            strtoupper($device->oui ?? '') === '80AB4D'
+        );
+
+        // These devices require explicit parameter names - no partial paths
+        $requiresExplicitParams = ($isCalix && !$isDevice2) || $isNokiaTR098;
 
         if ($isDevice2) {
             return [
@@ -345,7 +366,44 @@ class DeviceController extends Controller
                 'Device.WiFi.SSIDNumberOfEntries',
                 'Device.Hosts.HostNumberOfEntries',
             ];
+        } elseif ($requiresExplicitParams) {
+            // Calix TR-098 and Nokia Beacon G6 TR-098 - use explicit parameter names only
+            // These devices return SOAP Fault 9000 "Method not supported" for partial paths
+            // Also, Calix rejects entire request if ANY parameter doesn't exist
+            return [
+                // Device Info (explicit params only - no MemoryStatus as it doesn't exist on all models)
+                'InternetGatewayDevice.DeviceInfo.Manufacturer',
+                'InternetGatewayDevice.DeviceInfo.ManufacturerOUI',
+                'InternetGatewayDevice.DeviceInfo.ModelName',
+                'InternetGatewayDevice.DeviceInfo.SerialNumber',
+                'InternetGatewayDevice.DeviceInfo.SoftwareVersion',
+                'InternetGatewayDevice.DeviceInfo.HardwareVersion',
+                'InternetGatewayDevice.DeviceInfo.UpTime',
+
+                // Management Server (explicit params instead of ManagementServer. tree)
+                'InternetGatewayDevice.ManagementServer.URL',
+                'InternetGatewayDevice.ManagementServer.PeriodicInformEnable',
+                'InternetGatewayDevice.ManagementServer.PeriodicInformInterval',
+                'InternetGatewayDevice.ManagementServer.ConnectionRequestURL',
+                'InternetGatewayDevice.ManagementServer.STUNEnable',
+                'InternetGatewayDevice.ManagementServer.NATDetected',
+                'InternetGatewayDevice.ManagementServer.UDPConnectionRequestAddress',
+
+                // LAN parameters
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceIPAddress',
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceSubnetMask',
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPServerEnable',
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MinAddress',
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MaxAddress',
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DNSServers',
+
+                // Discovery counters
+                'InternetGatewayDevice.WANDeviceNumberOfEntries',
+                'InternetGatewayDevice.LANDevice.1.LANWLANConfigurationNumberOfEntries',
+                'InternetGatewayDevice.LANDevice.1.Hosts.HostNumberOfEntries',
+            ];
         } else {
+            // SmartRG and other devices that support partial path queries
             return [
                 // Query entire DeviceInfo tree (gets ALL device info + vendor extensions automatically)
                 'InternetGatewayDevice.DeviceInfo.',
@@ -436,6 +494,11 @@ class DeviceController extends Controller
             strtoupper($device->oui ?? '') === 'E82C6D'
         );
 
+        // Calix GigaCenters (TR-098) also support partial path queries
+        // Tested: CXNK0020A87F (OUI EC4F82) successfully returned all params with InternetGatewayDevice.
+        // GigaCenters use WANDevice.1 for fiber WAN connections
+        $isCalixGigaCenter = $isCalix && !$isDevice2;  // Calix TR-098 devices
+
         if ($isSmartRG) {
             // Use partial paths like USS does - gets all params under each path
             // SmartRG uses WANDevice.3 based on USS traces
@@ -450,6 +513,15 @@ class DeviceController extends Controller
                 'InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.',
                 'InternetGatewayDevice.WANDevice.3.WANConnectionDevice.1.WANIPConnection.2.',
                 'InternetGatewayDevice.WANDevice.3.WANDSLInterfaceConfig.',
+            ];
+        }
+
+        if ($isCalixGigaCenter) {
+            // Calix GigaCenters (844E, 844G, 854G, 804Mesh) support partial path queries
+            // IMPORTANT: Calix rejects entire request if ANY parameter doesn't exist
+            // Using single root path is safest - tested CXNK0020A87F returned 6,178 params
+            return [
+                'InternetGatewayDevice.',
             ];
         }
 
@@ -1664,8 +1736,35 @@ class DeviceController extends Controller
                 ->first();
             $externalIp = $externalIpParam ? $externalIpParam->value : null;
 
+        } elseif ($device->isSmartRG()) {
+            // SmartRG/Sagemcom devices - use LAN IP (MER network) for GUI access
+            $parametersToQuery = [
+                'InternetGatewayDevice.User.1.Username',
+                'InternetGatewayDevice.User.1.Password',
+                'InternetGatewayDevice.UserInterface.RemoteAccess.Port',
+                'InternetGatewayDevice.UserInterface.RemoteAccess.Enable',
+                'InternetGatewayDevice.User.2.RemoteAccessCapable',
+                'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceIPAddress',
+            ];
+            $enableParams = [
+                'InternetGatewayDevice.UserInterface.RemoteAccess.Enable' => [
+                    'value' => true,
+                    'type' => 'xsd:boolean',
+                ],
+                'InternetGatewayDevice.User.2.RemoteAccessCapable' => [
+                    'value' => true,
+                    'type' => 'xsd:boolean',
+                ],
+            ];
+
+            // SmartRG: Use LAN IP (192.168.x.x) for backend/MER network access
+            $lanIpParam = $device->parameters()
+                ->where('name', 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceIPAddress')
+                ->first();
+            $externalIp = $lanIpParam ? $lanIpParam->value : '192.168.1.1'; // Default to 192.168.1.1
+
         } else {
-            // Generic TR-098 devices (SmartRG, etc.)
+            // Generic TR-098 devices
             $parametersToQuery = [
                 'InternetGatewayDevice.User.1.Username',
                 'InternetGatewayDevice.User.1.Password',
@@ -1715,6 +1814,8 @@ class DeviceController extends Controller
         // Trigger connection request
         $this->connectionRequestService->sendConnectionRequest($device);
 
+        $isSmartRG = $device->isSmartRG();
+
         return response()->json([
             'task' => $task,
             'enable_task' => $enableTask,
@@ -1722,7 +1823,11 @@ class DeviceController extends Controller
             'port' => $port,
             'username' => $username,
             'is_nokia' => $isNokia,
-            'message' => 'Remote access is being enabled...',
+            'is_smartrg' => $isSmartRG,
+            'use_lan_ip' => $isSmartRG, // Indicates this IP is for backend/MER network access
+            'message' => $isSmartRG
+                ? 'Remote access enabled. Use the LAN IP from the backend/MER network.'
+                : 'Remote access is being enabled...',
         ]);
     }
 

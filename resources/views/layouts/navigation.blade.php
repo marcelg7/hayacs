@@ -30,6 +30,9 @@
                     <x-nav-link :href="route('subscribers.index')" :active="request()->routeIs('subscribers.*')">
                         {{ __('Subscribers') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
+                        {{ __('Reports') }}
+                    </x-nav-link>
                     @if(Auth::user()->isAdmin())
                         {{-- Automation Dropdown (Groups & Workflows) --}}
                         <div class="hidden sm:flex sm:items-center" x-data="{ open: false }">
@@ -149,6 +152,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('subscribers.index')" :active="request()->routeIs('subscribers.*')">
                 {{ __('Subscribers') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
+                {{ __('Reports') }}
             </x-responsive-nav-link>
             @if(Auth::user()->isAdmin())
                 <div class="border-t border-gray-200 dark:border-gray-600 pt-2 mt-2">

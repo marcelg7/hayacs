@@ -78,7 +78,7 @@
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">IP Address</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Interface</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Signal</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Rate</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Down / Up Rate</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white dark:bg-{{ $colors['card'] }} divide-y divide-gray-200 dark:divide-{{ $colors['border'] }}">
@@ -116,7 +116,11 @@
                             $connSignalLabel = '';
 
                             if ($connWifiData) {
-                                $connSignalStrength = $connWifiData['SignalStrength'] ?? null;
+                                // Check standard SignalStrength first, then Calix vendor extension (X_000631_)
+                                $connSignalStrength = $connWifiData['SignalStrength']
+                                    ?? $connWifiData['X_000631_SignalStrength']
+                                    ?? $connWifiData['X_000631_Metrics.RSSIUpstream']
+                                    ?? null;
                             }
 
                             if ($connSignalStrength === null && isset($connHost['X_CLEARACCESS_COM_WlanRssi'])) {
@@ -146,8 +150,16 @@
                                 }
                             }
 
-                            // Get rates
-                            $connDownRate = $connWifiData['LastDataDownlinkRate'] ?? null;
+                            // Get rates - check standard params first, then Calix vendor extension (X_000631_)
+                            $connDownRate = $connWifiData['LastDataDownlinkRate']
+                                ?? $connWifiData['X_000631_LastDataDownlinkRate']
+                                ?? $connWifiData['X_000631_Metrics.PhyRateTx']
+                                ?? null;
+
+                            $connUpRate = $connWifiData['LastDataUplinkRate']
+                                ?? $connWifiData['X_000631_LastDataUplinkRate']
+                                ?? $connWifiData['X_000631_Metrics.PhyRateRx']
+                                ?? null;
 
                             if ($connDownRate === null && isset($connHost['X_CLEARACCESS_COM_WlanTxRate'])) {
                                 $txRate = (int)$connHost['X_CLEARACCESS_COM_WlanTxRate'];
@@ -203,9 +215,20 @@
                                 @endif
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm">
-                                @if($connDownRate)
+                                @if($connDownRate || $connUpRate)
                                     <span class="text-gray-900 dark:text-{{ $colors['text'] }} font-mono text-xs">
-                                        {{ number_format($connDownRate / 1000, 0) }} Mbps
+                                        @if($connDownRate)
+                                            <span class="text-green-600 dark:text-green-400" title="Download">{{ number_format($connDownRate / 1000, 0) }}</span>
+                                        @else
+                                            <span class="text-gray-400">-</span>
+                                        @endif
+                                        <span class="text-gray-400 mx-1">/</span>
+                                        @if($connUpRate)
+                                            <span class="text-blue-600 dark:text-blue-400" title="Upload">{{ number_format($connUpRate / 1000, 0) }}</span>
+                                        @else
+                                            <span class="text-gray-400">-</span>
+                                        @endif
+                                        <span class="text-gray-500 text-xs ml-1">Mbps</span>
                                     </span>
                                 @else
                                     <span class="text-gray-400 dark:text-{{ $colors['text-muted'] }}">-</span>

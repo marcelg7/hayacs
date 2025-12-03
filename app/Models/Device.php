@@ -558,6 +558,44 @@ class Device extends Model
     }
 
     /**
+     * Check if this device is a Calix GigaSpire (GS4220E, GS2020E, GM1028, etc.)
+     * IMPORTANT: GigaSpires have different TR-069 behavior than GigaCenters
+     * GigaSpire code is handled by Claude Instance 1
+     */
+    public function isGigaSpire(): bool
+    {
+        if (!$this->isCalix()) {
+            return false;
+        }
+        $productClass = $this->product_class ?? '';
+        return stripos($productClass, 'GigaSpire') !== false
+            || preg_match('/^GS\d/i', $productClass)
+            || preg_match('/^GM\d/i', $productClass);
+    }
+
+    /**
+     * Check if this device is a Calix GigaCenter (844E, 844G, 854G, 812G, 804Mesh)
+     * IMPORTANT: GigaCenters are WORKING - do not modify their code paths
+     * GigaCenter code is handled by Claude Instance 2
+     */
+    public function isGigaCenter(): bool
+    {
+        if (!$this->isCalix()) {
+            return false;
+        }
+        // GigaCenter if it's Calix but NOT a GigaSpire
+        // and matches known GigaCenter model patterns
+        if ($this->isGigaSpire()) {
+            return false;
+        }
+        $productClass = $this->product_class ?? '';
+        return stripos($productClass, '844') !== false
+            || stripos($productClass, '854') !== false
+            || stripos($productClass, '812') !== false
+            || stripos($productClass, '804') !== false;
+    }
+
+    /**
      * Check if this device is a Nokia/Alcatel-Lucent device
      */
     public function isNokia(): bool

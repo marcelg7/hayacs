@@ -15,6 +15,7 @@ use App\Http\Controllers\SubscriberController;
 use App\Http\Controllers\DeviceUploadController;
 use App\Http\Controllers\DeviceGroupController;
 use App\Http\Controllers\GroupWorkflowController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 // CWMP Endpoint for TR-069 Device Communication (Protected with HTTP Basic Auth)
@@ -52,6 +53,29 @@ Route::middleware(['auth'])->group(function () {
 
     // Analytics
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+
+    // Reports
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', [ReportController::class, 'index'])->name('index');
+        Route::get('/offline-devices', [ReportController::class, 'offlineDevices'])->name('offline-devices');
+        Route::get('/inactive-devices', [ReportController::class, 'inactiveDevices'])->name('inactive-devices');
+        Route::get('/devices-without-subscriber', [ReportController::class, 'devicesWithoutSubscriber'])->name('devices-without-subscriber');
+        Route::get('/duplicate-serials', [ReportController::class, 'duplicateSerials'])->name('duplicate-serials');
+        Route::get('/duplicate-macs', [ReportController::class, 'duplicateMacs'])->name('duplicate-macs');
+        Route::get('/excessive-informs', [ReportController::class, 'excessiveInforms'])->name('excessive-informs');
+        Route::get('/firmware', [ReportController::class, 'firmwareReport'])->name('firmware');
+        Route::get('/device-types', [ReportController::class, 'deviceTypeReport'])->name('device-types');
+        Route::get('/connection-request-failures', [ReportController::class, 'connectionRequestFailures'])->name('connection-request-failures');
+        Route::get('/stun-devices', [ReportController::class, 'stunDevices'])->name('stun-devices');
+        Route::get('/nat-devices', [ReportController::class, 'natDevices'])->name('nat-devices');
+        Route::get('/smartrg-on-non-dsl', [ReportController::class, 'smartrgOnNonDsl'])->name('smartrg-on-non-dsl');
+        Route::get('/export/all-devices', [ReportController::class, 'exportAllDevices'])->name('export-all-devices');
+
+        // Actions
+        Route::post('/wake-device/{id}', [ReportController::class, 'wakeDevice'])->name('wake-device');
+        Route::post('/bulk-wake', [ReportController::class, 'bulkWake'])->name('bulk-wake');
+        Route::post('/bulk-set-inform-interval', [ReportController::class, 'bulkSetInformInterval'])->name('bulk-set-inform-interval');
+    });
 
     // Analytics API (using web session auth instead of sanctum for seamless browser access)
     Route::get('/analytics/device-health', [AnalyticsController::class, 'deviceHealth'])->name('analytics.device-health');

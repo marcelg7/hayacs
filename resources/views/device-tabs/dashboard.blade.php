@@ -606,7 +606,11 @@
                                 $signalIcon = '';
 
                                 if ($wifiData) {
-                                    $signalStrength = $wifiData['SignalStrength'] ?? null;
+                                    // Check standard SignalStrength first, then Calix vendor extension (X_000631_)
+                                    $signalStrength = $wifiData['SignalStrength']
+                                        ?? $wifiData['X_000631_SignalStrength']
+                                        ?? $wifiData['X_000631_Metrics.RSSIUpstream']
+                                        ?? null;
                                 }
 
                                 if ($signalStrength === null && isset($host['X_CLEARACCESS_COM_WlanRssi'])) {
@@ -636,8 +640,15 @@
                                     }
                                 }
 
-                                $downRate = $wifiData['LastDataDownlinkRate'] ?? null;
-                                $upRate = $wifiData['LastDataUplinkRate'] ?? null;
+                                // Check standard rates first, then Calix vendor extension (X_000631_)
+                                $downRate = $wifiData['LastDataDownlinkRate']
+                                    ?? $wifiData['X_000631_LastDataDownlinkRate']
+                                    ?? $wifiData['X_000631_Metrics.PhyRateTx']
+                                    ?? null;
+                                $upRate = $wifiData['LastDataUplinkRate']
+                                    ?? $wifiData['X_000631_LastDataUplinkRate']
+                                    ?? $wifiData['X_000631_Metrics.PhyRateRx']
+                                    ?? null;
 
                                 if ($downRate === null && isset($host['X_CLEARACCESS_COM_WlanTxRate'])) {
                                     $txRate = (int)$host['X_CLEARACCESS_COM_WlanTxRate'];

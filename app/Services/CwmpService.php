@@ -91,8 +91,13 @@ class CwmpService
     /**
      * Get the CWMP namespace to use for responses
      * Priority: 1. Session namespace (from device's message)
-     *           2. Device-based default (Calix = CWMP 1.2)
+     *           2. Device-based default (based on device type)
      *           3. Default CWMP 1.0
+     *
+     * CRITICAL: Device families use different CWMP versions:
+     * - Calix GigaCenters (844E, 844G, 854G, 804Mesh) - TR-098, CWMP 1.0
+     * - Calix GigaSpires (GS4220E, GM1028, etc.) - TR-098, but require CWMP 1.2!
+     * - Nokia devices - CWMP 1.2
      */
     public function getCwmpNamespace(): string
     {
@@ -103,9 +108,19 @@ class CwmpService
 
         // Second, check device context and use appropriate default
         if ($this->currentDevice) {
-            // Calix devices use CWMP 1.2
-            if ($this->currentDevice->isCalix()) {
+            // CRITICAL: GigaSpires use TR-098 data model but require CWMP 1.2
+            // This is different from GigaCenters which use CWMP 1.0
+            if ($this->currentDevice->isGigaSpire()) {
                 return self::CWMP_1_2;
+            }
+            // GigaCenters (844E, 844G, 854G, 804Mesh) use CWMP 1.0
+            if ($this->currentDevice->isGigaCenter()) {
+                return self::CWMP;
+            }
+            // Other Calix devices: check data model
+            if ($this->currentDevice->isCalix()) {
+                $dataModel = $this->currentDevice->getDataModel();
+                return $dataModel === 'TR-181' ? self::CWMP_1_2 : self::CWMP;
             }
             // Nokia devices also use CWMP 1.2
             if ($this->currentDevice->isNokia()) {
@@ -365,8 +380,8 @@ class CwmpService
         $dom->formatOutput = true;
 
         // Create SOAP Envelope with cwmp:ID echoed back (isResponse = true)
-        $envelope = $this->createSoapEnvelope($dom, null, true);
-        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
+        $result = $this->createSoapEnvelope($dom, null, true);
+        $body = $result['body'];
 
         // Create InformResponse
         $informResponse = $dom->createElement('cwmp:InformResponse');
@@ -375,7 +390,7 @@ class CwmpService
         $maxEnvelopesEl = $dom->createElement('MaxEnvelopes', (string) $maxEnvelopes);
         $informResponse->appendChild($maxEnvelopesEl);
 
-        return $dom->saveXML();
+        return $this->fixNamespaceOrder($dom->saveXML());
     }
 
     /**
@@ -387,8 +402,8 @@ class CwmpService
         $dom->formatOutput = true;
 
         // Create SOAP Envelope
-        $envelope = $this->createSoapEnvelope($dom);
-        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
+        $result = $this->createSoapEnvelope($dom);
+        $body = $result['body'];
 
         // Create GetParameterValues
         $getParams = $dom->createElement('cwmp:GetParameterValues');
@@ -396,7 +411,7 @@ class CwmpService
 
         // Create ParameterNames array
         $paramNamesArray = $dom->createElement('ParameterNames');
-        $paramNamesArray->setAttribute('SOAP-ENC:arrayType', 'xsd:string[' . count($parameterNames) . ']');
+        $paramNamesArray->setAttribute('soap-enc:arrayType', 'xsd:string[' . count($parameterNames) . ']');
         $getParams->appendChild($paramNamesArray);
 
         foreach ($parameterNames as $name) {
@@ -404,7 +419,7 @@ class CwmpService
             $paramNamesArray->appendChild($paramName);
         }
 
-        return $dom->saveXML();
+        return $this->fixNamespaceOrder($dom->saveXML());
     }
 
     /**
@@ -420,8 +435,8 @@ class CwmpService
         $dom->formatOutput = true;
 
         // Create SOAP Envelope
-        $envelope = $this->createSoapEnvelope($dom);
-        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
+        $result = $this->createSoapEnvelope($dom);
+        $body = $result['body'];
 
         // Create GetParameterNames
         $getParamNames = $dom->createElement('cwmp:GetParameterNames');
@@ -435,7 +450,7 @@ class CwmpService
         $nextLevelElement = $dom->createElement('NextLevel', $nextLevel ? 'true' : 'false');
         $getParamNames->appendChild($nextLevelElement);
 
-        return $dom->saveXML();
+        return $this->fixNamespaceOrder($dom->saveXML());
     }
 
     /**
@@ -451,8 +466,8 @@ class CwmpService
         $dom->formatOutput = true;
 
         // Create SOAP Envelope
-        $envelope = $this->createSoapEnvelope($dom);
-        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
+        $result = $this->createSoapEnvelope($dom);
+        $body = $result['body'];
 
         // Create SetParameterValues
         $setParams = $dom->createElement('cwmp:SetParameterValues');
@@ -460,7 +475,7 @@ class CwmpService
 
         // Create ParameterList
         $paramList = $dom->createElement('ParameterList');
-        $paramList->setAttribute('SOAP-ENC:arrayType', 'cwmp:ParameterValueStruct[' . count($parameters) . ']');
+        $paramList->setAttribute('soap-enc:arrayType', 'cwmp:ParameterValueStruct[' . count($parameters) . ']');
         $setParams->appendChild($paramList);
 
         foreach ($parameters as $name => $value) {
@@ -501,7 +516,7 @@ class CwmpService
         $paramKey = $dom->createElement('ParameterKey', '');
         $setParams->appendChild($paramKey);
 
-        return $dom->saveXML();
+        return $this->fixNamespaceOrder($dom->saveXML());
     }
 
     /**
@@ -513,8 +528,8 @@ class CwmpService
         $dom->formatOutput = true;
 
         // Create SOAP Envelope
-        $envelope = $this->createSoapEnvelope($dom);
-        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
+        $result = $this->createSoapEnvelope($dom);
+        $body = $result['body'];
 
         // Create Reboot
         $reboot = $dom->createElement('cwmp:Reboot');
@@ -523,7 +538,7 @@ class CwmpService
         $cmdKey = $dom->createElement('CommandKey', htmlspecialchars($commandKey));
         $reboot->appendChild($cmdKey);
 
-        return $dom->saveXML();
+        return $this->fixNamespaceOrder($dom->saveXML());
     }
 
     /**
@@ -535,14 +550,14 @@ class CwmpService
         $dom->formatOutput = true;
 
         // Create SOAP Envelope
-        $envelope = $this->createSoapEnvelope($dom);
-        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
+        $result = $this->createSoapEnvelope($dom);
+        $body = $result['body'];
 
         // Create FactoryReset
         $factoryReset = $dom->createElement('cwmp:FactoryReset');
         $body->appendChild($factoryReset);
 
-        return $dom->saveXML();
+        return $this->fixNamespaceOrder($dom->saveXML());
     }
 
     /**
@@ -554,8 +569,8 @@ class CwmpService
         $dom->formatOutput = true;
 
         // Create SOAP Envelope
-        $envelope = $this->createSoapEnvelope($dom);
-        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
+        $result = $this->createSoapEnvelope($dom);
+        $body = $result['body'];
 
         // Create AddObject
         $addObject = $dom->createElement('cwmp:AddObject');
@@ -567,7 +582,7 @@ class CwmpService
         $paramKeyEl = $dom->createElement('ParameterKey', htmlspecialchars($parameterKey));
         $addObject->appendChild($paramKeyEl);
 
-        return $dom->saveXML();
+        return $this->fixNamespaceOrder($dom->saveXML());
     }
 
     /**
@@ -579,8 +594,8 @@ class CwmpService
         $dom->formatOutput = true;
 
         // Create SOAP Envelope
-        $envelope = $this->createSoapEnvelope($dom);
-        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
+        $result = $this->createSoapEnvelope($dom);
+        $body = $result['body'];
 
         // Create DeleteObject
         $deleteObject = $dom->createElement('cwmp:DeleteObject');
@@ -592,7 +607,7 @@ class CwmpService
         $paramKeyEl = $dom->createElement('ParameterKey', htmlspecialchars($parameterKey));
         $deleteObject->appendChild($paramKeyEl);
 
-        return $dom->saveXML();
+        return $this->fixNamespaceOrder($dom->saveXML());
     }
 
     /**
@@ -604,8 +619,8 @@ class CwmpService
         $dom->formatOutput = true;
 
         // Create SOAP Envelope
-        $envelope = $this->createSoapEnvelope($dom);
-        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
+        $result = $this->createSoapEnvelope($dom);
+        $body = $result['body'];
 
         // Create Download
         $download = $dom->createElement('cwmp:Download');
@@ -641,7 +656,7 @@ class CwmpService
         $failureUrl = $dom->createElement('FailureURL', '');
         $download->appendChild($failureUrl);
 
-        return $dom->saveXML();
+        return $this->fixNamespaceOrder($dom->saveXML());
     }
 
     /**
@@ -653,8 +668,8 @@ class CwmpService
         $dom->formatOutput = true;
 
         // Create SOAP Envelope
-        $envelope = $this->createSoapEnvelope($dom);
-        $body = $envelope->getElementsByTagNameNS(self::SOAP_ENV, 'Body')->item(0);
+        $result = $this->createSoapEnvelope($dom);
+        $body = $result['body'];
 
         // Create Upload
         $upload = $dom->createElement('cwmp:Upload');
@@ -678,7 +693,7 @@ class CwmpService
         $delaySeconds = $dom->createElement('DelaySeconds', '0');
         $upload->appendChild($delaySeconds);
 
-        return $dom->saveXML();
+        return $this->fixNamespaceOrder($dom->saveXML());
     }
 
     /**
@@ -770,21 +785,26 @@ XML;
      * @param DOMDocument $dom The DOM document
      * @param string|null $cwmpId The cwmp:ID to use. If null, generates a new one for ACS requests
      * @param bool $isResponse If true, echoes back the session cwmp:ID (for InformResponse, etc.)
+     * @return array{envelope: DOMElement, body: DOMElement} Returns array with both envelope and body elements
      */
-    private function createSoapEnvelope(DOMDocument $dom, ?string $cwmpId = null, bool $isResponse = false): DOMElement
+    private function createSoapEnvelope(DOMDocument $dom, ?string $cwmpId = null, bool $isResponse = false): array
     {
         // Use the device's CWMP namespace if available, otherwise default
         $cwmpNamespace = $this->getCwmpNamespace();
 
-        // Use USS-compatible SOAP prefix format (SOAP-ENV, SOAP-ENC uppercase with hyphens)
-        // USS uses uppercase, matching the SOAP 1.1 standard conventions
-        // This is critical for GigaSpire GS4220E devices to process commands properly
-        $envelope = $dom->createElementNS(self::SOAP_ENV, 'SOAP-ENV:Envelope');
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:SOAP-ENC', self::SOAP_ENC);
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:SOAP-ENV', self::SOAP_ENV);
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:cwmp', $cwmpNamespace);
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xsd', self::XSD);
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xsi', self::XSI);
+        // CRITICAL: USS uses specific namespace attribute order that GigaSpire devices require
+        // Order: xmlns:cwmp, xmlns:soap-enc, xmlns:soap-env, xmlns:xsd, xmlns:xsi
+        // PHP's DOMDocument puts the element's own namespace first, so we need a workaround
+        // Create envelope as regular element, then manually set ALL namespaces in exact order
+        $envelope = $dom->createElement('soap-env:Envelope');
+
+        // Set namespaces in the exact order USS uses (critical for GigaSpire GS4220E)
+        // Note: Using setAttribute instead of setAttributeNS to control order
+        $envelope->setAttribute('xmlns:cwmp', $cwmpNamespace);
+        $envelope->setAttribute('xmlns:soap-enc', self::SOAP_ENC);
+        $envelope->setAttribute('xmlns:soap-env', self::SOAP_ENV);
+        $envelope->setAttribute('xmlns:xsd', self::XSD);
+        $envelope->setAttribute('xmlns:xsi', self::XSI);
         $dom->appendChild($envelope);
 
         // Determine the ID to use
@@ -801,18 +821,91 @@ XML;
 
         // Always include SOAP Header with cwmp:ID (like USS does)
         // This is critical for GigaSpire devices to process commands
-        $header = $dom->createElementNS(self::SOAP_ENV, 'SOAP-ENV:Header');
+        $header = $dom->createElement('soap-env:Header');
         $envelope->appendChild($header);
 
-        // Add cwmp:ID element with mustUnderstand="1"
+        // Add cwmp:ID element with mustUnderstand="1" (lowercase soap-env)
         $id = $dom->createElement('cwmp:ID', $idValue);
-        $id->setAttribute('SOAP-ENV:mustUnderstand', '1');
+        $id->setAttribute('soap-env:mustUnderstand', '1');
         $header->appendChild($id);
 
-        // Create SOAP Body
-        $body = $dom->createElementNS(self::SOAP_ENV, 'SOAP-ENV:Body');
+        // Create SOAP Body (lowercase soap-env)
+        $body = $dom->createElement('soap-env:Body');
         $envelope->appendChild($body);
 
-        return $envelope;
+        // Return both envelope and body so callers can add content to body directly
+        return ['envelope' => $envelope, 'body' => $body];
+    }
+
+    /**
+     * Post-process XML to fix namespace attribute order
+     * PHP's DOMDocument puts the element's own namespace first, but GigaSpire devices
+     * require xmlns:cwmp to be first (matching USS behavior)
+     *
+     * Also ensures all required namespace declarations are present, even if PHP
+     * optimizes them away.
+     *
+     * @param string $xml The XML string from saveXML()
+     * @return string The XML with fixed namespace order
+     */
+    public function fixNamespaceOrder(string $xml): string
+    {
+        // Get the current CWMP namespace (1.0, 1.1, or 1.2)
+        $cwmpNamespace = $this->getCwmpNamespace();
+
+        // Match the soap-env:Envelope opening tag with its attributes
+        // Pattern captures everything between <soap-env:Envelope and >
+        $pattern = '/<soap-env:Envelope([^>]*)>/';
+
+        return preg_replace_callback($pattern, function($matches) use ($cwmpNamespace) {
+            $attrs = $matches[1];
+
+            // Extract all namespace declarations that exist
+            preg_match_all('/\s*(xmlns:[^=]+="[^"]*")/', $attrs, $nsMatches);
+
+            $namespaces = [];
+            if (!empty($nsMatches[1])) {
+                foreach ($nsMatches[1] as $ns) {
+                    // Extract prefix and value
+                    if (preg_match('/xmlns:(\S+)="([^"]*)"/', $ns, $parts)) {
+                        $namespaces[$parts[1]] = $parts[2];
+                    }
+                }
+            }
+
+            // Ensure all required namespaces are present (USS format)
+            // This handles the case where PHP optimizes away "unused" namespace declarations
+            $required = [
+                'cwmp' => $cwmpNamespace,
+                'soap-enc' => self::SOAP_ENC,
+                'soap-env' => self::SOAP_ENV,
+                'xsd' => self::XSD,
+                'xsi' => self::XSI,
+            ];
+
+            foreach ($required as $prefix => $uri) {
+                if (!isset($namespaces[$prefix])) {
+                    $namespaces[$prefix] = $uri;
+                }
+            }
+
+            // Build attributes in USS order: cwmp, soap-enc, soap-env, xsd, xsi
+            $orderedNs = [];
+            $order = ['cwmp', 'soap-enc', 'soap-env', 'xsd', 'xsi'];
+
+            foreach ($order as $prefix) {
+                if (isset($namespaces[$prefix])) {
+                    $orderedNs[] = "xmlns:{$prefix}=\"{$namespaces[$prefix]}\"";
+                    unset($namespaces[$prefix]);
+                }
+            }
+
+            // Add any remaining namespaces (shouldn't be any, but just in case)
+            foreach ($namespaces as $prefix => $uri) {
+                $orderedNs[] = "xmlns:{$prefix}=\"{$uri}\"";
+            }
+
+            return '<soap-env:Envelope ' . implode(' ', $orderedNs) . '>';
+        }, $xml);
     }
 }

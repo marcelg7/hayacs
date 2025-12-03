@@ -1,7 +1,59 @@
 # CLAUDE.md - Project Context & Current State
 
 **Last Updated**: December 3, 2025
-**Current Focus**: Nokia Beacon G6 TR-181 migration, Remote Support system, Log management automation
+**Current Focus**: GigaSpire GS4220E TR-069 communication issues, Nokia Beacon G6 TR-181 migration
+
+---
+
+## CRITICAL: Calix Device Family Separation
+
+**THIS IS A PRIMARY RULE - DO NOT VIOLATE**
+
+Calix has TWO distinct device families that MUST be treated separately in code:
+
+### GigaCenters (WORKING - DO NOT BREAK)
+- **Models**: 844E, 844G, 854G, 812G, 804Mesh
+- **Product Class**: Contains "844", "854", "812", "804" in product_class
+- **Status**: Fully functional with Hay ACS
+- **Code Owner**: Claude Instance 2 (if fixes needed)
+
+### GigaSpires (IN DEVELOPMENT)
+- **Models**: GS4220E, GS2020E, GM1028
+- **Product Class**: Contains "GigaSpire" or "GS" or "GM" in product_class
+- **Status**: TR-069 communication issues being investigated
+- **Code Owner**: Claude Instance 1 (this instance)
+
+### Detection Methods
+```php
+// Check if device is a GigaSpire (NOT a GigaCenter)
+public function isGigaSpire(): bool
+{
+    $productClass = strtolower($this->product_class ?? '');
+    return stripos($productClass, 'gigaspire') !== false
+        || preg_match('/^gs\d/i', $productClass)
+        || preg_match('/^gm\d/i', $productClass);
+}
+
+// Check if device is a GigaCenter
+public function isGigaCenter(): bool
+{
+    $productClass = strtolower($this->product_class ?? '');
+    return $this->isCalix()
+        && !$this->isGigaSpire()
+        && (stripos($productClass, '844') !== false
+            || stripos($productClass, '854') !== false
+            || stripos($productClass, '812') !== false
+            || stripos($productClass, '804') !== false);
+}
+```
+
+### Code Change Rules
+1. **ALWAYS** check device type before applying Calix-specific logic
+2. **NEVER** make changes that affect GigaCenters when fixing GigaSpire issues
+3. **USE** separate code paths: `if ($device->isGigaSpire()) { ... } else { ... }`
+4. **TEST** both device families after any Calix-related changes
+
+---
 
 ## Current Status
 
