@@ -1,0 +1,666 @@
+2025/07/04|16:21:32|CXNK0107FEDD|422207035302|23.4.0.1.128|boot-calix|installing broadkey.ko and starting clx_security_proxy|
+
+2025/07/04|16:21:32|CXNK0107FEDD|422207035302|23.4.0.1.128|boot-calix|Cold boot, persistent_cnt:1 ,boot_reason:2|
+
+2025/07/04|16:21:32|CXNK0107FEDD|422207035302|23.4.0.1.128|boot-calix|boot_reason_string:0x2(->ColdBoot omci:cold-reboot )|
+
+2025/07/04|16:21:33|CXNK0107FEDD|422207035302|23.4.0.1.128|boot-calix|using existing config|
+
+2025/07/04|16:21:44|CXNK0107FEDD|422207035302|23.4.0.1.128|sysmon|WAN(0) wanIfNames initialized to eth4,rc=0|
+
+2025/07/04|16:21:48|CXNK0107FEDD|422207035302|23.4.0.1.128|ledmgr|set LED condition c_default, priority is 3|
+
+2025/07/04|16:21:48|CXNK0107FEDD|422207035302|23.4.0.1.128|ledmgr|set LED condition c_booting, priority is 0|
+
+2025/07/04|16:21:48|CXNK0107FEDD|422207035302|23.4.0.1.128|ledmgr|set LED condition c_no_service, priority is 1|
+
+2025/07/15|06:47:04|CXNK0107FEDD|422207035302|23.4.0.1.128|(birth-mark=0, seq=0, side=RG, boot-src=RG, ver=23.4.0.1.128, uptime=122, boot-reason=cold-reboot(2), ext=<module=32>,<hdate=1752576424>)|
+
+2025/07/15|06:47:39|CXNK0107FEDD|422207035302|23.4.0.1.128|ledmgr|clear LED condition c_booting, priority is 0|
+
+2025/07/15|06:47:39|CXNK0107FEDD|422207035302|23.4.0.1.128|ledmgr|set LED condition c_bootup, priority is 3|
+
+2025/07/15|06:47:39|CXNK0107FEDD|422207035302|23.4.0.1.128|ledmgr|set LED condition c_voip_onhook, priority is 2|
+
+2025/07/15|06:47:40|CXNK0107FEDD|422207035302|23.4.0.1.128|sysmgr|save config|
+
+2025/07/15|06:47:43|CXNK0107FEDD|422207035302|23.4.0.1.128|ledmgr|clear LED condition c_no_service, priority is 1|
+
+2025/07/15|06:47:43|CXNK0107FEDD|422207035302|23.4.0.1.128|ledmgr|set LED condition c_service, priority is 2|
+
+2025/07/15|06:47:43|CXNK0107FEDD|422207035302|23.4.0.1.128|sysmgr|save config|
+
+2025/07/15|06:47:46|CXNK0107FEDD|422207035302|23.4.0.1.128|sysmgr|save config|
+
+2025/07/19|22:06:49|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|08:35:29|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|09:00:31|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|09:25:32|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|09:50:34|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|10:15:35|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|10:40:36|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|11:05:38|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|11:30:39|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|11:55:41|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|12:20:42|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|12:45:43|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|13:10:45|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|13:35:46|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|14:00:48|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|14:25:49|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|14:50:50|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|15:15:52|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|15:40:53|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|16:05:54|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|16:30:56|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|16:55:57|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|17:20:58|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|17:46:00|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|18:11:01|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|18:36:02|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|19:01:04|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|19:26:05|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|19:51:07|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|20:16:08|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|20:41:09|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|21:06:11|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|21:31:12|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|21:56:13|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|22:21:15|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|22:46:16|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|23:11:18|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/07|23:36:19|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|00:01:20|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|00:26:22|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|00:51:23|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|01:16:25|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|01:41:26|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|02:06:27|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|02:31:29|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|02:56:30|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|03:21:31|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|03:46:33|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|04:11:34|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|04:36:36|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|05:01:37|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|05:26:38|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|05:51:40|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|06:16:41|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|06:41:42|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|07:06:44|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|07:31:45|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|07:56:47|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|08:21:48|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|08:46:49|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|09:11:51|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|09:36:52|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|10:01:53|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|10:26:55|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|10:51:56|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|11:16:58|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|11:41:59|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|12:07:01|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|12:32:02|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|12:57:03|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|13:22:05|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|13:47:06|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|14:12:08|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|14:37:09|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|15:02:10|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|15:27:12|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|15:52:13|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|16:17:14|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|16:42:16|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|17:07:17|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|17:32:18|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|17:57:20|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|18:22:21|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|18:47:23|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|19:12:24|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|19:37:25|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|20:02:27|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|20:27:28|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|20:52:29|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|21:17:31|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|21:42:32|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|22:07:34|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|22:32:35|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|22:57:37|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|23:22:38|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/08|23:47:39|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|00:12:41|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|00:37:42|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|01:02:43|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|01:27:45|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|01:52:46|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|02:17:47|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|02:42:49|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|03:07:50|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|03:32:52|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|03:57:53|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|04:22:54|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|04:47:56|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|05:12:57|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|05:37:59|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|06:03:00|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|06:28:01|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|06:53:03|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|07:18:04|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|07:43:06|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|08:08:07|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|08:33:08|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|08:58:10|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|09:23:11|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|09:48:13|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|10:13:14|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|10:38:15|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|11:03:17|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|11:28:18|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|11:53:20|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|12:18:21|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|12:43:22|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|13:08:24|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|13:33:25|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|13:58:27|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|14:23:28|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|14:48:29|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|15:13:31|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|15:38:32|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|16:03:34|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|16:28:35|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|16:53:37|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|17:18:38|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|17:43:39|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|18:08:41|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|18:33:42|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|18:58:43|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|19:23:45|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|19:48:46|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|20:13:47|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|20:38:49|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|21:03:50|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|21:28:52|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|21:53:53|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|22:18:54|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|22:43:56|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|23:08:57|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|23:33:59|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/09|23:59:00|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|00:24:01|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|00:49:03|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|01:14:04|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|01:39:05|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|02:04:07|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|02:29:08|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|02:54:10|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|03:19:11|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|03:44:13|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|04:09:14|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|04:34:15|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|04:59:17|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|05:24:18|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|05:49:19|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|06:14:21|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|06:39:22|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|07:04:24|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|07:29:25|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|07:54:27|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|08:19:28|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|08:44:29|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|09:09:31|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|09:34:32|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|09:59:33|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|10:24:35|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|10:49:36|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|11:14:38|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|11:39:39|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|12:04:40|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|12:29:42|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|12:54:43|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|13:19:44|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|13:44:46|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|14:09:47|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|14:34:49|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|14:59:50|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|15:24:52|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|15:49:53|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|16:14:54|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|16:39:56|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|17:04:57|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/10|17:29:58|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/12|04:56:55|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/23|02:51:22|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/26|14:59:17|CXNK0107FEDD|422207035302|23.4.0.1.128|ledmgr|clear LED condition c_service, priority is 2|
+
+2025/08/26|14:59:17|CXNK0107FEDD|422207035302|23.4.0.1.128|ledmgr|set LED condition c_no_service, priority is 1|
+
+2025/08/28|14:38:46|CXNK0107FEDD|422207035302|23.4.0.1.128|ledmgr|clear LED condition c_no_service, priority is 1|
+
+2025/08/28|14:38:46|CXNK0107FEDD|422207035302|23.4.0.1.128|ledmgr|set LED condition c_service, priority is 2|
+
+2025/08/28|14:38:46|CXNK0107FEDD|422207035302|23.4.0.1.128|sysmgr|save config|
+
+2025/08/28|14:38:47|CXNK0107FEDD|422207035302|23.4.0.1.128|sysmgr|save config|
+
+2025/08/28|14:38:50|CXNK0107FEDD|422207035302|23.4.0.1.128|sysmgr|save config|
+
+2025/08/30|12:31:25|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|12:56:26|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|13:21:27|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|13:46:29|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|14:11:30|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|14:36:32|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|15:01:33|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|15:26:35|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|15:51:36|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|16:16:38|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|16:41:39|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|17:06:40|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|17:31:42|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|17:56:43|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|18:21:45|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|18:46:46|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|19:11:48|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|19:36:49|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|20:01:50|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|20:26:52|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|20:51:53|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|21:16:55|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|21:41:56|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|22:06:57|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|22:31:59|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|22:57:00|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|23:22:02|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/30|23:47:03|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|00:12:05|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|00:37:06|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|01:02:08|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|01:27:09|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|01:52:11|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|02:17:12|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|02:42:13|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|03:07:15|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|03:32:16|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|03:57:17|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|04:22:19|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|04:47:20|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|05:12:22|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|05:37:23|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|06:02:25|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|06:27:26|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|06:52:28|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|07:17:29|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|07:42:30|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|08:07:32|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|08:32:33|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|08:57:35|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|09:22:36|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|09:47:37|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|10:12:39|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|10:37:40|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|11:02:42|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|11:27:43|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|11:52:45|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|12:17:46|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|12:42:48|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|13:07:49|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|13:32:50|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|13:57:52|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|14:22:53|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|14:47:55|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|15:12:56|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|15:37:58|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|16:02:59|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|16:28:00|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|16:53:02|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|17:18:03|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|17:43:05|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|18:08:06|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|18:33:08|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|18:58:09|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|19:23:10|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|19:48:12|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|20:13:13|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|20:38:15|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|21:03:16|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|21:28:18|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|21:53:19|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|22:18:20|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|22:43:22|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|23:08:23|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|23:33:25|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/08/31|23:58:26|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|00:23:28|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|00:48:29|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|01:13:31|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|01:38:32|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|02:03:34|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|02:28:35|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|02:53:36|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|03:18:38|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|03:43:39|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|04:08:41|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|04:33:42|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|04:58:44|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|05:23:45|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|05:48:47|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|06:13:48|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|06:38:49|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|07:03:51|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|07:28:52|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|07:53:54|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|08:18:55|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|08:43:56|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|09:08:58|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|09:33:59|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|09:59:01|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
+2025/09/01|10:24:02|CXNK0107FEDD|422207035302|23.4.0.1.128|Security proxy deteced broadkey fault|
+
