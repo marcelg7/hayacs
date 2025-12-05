@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Middleware\CwmpBasicAuth;
+use App\Http\Middleware\CwmpAuth;
 use App\Http\Middleware\EnsurePasswordChanged;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserIsAdminOrSupport;
@@ -52,7 +52,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'cwmp.auth' => CwmpBasicAuth::class,
+            'cwmp.auth' => CwmpAuth::class,
             'admin' => EnsureUserIsAdmin::class,
             'admin.support' => EnsureUserIsAdminOrSupport::class,
         ]);

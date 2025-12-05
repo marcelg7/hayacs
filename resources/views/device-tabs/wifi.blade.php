@@ -14,6 +14,10 @@
         $wlanConfigs = [];
         $wifi24Ghz = [];
         $wifi5Ghz = [];
+        $wifi6Ghz = [];
+
+        // Detect GigaSpire for 6GHz band support (product_class = "GigaSpire")
+        $isGigaSpire = strtolower($device->product_class ?? '') === 'gigaspire';
 
         if ($isDevice2) {
             // TR-181: Device.WiFi.SSID.*, Device.WiFi.Radio.*, Device.WiFi.AccessPoint.*
@@ -165,15 +169,22 @@
 
             ksort($wlanConfigs);
 
-            // Organize into 2.4GHz and 5GHz groups
+            // Organize into 2.4GHz, 5GHz, and 6GHz groups
             // Nokia TR-098: instances 1-4 = 2.4GHz, 5-8 = 5GHz
-            // Other TR-098: typically 1-8 for 2.4GHz, 9-16 for 5GHz
+            // Calix GigaSpire TR-098: instances 1-8 = 2.4GHz, 9-16 = 5GHz, 17-24 = 6GHz
+            // Other Calix TR-098 (GigaCenter): instances 1-8 = 2.4GHz, 9-16 = 5GHz (no 6GHz)
             if ($isNokia) {
                 $wifi24Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] <= 4);
                 $wifi5Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] >= 5 && $config['instance'] <= 8);
-            } else {
+            } elseif ($isGigaSpire) {
+                // GigaSpire has 24 WLAN instances: 1-8 (2.4GHz), 9-16 (5GHz), 17-24 (6GHz)
                 $wifi24Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] <= 8);
-                $wifi5Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] >= 9);
+                $wifi5Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] >= 9 && $config['instance'] <= 16);
+                $wifi6Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] >= 17 && $config['instance'] <= 24);
+            } else {
+                // Other Calix TR-098 devices (GigaCenter) - 16 instances, no 6GHz
+                $wifi24Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] <= 8);
+                $wifi5Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] >= 9 && $config['instance'] <= 16);
             }
         }
     @endphp
@@ -882,6 +893,78 @@
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             @foreach($wifi5Ghz as $config)
                 @include('device-tabs.partials.wifi-card-tr181', ['config' => $config, 'band' => '5GHz', 'device' => $device, 'colors' => $colors, 'isDevice2' => $isDevice2, 'isCalix' => $isCalix])
+            @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- 6GHz WiFi Networks (GigaSpire only) -->
+    @if(count($wifi6Ghz) > 0)
+    @php
+        $radio6GhzEnabled = collect($wifi6Ghz)->first()['RadioEnabled'] ?? '0';
+        $radio6GhzChannel = collect($wifi6Ghz)->first()['Channel'] ?? '';
+        $radio6GhzAuto = (collect($wifi6Ghz)->first()['AutoChannelEnable'] ?? '0') === '1';
+    @endphp
+    <div class="bg-white dark:bg-{{ $colors['card'] }} shadow overflow-hidden sm:rounded-lg" x-data="{ radio6GhzEnabled: {{ $radio6GhzEnabled === '1' || $radio6GhzEnabled === 'true' ? 'true' : 'false' }} }">
+        <div class="px-4 py-4 sm:px-6 bg-cyan-50 dark:bg-cyan-900/20 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <svg class="w-6 h-6 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path>
+                </svg>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-{{ $colors['text'] }}">6 GHz</h3>
+                    <p class="text-xs text-gray-600 dark:text-{{ $colors['text-muted'] }}">
+                        Ch {{ $radio6GhzChannel ?: 'Auto' }}@if($radio6GhzAuto) (Auto)@endif
+                        · {{ count($wifi6Ghz) }} SSID{{ count($wifi6Ghz) > 1 ? 's' : '' }}
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span class="text-sm text-gray-600 dark:text-{{ $colors['text-muted'] }}">Radio:</span>
+                <button @click="async () => {
+                    radio6GhzEnabled = !radio6GhzEnabled;
+                    const message = (radio6GhzEnabled ? 'Enabling' : 'Disabling') + ' 6GHz Radio...';
+
+                    taskLoading = true;
+                    taskMessage = message;
+
+                    try {
+                        const deviceId = encodeURIComponent('{{ $device->id }}');
+                        const response = await fetch(`/api/devices/${deviceId}/wifi-radio`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                band: '6GHz',
+                                enabled: radio6GhzEnabled
+                            })
+                        });
+                        const result = await response.json();
+                        if (result.task && result.task.id) {
+                            startTaskTracking(message, result.task.id);
+                        } else {
+                            taskLoading = false;
+                            alert('Radio toggled, but no task ID returned');
+                        }
+                    } catch (error) {
+                        taskLoading = false;
+                        alert('Error: ' + error);
+                        radio6GhzEnabled = !radio6GhzEnabled;
+                    }
+                }" :class="radio6GhzEnabled ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-gray-400 hover:bg-gray-500'"
+                class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2">
+                    <span :class="radio6GhzEnabled ? 'translate-x-5' : 'translate-x-0'"
+                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                </button>
+            </div>
+        </div>
+        <div class="border-t border-gray-200 dark:border-{{ $colors['border'] }} p-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            @foreach($wifi6Ghz as $config)
+                @include('device-tabs.partials.wifi-card-tr181', ['config' => $config, 'band' => '6GHz', 'device' => $device, 'colors' => $colors, 'isDevice2' => $isDevice2, 'isCalix' => $isCalix])
             @endforeach
             </div>
         </div>

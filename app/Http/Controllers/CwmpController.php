@@ -994,6 +994,24 @@ class CwmpController extends Controller
     private function handleTransferCompleteResponse(array $parsed): string
     {
         $task = $this->findSentTaskForSession(['download', 'upload', 'config_restore']);
+        $commandKey = $parsed['command_key'] ?? null;
+
+        // If no sent task found, this could be:
+        // 1. A duplicate TransferComplete for an already-completed task
+        // 2. A TransferComplete for a deleted task
+        // 3. A stale TransferComplete from a previous ACS session
+        // In all cases, we MUST send TransferCompleteResponse to acknowledge and stop retries
+        if (!$task) {
+            $deviceId = $this->getSessionDeviceId();
+            Log::info('TransferComplete received without matching sent task (orphan/duplicate)', [
+                'device_id' => $deviceId,
+                'command_key' => $commandKey,
+                'fault_code' => $parsed['fault_code'] ?? 0,
+                'fault_string' => $parsed['fault_string'] ?? '',
+            ]);
+            // Send proper TransferCompleteResponse to acknowledge and stop device retries
+            return $this->cwmpService->createTransferCompleteResponse();
+        }
 
         if ($task) {
             $faultCode = $parsed['fault_code'] ?? 0;
@@ -1052,6 +1070,13 @@ class CwmpController extends Controller
                 $isValidationError = str_contains($faultString, 'Invalid') || str_contains($faultString, 'format');
                 $hasReasonableSpeed = $speedMbps !== null && $speedMbps < 2000; // Sanity check: less than 2 Gbps
 
+                // For uploads that report error 9011 but file was actually received successfully
+                // This is a known behavior with some Calix/GigaSpire devices that report upload errors
+                // even when our server received the file and responded with HTTP 200
+                $isUploadTask = $task->task_type === 'upload';
+                $fileWasReceived = !empty($task->progress_info['uploaded_file']) && !empty($task->progress_info['file_size']);
+                $isUploadErrorCode = $faultCode === 9011; // TR-069 Upload failure code
+
                 if ($isSpeedTest && $isValidationError && $hasReasonableSpeed && $transferDuration > 0) {
                     $resultData['note'] = 'Speed test successful - validation error ignored';
                     $task->markAsCompleted($resultData);
@@ -1059,6 +1084,20 @@ class CwmpController extends Controller
                     Log::info('Speed test completed (validation error ignored)', [
                         'device_id' => $task->device_id,
                         'speed_mbps' => $speedMbps,
+                        'fault_code' => $faultCode,
+                        'fault_string' => $faultString,
+                    ]);
+                } elseif ($isUploadTask && $fileWasReceived && $isUploadErrorCode) {
+                    // File was successfully received by our server - mark as completed despite device error
+                    $resultData['note'] = 'Upload successful - device reported error but file was received';
+                    $resultData['uploaded_file'] = $task->progress_info['uploaded_file'];
+                    $resultData['file_size'] = $task->progress_info['file_size'];
+                    $task->markAsCompleted($resultData);
+
+                    Log::info('Upload completed (device error ignored - file received)', [
+                        'device_id' => $task->device_id,
+                        'file_size' => $task->progress_info['file_size'],
+                        'uploaded_file' => $task->progress_info['uploaded_file'],
                         'fault_code' => $faultCode,
                         'fault_string' => $faultString,
                     ]);
@@ -1076,8 +1115,9 @@ class CwmpController extends Controller
             }
         }
 
-        // End session after transfer complete (device will likely reboot for firmware upgrades)
-        return $this->cwmpService->createEmptyResponse();
+        // Send proper TransferCompleteResponse to acknowledge and stop device retries
+        // Note: Device will continue session after receiving this and may send more data or end session
+        return $this->cwmpService->createTransferCompleteResponse();
     }
 
     /**

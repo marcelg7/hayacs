@@ -740,11 +740,13 @@
                     const result = await response.json();
 
                     if (result.enable_task && result.enable_task.id) {
-                        // Use port from API response if provided (Nokia=443), otherwise default to 8443
+                        // Use port/protocol from API response
+                        // Calix: http:8080, Nokia: https:443, default: https:8443
                         const port = result.port || '8443';
+                        const protocol = result.protocol || 'https';
                         const externalIp = result.external_ip || '{{ $externalIp }}';
                         if (externalIp) {
-                            const url = 'https://' + externalIp + ':' + port + '/';
+                            const url = protocol + '://' + externalIp + ':' + port + '/';
                             // Use noopener,noreferrer to avoid Invalid REFERER errors on Nokia devices
                             window.open(url, '_blank', 'noopener,noreferrer');
                             taskLoading = false;

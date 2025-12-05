@@ -385,7 +385,7 @@ echo "" > storage/logs/laravel.log
 ### Tested and Working
 This ACS has been tested and verified with the following devices:
 
-#### Calix (TR-181)
+#### Calix (TR-098)
 - 844E-1 (ENT) - Production ready for 2,834 devices
 - GS4220E (GigaSpire u6) - Production ready for 2,143 devices
 - 854G-1 (ONT) - Production ready for 512 devices

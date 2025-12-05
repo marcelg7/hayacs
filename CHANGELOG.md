@@ -186,7 +186,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Tested - November 18, 2025
 
 #### Device Compatibility
-**Calix Devices (TR-181)**: ✅
+**Calix Devices (TR-098)**: ✅
 - 854G-1, 844G-1, 844E-1, GS4220E, 804Mesh, GigaMesh u4m, 812G-1
 
 **SmartRG Devices (TR-098)**: ✅

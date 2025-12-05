@@ -512,11 +512,10 @@ $user->save();
 
 ### Get Everything (Smart Parameter Discovery)
 - **Data Model Optimized**: Uses different approaches based on device data model
-- **TR-098 (Nokia, SmartRG)**: Uses `GetParameterValues` with partial path (e.g., `InternetGatewayDevice.`)
+- **TR-098 (All Calix, Nokia, SmartRG)**: Uses `GetParameterValues` with partial path (e.g., `InternetGatewayDevice.`)
   - Returns ALL parameters with values in a single response (~15 seconds, 7,771 params on Beacon G6)
   - Matches USS behavior - fast and efficient
-- **TR-181 (Calix)**: Uses `GetParameterNames` discovery then chunked `GetParameterValues`
-  - ~7-8 minutes discovery time on fiber
+  - **Note**: All Calix devices (GigaSpire, GigaCenter, etc.) use TR-098, not TR-181
 - **Progress Tracking**: Real-time task status monitoring
 - **Multi-Vendor Support**: Works with Calix, SmartRG, Nokia devices
 
@@ -996,7 +995,7 @@ The project can be run locally using Laravel Herd on Windows. The local environm
 | SR516ac | ✅ | ✅ | ✅ | ~8 seconds for add, instant delete |
 | SR505n | 🔄 | 🔄 | 🔄 | Testing in progress |
 | SR515ac | 🔄 | 🔄 | 🔄 | Testing in progress |
-| Calix (TR-181) | ⏳ | ⏳ | ⏳ | Pending testing |
+| Calix (TR-098) | ⏳ | ⏳ | ⏳ | Pending testing |
 | Nokia Beacon G6 | ⏳ | ⏳ | ⏳ | Pending testing |
 
 Legend: ✅ Working | 🔄 Testing | ⏳ Pending | ❌ Issue
@@ -1281,7 +1280,10 @@ $isCalix = in_array(strtoupper($device->oui ?? ''), $calixOuis) ||
 
 ---
 
-### Calix TR-181 WiFi Parameter Structure
+### Calix Device. Prefix WiFi Parameter Structure (TR-098 variant)
+
+**Note**: Calix devices are TR-098, but some use Device. prefix instead of InternetGatewayDevice. prefix.
+These are still TR-098 devices, just with vendor-specific parameter paths.
 
 **Key WiFi Parameters** (discovered from CXNK0083217F):
 ```

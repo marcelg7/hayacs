@@ -809,9 +809,8 @@ class DeviceController extends Controller
      *   This returns ALL parameters with values in a single response (~15 seconds)
      *   This matches USS behavior and is much faster than parameter discovery
      *
-     * For TR-181 devices (Calix):
-     *   Uses GetParameterNames to discover all parameters, then fetches in chunks
-     *   TR-181 devices handle this approach better
+     * Note: All Calix devices (GigaSpire, GigaCenter, etc.) use TR-098 (InternetGatewayDevice.)
+     * Nokia Beacon G6 devices can be either TR-098 or have Device. prefix parameters
      */
     public function getAllParameters(string $id): JsonResponse
     {
@@ -1643,9 +1642,11 @@ class DeviceController extends Controller
 
         // Check if this is a Nokia device using centralized detection
         $isNokia = $device->isNokia();
+        $isCalix = $device->isCalix();
 
         // Default values that will be returned
         $port = null;
+        $protocol = 'https'; // Default to HTTPS, Calix uses HTTP
         $username = null;
         $externalIp = null;
 
@@ -1708,8 +1709,40 @@ class DeviceController extends Controller
                 ->first();
             $externalIp = $externalIpParam ? $externalIpParam->value : null;
 
+        } elseif ($device->product_class === 'GigaSpire') {
+            // Calix GigaSpire devices - use HTTP on port 8080
+            $parametersToQuery = [
+                'Device.Users.User.1.Username',
+                'Device.Users.User.1.Password',
+                'Device.Users.User.2.Username',
+                'Device.Users.User.2.Password',
+                'Device.UserInterface.RemoteAccess.Port',
+                'Device.UserInterface.RemoteAccess.Enable',
+            ];
+            $enableParams = [
+                'Device.UserInterface.RemoteAccess.Enable' => [
+                    'value' => true,
+                    'type' => 'xsd:boolean',
+                ],
+            ];
+            // GigaSpire uses HTTP on port 8080
+            $port = 8080;
+            $protocol = 'http';
+
+            // TR-181: External IP is on Device.IP.Interface.2 (WAN interface)
+            $externalIpParam = $device->parameters()
+                ->where('name', 'LIKE', 'Device.IP.Interface.2.IPv4Address.%.IPAddress')
+                ->whereNotNull('value')
+                ->where('value', '!=', '')
+                ->where('value', 'NOT LIKE', '192.168.%')
+                ->where('value', 'NOT LIKE', '10.%')
+                ->where('value', 'NOT LIKE', '172.16.%')
+                ->first();
+            $externalIp = $externalIpParam ? $externalIpParam->value : null;
+
         } elseif ($dataModel === 'TR-181') {
-            // Generic TR-181 devices (Calix, etc.)
+            // TR-181 devices (Nokia Beacon G6 with Device. prefix) - HTTPS on port 8443
+            // Note: Calix devices are TR-098, not TR-181
             $parametersToQuery = [
                 'Device.Users.User.1.Username',
                 'Device.Users.User.1.Password',
@@ -1821,8 +1854,10 @@ class DeviceController extends Controller
             'enable_task' => $enableTask,
             'external_ip' => $externalIp,
             'port' => $port,
+            'protocol' => $protocol,
             'username' => $username,
             'is_nokia' => $isNokia,
+            'is_calix' => $isCalix,
             'is_smartrg' => $isSmartRG,
             'use_lan_ip' => $isSmartRG, // Indicates this IP is for backend/MER network access
             'message' => $isSmartRG
@@ -2575,7 +2610,8 @@ class DeviceController extends Controller
         $isCalix = strtolower($device->manufacturer) === 'calix' ||
             strtoupper($device->oui) === 'D0768F';
 
-        // TR-181 devices (Nokia Beacon G6, some Calix models) use Device.NAT.PortMapping
+        // Devices with Device. prefix parameters (Nokia Beacon G6) use Device.NAT.PortMapping
+        // Note: Calix devices are TR-098, not TR-181
         if ($isDevice2) {
             // Clear existing TR-181 port mapping parameters
             $deletedCount = $device->parameters()
@@ -5030,6 +5066,10 @@ class DeviceController extends Controller
         // For WRITING, we must use the standard PreSharedKey.1.KeyPassphrase parameter
         $passwordParam = 'PreSharedKey.1.KeyPassphrase';
 
+        // Detect GigaSpire devices - they do NOT support some vendor-specific parameters
+        // GigaSpire uses product_class = "GigaSpire" while GigaCenter uses "ENT", "ONT", etc.
+        $isGigaSpire = strtolower($device->product_class ?? '') === 'gigaspire';
+
         // Build network configurations grouped by radio
         // Calix structure: 1-8 = 2.4GHz radio, 9-16 = 5GHz radio
         // RadioEnabled is the master switch that controls whether the radio is actually on
@@ -5037,67 +5077,110 @@ class DeviceController extends Controller
         //   1 = Primary 2.4GHz (band-steered), 9 = Primary 5GHz (band-steered)
         //   2 = Guest 2.4GHz, 10 = Guest 5GHz
         //   3 = Dedicated 2.4GHz only, 12 = Dedicated 5GHz only
+
+        // Base parameters for 2.4GHz radio (supported by all Calix TR-098 devices)
+        $params24ghz = [
+            // Instance 1 - Primary 2.4GHz (band-steered)
+            "{$prefix}.1.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.1.SSID" => $ssid,
+            "{$prefix}.1.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.1.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.1.BeaconType" => $beaconType,
+            "{$prefix}.1.{$passwordParam}" => $password,
+            // Instance 2 - Guest 2.4GHz
+            "{$prefix}.2.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.2.SSID" => $ssid . '-Guest',
+            "{$prefix}.2.Enable" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+            "{$prefix}.2.SSIDAdvertisementEnabled" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+            "{$prefix}.2.BeaconType" => $beaconType,
+            "{$prefix}.2.{$passwordParam}" => $guestPassword,
+            // Instance 3 - Dedicated 2.4GHz only
+            "{$prefix}.3.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.3.SSID" => $ssid . '-2.4GHz',
+            "{$prefix}.3.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.3.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.3.BeaconType" => $beaconType,
+            "{$prefix}.3.{$passwordParam}" => $password,
+        ];
+
+        // Add GigaCenter-specific parameters (NOT supported on GigaSpire)
+        if (!$isGigaSpire) {
+            // Disable legacy features that hurt performance on modern networks
+            $params24ghz["{$prefix}.1.X_000631_AirtimeFairness"] = ['value' => false, 'type' => 'xsd:boolean'];
+            $params24ghz["{$prefix}.1.X_000631_MulticastForwardEnable"] = ['value' => false, 'type' => 'xsd:boolean'];
+            // Enable client isolation on guest network
+            $params24ghz["{$prefix}.2.X_000631_IntraSsidIsolation"] = ['value' => true, 'type' => 'xsd:boolean'];
+        }
+
+        // Base parameters for 5GHz radio (supported by all Calix TR-098 devices)
+        $params5ghz = [
+            // Instance 9 - Primary 5GHz (band-steered)
+            "{$prefix}.9.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.9.SSID" => $ssid,
+            "{$prefix}.9.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.9.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.9.BeaconType" => $beaconType,
+            "{$prefix}.9.{$passwordParam}" => $password,
+            // Instance 10 - Guest 5GHz
+            "{$prefix}.10.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.10.SSID" => $ssid . '-Guest',
+            "{$prefix}.10.Enable" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+            "{$prefix}.10.SSIDAdvertisementEnabled" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+            "{$prefix}.10.BeaconType" => $beaconType,
+            "{$prefix}.10.{$passwordParam}" => $guestPassword,
+            // Instance 12 - Dedicated 5GHz only
+            "{$prefix}.12.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.12.SSID" => $ssid . '-5GHz',
+            "{$prefix}.12.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.12.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.12.BeaconType" => $beaconType,
+            "{$prefix}.12.{$passwordParam}" => $password,
+        ];
+
+        // Add GigaCenter-specific parameters for 5GHz (NOT supported on GigaSpire)
+        if (!$isGigaSpire) {
+            // Enable client isolation on guest network
+            $params5ghz["{$prefix}.10.X_000631_IntraSsidIsolation"] = ['value' => true, 'type' => 'xsd:boolean'];
+        }
+
+        // Initialize networks with 2.4GHz and 5GHz
         $networks = [
             'radio_24ghz' => [
                 'description' => "WiFi: Configure 2.4GHz networks (Primary + Guest + Dedicated)",
-                'params' => [
-                    // Instance 1 - Primary 2.4GHz (band-steered)
-                    "{$prefix}.1.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-                    "{$prefix}.1.SSID" => $ssid,
-                    "{$prefix}.1.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
-                    "{$prefix}.1.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-                    "{$prefix}.1.BeaconType" => $beaconType,
-                    "{$prefix}.1.{$passwordParam}" => $password,
-                    // Disable legacy features that hurt performance on modern networks
-                    "{$prefix}.1.X_000631_AirtimeFairness" => ['value' => false, 'type' => 'xsd:boolean'],
-                    "{$prefix}.1.X_000631_MulticastForwardEnable" => ['value' => false, 'type' => 'xsd:boolean'],
-                    // Instance 2 - Guest 2.4GHz
-                    "{$prefix}.2.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-                    "{$prefix}.2.SSID" => $ssid . '-Guest',
-                    "{$prefix}.2.Enable" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
-                    "{$prefix}.2.SSIDAdvertisementEnabled" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
-                    "{$prefix}.2.BeaconType" => $beaconType,
-                    "{$prefix}.2.{$passwordParam}" => $guestPassword,
-                    // Enable client isolation on guest network
-                    "{$prefix}.2.X_000631_IntraSsidIsolation" => ['value' => true, 'type' => 'xsd:boolean'],
-                    // Instance 3 - Dedicated 2.4GHz only
-                    "{$prefix}.3.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-                    "{$prefix}.3.SSID" => $ssid . '-2.4GHz',
-                    "{$prefix}.3.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
-                    "{$prefix}.3.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-                    "{$prefix}.3.BeaconType" => $beaconType,
-                    "{$prefix}.3.{$passwordParam}" => $password,
-                ],
+                'params' => $params24ghz,
             ],
             'radio_5ghz' => [
                 'description' => "WiFi: Configure 5GHz networks (Primary + Guest + Dedicated)",
-                'params' => [
-                    // Instance 9 - Primary 5GHz (band-steered)
-                    "{$prefix}.9.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-                    "{$prefix}.9.SSID" => $ssid,
-                    "{$prefix}.9.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
-                    "{$prefix}.9.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-                    "{$prefix}.9.BeaconType" => $beaconType,
-                    "{$prefix}.9.{$passwordParam}" => $password,
-                    // Instance 10 - Guest 5GHz
-                    "{$prefix}.10.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-                    "{$prefix}.10.SSID" => $ssid . '-Guest',
-                    "{$prefix}.10.Enable" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
-                    "{$prefix}.10.SSIDAdvertisementEnabled" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
-                    "{$prefix}.10.BeaconType" => $beaconType,
-                    "{$prefix}.10.{$passwordParam}" => $guestPassword,
-                    // Enable client isolation on guest network
-                    "{$prefix}.10.X_000631_IntraSsidIsolation" => ['value' => true, 'type' => 'xsd:boolean'],
-                    // Instance 12 - Dedicated 5GHz only
-                    "{$prefix}.12.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-                    "{$prefix}.12.SSID" => $ssid . '-5GHz',
-                    "{$prefix}.12.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
-                    "{$prefix}.12.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-                    "{$prefix}.12.BeaconType" => $beaconType,
-                    "{$prefix}.12.{$passwordParam}" => $password,
-                ],
+                'params' => $params5ghz,
             ],
         ];
+
+        // Add 6GHz radio configuration for GigaSpire devices (instances 17-24)
+        // GigaSpire has 24 WLAN instances: 1-8 (2.4GHz), 9-16 (5GHz), 17-24 (6GHz)
+        if ($isGigaSpire) {
+            $params6ghz = [
+                // Instance 17 - Primary 6GHz (band-steered)
+                "{$prefix}.17.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+                "{$prefix}.17.SSID" => $ssid,
+                "{$prefix}.17.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
+                "{$prefix}.17.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+                "{$prefix}.17.BeaconType" => $beaconType,
+                "{$prefix}.17.{$passwordParam}" => $password,
+                // Instance 18 - Guest 6GHz
+                "{$prefix}.18.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+                "{$prefix}.18.SSID" => $ssid . '-Guest',
+                "{$prefix}.18.Enable" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                "{$prefix}.18.SSIDAdvertisementEnabled" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+                "{$prefix}.18.BeaconType" => $beaconType,
+                "{$prefix}.18.{$passwordParam}" => $guestPassword,
+                // Note: No dedicated 6GHz-only SSID (6GHz is high-bandwidth for all devices)
+            ];
+
+            $networks['radio_6ghz'] = [
+                'description' => "WiFi: Configure 6GHz networks (Primary + Guest)",
+                'params' => $params6ghz,
+            ];
+        }
 
         $tasks = [];
         $isOneTaskPerSession = $this->isOneTaskPerSessionDevice($device);
@@ -5129,7 +5212,6 @@ class DeviceController extends Controller
         $refreshParams = [
             // Primary 2.4GHz (instance 1)
             "{$prefix}.1.RadioEnabled", "{$prefix}.1.Status", "{$prefix}.1.SSID", "{$prefix}.1.Enable",
-            "{$prefix}.1.X_000631_AirtimeFairness", "{$prefix}.1.X_000631_MulticastForwardEnable",
             "{$prefix}.1.PreSharedKey.1.X_000631_KeyPassphrase",
             // Guest 2.4GHz (instance 2)
             "{$prefix}.2.RadioEnabled", "{$prefix}.2.Status", "{$prefix}.2.SSID", "{$prefix}.2.Enable",
@@ -5147,6 +5229,28 @@ class DeviceController extends Controller
             "{$prefix}.12.RadioEnabled", "{$prefix}.12.Status", "{$prefix}.12.SSID", "{$prefix}.12.Enable",
             "{$prefix}.12.PreSharedKey.1.X_000631_KeyPassphrase",
         ];
+
+        // Add GigaCenter-specific refresh params (NOT supported on GigaSpire)
+        if (!$isGigaSpire) {
+            $refreshParams[] = "{$prefix}.1.X_000631_AirtimeFairness";
+            $refreshParams[] = "{$prefix}.1.X_000631_MulticastForwardEnable";
+        }
+
+        // Add 6GHz refresh params for GigaSpire devices
+        if ($isGigaSpire) {
+            // Primary 6GHz (instance 17)
+            $refreshParams[] = "{$prefix}.17.RadioEnabled";
+            $refreshParams[] = "{$prefix}.17.Status";
+            $refreshParams[] = "{$prefix}.17.SSID";
+            $refreshParams[] = "{$prefix}.17.Enable";
+            $refreshParams[] = "{$prefix}.17.PreSharedKey.1.X_000631_KeyPassphrase";
+            // Guest 6GHz (instance 18)
+            $refreshParams[] = "{$prefix}.18.RadioEnabled";
+            $refreshParams[] = "{$prefix}.18.Status";
+            $refreshParams[] = "{$prefix}.18.SSID";
+            $refreshParams[] = "{$prefix}.18.Enable";
+            $refreshParams[] = "{$prefix}.18.PreSharedKey.1.X_000631_KeyPassphrase";
+        }
         $refreshTask = Task::create([
             'device_id' => $device->id,
             'task_type' => 'get_parameter_values',
@@ -5173,19 +5277,30 @@ class DeviceController extends Controller
             ]
         );
 
+        $deviceSubType = $isGigaSpire ? 'GigaSpire' : 'GigaCenter';
+        $noteText = $isGigaSpire
+            ? 'GigaSpire creates: main tri-band SSID (2.4/5/6GHz), dedicated 2.4GHz/5GHz SSIDs, and optional guest network across all bands. UI will refresh automatically.'
+            : 'GigaCenter creates: main band-steered SSID, dedicated 2.4GHz/5GHz SSIDs, and optional guest with client isolation. UI will refresh automatically.';
+
+        $taskMessage = $isGigaSpire
+            ? 'Standard WiFi configuration queued (4 tasks: 2.4GHz, 5GHz, 6GHz config, refresh)'
+            : 'Standard WiFi configuration queued (3 tasks: 2.4GHz config, 5GHz config, refresh)';
+
+        $networksConfigured = [
+            'primary' => $ssid . ($isGigaSpire ? ' (tri-band: 2.4/5/6 GHz)' : ' (band-steered)'),
+            'dedicated_24ghz' => $ssid . '-2.4GHz',
+            'dedicated_5ghz' => $ssid . '-5GHz',
+            'guest' => $enableGuest ? ($ssid . '-Guest') : 'disabled',
+        ];
+
         $response = [
-            'message' => 'Standard WiFi configuration queued (3 tasks: 2.4GHz config, 5GHz config, refresh)',
+            'message' => $taskMessage,
             'tasks' => array_map(fn($t) => ['id' => $t->id, 'description' => $t->description], $tasks),
             'task_count' => count($tasks),
-            'networks_configured' => [
-                'primary' => $ssid . ' (band-steered)',
-                'dedicated_24ghz' => $ssid . '-2.4GHz',
-                'dedicated_5ghz' => $ssid . '-5GHz',
-                'guest' => $enableGuest ? ($ssid . '-Guest') : 'disabled',
-            ],
+            'networks_configured' => $networksConfigured,
             'data_model' => 'TR-098',
-            'device_type' => 'Calix',
-            'note' => 'Calix creates: main band-steered SSID, dedicated 2.4GHz/5GHz SSIDs, and optional guest with client isolation. UI will refresh automatically.',
+            'device_type' => 'Calix ' . $deviceSubType,
+            'note' => $noteText,
         ];
 
         // Include the generated guest password so user can save it

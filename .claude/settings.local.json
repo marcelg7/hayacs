@@ -29,7 +29,8 @@
       "Bash(sudo chmod:*)",
       "Bash(xxd:*)",
       "Bash(sudo ls:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(tshark:*)"
     ],
     "deny": [],
     "ask": []

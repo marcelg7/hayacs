@@ -705,6 +705,40 @@ class CwmpService
     }
 
     /**
+     * Create TransferCompleteResponse to acknowledge device's TransferComplete message
+     *
+     * Per TR-069, when a device sends TransferComplete, the ACS must respond with
+     * TransferCompleteResponse. If the device doesn't receive this acknowledgment,
+     * it will keep retrying TransferComplete on every session until acknowledged.
+     *
+     * This is critical for GigaSpire and other devices that strictly follow TR-069.
+     */
+    public function createTransferCompleteResponse(): string
+    {
+        // Get the cwmp:ID to echo back
+        $cwmpId = $this->sessionCwmpId ?: 'ACS_1';
+
+        // Build response matching USS format
+        $response = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <cwmp:ID SOAP-ENV:mustUnderstand="1">{$cwmpId}</cwmp:ID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <cwmp:TransferCompleteResponse/>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+XML;
+
+        return $response;
+    }
+
+    /**
      * Create GetRPCMethodsResponse for devices that request ACS capabilities
      * Per TR-069, the ACS must respond with the list of RPC methods it supports
      *
