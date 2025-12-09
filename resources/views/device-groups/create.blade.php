@@ -140,7 +140,7 @@
                         <p class="text-xs text-blue-600 dark:text-blue-300 mb-1">Sample devices:</p>
                         <ul class="text-xs text-blue-700 dark:text-blue-200">
                             <template x-for="device in previewDevices.slice(0, 5)" :key="device.id">
-                                <li x-text="device.serial_number + ' (' + device.product_class + ' - ' + device.software_version + ')'"></li>
+                                <li x-text="device.serial_number + ' (' + (device.display_name || device.product_class) + ' - ' + device.software_version + ')'"></li>
                             </template>
                         </ul>
                     </div>

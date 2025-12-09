@@ -3,27 +3,21 @@
 @section('title', 'Analytics - TR-069 ACS')
 
 @section('content')
-@php
-    $theme = session('theme', 'standard');
-    $themeConfig = config("themes.{$theme}");
-    $colors = $themeConfig['colors'];
-@endphp
-
 <div x-data="analyticsData()" x-init="init()" class="space-y-6">
     <!-- Header -->
     <div class="md:flex md:items-center md:justify-between">
         <div class="flex-1 min-w-0">
-            <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-{{ $colors['text'] }} sm:text-3xl">
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl">
                 Analytics & Historical Trends
             </h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}">
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 Monitor device health, task performance, parameter trends, and fleet-wide statistics
             </p>
         </div>
         <div class="mt-4 flex md:mt-0 md:ml-4">
             <!-- Time Range Selector -->
             <select x-model="timeRange" @change="refreshAll()"
-                    class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-{{ $colors['border'] }} rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-{{ $colors['text'] }} bg-white dark:bg-{{ $colors['card'] }} hover:bg-gray-50">
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-100 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700">
                 <option value="24h">Last 24 Hours</option>
                 <option value="7d">Last 7 Days</option>
                 <option value="30d">Last 30 Days</option>
@@ -34,16 +28,16 @@
     </div>
 
     <!-- Fleet Analytics -->
-    <div class="bg-white dark:bg-{{ $colors['card'] }} shadow rounded-lg p-6">
+    <div class="bg-white dark:bg-slate-800 shadow rounded-lg p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-{{ $colors['text'] }}">Fleet Overview</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Fleet Overview</h3>
             <button @click="loadFleetAnalytics()" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Refresh</button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" x-show="fleetData">
-            <div class="bg-gray-50 dark:bg-{{ $colors['bg'] }} rounded-lg p-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }}">Total Devices</p>
-                <p class="mt-1 text-3xl font-semibold text-gray-900 dark:text-{{ $colors['text'] }}" x-text="fleetData?.total_devices || 0"></p>
+            <div class="bg-gray-50 dark:bg-slate-900 rounded-lg p-4">
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Devices</p>
+                <p class="mt-1 text-3xl font-semibold text-gray-900 dark:text-gray-100" x-text="fleetData?.total_devices || 0"></p>
             </div>
             <div class="bg-green-50 dark:bg-green-900 rounded-lg p-4">
                 <p class="text-sm font-medium text-green-600 dark:text-green-300">Online Devices</p>
@@ -63,31 +57,31 @@
         <!-- Distribution Charts -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
             <div>
-                <h4 class="text-sm font-medium text-gray-700 dark:text-{{ $colors['text'] }} mb-3">Firmware Distribution</h4>
+                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-100 mb-3">Firmware Distribution</h4>
                 <canvas id="firmwareChart" height="200"></canvas>
             </div>
             <div>
-                <h4 class="text-sm font-medium text-gray-700 dark:text-{{ $colors['text'] }} mb-3">Device Types</h4>
+                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-100 mb-3">Device Types</h4>
                 <canvas id="deviceTypeChart" height="200"></canvas>
             </div>
             <div>
-                <h4 class="text-sm font-medium text-gray-700 dark:text-{{ $colors['text'] }} mb-3">Manufacturers</h4>
+                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-100 mb-3">Manufacturers</h4>
                 <canvas id="manufacturerChart" height="200"></canvas>
             </div>
         </div>
     </div>
 
     <!-- Task Performance -->
-    <div class="bg-white dark:bg-{{ $colors['card'] }} shadow rounded-lg p-6">
+    <div class="bg-white dark:bg-slate-800 shadow rounded-lg p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-{{ $colors['text'] }}">Task Performance</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Task Performance</h3>
             <button @click="loadTaskPerformance()" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Refresh</button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" x-show="taskData">
-            <div class="bg-gray-50 dark:bg-{{ $colors['bg'] }} rounded-lg p-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }}">Total Tasks</p>
-                <p class="mt-1 text-3xl font-semibold text-gray-900 dark:text-{{ $colors['text'] }}" x-text="taskData?.total_tasks || 0"></p>
+            <div class="bg-gray-50 dark:bg-slate-900 rounded-lg p-4">
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Tasks</p>
+                <p class="mt-1 text-3xl font-semibold text-gray-900 dark:text-gray-100" x-text="taskData?.total_tasks || 0"></p>
             </div>
             <div class="bg-green-50 dark:bg-green-900 rounded-lg p-4">
                 <p class="text-sm font-medium text-green-600 dark:text-green-300">Successful</p>
@@ -105,27 +99,27 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
-                <h4 class="text-sm font-medium text-gray-700 dark:text-{{ $colors['text'] }} mb-3">Task Timeline</h4>
+                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-100 mb-3">Task Timeline</h4>
                 <canvas id="taskTimelineChart" height="150"></canvas>
             </div>
             <div>
-                <h4 class="text-sm font-medium text-gray-700 dark:text-{{ $colors['text'] }} mb-3">Task Type Breakdown</h4>
+                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-100 mb-3">Task Type Breakdown</h4>
                 <div class="max-h-64 overflow-y-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-{{ $colors['border'] }}">
-                        <thead class="bg-gray-50 dark:bg-{{ $colors['bg'] }}">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+                        <thead class="bg-gray-50 dark:bg-slate-900">
                             <tr>
-                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }}">Type</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }}">Total</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }}">Success</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }}">Rate</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Type</th>
+                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">Total</th>
+                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">Success</th>
+                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">Rate</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-{{ $colors['border'] }}">
+                        <tbody class="divide-y divide-gray-200 dark:divide-slate-700">
                             <template x-for="type in taskData?.task_type_breakdown || []" :key="type.task_type">
                                 <tr>
-                                    <td class="px-3 py-2 text-sm text-gray-900 dark:text-{{ $colors['text'] }}" x-text="type.task_type.replace(/_/g, ' ')"></td>
-                                    <td class="px-3 py-2 text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }} text-right" x-text="type.total"></td>
-                                    <td class="px-3 py-2 text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }} text-right" x-text="type.successful"></td>
+                                    <td class="px-3 py-2 text-sm text-gray-900 dark:text-gray-100" x-text="type.task_type.replace(/_/g, ' ')"></td>
+                                    <td class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 text-right" x-text="type.total"></td>
+                                    <td class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 text-right" x-text="type.successful"></td>
                                     <td class="px-3 py-2 text-sm text-right">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
                                               :class="type.success_rate >= 80 ? 'bg-green-100 text-green-800' : type.success_rate >= 50 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'"
@@ -141,7 +135,7 @@
 
         <!-- Common Errors -->
         <div class="mt-6" x-show="taskData?.common_errors?.length > 0">
-            <h4 class="text-sm font-medium text-gray-700 dark:text-{{ $colors['text'] }} mb-3">Most Common Errors</h4>
+            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-100 mb-3">Most Common Errors</h4>
             <div class="bg-red-50 dark:bg-red-900 rounded-lg p-4">
                 <ul class="space-y-2">
                     <template x-for="error in taskData?.common_errors || []" :key="error.error">
@@ -156,16 +150,16 @@
     </div>
 
     <!-- SpeedTest Results -->
-    <div class="bg-white dark:bg-{{ $colors['card'] }} shadow rounded-lg p-6">
+    <div class="bg-white dark:bg-slate-800 shadow rounded-lg p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-{{ $colors['text'] }}">TR-143 SpeedTest Results</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">TR-143 SpeedTest Results</h3>
             <button @click="loadSpeedTestResults()" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Refresh</button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" x-show="speedTestData">
-            <div class="bg-gray-50 dark:bg-{{ $colors['bg'] }} rounded-lg p-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }}">Total Tests</p>
-                <p class="mt-1 text-3xl font-semibold text-gray-900 dark:text-{{ $colors['text'] }}" x-text="speedTestData?.total_tests || 0"></p>
+            <div class="bg-gray-50 dark:bg-slate-900 rounded-lg p-4">
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Tests</p>
+                <p class="mt-1 text-3xl font-semibold text-gray-900 dark:text-gray-100" x-text="speedTestData?.total_tests || 0"></p>
             </div>
             <div class="bg-blue-50 dark:bg-blue-900 rounded-lg p-4">
                 <p class="text-sm font-medium text-blue-600 dark:text-blue-300">Avg Download</p>
@@ -182,15 +176,15 @@
         </div>
 
         <div>
-            <h4 class="text-sm font-medium text-gray-700 dark:text-{{ $colors['text'] }} mb-3">Speed Trends</h4>
+            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-100 mb-3">Speed Trends</h4>
             <canvas id="speedTestChart" height="120"></canvas>
         </div>
     </div>
 
     <!-- Device Health -->
-    <div class="bg-white dark:bg-{{ $colors['card'] }} shadow rounded-lg p-6">
+    <div class="bg-white dark:bg-slate-800 shadow rounded-lg p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-{{ $colors['text'] }}">Device Health Trends</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Device Health Trends</h3>
             <button @click="loadDeviceHealth()" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Refresh</button>
         </div>
 
@@ -210,7 +204,7 @@
         </div>
 
         <div>
-            <h4 class="text-sm font-medium text-gray-700 dark:text-{{ $colors['text'] }} mb-3">Online/Offline Timeline</h4>
+            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-100 mb-3">Online/Offline Timeline</h4>
             <canvas id="healthChart" height="120"></canvas>
         </div>
     </div>
@@ -346,7 +340,7 @@ function analyticsData() {
             this.deviceTypeChart = new Chart(ctx, {
                 type: 'pie',
                 data: {
-                    labels: this.fleetData.device_type_distribution.map(d => d.product_class || 'Unknown'),
+                    labels: this.fleetData.device_type_distribution.map(d => d.display_name || d.product_class || 'Unknown'),
                     datasets: [{
                         data: this.fleetData.device_type_distribution.map(d => d.count),
                         backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6']

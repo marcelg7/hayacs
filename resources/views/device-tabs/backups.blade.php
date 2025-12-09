@@ -395,48 +395,92 @@
     }
 }">
     <div class="bg-white dark:bg-{{ $colors['card'] }} shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6 bg-gray-50 dark:bg-{{ $colors['bg'] }} flex justify-between items-center">
-            <div>
-                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors['text'] }}">Configuration Backups</h3>
-                <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}">Backup and restore device configuration</p>
-            </div>
-            <div class="flex space-x-3">
-                <button x-show="selectedForComparison.length > 0" @click="clearCompareSelection()"
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-{{ $colors['border'] }} rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-{{ $colors['text'] }} bg-white dark:bg-{{ $colors['card'] }} hover:bg-gray-50 dark:hover:bg-{{ $colors['bg'] }}">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                    Clear Selection
-                </button>
-                <button x-show="selectedForComparison.length === 2" @click="compareBackups()"
-                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                    </svg>
-                    Compare Selected (2)
-                </button>
-                <button @click="requestDeviceConfigFile()" :disabled="loading"
-                        class="inline-flex items-center px-4 py-2 border border-orange-300 dark:border-orange-600 rounded-md shadow-sm text-sm font-medium text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-900/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Request the device to upload its internal configuration file (may contain WiFi passwords)">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                    </svg>
-                    Request Config File
-                </button>
-                <button @click="openImportModal()" :disabled="loading"
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-{{ $colors['border'] }} rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-{{ $colors['text'] }} bg-white dark:bg-{{ $colors['card'] }} hover:bg-gray-50 dark:hover:bg-{{ $colors['bg'] }} disabled:opacity-50 disabled:cursor-not-allowed">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                    </svg>
-                    Import Backup
-                </button>
-                <button @click="createBackup()" :disabled="loading"
-                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors['btn-success'] }}-600 hover:bg-{{ $colors['btn-success'] }}-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Create Backup
-                </button>
+        <div class="px-4 py-5 sm:px-6 bg-gray-50 dark:bg-{{ $colors['bg'] }}">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                <div>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors['text'] }}">Configuration Backups</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}">Backup and restore device configuration</p>
+                </div>
+
+                {{-- Mobile: Compact button grid --}}
+                <div class="flex flex-wrap gap-2 sm:hidden">
+                    {{-- Comparison buttons (conditional) --}}
+                    <button x-show="selectedForComparison.length > 0" @click="clearCompareSelection()"
+                            class="inline-flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-{{ $colors['border'] }} rounded-md text-sm font-medium text-gray-700 dark:text-{{ $colors['text'] }} bg-white dark:bg-{{ $colors['card'] }} touch-manipulation">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                    <button x-show="selectedForComparison.length === 2" @click="compareBackups()"
+                            class="inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-purple-600 touch-manipulation">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        Compare
+                    </button>
+                    {{-- Primary action buttons --}}
+                    <button @click="requestDeviceConfigFile()" :disabled="loading"
+                            class="inline-flex items-center justify-center px-3 py-2 border border-orange-300 dark:border-orange-600 rounded-md text-sm font-medium text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-900/30 disabled:opacity-50 touch-manipulation"
+                            title="Request Config File">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                    </button>
+                    <button @click="openImportModal()" :disabled="loading"
+                            class="inline-flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-{{ $colors['border'] }} rounded-md text-sm font-medium text-gray-700 dark:text-{{ $colors['text'] }} bg-white dark:bg-{{ $colors['card'] }} disabled:opacity-50 touch-manipulation"
+                            title="Import Backup">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                    </button>
+                    <button @click="createBackup()" :disabled="loading"
+                            class="inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-{{ $colors['btn-success'] }}-600 disabled:opacity-50 touch-manipulation"
+                            title="Create Backup">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Desktop: Full buttons with labels --}}
+                <div class="hidden sm:flex sm:space-x-3">
+                    <button x-show="selectedForComparison.length > 0" @click="clearCompareSelection()"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-{{ $colors['border'] }} rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-{{ $colors['text'] }} bg-white dark:bg-{{ $colors['card'] }} hover:bg-gray-50 dark:hover:bg-{{ $colors['bg'] }}">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Clear Selection
+                    </button>
+                    <button x-show="selectedForComparison.length === 2" @click="compareBackups()"
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        Compare Selected (2)
+                    </button>
+                    <button @click="requestDeviceConfigFile()" :disabled="loading"
+                            class="inline-flex items-center px-4 py-2 border border-orange-300 dark:border-orange-600 rounded-md shadow-sm text-sm font-medium text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-900/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Request the device to upload its internal configuration file (may contain WiFi passwords)">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        Request Config File
+                    </button>
+                    <button @click="openImportModal()" :disabled="loading"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-{{ $colors['border'] }} rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-{{ $colors['text'] }} bg-white dark:bg-{{ $colors['card'] }} hover:bg-gray-50 dark:hover:bg-{{ $colors['bg'] }} disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                        Import Backup
+                    </button>
+                    <button @click="createBackup()" :disabled="loading"
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors['btn-success'] }}-600 hover:bg-{{ $colors['btn-success'] }}-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Create Backup
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -529,23 +573,25 @@
 
     <!-- Native Config Files Section -->
     <div class="mt-6 bg-white dark:bg-{{ $colors['card'] }} shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6 bg-orange-50 dark:bg-orange-900/20 flex justify-between items-center">
-            <div>
-                <h3 class="text-lg leading-6 font-medium text-orange-900 dark:text-orange-300 flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        <div class="px-4 py-5 sm:px-6 bg-orange-50 dark:bg-orange-900/20">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                <div>
+                    <h3 class="text-lg leading-6 font-medium text-orange-900 dark:text-orange-300 flex items-center">
+                        <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Native Device Config Files
+                    </h3>
+                    <p class="mt-1 text-sm text-orange-700 dark:text-orange-400">Binary config files uploaded from device - includes WiFi passwords and encrypted settings</p>
+                </div>
+                <button @click="loadNativeConfigs()" :disabled="nativeConfigsLoading"
+                        class="inline-flex items-center justify-center self-start px-3 py-1.5 border border-orange-300 dark:border-orange-600 rounded-md text-sm font-medium text-orange-700 dark:text-orange-300 bg-white dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-900/50 disabled:opacity-50 touch-manipulation">
+                    <svg class="w-4 h-4 sm:mr-1" :class="{'animate-spin': nativeConfigsLoading}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
-                    Native Device Config Files
-                </h3>
-                <p class="mt-1 max-w-2xl text-sm text-orange-700 dark:text-orange-400">Binary config files uploaded from device - includes WiFi passwords and encrypted settings</p>
+                    <span class="hidden sm:inline">Refresh</span>
+                </button>
             </div>
-            <button @click="loadNativeConfigs()" :disabled="nativeConfigsLoading"
-                    class="inline-flex items-center px-3 py-1.5 border border-orange-300 dark:border-orange-600 rounded-md text-sm font-medium text-orange-700 dark:text-orange-300 bg-white dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-900/50 disabled:opacity-50">
-                <svg class="w-4 h-4 mr-1" :class="{'animate-spin': nativeConfigsLoading}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                </svg>
-                Refresh
-            </button>
         </div>
 
         <div class="border-t border-orange-200 dark:border-orange-800">

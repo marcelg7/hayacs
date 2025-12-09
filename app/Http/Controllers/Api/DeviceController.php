@@ -715,9 +715,38 @@ class DeviceController extends Controller
     /**
      * Factory reset a device
      */
-    public function factoryReset(string $id): JsonResponse
+    public function factoryReset(Request $request, string $id): JsonResponse
     {
         $device = Device::findOrFail($id);
+
+        // Check if this is a Calix GigaSpire device (TR-098) that doesn't expose WiFi passwords
+        // These devices need stored ACS credentials to restore WiFi after factory reset
+        $isGigaSpire = $device->isCalix() &&
+            $device->getDataModel() === 'TR-098' &&
+            str_contains(strtolower($device->model_name ?? ''), 'gigaspire');
+
+        if ($isGigaSpire) {
+            $storedCredentials = DeviceWifiCredential::where('device_id', $device->id)->first();
+
+            // Block factory reset if no WiFi password is stored (unless force is specified)
+            if (!$storedCredentials || !$storedCredentials->main_password) {
+                $forceReset = $request->boolean('force', false);
+
+                if (!$forceReset) {
+                    return response()->json([
+                        'error' => 'WiFi password not stored in ACS',
+                        'message' => 'This GigaSpire device does not expose WiFi passwords in backups. ' .
+                            'No ACS-stored WiFi password found - WiFi will not work after factory reset. ' .
+                            'Please use Standard WiFi Setup to set and store the password first, ' .
+                            'or send force=true to proceed anyway.',
+                        'requires_wifi_setup' => true,
+                        'device_model' => $device->model_name,
+                    ], 422);
+                }
+
+                Log::warning("Factory reset forced on {$device->serial_number} without stored WiFi credentials");
+            }
+        }
 
         // Create safety backup before factory reset (CRITICAL - this cannot be undone!)
         $this->createPreOperationBackup($device, 'Factory Reset');
@@ -1710,17 +1739,23 @@ class DeviceController extends Controller
             $externalIp = $externalIpParam ? $externalIpParam->value : null;
 
         } elseif ($device->product_class === 'GigaSpire') {
-            // Calix GigaSpire devices - use HTTP on port 8080
+            // Calix GigaSpire devices - TR-098 data model, use HTTP on port 8080
+            // User.1 = admin (local), User.2 = support (remote access capable)
             $parametersToQuery = [
-                'Device.Users.User.1.Username',
-                'Device.Users.User.1.Password',
-                'Device.Users.User.2.Username',
-                'Device.Users.User.2.Password',
-                'Device.UserInterface.RemoteAccess.Port',
-                'Device.UserInterface.RemoteAccess.Enable',
+                'InternetGatewayDevice.User.1.Username',
+                'InternetGatewayDevice.User.1.Password',
+                'InternetGatewayDevice.User.2.Username',
+                'InternetGatewayDevice.User.2.Password',
+                'InternetGatewayDevice.UserInterface.RemoteAccess.Port',
+                'InternetGatewayDevice.UserInterface.RemoteAccess.Enable',
+                'InternetGatewayDevice.User.2.RemoteAccessCapable',
             ];
             $enableParams = [
-                'Device.UserInterface.RemoteAccess.Enable' => [
+                'InternetGatewayDevice.UserInterface.RemoteAccess.Enable' => [
+                    'value' => true,
+                    'type' => 'xsd:boolean',
+                ],
+                'InternetGatewayDevice.User.2.RemoteAccessCapable' => [
                     'value' => true,
                     'type' => 'xsd:boolean',
                 ],
@@ -1729,14 +1764,9 @@ class DeviceController extends Controller
             $port = 8080;
             $protocol = 'http';
 
-            // TR-181: External IP is on Device.IP.Interface.2 (WAN interface)
+            // TR-098: External IP is in WANIPConnection
             $externalIpParam = $device->parameters()
-                ->where('name', 'LIKE', 'Device.IP.Interface.2.IPv4Address.%.IPAddress')
-                ->whereNotNull('value')
-                ->where('value', '!=', '')
-                ->where('value', 'NOT LIKE', '192.168.%')
-                ->where('value', 'NOT LIKE', '10.%')
-                ->where('value', 'NOT LIKE', '172.16.%')
+                ->where('name', 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress')
                 ->first();
             $externalIp = $externalIpParam ? $externalIpParam->value : null;
 
@@ -2054,31 +2084,181 @@ class DeviceController extends Controller
             $this->createPreOperationBackup($device, 'Configuration Restore');
         }
 
-        // Filter parameters to only include writable ones
-        $writableParams = collect($backup->backup_data)
-            ->filter(function ($param, $name) use ($selectedParams) {
-                // Must be writable
-                if (!($param['writable'] ?? false)) {
-                    return false;
-                }
-                // If selective restore, must be in selected list
-                if ($selectedParams !== null && !in_array($name, $selectedParams)) {
-                    return false;
-                }
-                return true;
-            })
-            ->mapWithKeys(function ($param, $name) {
-                return [$name => [
-                    'value' => $param['value'],
-                    'type' => $param['type'] ?? 'xsd:string',
-                ]];
-            })
-            ->toArray();
+        // Check if backup has writable info - TR-098 devices using GetParameterValues
+        // with partial path don't get writable attribute, only GetParameterNames provides it
+        $hasWritableInfo = collect($backup->backup_data)->contains(function ($param) {
+            return isset($param['writable']) && $param['writable'] === true;
+        });
+
+        // For TR-098 Calix devices without writable info, use heuristic-based filtering
+        $isCalix = $device->isCalix();
+        $dataModel = $device->getDataModel();
+
+        if (!$hasWritableInfo && $dataModel === 'TR-098' && $isCalix) {
+            // Use pattern-based heuristic for commonly writable TR-098 Calix parameters
+            $writableParams = collect($backup->backup_data)
+                ->filter(function ($param, $name) use ($selectedParams) {
+                    // If selective restore, must be in selected list
+                    if ($selectedParams !== null && !in_array($name, $selectedParams)) {
+                        return false;
+                    }
+
+                    // Password/passphrase parameters are ALWAYS included for later injection
+                    // Even if empty in backup, we'll inject stored passwords from DeviceWifiCredential
+                    // EXCEPTION: ConnectionRequestPassword should NEVER be set to empty (breaks management)
+                    $isPasswordParam = preg_match('/(KeyPassphrase|PreSharedKey|Password|Passphrase|PSK|WEPKey)$/i', $name);
+                    if ($isPasswordParam) {
+                        // Skip ConnectionRequestPassword if empty - setting it empty breaks connection requests
+                        if (preg_match('/ConnectionRequestPassword$/i', $name)) {
+                            $value = $param['value'] ?? '';
+                            if ($value === '' || $value === null) {
+                                return false; // Don't include empty connection request password
+                            }
+                        }
+                        return true; // Include other password params for injection
+                    }
+
+                    // Use pattern matching to identify likely writable parameters
+                    if (!$this->isTr098CalixWritableParameter($name)) {
+                        return false;
+                    }
+                    return true;
+                })
+                ->mapWithKeys(function ($param, $name) {
+                    return [$name => [
+                        'value' => $param['value'],
+                        'type' => $param['type'] ?? 'xsd:string',
+                    ]];
+                })
+                ->toArray();
+        } else {
+            // Standard approach: filter by writable attribute
+            $writableParams = collect($backup->backup_data)
+                ->filter(function ($param, $name) use ($selectedParams) {
+                    // If selective restore, must be in selected list
+                    if ($selectedParams !== null && !in_array($name, $selectedParams)) {
+                        return false;
+                    }
+
+                    // Password/passphrase parameters are ALWAYS writable even if device reports otherwise
+                    // Devices often incorrectly report these as non-writable because values can't be READ back
+                    // But they ARE writable - you CAN set them, you just can't retrieve them (write-only)
+                    // EXCEPTION: ConnectionRequestPassword should NEVER be set to empty (breaks management)
+                    $isPasswordParam = preg_match('/(KeyPassphrase|PreSharedKey|Password|Passphrase|PSK|WEPKey)$/i', $name);
+                    if ($isPasswordParam) {
+                        // Skip ConnectionRequestPassword if empty - setting it empty breaks connection requests
+                        if (preg_match('/ConnectionRequestPassword$/i', $name)) {
+                            $value = $param['value'] ?? '';
+                            if ($value === '' || $value === null) {
+                                return false; // Don't include empty connection request password
+                            }
+                        }
+                        return true; // Include other password params for injection
+                    }
+
+                    // For non-password params, must be writable
+                    if (!($param['writable'] ?? false)) {
+                        return false;
+                    }
+                    return true;
+                })
+                ->mapWithKeys(function ($param, $name) {
+                    return [$name => [
+                        'value' => $param['value'],
+                        'type' => $param['type'] ?? 'xsd:string',
+                    ]];
+                })
+                ->toArray();
+        }
 
         if (empty($writableParams)) {
+            $errorMsg = 'No writable parameters found in backup';
+            if ($selectedParams) {
+                $errorMsg .= ' matching selection';
+            } elseif (!$hasWritableInfo && $dataModel === 'TR-098' && $isCalix) {
+                $errorMsg .= '. Try running "Get Everything" first to populate writable info, or use selective restore.';
+            }
             return response()->json([
-                'error' => 'No writable parameters found in backup' . ($selectedParams ? ' matching selection' : ''),
+                'error' => $errorMsg,
             ], 400);
+        }
+
+        // Validate parameters against device's current structure and remap if needed
+        $validationResult = $this->validateAndRemapRestoreParams($device, $writableParams);
+        $writableParams = $validationResult['params'];
+        $skippedParams = $validationResult['skipped'];
+        $remappedParams = $validationResult['remapped'];
+
+        if (!empty($skippedParams)) {
+            Log::info("Restore backup #{$backupId} for device {$device->serial_number}: Skipped " . count($skippedParams) . " invalid parameters", [
+                'skipped_samples' => array_slice($skippedParams, 0, 10)
+            ]);
+        }
+
+        if (!empty($remappedParams)) {
+            Log::info("Restore backup #{$backupId} for device {$device->serial_number}: Remapped " . count($remappedParams) . " parameters", [
+                'remapped' => $remappedParams
+            ]);
+        }
+
+        // Inject stored WiFi passwords for empty password parameters on ALL devices
+        // Many devices don't expose WiFi passwords in backups for security reasons
+        $injectedPasswords = [];
+        $storedCredentials = DeviceWifiCredential::where('device_id', $device->id)->first();
+
+        if ($storedCredentials) {
+            foreach ($writableParams as $paramName => &$paramData) {
+                $value = $paramData['value'] ?? '';
+
+                // Skip if value is already set (not empty)
+                if ($value !== '' && $value !== null) {
+                    continue;
+                }
+
+                $isGuestNetwork = false;
+                $isPasswordParam = false;
+
+                // TR-098 style: WLANConfiguration.{i}.PreSharedKey.{j}.KeyPassphrase
+                if (preg_match('/WLANConfiguration\.(\d+)\.PreSharedKey\.\d+\.KeyPassphrase$/i', $paramName, $matches)) {
+                    $instance = (int) $matches[1];
+                    $isPasswordParam = true;
+                    // Calix TR-098: instances 2, 10 are guest networks
+                    $isGuestNetwork = in_array($instance, [2, 10]);
+                }
+                // TR-181 style: WiFi.AccessPoint.{i}.Security.KeyPassphrase
+                elseif (preg_match('/WiFi\.AccessPoint\.(\d+)\.Security\.KeyPassphrase$/i', $paramName, $matches)) {
+                    $instance = (int) $matches[1];
+                    $isPasswordParam = true;
+                    // TR-181: instances 3, 4 are typically guest networks (SSID 3/4)
+                    $isGuestNetwork = in_array($instance, [3, 4]);
+                }
+                // Nokia TR-098 style: WLANConfiguration.{i}.KeyPassphrase (direct)
+                elseif (preg_match('/WLANConfiguration\.(\d+)\.KeyPassphrase$/i', $paramName, $matches)) {
+                    $instance = (int) $matches[1];
+                    $isPasswordParam = true;
+                    $isGuestNetwork = in_array($instance, [2, 10]);
+                }
+                // Generic passphrase/password patterns
+                elseif (preg_match('/(Passphrase|PreSharedKey)$/i', $paramName) &&
+                        preg_match('/(WiFi|WLAN|Wireless)/i', $paramName)) {
+                    $isPasswordParam = true;
+                    // Check for "guest" in the parameter name
+                    $isGuestNetwork = preg_match('/guest/i', $paramName);
+                }
+
+                if ($isPasswordParam) {
+                    if ($isGuestNetwork && $storedCredentials->guest_password) {
+                        $paramData['value'] = $storedCredentials->guest_password;
+                        $injectedPasswords[] = "{$paramName} (guest)";
+                        Log::info("Restore: Injected stored guest WiFi password for {$paramName}");
+                    } elseif (!$isGuestNetwork && $storedCredentials->main_password) {
+                        $paramData['value'] = $storedCredentials->main_password;
+                        $injectedPasswords[] = "{$paramName} (main)";
+                        Log::info("Restore: Injected stored main WiFi password for {$paramName}");
+                    }
+                }
+            }
+            unset($paramData); // Break reference after foreach
         }
 
         // Create task to restore the parameters
@@ -2089,17 +2269,55 @@ class DeviceController extends Controller
             'parameters' => $writableParams,
         ]);
 
+        // Create follow-up refresh task to run after restore completes
+        // Uses wait_for_next_session to ensure it runs in a new session after restore
+        $refreshTask = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'get_params',
+            'status' => 'pending',
+            'parameters' => ['names' => array_keys($writableParams)],
+            'progress_info' => [
+                'wait_for_next_session' => true,
+                'post_restore_refresh' => true,
+                'restore_task_id' => $task->id,
+            ],
+        ]);
+
+        Log::info("Created post-restore refresh task #{$refreshTask->id} for device {$device->serial_number} (after restore task #{$task->id})");
+
         // Trigger connection request
         $this->connectionRequestService->sendConnectionRequest($device);
 
         $restoreType = $selectedParams ? 'Selective restore' : 'Full restore';
 
-        return response()->json([
+        $response = [
             'task' => $task,
-            'message' => $restoreType . ' initiated',
+            'refresh_task' => $refreshTask,
+            'message' => $restoreType . ' initiated (refresh scheduled)',
             'writable_params_count' => count($writableParams),
             'total_params_in_backup' => count($backup->backup_data),
-        ]);
+        ];
+
+        // Add info about skipped/remapped parameters
+        if (!empty($skippedParams)) {
+            $response['skipped_params_count'] = count($skippedParams);
+            $response['skipped_params_samples'] = array_slice($skippedParams, 0, 5);
+        }
+
+        if (!empty($remappedParams)) {
+            $response['remapped_params_count'] = count($remappedParams);
+            $response['remapped_params'] = $remappedParams;
+        }
+
+        // Add info about injected WiFi passwords if any were used
+        if (!empty($injectedPasswords)) {
+            $response['wifi_passwords_injected'] = true;
+            $response['wifi_passwords_injected_count'] = count($injectedPasswords);
+            $response['message'] .= ' (WiFi passwords restored from ACS storage)';
+            Log::info("Restore backup #{$backupId} for device {$device->serial_number}: Injected " . count($injectedPasswords) . " stored WiFi passwords");
+        }
+
+        return response()->json($response);
     }
 
     /**
@@ -3563,7 +3781,7 @@ class DeviceController extends Controller
                 'status' => 'pending',
                 'parameters' => [
                     'url' => $downloadUrl,
-                    'file_type' => '3 Vendor Log File',
+                    'file_type' => '2 Web Content',  // Changed from '3 Vendor Log File' - that type is for uploads FROM device
                     'file_size' => $fileSize,
                     'username' => '',
                     'password' => '',
@@ -4500,32 +4718,52 @@ class DeviceController extends Controller
         // Handle TR-098 Calix devices
         if ($dataModel === 'TR-098' && $isCalix) {
             // Calix TR-098 uses InternetGatewayDevice.LANDevice.1.WLANConfiguration.{i}
-            // Instance 1 = Primary 2.4GHz (band-steered), Instance 9 = Primary 5GHz (band-steered)
-            // Instance 2 = Guest 2.4GHz, Instance 10 = Guest 5GHz
-            // Instance 3 = Dedicated 2.4GHz only, Instance 12 = Dedicated 5GHz only
-            $mainSsid24 = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID')->first();
-            $mainSsid5 = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.9.SSID')->first();
+            // GigaSpire: 1-8 = 5GHz, 9-16 = 2.4GHz (INVERTED from GigaCenter)
+            // GigaCenter: 1-8 = 2.4GHz, 9-16 = 5GHz
+            $isGigaSpire = strtolower($device->product_class ?? '') === 'gigaspire';
+            $prefix = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration';
+
+            if ($isGigaSpire) {
+                // GigaSpire: 5GHz uses instances 1-8, 2.4GHz uses instances 9-16
+                $inst24Primary = 9;   // Primary 2.4GHz (band-steered)
+                $inst24Guest = 10;    // Guest 2.4GHz
+                $inst24Dedicated = 12; // Dedicated 2.4GHz only
+                $inst5Primary = 1;    // Primary 5GHz (band-steered)
+                $inst5Guest = 2;      // Guest 5GHz
+                $inst5Dedicated = 3;  // Dedicated 5GHz only
+            } else {
+                // GigaCenter: 2.4GHz uses instances 1-8, 5GHz uses instances 9-16
+                $inst24Primary = 1;
+                $inst24Guest = 2;
+                $inst24Dedicated = 3;
+                $inst5Primary = 9;
+                $inst5Guest = 10;
+                $inst5Dedicated = 12;
+            }
+
+            $mainSsid24 = $device->parameters()->where('name', "{$prefix}.{$inst24Primary}.SSID")->first();
+            $mainSsid5 = $device->parameters()->where('name', "{$prefix}.{$inst5Primary}.SSID")->first();
 
             // Check if guest networks are enabled
-            $guestEnabled24 = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.Enable')->first();
-            $guestEnabled5 = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.10.Enable')->first();
+            $guestEnabled24 = $device->parameters()->where('name', "{$prefix}.{$inst24Guest}.Enable")->first();
+            $guestEnabled5 = $device->parameters()->where('name', "{$prefix}.{$inst5Guest}.Enable")->first();
             $guestEnabled = ($guestEnabled24 && $guestEnabled24->value === '1') ||
                             ($guestEnabled5 && $guestEnabled5->value === '1');
 
-            // Get guest SSID
-            $guestSsid = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.SSID')->first();
+            // Get guest SSID (use 2.4GHz instance as primary guest SSID source)
+            $guestSsid = $device->parameters()->where('name', "{$prefix}.{$inst24Guest}.SSID")->first();
 
-            // Check if dedicated networks are enabled (instance 3 for 2.4GHz, instance 12 for 5GHz)
-            $dedicated24Enabled = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.3.Enable')->first();
-            $dedicated5Enabled = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.12.Enable')->first();
+            // Check if dedicated networks are enabled
+            $dedicated24Enabled = $device->parameters()->where('name', "{$prefix}.{$inst24Dedicated}.Enable")->first();
+            $dedicated5Enabled = $device->parameters()->where('name', "{$prefix}.{$inst5Dedicated}.Enable")->first();
 
             // Get dedicated SSIDs
-            $dedicated24Ssid = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.3.SSID')->first();
-            $dedicated5Ssid = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.12.SSID')->first();
+            $dedicated24Ssid = $device->parameters()->where('name', "{$prefix}.{$inst24Dedicated}.SSID")->first();
+            $dedicated5Ssid = $device->parameters()->where('name', "{$prefix}.{$inst5Dedicated}.SSID")->first();
 
             // Calix exposes passwords in clear text via X_000631_KeyPassphrase
-            $mainPassword24 = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.X_000631_KeyPassphrase')->first();
-            $guestPassword = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.PreSharedKey.1.X_000631_KeyPassphrase')->first();
+            $mainPassword24 = $device->parameters()->where('name', "{$prefix}.{$inst24Primary}.PreSharedKey.1.X_000631_KeyPassphrase")->first();
+            $guestPassword = $device->parameters()->where('name', "{$prefix}.{$inst24Guest}.PreSharedKey.1.X_000631_KeyPassphrase")->first();
 
             return response()->json([
                 'ssid' => $mainSsid24?->value ?? '',
@@ -4535,13 +4773,13 @@ class DeviceController extends Controller
                 'guest_enabled' => $guestEnabled,
                 'guest_ssid' => $guestSsid?->value ?? '',
                 'guest_password' => $guestPassword?->value ?? $storedCredentials?->guest_password ?? '',
-                // Calix dedicated networks: instance 3 = 2.4GHz, instance 12 = 5GHz
+                // Dedicated networks use instance mapping based on device type
                 'dedicated_24ghz_enabled' => $dedicated24Enabled && $dedicated24Enabled->value === '1',
                 'dedicated_24ghz_ssid' => $dedicated24Ssid?->value ?? '',
                 'dedicated_5ghz_enabled' => $dedicated5Enabled && $dedicated5Enabled->value === '1',
                 'dedicated_5ghz_ssid' => $dedicated5Ssid?->value ?? '',
                 'data_model' => $dataModel,
-                'device_type' => 'Calix',
+                'device_type' => $isGigaSpire ? 'GigaSpire' : 'GigaCenter',
                 'credentials_stored' => $storedCredentials !== null,
                 'credentials_set_by' => $storedCredentials?->set_by,
                 'credentials_updated_at' => $storedCredentials?->updated_at?->toIso8601String(),
@@ -5042,9 +5280,17 @@ class DeviceController extends Controller
     /**
      * Apply WiFi configuration for TR-098 Calix devices
      * TR-098 Calix uses InternetGatewayDevice.LANDevice.1.WLANConfiguration.{i} structure
-     * Instance mapping:
-     *   1 = Primary 2.4GHz, 2 = Guest 2.4GHz, 3-8 = Operator reserved
-     *   9 = Primary 5GHz, 10 = Guest 5GHz, 11-16 = Operator/IPTV/Backhaul
+     *
+     * Instance mapping varies by device type:
+     *
+     * GigaCenter (ENT, ONT, etc.): 16 instances, dual-band
+     *   1-8 = 2.4GHz radio (1=Primary, 2=Guest, 3=Dedicated)
+     *   9-16 = 5GHz radio (9=Primary, 10=Guest, 12=Dedicated)
+     *
+     * GigaSpire: 24 instances, dual-band (NO 6GHz support despite 24 instances)
+     *   1-8 = 5GHz radio (1=Primary, 2=Guest, 3=Dedicated)
+     *   9-16 = 2.4GHz radio (9=Primary, 10=Guest, 12=Dedicated)
+     *   17-24 = Reserved/unused (Channel 0)
      */
     private function applyTr098CalixWifiConfig(
         Device $device,
@@ -5057,90 +5303,148 @@ class DeviceController extends Controller
         // TR-098 parameter path prefix
         $prefix = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration';
 
-        // Calix uses 11i for WPA2-only, WPAand11i for WPA/WPA2 mixed mode
-        // Using WPAand11i for maximum compatibility
-        $beaconType = 'WPAand11i';
-
         // Calix uses the STANDARD KeyPassphrase for SETTING passwords
         // Note: X_000631_KeyPassphrase is READ-ONLY (returns the actual password in clear text)
         // For WRITING, we must use the standard PreSharedKey.1.KeyPassphrase parameter
         $passwordParam = 'PreSharedKey.1.KeyPassphrase';
 
-        // Detect GigaSpire devices - they do NOT support some vendor-specific parameters
+        // Detect GigaSpire devices - they have DIFFERENT instance mapping and do NOT support 6GHz
         // GigaSpire uses product_class = "GigaSpire" while GigaCenter uses "ENT", "ONT", etc.
         $isGigaSpire = strtolower($device->product_class ?? '') === 'gigaspire';
 
-        // Build network configurations grouped by radio
-        // Calix structure: 1-8 = 2.4GHz radio, 9-16 = 5GHz radio
-        // RadioEnabled is the master switch that controls whether the radio is actually on
-        // Instance mapping:
-        //   1 = Primary 2.4GHz (band-steered), 9 = Primary 5GHz (band-steered)
-        //   2 = Guest 2.4GHz, 10 = Guest 5GHz
-        //   3 = Dedicated 2.4GHz only, 12 = Dedicated 5GHz only
+        // Security settings differ between GigaCenter and GigaSpire:
+        // GigaCenter: BeaconType = WPAand11i (WPA/WPA2 mixed)
+        // GigaSpire: BeaconType = 11iandWPA3 (WPA2/WPA3 transitional) with IEEE11i settings
+        if ($isGigaSpire) {
+            $beaconType = '11iandWPA3';
+            $authMode = 'SAEandPSKAuthentication';  // WPA3-SAE + WPA2-PSK
+            $encryptionMode = 'AESEncryption';
+        } else {
+            $beaconType = 'WPAand11i';  // WPA/WPA2 mixed for older GigaCenter
+            $authMode = null;  // GigaCenter doesn't need explicit auth mode
+            $encryptionMode = null;
+        }
+
+        // Instance mapping differs between GigaCenter and GigaSpire:
+        // GigaCenter: 1-8 = 2.4GHz, 9-16 = 5GHz
+        // GigaSpire:  1-8 = 5GHz, 9-16 = 2.4GHz (swapped!)
+        if ($isGigaSpire) {
+            // GigaSpire: 5GHz uses instances 1-8, 2.4GHz uses instances 9-16
+            $inst24Primary = 9;   // Primary 2.4GHz (band-steered)
+            $inst24Guest = 10;    // Guest 2.4GHz
+            $inst24Dedicated = 12; // Dedicated 2.4GHz only
+            $inst5Primary = 1;    // Primary 5GHz (band-steered)
+            $inst5Guest = 2;      // Guest 5GHz
+            $inst5Dedicated = 3;  // Dedicated 5GHz only
+        } else {
+            // GigaCenter: 2.4GHz uses instances 1-8, 5GHz uses instances 9-16
+            $inst24Primary = 1;   // Primary 2.4GHz (band-steered)
+            $inst24Guest = 2;     // Guest 2.4GHz
+            $inst24Dedicated = 3; // Dedicated 2.4GHz only
+            $inst5Primary = 9;    // Primary 5GHz (band-steered)
+            $inst5Guest = 10;     // Guest 5GHz
+            $inst5Dedicated = 12; // Dedicated 5GHz only
+        }
 
         // Base parameters for 2.4GHz radio (supported by all Calix TR-098 devices)
+        // Uses instance variables set above based on device type
         $params24ghz = [
-            // Instance 1 - Primary 2.4GHz (band-steered)
-            "{$prefix}.1.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-            "{$prefix}.1.SSID" => $ssid,
-            "{$prefix}.1.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
-            "{$prefix}.1.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-            "{$prefix}.1.BeaconType" => $beaconType,
-            "{$prefix}.1.{$passwordParam}" => $password,
-            // Instance 2 - Guest 2.4GHz
-            "{$prefix}.2.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-            "{$prefix}.2.SSID" => $ssid . '-Guest',
-            "{$prefix}.2.Enable" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
-            "{$prefix}.2.SSIDAdvertisementEnabled" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
-            "{$prefix}.2.BeaconType" => $beaconType,
-            "{$prefix}.2.{$passwordParam}" => $guestPassword,
-            // Instance 3 - Dedicated 2.4GHz only
-            "{$prefix}.3.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-            "{$prefix}.3.SSID" => $ssid . '-2.4GHz',
-            "{$prefix}.3.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
-            "{$prefix}.3.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-            "{$prefix}.3.BeaconType" => $beaconType,
-            "{$prefix}.3.{$passwordParam}" => $password,
+            // Primary 2.4GHz (band-steered)
+            "{$prefix}.{$inst24Primary}.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst24Primary}.SSID" => $ssid,
+            "{$prefix}.{$inst24Primary}.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst24Primary}.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst24Primary}.BeaconType" => $beaconType,
+            "{$prefix}.{$inst24Primary}.{$passwordParam}" => $password,
+            // Guest 2.4GHz
+            "{$prefix}.{$inst24Guest}.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst24Guest}.SSID" => $ssid . '-Guest',
+            "{$prefix}.{$inst24Guest}.Enable" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst24Guest}.SSIDAdvertisementEnabled" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst24Guest}.BeaconType" => $beaconType,
+            "{$prefix}.{$inst24Guest}.{$passwordParam}" => $guestPassword,
+            // Dedicated 2.4GHz only
+            "{$prefix}.{$inst24Dedicated}.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst24Dedicated}.SSID" => $ssid . '-2.4GHz',
+            "{$prefix}.{$inst24Dedicated}.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst24Dedicated}.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst24Dedicated}.BeaconType" => $beaconType,
+            "{$prefix}.{$inst24Dedicated}.{$passwordParam}" => $password,
         ];
 
         // Add GigaCenter-specific parameters (NOT supported on GigaSpire)
         if (!$isGigaSpire) {
             // Disable legacy features that hurt performance on modern networks
-            $params24ghz["{$prefix}.1.X_000631_AirtimeFairness"] = ['value' => false, 'type' => 'xsd:boolean'];
-            $params24ghz["{$prefix}.1.X_000631_MulticastForwardEnable"] = ['value' => false, 'type' => 'xsd:boolean'];
+            $params24ghz["{$prefix}.{$inst24Primary}.X_000631_AirtimeFairness"] = ['value' => false, 'type' => 'xsd:boolean'];
+            $params24ghz["{$prefix}.{$inst24Primary}.X_000631_MulticastForwardEnable"] = ['value' => false, 'type' => 'xsd:boolean'];
             // Enable client isolation on guest network
-            $params24ghz["{$prefix}.2.X_000631_IntraSsidIsolation"] = ['value' => true, 'type' => 'xsd:boolean'];
+            $params24ghz["{$prefix}.{$inst24Guest}.X_000631_IntraSsidIsolation"] = ['value' => true, 'type' => 'xsd:boolean'];
+        }
+
+        // Add GigaSpire-specific security parameters (WPA3 transitional mode)
+        if ($isGigaSpire && $authMode && $encryptionMode) {
+            // Primary 2.4GHz security
+            $params24ghz["{$prefix}.{$inst24Primary}.IEEE11iAuthenticationMode"] = $authMode;
+            $params24ghz["{$prefix}.{$inst24Primary}.IEEE11iEncryptionModes"] = $encryptionMode;
+            // Guest 2.4GHz security
+            $params24ghz["{$prefix}.{$inst24Guest}.IEEE11iAuthenticationMode"] = $authMode;
+            $params24ghz["{$prefix}.{$inst24Guest}.IEEE11iEncryptionModes"] = $encryptionMode;
+            // Dedicated 2.4GHz security
+            $params24ghz["{$prefix}.{$inst24Dedicated}.IEEE11iAuthenticationMode"] = $authMode;
+            $params24ghz["{$prefix}.{$inst24Dedicated}.IEEE11iEncryptionModes"] = $encryptionMode;
         }
 
         // Base parameters for 5GHz radio (supported by all Calix TR-098 devices)
+        // Uses instance variables set above based on device type
         $params5ghz = [
-            // Instance 9 - Primary 5GHz (band-steered)
-            "{$prefix}.9.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-            "{$prefix}.9.SSID" => $ssid,
-            "{$prefix}.9.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
-            "{$prefix}.9.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-            "{$prefix}.9.BeaconType" => $beaconType,
-            "{$prefix}.9.{$passwordParam}" => $password,
-            // Instance 10 - Guest 5GHz
-            "{$prefix}.10.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-            "{$prefix}.10.SSID" => $ssid . '-Guest',
-            "{$prefix}.10.Enable" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
-            "{$prefix}.10.SSIDAdvertisementEnabled" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
-            "{$prefix}.10.BeaconType" => $beaconType,
-            "{$prefix}.10.{$passwordParam}" => $guestPassword,
-            // Instance 12 - Dedicated 5GHz only
-            "{$prefix}.12.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-            "{$prefix}.12.SSID" => $ssid . '-5GHz',
-            "{$prefix}.12.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
-            "{$prefix}.12.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-            "{$prefix}.12.BeaconType" => $beaconType,
-            "{$prefix}.12.{$passwordParam}" => $password,
+            // Primary 5GHz (band-steered)
+            "{$prefix}.{$inst5Primary}.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst5Primary}.SSID" => $ssid,
+            "{$prefix}.{$inst5Primary}.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst5Primary}.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst5Primary}.BeaconType" => $beaconType,
+            "{$prefix}.{$inst5Primary}.{$passwordParam}" => $password,
+            // Guest 5GHz
+            "{$prefix}.{$inst5Guest}.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst5Guest}.SSID" => $ssid . '-Guest',
+            "{$prefix}.{$inst5Guest}.Enable" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst5Guest}.SSIDAdvertisementEnabled" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst5Guest}.BeaconType" => $beaconType,
+            "{$prefix}.{$inst5Guest}.{$passwordParam}" => $guestPassword,
+            // Dedicated 5GHz only
+            "{$prefix}.{$inst5Dedicated}.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst5Dedicated}.SSID" => $ssid . '-5GHz',
+            "{$prefix}.{$inst5Dedicated}.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst5Dedicated}.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
+            "{$prefix}.{$inst5Dedicated}.BeaconType" => $beaconType,
+            "{$prefix}.{$inst5Dedicated}.{$passwordParam}" => $password,
         ];
 
         // Add GigaCenter-specific parameters for 5GHz (NOT supported on GigaSpire)
         if (!$isGigaSpire) {
             // Enable client isolation on guest network
-            $params5ghz["{$prefix}.10.X_000631_IntraSsidIsolation"] = ['value' => true, 'type' => 'xsd:boolean'];
+            $params5ghz["{$prefix}.{$inst5Guest}.X_000631_IntraSsidIsolation"] = ['value' => true, 'type' => 'xsd:boolean'];
+        }
+
+        // Add GigaSpire-specific parameters for 5GHz
+        if ($isGigaSpire) {
+            // MU-MIMO enable for 5GHz
+            $params5ghz["{$prefix}.{$inst5Primary}.X_000631_EnableMUMIMO"] = ['value' => true, 'type' => 'xsd:boolean'];
+            $params5ghz["{$prefix}.{$inst5Guest}.X_000631_EnableMUMIMO"] = ['value' => true, 'type' => 'xsd:boolean'];
+            $params5ghz["{$prefix}.{$inst5Dedicated}.X_000631_EnableMUMIMO"] = ['value' => true, 'type' => 'xsd:boolean'];
+
+            // Security parameters (WPA3 transitional mode)
+            if ($authMode && $encryptionMode) {
+                // Primary 5GHz security
+                $params5ghz["{$prefix}.{$inst5Primary}.IEEE11iAuthenticationMode"] = $authMode;
+                $params5ghz["{$prefix}.{$inst5Primary}.IEEE11iEncryptionModes"] = $encryptionMode;
+                // Guest 5GHz security
+                $params5ghz["{$prefix}.{$inst5Guest}.IEEE11iAuthenticationMode"] = $authMode;
+                $params5ghz["{$prefix}.{$inst5Guest}.IEEE11iEncryptionModes"] = $encryptionMode;
+                // Dedicated 5GHz security
+                $params5ghz["{$prefix}.{$inst5Dedicated}.IEEE11iAuthenticationMode"] = $authMode;
+                $params5ghz["{$prefix}.{$inst5Dedicated}.IEEE11iEncryptionModes"] = $encryptionMode;
+            }
         }
 
         // Initialize networks with 2.4GHz and 5GHz
@@ -5155,32 +5459,8 @@ class DeviceController extends Controller
             ],
         ];
 
-        // Add 6GHz radio configuration for GigaSpire devices (instances 17-24)
-        // GigaSpire has 24 WLAN instances: 1-8 (2.4GHz), 9-16 (5GHz), 17-24 (6GHz)
-        if ($isGigaSpire) {
-            $params6ghz = [
-                // Instance 17 - Primary 6GHz (band-steered)
-                "{$prefix}.17.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-                "{$prefix}.17.SSID" => $ssid,
-                "{$prefix}.17.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
-                "{$prefix}.17.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-                "{$prefix}.17.BeaconType" => $beaconType,
-                "{$prefix}.17.{$passwordParam}" => $password,
-                // Instance 18 - Guest 6GHz
-                "{$prefix}.18.RadioEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
-                "{$prefix}.18.SSID" => $ssid . '-Guest',
-                "{$prefix}.18.Enable" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
-                "{$prefix}.18.SSIDAdvertisementEnabled" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
-                "{$prefix}.18.BeaconType" => $beaconType,
-                "{$prefix}.18.{$passwordParam}" => $guestPassword,
-                // Note: No dedicated 6GHz-only SSID (6GHz is high-bandwidth for all devices)
-            ];
-
-            $networks['radio_6ghz'] = [
-                'description' => "WiFi: Configure 6GHz networks (Primary + Guest)",
-                'params' => $params6ghz,
-            ];
-        }
+        // Note: GigaSpire has 24 WLAN instances but instances 17-24 are reserved/unused (Channel 0)
+        // GigaSpire does NOT support 6GHz - only dual-band (2.4GHz + 5GHz)
 
         $tasks = [];
         $isOneTaskPerSession = $this->isOneTaskPerSessionDevice($device);
@@ -5208,48 +5488,50 @@ class DeviceController extends Controller
 
         // Queue a refresh task to update the UI after WiFi config is applied
         // This reads back the WiFi parameters so the GUI shows the new settings
-        // Note: X_000631_KeyPassphrase is the READ-ONLY parameter that exposes passwords in clear text
+        // Note: X_000631_KeyPassphrase is the READ-ONLY parameter that exposes passwords in clear text (GigaCenter ONLY)
+        // Uses instance variables set above based on device type (GigaSpire vs GigaCenter)
         $refreshParams = [
-            // Primary 2.4GHz (instance 1)
-            "{$prefix}.1.RadioEnabled", "{$prefix}.1.Status", "{$prefix}.1.SSID", "{$prefix}.1.Enable",
-            "{$prefix}.1.PreSharedKey.1.X_000631_KeyPassphrase",
-            // Guest 2.4GHz (instance 2)
-            "{$prefix}.2.RadioEnabled", "{$prefix}.2.Status", "{$prefix}.2.SSID", "{$prefix}.2.Enable",
-            "{$prefix}.2.PreSharedKey.1.X_000631_KeyPassphrase",
-            // Dedicated 2.4GHz (instance 3)
-            "{$prefix}.3.RadioEnabled", "{$prefix}.3.Status", "{$prefix}.3.SSID", "{$prefix}.3.Enable",
-            "{$prefix}.3.PreSharedKey.1.X_000631_KeyPassphrase",
-            // Primary 5GHz (instance 9)
-            "{$prefix}.9.RadioEnabled", "{$prefix}.9.Status", "{$prefix}.9.SSID", "{$prefix}.9.Enable",
-            "{$prefix}.9.PreSharedKey.1.X_000631_KeyPassphrase",
-            // Guest 5GHz (instance 10)
-            "{$prefix}.10.RadioEnabled", "{$prefix}.10.Status", "{$prefix}.10.SSID", "{$prefix}.10.Enable",
-            "{$prefix}.10.PreSharedKey.1.X_000631_KeyPassphrase",
-            // Dedicated 5GHz (instance 12)
-            "{$prefix}.12.RadioEnabled", "{$prefix}.12.Status", "{$prefix}.12.SSID", "{$prefix}.12.Enable",
-            "{$prefix}.12.PreSharedKey.1.X_000631_KeyPassphrase",
+            // Primary 2.4GHz
+            "{$prefix}.{$inst24Primary}.RadioEnabled", "{$prefix}.{$inst24Primary}.Status", "{$prefix}.{$inst24Primary}.SSID", "{$prefix}.{$inst24Primary}.Enable",
+            "{$prefix}.{$inst24Primary}.BeaconType",
+            // Guest 2.4GHz
+            "{$prefix}.{$inst24Guest}.RadioEnabled", "{$prefix}.{$inst24Guest}.Status", "{$prefix}.{$inst24Guest}.SSID", "{$prefix}.{$inst24Guest}.Enable",
+            "{$prefix}.{$inst24Guest}.BeaconType",
+            // Dedicated 2.4GHz
+            "{$prefix}.{$inst24Dedicated}.RadioEnabled", "{$prefix}.{$inst24Dedicated}.Status", "{$prefix}.{$inst24Dedicated}.SSID", "{$prefix}.{$inst24Dedicated}.Enable",
+            "{$prefix}.{$inst24Dedicated}.BeaconType",
+            // Primary 5GHz
+            "{$prefix}.{$inst5Primary}.RadioEnabled", "{$prefix}.{$inst5Primary}.Status", "{$prefix}.{$inst5Primary}.SSID", "{$prefix}.{$inst5Primary}.Enable",
+            "{$prefix}.{$inst5Primary}.BeaconType",
+            // Guest 5GHz
+            "{$prefix}.{$inst5Guest}.RadioEnabled", "{$prefix}.{$inst5Guest}.Status", "{$prefix}.{$inst5Guest}.SSID", "{$prefix}.{$inst5Guest}.Enable",
+            "{$prefix}.{$inst5Guest}.BeaconType",
+            // Dedicated 5GHz
+            "{$prefix}.{$inst5Dedicated}.RadioEnabled", "{$prefix}.{$inst5Dedicated}.Status", "{$prefix}.{$inst5Dedicated}.SSID", "{$prefix}.{$inst5Dedicated}.Enable",
+            "{$prefix}.{$inst5Dedicated}.BeaconType",
         ];
+
+        // GigaCenter ONLY: Add X_000631_KeyPassphrase to read passwords (GigaSpire does NOT support this)
+        if (!$isGigaSpire) {
+            $refreshParams[] = "{$prefix}.{$inst24Primary}.PreSharedKey.1.X_000631_KeyPassphrase";
+            $refreshParams[] = "{$prefix}.{$inst24Guest}.PreSharedKey.1.X_000631_KeyPassphrase";
+            $refreshParams[] = "{$prefix}.{$inst24Dedicated}.PreSharedKey.1.X_000631_KeyPassphrase";
+            $refreshParams[] = "{$prefix}.{$inst5Primary}.PreSharedKey.1.X_000631_KeyPassphrase";
+            $refreshParams[] = "{$prefix}.{$inst5Guest}.PreSharedKey.1.X_000631_KeyPassphrase";
+            $refreshParams[] = "{$prefix}.{$inst5Dedicated}.PreSharedKey.1.X_000631_KeyPassphrase";
+        }
 
         // Add GigaCenter-specific refresh params (NOT supported on GigaSpire)
         if (!$isGigaSpire) {
-            $refreshParams[] = "{$prefix}.1.X_000631_AirtimeFairness";
-            $refreshParams[] = "{$prefix}.1.X_000631_MulticastForwardEnable";
+            $refreshParams[] = "{$prefix}.{$inst24Primary}.X_000631_AirtimeFairness";
+            $refreshParams[] = "{$prefix}.{$inst24Primary}.X_000631_MulticastForwardEnable";
         }
 
-        // Add 6GHz refresh params for GigaSpire devices
+        // Add MU-MIMO refresh params for GigaSpire devices
         if ($isGigaSpire) {
-            // Primary 6GHz (instance 17)
-            $refreshParams[] = "{$prefix}.17.RadioEnabled";
-            $refreshParams[] = "{$prefix}.17.Status";
-            $refreshParams[] = "{$prefix}.17.SSID";
-            $refreshParams[] = "{$prefix}.17.Enable";
-            $refreshParams[] = "{$prefix}.17.PreSharedKey.1.X_000631_KeyPassphrase";
-            // Guest 6GHz (instance 18)
-            $refreshParams[] = "{$prefix}.18.RadioEnabled";
-            $refreshParams[] = "{$prefix}.18.Status";
-            $refreshParams[] = "{$prefix}.18.SSID";
-            $refreshParams[] = "{$prefix}.18.Enable";
-            $refreshParams[] = "{$prefix}.18.PreSharedKey.1.X_000631_KeyPassphrase";
+            $refreshParams[] = "{$prefix}.{$inst5Primary}.X_000631_EnableMUMIMO";
+            $refreshParams[] = "{$prefix}.{$inst5Guest}.X_000631_EnableMUMIMO";
+            $refreshParams[] = "{$prefix}.{$inst5Dedicated}.X_000631_EnableMUMIMO";
         }
         $refreshTask = Task::create([
             'device_id' => $device->id,
@@ -5279,15 +5561,13 @@ class DeviceController extends Controller
 
         $deviceSubType = $isGigaSpire ? 'GigaSpire' : 'GigaCenter';
         $noteText = $isGigaSpire
-            ? 'GigaSpire creates: main tri-band SSID (2.4/5/6GHz), dedicated 2.4GHz/5GHz SSIDs, and optional guest network across all bands. UI will refresh automatically.'
+            ? 'GigaSpire creates: main dual-band SSID (2.4/5GHz), dedicated 2.4GHz/5GHz SSIDs, and optional guest network. MU-MIMO enabled on 5GHz. UI will refresh automatically.'
             : 'GigaCenter creates: main band-steered SSID, dedicated 2.4GHz/5GHz SSIDs, and optional guest with client isolation. UI will refresh automatically.';
 
-        $taskMessage = $isGigaSpire
-            ? 'Standard WiFi configuration queued (4 tasks: 2.4GHz, 5GHz, 6GHz config, refresh)'
-            : 'Standard WiFi configuration queued (3 tasks: 2.4GHz config, 5GHz config, refresh)';
+        $taskMessage = 'Standard WiFi configuration queued (3 tasks: 2.4GHz config, 5GHz config, refresh)';
 
         $networksConfigured = [
-            'primary' => $ssid . ($isGigaSpire ? ' (tri-band: 2.4/5/6 GHz)' : ' (band-steered)'),
+            'primary' => $ssid . ($isGigaSpire ? ' (dual-band: 2.4/5 GHz)' : ' (band-steered)'),
             'dedicated_24ghz' => $ssid . '-2.4GHz',
             'dedicated_5ghz' => $ssid . '-5GHz',
             'guest' => $enableGuest ? ($ssid . '-Guest') : 'disabled',
@@ -5696,5 +5976,253 @@ class DeviceController extends Controller
             'credential_source' => $credentials->credential_source,
             'imported_at' => $credentials->imported_at?->toIso8601String(),
         ]);
+    }
+
+    // =========================================================================
+    // Helper Methods for Restore Parameter Validation
+    // =========================================================================
+
+    /**
+     * Validate and remap restore parameters against device's current structure.
+     *
+     * This method:
+     * 1. Detects which object instances exist on the device (from stored parameters)
+     * 2. Skips backup parameters that reference non-existent instances
+     * 3. Remaps pertinent parameters where possible (e.g., LANDevice.2.DHCP → LANDevice.1.DHCP)
+     *
+     * @param Device $device The device being restored to
+     * @param array $params The parameters from backup to validate
+     * @return array ['params' => validated params, 'skipped' => skipped params, 'remapped' => remapping info]
+     */
+    private function validateAndRemapRestoreParams(Device $device, array $params): array
+    {
+        $validParams = [];
+        $skippedParams = [];
+        $remappedParams = [];
+
+        // Determine device-specific invalid instances
+        // These are instances that we KNOW don't exist on certain device types
+        $invalidInstances = [];
+
+        // Calix GigaSpire devices don't have LANDevice.2 (guest network bridge)
+        // Only GigaCenters have this - GigaSpires manage guest networks differently
+        $productClass = $device->product_class ?? '';
+        $isGigaSpire = stripos($productClass, 'GigaSpire') !== false;
+        $isCalix = stripos($device->manufacturer ?? '', 'Calix') !== false;
+
+        if ($isCalix && $isGigaSpire) {
+            // GigaSpire only has LANDevice.1
+            $invalidInstances['LANDevice.2'] = true;
+            $invalidInstances['LANDevice.3'] = true;
+            $invalidInstances['LANDevice.4'] = true;
+            Log::debug("Restore validation: GigaSpire device - marking LANDevice.2+ as invalid");
+        }
+
+        // For TR-181 devices, TR-098 style paths are invalid and vice versa
+        $isTr181 = $device->parameters()->where('name', 'LIKE', 'Device.%')->exists();
+        $isTr098 = $device->parameters()->where('name', 'LIKE', 'InternetGatewayDevice.%')->exists();
+
+        // Define pertinent parameters that should be remapped when their instance doesn't exist
+        // These are settings that should be preserved even if the object instance changed
+        $remappablePatterns = [
+            // DHCP settings - critical for network operation
+            'LANHostConfigManagement' => [
+                'DHCPServerConfigurable',
+                'DHCPServerEnable',
+                'MinAddress',
+                'MaxAddress',
+                'ReservedAddresses',
+                'DHCPLeaseTime',
+                'SubnetMask',
+                'IPRouters',
+                'DNSServers',
+            ],
+            // IP Interface settings
+            'IPInterface' => [
+                'IPInterfaceIPAddress',
+                'IPInterfaceSubnetMask',
+                'IPInterfaceAddressingType',
+            ],
+        ];
+
+        foreach ($params as $paramName => $paramData) {
+            // Extract all object instances from this parameter name
+            preg_match_all('/([A-Za-z]+)\.(\d+)/', $paramName, $matches, PREG_SET_ORDER);
+
+            $hasInvalidInstance = false;
+            $remapTarget = null;
+
+            foreach ($matches as $match) {
+                $objectType = $match[1];
+                $instanceNum = (int) $match[2];
+                $objectPath = $objectType . '.' . $instanceNum;
+
+                // Check if this instance is explicitly invalid for this device type
+                if (isset($invalidInstances[$objectPath])) {
+                    $hasInvalidInstance = true;
+
+                    // Try to remap to instance 1 if it's a remappable parameter
+                    $alternateInstance = $objectType . '.1';
+                    if (!isset($invalidInstances[$alternateInstance])) {
+                        // Check if this parameter is remappable
+                        $isRemappable = false;
+                        foreach ($remappablePatterns as $remapObject => $remapParams) {
+                            if ($objectType === 'LANDevice' || strpos($paramName, $remapObject) !== false) {
+                                foreach ($remapParams as $remapParam) {
+                                    if (strpos($paramName, $remapParam) !== false) {
+                                        $isRemappable = true;
+                                        break 2;
+                                    }
+                                }
+                            }
+                        }
+
+                        if ($isRemappable) {
+                            // Create remapped parameter name
+                            $remappedName = str_replace($objectPath, $alternateInstance, $paramName);
+
+                            // Only remap if the target parameter doesn't already exist in our params
+                            if (!isset($params[$remappedName]) && !isset($validParams[$remappedName])) {
+                                $remapTarget = [
+                                    'original' => $paramName,
+                                    'remapped' => $remappedName,
+                                    'from_instance' => $objectPath,
+                                    'to_instance' => $alternateInstance,
+                                ];
+                            }
+                        }
+                    }
+                    break; // One invalid instance is enough to flag this param
+                }
+            }
+
+            if ($hasInvalidInstance) {
+                if ($remapTarget !== null) {
+                    // Remap the parameter
+                    $validParams[$remapTarget['remapped']] = $paramData;
+                    $remappedParams[] = $remapTarget;
+                } else {
+                    // Skip parameters with non-existent instances that can't be remapped
+                    $skippedParams[] = $paramName;
+                }
+            } else {
+                // Parameter is valid, keep it
+                $validParams[$paramName] = $paramData;
+            }
+        }
+
+        return [
+            'params' => $validParams,
+            'skipped' => $skippedParams,
+            'remapped' => $remappedParams,
+        ];
+    }
+
+    // =========================================================================
+    // Helper Methods for TR-098 Calix Parameter Handling
+    // =========================================================================
+
+    /**
+     * Determine if a TR-098 Calix parameter is likely writable based on patterns.
+     *
+     * This is used when backups don't have writable attribute info (TR-098 devices
+     * using GetParameterValues don't return writable info - only GetParameterNames does).
+     *
+     * @param string $paramName The parameter name to check
+     * @return bool True if the parameter is likely writable
+     */
+    private function isTr098CalixWritableParameter(string $paramName): bool
+    {
+        // SPECIFIC patterns for parameters that ARE writable on TR-098 Calix devices
+        // Be very conservative - only include parameters we KNOW are writable
+        $writablePatterns = [
+            // ===== WiFi Configuration - Core Writable Settings =====
+            '/WLANConfiguration\.\d+\.SSID$/i',
+            '/WLANConfiguration\.\d+\.Enable$/i',
+            '/WLANConfiguration\.\d+\.RadioEnabled$/i',
+            '/WLANConfiguration\.\d+\.SSIDAdvertisementEnabled$/i',
+            '/WLANConfiguration\.\d+\.BeaconType$/i',
+            '/WLANConfiguration\.\d+\.BasicAuthenticationMode$/i',
+            '/WLANConfiguration\.\d+\.BasicEncryptionModes$/i',
+            '/WLANConfiguration\.\d+\.WPAAuthenticationMode$/i',
+            '/WLANConfiguration\.\d+\.WPAEncryptionModes$/i',
+            '/WLANConfiguration\.\d+\.IEEE11iAuthenticationMode$/i',
+            '/WLANConfiguration\.\d+\.IEEE11iEncryptionModes$/i',
+            '/WLANConfiguration\.\d+\.Channel$/i',
+            '/WLANConfiguration\.\d+\.AutoChannelEnable$/i',
+            '/WLANConfiguration\.\d+\.OperatingChannelBandwidth$/i',
+            '/WLANConfiguration\.\d+\.WMMEnable$/i',
+            '/WLANConfiguration\.\d+\.UAPSDEnable$/i',
+            '/WLANConfiguration\.\d+\.TransmitPower$/i',
+            '/WLANConfiguration\.\d+\.AutoRateFallBackEnabled$/i',
+            // Calix vendor-specific WiFi params
+            '/WLANConfiguration\.\d+\.X_000631_Bandwidth$/i',
+            '/WLANConfiguration\.\d+\.X_000631_MaxClients$/i',
+            '/WLANConfiguration\.\d+\.X_000631_ClientIsolation$/i',
+            '/WLANConfiguration\.\d+\.X_000631_Hidden$/i',
+            '/WLANConfiguration\.\d+\.X_000631_OperatingMode$/i',
+            '/WLANConfiguration\.\d+\.X_000631_WPSPushButton$/i',
+            '/WLANConfiguration\.\d+\.X_000631_WPSEnabled$/i',
+            '/WLANConfiguration\.\d+\.X_000631_PMFMode$/i',
+
+            // ===== WiFi PreSharedKey (passwords) =====
+            '/PreSharedKey\.\d+\.PreSharedKey$/i',
+            '/PreSharedKey\.\d+\.KeyPassphrase$/i',
+            // Note: X_000631_KeyPassphrase is READ-ONLY on GigaSpire (only GigaCenter supports it for writing)
+
+            // ===== WEP Keys (legacy) =====
+            '/WEPKey\.\d+\.WEPKey$/i',
+
+            // ===== Port Forwarding / NAT =====
+            '/PortMapping\.\d+\.PortMappingEnabled$/i',
+            '/PortMapping\.\d+\.PortMappingDescription$/i',
+            '/PortMapping\.\d+\.ExternalPort$/i',
+            '/PortMapping\.\d+\.ExternalPortEndRange$/i',
+            '/PortMapping\.\d+\.InternalPort$/i',
+            '/PortMapping\.\d+\.InternalClient$/i',
+            '/PortMapping\.\d+\.PortMappingProtocol$/i',
+            '/PortMapping\.\d+\.RemoteHost$/i',
+            '/PortMapping\.\d+\.PortMappingLeaseDuration$/i',
+
+            // ===== Time/NTP - Only specific writable fields =====
+            '/\.Time\.LocalTimeZone$/i',
+            '/\.Time\.LocalTimeZoneName$/i',
+            '/\.Time\.NTPServer1$/i',
+            '/\.Time\.NTPServer2$/i',
+            '/\.Time\.NTPServer3$/i',
+
+            // ===== Management Server - Only specific writable fields =====
+            '/ManagementServer\.PeriodicInformInterval$/i',
+            '/ManagementServer\.PeriodicInformEnable$/i',
+            '/ManagementServer\.ConnectionRequestUsername$/i',
+            '/ManagementServer\.ConnectionRequestPassword$/i',
+
+            // ===== DHCP Server settings =====
+            '/LANHostConfigManagement\.DHCPServerConfigurable$/i',
+            '/LANHostConfigManagement\.DHCPServerEnable$/i',
+            '/LANHostConfigManagement\.MinAddress$/i',
+            '/LANHostConfigManagement\.MaxAddress$/i',
+            '/LANHostConfigManagement\.ReservedAddresses$/i',
+            '/LANHostConfigManagement\.DHCPLeaseTime$/i',
+
+            // ===== LAN IP Configuration =====
+            '/LANHostConfigManagement\.IPInterface\.\d+\.IPInterfaceIPAddress$/i',
+            '/LANHostConfigManagement\.IPInterface\.\d+\.IPInterfaceSubnetMask$/i',
+
+            // ===== Device passwords (Calix specific) =====
+            '/X_000631_WebPassword$/i',
+            '/UserInterface\.X_000631_WebPassword$/i',
+        ];
+
+        // Check if parameter matches any writable pattern
+        foreach ($writablePatterns as $pattern) {
+            if (preg_match($pattern, $paramName)) {
+                return true;
+            }
+        }
+
+        // Default: assume NOT writable for safety
+        // This is very conservative - only restore parameters we KNOW are writable
+        return false;
     }
 }

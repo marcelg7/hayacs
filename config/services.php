@@ -33,6 +33,10 @@ return [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
+        // Feedback system Slack integration
+        'enabled' => env('SLACK_FEEDBACK_ENABLED', false),
+        'webhook_url' => env('SLACK_FEEDBACK_WEBHOOK_URL'),
+        'signing_secret' => env('SLACK_FEEDBACK_SIGNING_SECRET'),
     ],
 
 ];

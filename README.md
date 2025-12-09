@@ -47,6 +47,9 @@ A complete TR-069/CWMP Auto Configuration Server (ACS) implementation built with
 - 🔎 **Smart Parameter Search** - Live search with 300ms debounce
   - Search both parameter names and values
   - Handles 5,000+ parameters instantly
+- 🔍 **Global Search** - Optimized cross-entity search (avg 69ms response)
+  - Search devices, tasks, subscribers, and parameters
+  - Smart query detection skips expensive searches for non-relevant terms
 - 📊 **CSV Export** - Memory-efficient streaming export
   - Export all or filtered parameters
   - Includes full metadata and timestamps

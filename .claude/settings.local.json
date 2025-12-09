@@ -30,7 +30,8 @@
       "Bash(xxd:*)",
       "Bash(sudo ls:*)",
       "Bash(pkill:*)",
-      "Bash(tshark:*)"
+      "Bash(tshark:*)",
+      "Bash(xargs basename:*)"
     ],
     "deny": [],
     "ask": []

@@ -290,6 +290,7 @@ class AnalyticsController extends Controller
             ->map(function ($item) {
                 return [
                     'product_class' => $item->product_class,
+                    'display_name' => Device::getDisplayNameForProductClass($item->product_class),
                     'count' => $item->count,
                 ];
             });

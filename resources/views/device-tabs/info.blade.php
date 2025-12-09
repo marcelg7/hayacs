@@ -18,8 +18,13 @@
                 <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors['text'] }} sm:mt-0 sm:col-span-2">{{ $device->oui ?? '-' }}</dd>
             </div>
             <div class="bg-white dark:bg-{{ $colors['card'] }} px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt class="text-sm font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }}">Product Class</dt>
-                <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors['text'] }} sm:mt-0 sm:col-span-2">{{ $device->product_class ?? '-' }}</dd>
+                <dt class="text-sm font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }}">Model</dt>
+                <dd class="mt-1 text-sm text-gray-900 dark:text-{{ $colors['text'] }} sm:mt-0 sm:col-span-2">
+                    {{ $device->display_name }}
+                    @if($device->display_name !== $device->product_class && $device->product_class)
+                        <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">({{ $device->product_class }})</span>
+                    @endif
+                </dd>
             </div>
             <div class="bg-gray-50 dark:bg-{{ $colors['bg'] }} px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt class="text-sm font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }}">Serial Number</dt>

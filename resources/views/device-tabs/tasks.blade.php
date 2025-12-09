@@ -5,7 +5,65 @@
     <div class="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-{{ $colors['border'] }}">
         <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors['text'] }}">Device Tasks</h3>
     </div>
-    <table class="min-w-full divide-y divide-gray-200 dark:divide-{{ $colors['border'] }}">
+
+    {{-- Mobile: Card layout --}}
+    <div class="sm:hidden divide-y divide-gray-200 dark:divide-{{ $colors['border'] }}">
+        @forelse($tasks as $task)
+        <div class="p-4 {{ ($task->task_type === 'ping_diagnostics' || $task->task_type === 'traceroute_diagnostics') && $task->result ? 'cursor-pointer' : '' }}"
+            @if(($task->task_type === 'ping_diagnostics' || $task->task_type === 'traceroute_diagnostics') && $task->result)
+            @click="expandedTask = expandedTask === {{ $task->id }} ? null : {{ $task->id }}"
+            @endif>
+            <div class="flex items-start justify-between">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-sm font-medium text-gray-900 dark:text-{{ $colors['text'] }}">
+                            {{ str_replace('_', ' ', ucwords($task->task_type, '_')) }}
+                        </span>
+                        @if($task->status === 'pending')
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Pending</span>
+                        @elseif($task->status === 'sent')
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Sent</span>
+                        @elseif($task->status === 'completed')
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Completed</span>
+                        @elseif($task->status === 'cancelled')
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">Cancelled</span>
+                        @elseif($task->status === 'failed')
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Failed</span>
+                        @else
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">{{ ucfirst($task->status) }}</span>
+                        @endif
+                    </div>
+                    @if($task->description)
+                        <p class="text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }} mt-1 line-clamp-2">{{ $task->description }}</p>
+                    @endif
+                    <div class="flex items-center gap-3 mt-2 text-xs text-gray-400 dark:text-gray-500">
+                        <span>#{{ $task->id }}</span>
+                        <span>{{ $task->created_at->diffForHumans() }}</span>
+                    </div>
+                    @if($task->status === 'failed' && $task->error)
+                        <p class="text-xs text-red-600 dark:text-red-400 mt-2 bg-red-50 dark:bg-red-900/20 p-2 rounded">{{ $task->error }}</p>
+                    @endif
+                </div>
+                @if(($task->task_type === 'ping_diagnostics' || $task->task_type === 'traceroute_diagnostics') && $task->result)
+                    <svg class="h-5 w-5 text-blue-500 ml-2 flex-shrink-0 transition-transform" :class="expandedTask === {{ $task->id }} ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                @endif
+            </div>
+            {{-- Expanded diagnostics results for mobile --}}
+            @if(($task->task_type === 'ping_diagnostics' || $task->task_type === 'traceroute_diagnostics') && $task->result)
+            <div x-show="expandedTask === {{ $task->id }}" x-cloak class="mt-3 pt-3 border-t border-gray-200 dark:border-{{ $colors['border'] }}">
+                @include('device-tabs.partials.task-diagnostics-results', ['task' => $task, 'colors' => $colors])
+            </div>
+            @endif
+        </div>
+        @empty
+        <div class="p-8 text-center text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}">No tasks found.</div>
+        @endforelse
+    </div>
+
+    {{-- Desktop: Table layout --}}
+    <table class="hidden sm:table min-w-full divide-y divide-gray-200 dark:divide-{{ $colors['border'] }}">
         <thead class="bg-gray-50 dark:bg-{{ $colors['bg'] }}">
             <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">ID</th>

@@ -169,18 +169,20 @@
 
             ksort($wlanConfigs);
 
-            // Organize into 2.4GHz, 5GHz, and 6GHz groups
+            // Organize into 2.4GHz and 5GHz groups
             // Nokia TR-098: instances 1-4 = 2.4GHz, 5-8 = 5GHz
-            // Calix GigaSpire TR-098: instances 1-8 = 2.4GHz, 9-16 = 5GHz, 17-24 = 6GHz
-            // Other Calix TR-098 (GigaCenter): instances 1-8 = 2.4GHz, 9-16 = 5GHz (no 6GHz)
+            // Calix GigaSpire TR-098: instances 1-8 = 5GHz, 9-16 = 2.4GHz (based on channel data)
+            //   Instance 17-24 are reserved/unused (Channel 0)
+            // Other Calix TR-098 (GigaCenter): instances 1-8 = 2.4GHz, 9-16 = 5GHz
             if ($isNokia) {
                 $wifi24Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] <= 4);
                 $wifi5Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] >= 5 && $config['instance'] <= 8);
             } elseif ($isGigaSpire) {
-                // GigaSpire has 24 WLAN instances: 1-8 (2.4GHz), 9-16 (5GHz), 17-24 (6GHz)
-                $wifi24Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] <= 8);
-                $wifi5Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] >= 9 && $config['instance'] <= 16);
-                $wifi6Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] >= 17 && $config['instance'] <= 24);
+                // GigaSpire has 24 WLAN instances: 1-8 = 5GHz (Channel 100), 9-16 = 2.4GHz (Channel 1)
+                // Instances 17-24 are reserved/unused (Channel 0), GigaSpire does NOT support 6GHz
+                $wifi5Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] <= 8);
+                $wifi24Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] >= 9 && $config['instance'] <= 16);
+                // Note: $wifi6Ghz stays empty - GigaSpire doesn't support 6GHz
             } else {
                 // Other Calix TR-098 devices (GigaCenter) - 16 instances, no 6GHz
                 $wifi24Ghz = array_filter($wlanConfigs, fn($config) => $config['instance'] <= 8);

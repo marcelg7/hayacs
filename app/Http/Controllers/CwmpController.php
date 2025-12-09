@@ -1000,17 +1000,45 @@ class CwmpController extends Controller
         // 1. A duplicate TransferComplete for an already-completed task
         // 2. A TransferComplete for a deleted task
         // 3. A stale TransferComplete from a previous ACS session
-        // In all cases, we MUST send TransferCompleteResponse to acknowledge and stop retries
+        // 4. A TransferComplete that arrived in a new session after the device disconnected mid-transfer
+        // Try to recover the task using the command_key which now contains the task ID
         if (!$task) {
             $deviceId = $this->getSessionDeviceId();
-            Log::info('TransferComplete received without matching sent task (orphan/duplicate)', [
-                'device_id' => $deviceId,
-                'command_key' => $commandKey,
-                'fault_code' => $parsed['fault_code'] ?? 0,
-                'fault_string' => $parsed['fault_string'] ?? '',
-            ]);
-            // Send proper TransferCompleteResponse to acknowledge and stop device retries
-            return $this->cwmpService->createTransferCompleteResponse();
+            $recoveredTask = null;
+
+            // Try to extract task ID from command_key (format: download_{taskId}_{timestamp} or upload_{taskId}_{timestamp})
+            if ($commandKey && preg_match('/^(download|upload)_(\d+)_\d+$/', $commandKey, $matches)) {
+                $taskId = (int) $matches[2];
+                $recoveredTask = Task::find($taskId);
+
+                // Verify this task belongs to the current device and is in a recoverable state
+                if ($recoveredTask) {
+                    $currentDevice = $this->getSessionDevice();
+                    if ($currentDevice && $recoveredTask->device_id === $currentDevice->id &&
+                        in_array($recoveredTask->status, ['failed', 'sent'])) {
+                        $task = $recoveredTask;
+                        Log::info('TransferComplete recovered orphaned task via command_key', [
+                            'device_id' => $deviceId,
+                            'task_id' => $taskId,
+                            'command_key' => $commandKey,
+                            'previous_status' => $recoveredTask->status,
+                        ]);
+                    } else {
+                        $recoveredTask = null; // Don't recover if device mismatch or wrong status
+                    }
+                }
+            }
+
+            if (!$task) {
+                Log::info('TransferComplete received without matching sent task (orphan/duplicate)', [
+                    'device_id' => $deviceId,
+                    'command_key' => $commandKey,
+                    'fault_code' => $parsed['fault_code'] ?? 0,
+                    'fault_string' => $parsed['fault_string'] ?? '',
+                ]);
+                // Send proper TransferCompleteResponse to acknowledge and stop device retries
+                return $this->cwmpService->createTransferCompleteResponse();
+            }
         }
 
         if ($task) {
@@ -1432,19 +1460,22 @@ class CwmpController extends Controller
                 $task->parameters['url'] ?? '',
                 $task->parameters['file_type'] ?? '1 Firmware Upgrade Image',
                 $task->parameters['username'] ?? '',
-                $task->parameters['password'] ?? ''
+                $task->parameters['password'] ?? '',
+                $task->id  // Include task ID in command_key for orphan recovery
             ),
             'upload' => $this->cwmpService->createUpload(
                 $task->parameters['url'] ?? '',
                 $task->parameters['file_type'] ?? '3 Vendor Log File',
                 $task->parameters['username'] ?? '',
-                $task->parameters['password'] ?? ''
+                $task->parameters['password'] ?? '',
+                $task->id  // Include task ID in command_key for orphan recovery
             ),
             'config_restore' => $this->cwmpService->createDownload(
                 $task->parameters['url'] ?? '',
                 $task->parameters['file_type'] ?? '3 Vendor Configuration File',
                 $task->parameters['username'] ?? '',
-                $task->parameters['password'] ?? ''
+                $task->parameters['password'] ?? '',
+                $task->id  // Include task ID in command_key for orphan recovery
             ),
             'ping_diagnostics' => $this->generatePingDiagnostics($task),
             'traceroute_diagnostics' => $this->generateTracerouteDiagnostics($task),

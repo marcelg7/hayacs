@@ -52,6 +52,11 @@ class Device extends Model
     ];
 
     /**
+     * Appended attributes for JSON serialization
+     */
+    protected $appends = ['display_name'];
+
+    /**
      * Get all parameters for this device
      */
     public function parameters(): HasMany
@@ -640,5 +645,83 @@ class Device extends Model
             return 'SmartRG';
         }
         return $this->manufacturer ?? 'Unknown';
+    }
+
+    /**
+     * Product class display name mappings
+     * Maps device-reported product_class to user-friendly display names
+     */
+    public const PRODUCT_CLASS_DISPLAY_NAMES = [
+        // Calix mappings
+        'ENT' => '844E',           // Calix 844E-1 reports as "ENT"
+        'ONT' => '854G',           // Calix 854G-1 reports as "ONT"
+        'GigaSpire' => 'GigaSpire',
+        '804Mesh' => '804Mesh',
+        // Add more as discovered...
+    ];
+
+    /**
+     * Static helper to translate product class to display name
+     * Used for filter dropdowns where we don't have a model instance
+     */
+    public static function getDisplayNameForProductClass(?string $productClass): string
+    {
+        if (empty($productClass)) {
+            return 'Unknown';
+        }
+
+        return self::PRODUCT_CLASS_DISPLAY_NAMES[$productClass] ?? $productClass;
+    }
+
+    /**
+     * Get all product_class values that match a display name search term
+     * Used to enable searching by friendly name (e.g., "844E") even when
+     * the database stores the device-reported name (e.g., "ENT")
+     *
+     * @param string $searchTerm The user's search term
+     * @return array Array of product_class values that match
+     */
+    public static function getProductClassesMatchingDisplayName(string $searchTerm): array
+    {
+        $matches = [];
+        $searchLower = strtolower($searchTerm);
+
+        foreach (self::PRODUCT_CLASS_DISPLAY_NAMES as $productClass => $displayName) {
+            if (stripos($displayName, $searchTerm) !== false) {
+                $matches[] = $productClass;
+            }
+        }
+
+        return $matches;
+    }
+
+    /**
+     * Get the display name for the device type
+     * Maps cryptic product_class values (like "ENT") to user-friendly names (like "844E")
+     */
+    public function getDisplayName(): string
+    {
+        $productClass = $this->product_class ?? '';
+
+        // Check for explicit mapping first
+        if (isset(self::PRODUCT_CLASS_DISPLAY_NAMES[$productClass])) {
+            return self::PRODUCT_CLASS_DISPLAY_NAMES[$productClass];
+        }
+
+        // If model_name is available and not empty, use it
+        if (!empty($this->model_name)) {
+            return $this->model_name;
+        }
+
+        // Fallback to product_class
+        return $productClass ?: 'Unknown';
+    }
+
+    /**
+     * Accessor for display_name attribute
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->getDisplayName();
     }
 }

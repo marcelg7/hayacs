@@ -251,7 +251,7 @@
                                             <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{{ $device->serial_number }}</span>
                                         </td>
                                         <td class="px-4 py-3 text-sm">{{ $device->manufacturer }}</td>
-                                        <td class="px-4 py-3 text-sm">{{ $device->product_class }}</td>
+                                        <td class="px-4 py-3 text-sm">{{ $device->display_name }}</td>
                                         <td class="px-4 py-3 text-sm">
                                             @if($device->online)
                                                 <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">

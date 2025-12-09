@@ -5,6 +5,12 @@
 
     RewriteEngine On
 
+    # Set environment variables for IP restriction bypass BEFORE any redirects
+    # These use THE_REQUEST which contains the original request line
+    # Must use RewriteRule with [E=] flag since SetEnvIf doesn't support THE_REQUEST in .htaccess
+    RewriteCond %{THE_REQUEST} \s/webhooks/slack [NC]
+    RewriteRule ^ - [E=allow_slack:1]
+
     # Redirect HTTP to HTTPS for all requests EXCEPT device endpoints
     # Use THE_REQUEST to check original request (not rewritten URI) for dynamic routes
     # Use REQUEST_URI for static file paths (firmware, speedtest)
@@ -40,30 +46,11 @@
     RewriteRule ^ index.php [L]
 </IfModule>
 
-# IP Restriction - Allow only specific IPs except for device endpoints
-<IfModule mod_authz_core.c>
-    # Allow CWMP endpoint from any IP (TR-069 device communication)
-    SetEnvIf Request_URI "^/cwmp" allow_cwmp=1
-    # Allow device-upload endpoint from any IP (TR-069 Upload RPC file reception)
-    SetEnvIf Request_URI "^/device-upload" allow_device_upload=1
-    # Allow device-config endpoint from any IP (TR-069 Download RPC config file serving)
-    SetEnvIf Request_URI "^/device-config" allow_device_config=1
-    # Allow firmware downloads from any IP (TR-069 Download RPC firmware serving)
-    SetEnvIf Request_URI "^/storage/firmware" allow_firmware=1
-
-    # Block all except allowed IPs (unless it's a device endpoint)
-    <RequireAll>
-        <RequireAny>
-            Require ip 163.182.0.0/16
-            Require ip 104.247.0.0/16
-            Require ip 45.59.0.0/16
-            Require ip 136.175.0.0/16
-            Require ip 206.130.0.0/16
-            Require ip 23.155.0.0/16
-            Require env allow_cwmp
-            Require env allow_device_upload
-            Require env allow_device_config
-            Require env allow_firmware
-        </RequireAny>
-    </RequireAll>
-</IfModule>
+# IP Restriction has been MOVED to Apache VirtualHost config
+# This allows proper path-based exceptions for:
+# - /cwmp (TR-069 device communication)
+# - /device-upload, /device-config (TR-069 file transfers)
+# - /storage/firmware (firmware downloads)
+# - /webhooks/slack (Slack interactive components)
+#
+# See /etc/httpd/conf.d/hayacs-le-ssl.conf for the IP restrictions

@@ -60,6 +60,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'cwmp',
             'device-upload/*', // TR-069 Upload RPC file reception
+            'webhooks/slack/*', // Slack interactive components webhook
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

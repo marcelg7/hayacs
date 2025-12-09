@@ -202,7 +202,7 @@
                                             {{ $device->serial_number }}
                                         </a>
                                     </td>
-                                    <td class="px-6 py-3 text-sm text-gray-600 dark:text-gray-300">{{ $device->product_class }}</td>
+                                    <td class="px-6 py-3 text-sm text-gray-600 dark:text-gray-300">{{ $device->display_name }}</td>
                                     <td class="px-6 py-3 text-sm text-gray-600 dark:text-gray-300">{{ $device->software_version }}</td>
                                     <td class="px-6 py-3">
                                         @if($device->online)

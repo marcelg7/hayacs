@@ -613,7 +613,7 @@ class CwmpService
     /**
      * Create Download RPC (for firmware upgrades, config files, etc.)
      */
-    public function createDownload(string $url, string $fileType = '1 Firmware Upgrade Image', string $username = '', string $password = ''): string
+    public function createDownload(string $url, string $fileType = '1 Firmware Upgrade Image', string $username = '', string $password = '', ?int $taskId = null): string
     {
         $dom = new DOMDocument('1.0', 'UTF-8');
         $dom->formatOutput = true;
@@ -626,7 +626,9 @@ class CwmpService
         $download = $dom->createElement('cwmp:Download');
         $body->appendChild($download);
 
-        $commandKey = $dom->createElement('CommandKey', 'download_' . time());
+        // Include task ID in command_key for correlation when TransferComplete arrives in a new session
+        $commandKeyValue = $taskId ? "download_{$taskId}_" . time() : 'download_' . time();
+        $commandKey = $dom->createElement('CommandKey', $commandKeyValue);
         $download->appendChild($commandKey);
 
         $fileTypeEl = $dom->createElement('FileType', htmlspecialchars($fileType));
@@ -662,7 +664,7 @@ class CwmpService
     /**
      * Create Upload RPC (for log files, config backups, etc.)
      */
-    public function createUpload(string $url, string $fileType = '3 Vendor Log File', string $username = '', string $password = ''): string
+    public function createUpload(string $url, string $fileType = '3 Vendor Log File', string $username = '', string $password = '', ?int $taskId = null): string
     {
         $dom = new DOMDocument('1.0', 'UTF-8');
         $dom->formatOutput = true;
@@ -675,7 +677,9 @@ class CwmpService
         $upload = $dom->createElement('cwmp:Upload');
         $body->appendChild($upload);
 
-        $commandKey = $dom->createElement('CommandKey', 'upload_' . time());
+        // Include task ID in command_key for correlation when TransferComplete arrives in a new session
+        $commandKeyValue = $taskId ? "upload_{$taskId}_" . time() : 'upload_' . time();
+        $commandKey = $dom->createElement('CommandKey', $commandKeyValue);
         $upload->appendChild($commandKey);
 
         $fileTypeEl = $dom->createElement('FileType', htmlspecialchars($fileType));

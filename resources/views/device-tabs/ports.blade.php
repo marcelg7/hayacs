@@ -168,27 +168,30 @@
     }
 }">
     <div class="bg-white dark:bg-{{ $colors['card'] }} shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6 bg-gray-50 dark:bg-{{ $colors['bg'] }} flex justify-between items-center">
-            <div>
-                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors['text'] }}">Port Forwarding (NAT)</h3>
-                <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}">Manage port forwarding rules for this device</p>
-            </div>
-            <div class="flex gap-2">
-                <button @click="refreshPortMappings()" :disabled="loading"
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-{{ $colors['border'] }} rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-{{ $colors['text'] }} bg-white dark:bg-{{ $colors['card'] }} hover:bg-gray-50 dark:hover:bg-{{ $colors['bg'] }} disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Refresh port mappings from device">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                    Refresh
-                </button>
-                <button @click="showAddForm = !showAddForm" :disabled="loading"
-                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors['btn-success'] }}-600 hover:bg-{{ $colors['btn-success'] }}-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    <span x-text="showAddForm ? 'Cancel' : 'Add Port Forward'"></span>
-                </button>
+        <div class="px-4 py-5 sm:px-6 bg-gray-50 dark:bg-{{ $colors['bg'] }}">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors['text'] }}">Port Forwarding (NAT)</h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}">Manage port forwarding rules for this device</p>
+                </div>
+                <div class="flex gap-2">
+                    <button @click="refreshPortMappings()" :disabled="loading"
+                            class="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-{{ $colors['border'] }} rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-{{ $colors['text'] }} bg-white dark:bg-{{ $colors['card'] }} hover:bg-gray-50 dark:hover:bg-{{ $colors['bg'] }} disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+                            title="Refresh port mappings from device">
+                        <svg class="w-4 h-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        <span class="hidden sm:inline">Refresh</span>
+                    </button>
+                    <button @click="showAddForm = !showAddForm" :disabled="loading"
+                            class="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors['btn-success'] }}-600 hover:bg-{{ $colors['btn-success'] }}-700 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation">
+                        <svg class="w-4 h-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        <span class="hidden sm:inline" x-text="showAddForm ? 'Cancel' : 'Add Port Forward'"></span>
+                        <span class="sm:hidden" x-text="showAddForm ? 'Cancel' : 'Add'"></span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -285,37 +288,70 @@
             </div>
 
             <!-- Port Mappings List -->
-            <div x-show="!loading && portMappings.length > 0" class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-{{ $colors['border'] }}">
-                    <thead class="bg-gray-50 dark:bg-{{ $colors['bg'] }}">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Description</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Protocol</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">External Port</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Internal Port</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Internal IP</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white dark:bg-{{ $colors['card'] }} divide-y divide-gray-200 dark:divide-{{ $colors['border'] }}">
-                        <template x-for="mapping in portMappings" :key="mapping.instance">
-                            <tr class="hover:bg-gray-50 dark:hover:bg-{{ $colors['bg'] }}">
-                                {{-- TR-181 uses Description/Protocol, TR-098 uses PortMappingDescription/PortMappingProtocol --}}
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-{{ $colors['text'] }}" x-text="mapping.Description || mapping.PortMappingDescription || 'N/A'"></td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}" x-text="mapping.Protocol || mapping.PortMappingProtocol || 'N/A'"></td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}" x-text="mapping.ExternalPort || 'N/A'"></td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}" x-text="mapping.InternalPort || 'N/A'"></td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}" x-text="mapping.InternalClient || 'N/A'"></td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <button @click="deletePortMapping(mapping.instance)"
-                                            class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-                                        Delete
-                                    </button>
-                                </td>
+            <div x-show="!loading && portMappings.length > 0">
+                {{-- Mobile: Card layout --}}
+                <div class="sm:hidden divide-y divide-gray-200 dark:divide-{{ $colors['border'] }}">
+                    <template x-for="mapping in portMappings" :key="mapping.instance">
+                        <div class="p-4">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-{{ $colors['text'] }}" x-text="mapping.Description || mapping.PortMappingDescription || 'Unnamed'"></p>
+                                    <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200" x-text="mapping.Protocol || mapping.PortMappingProtocol || 'N/A'"></span>
+                                        <span class="text-gray-500 dark:text-{{ $colors['text-muted'] }}">
+                                            <span x-text="mapping.ExternalPort || '-'"></span>
+                                            <svg class="inline-block w-3 h-3 mx-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                            </svg>
+                                            <span x-text="mapping.InternalPort || '-'"></span>
+                                        </span>
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500 font-mono" x-text="mapping.InternalClient || 'N/A'"></p>
+                                </div>
+                                <button @click="deletePortMapping(mapping.instance)"
+                                        class="ml-4 p-2 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 touch-manipulation">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                {{-- Desktop: Table layout --}}
+                <div class="hidden sm:block overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-{{ $colors['border'] }}">
+                        <thead class="bg-gray-50 dark:bg-{{ $colors['bg'] }}">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Description</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Protocol</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">External Port</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Internal Port</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Internal IP</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Actions</th>
                             </tr>
-                        </template>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="bg-white dark:bg-{{ $colors['card'] }} divide-y divide-gray-200 dark:divide-{{ $colors['border'] }}">
+                            <template x-for="mapping in portMappings" :key="mapping.instance">
+                                <tr class="hover:bg-gray-50 dark:hover:bg-{{ $colors['bg'] }}">
+                                    {{-- TR-181 uses Description/Protocol, TR-098 uses PortMappingDescription/PortMappingProtocol --}}
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-{{ $colors['text'] }}" x-text="mapping.Description || mapping.PortMappingDescription || 'N/A'"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}" x-text="mapping.Protocol || mapping.PortMappingProtocol || 'N/A'"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}" x-text="mapping.ExternalPort || 'N/A'"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}" x-text="mapping.InternalPort || 'N/A'"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}" x-text="mapping.InternalClient || 'N/A'"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button @click="deletePortMapping(mapping.instance)"
+                                                class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

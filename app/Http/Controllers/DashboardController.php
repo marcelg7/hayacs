@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Device;
 use App\Models\Task;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -58,14 +59,24 @@ class DashboardController extends Controller
 
         // Apply search filter
         if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
+            // Check if search matches any display name mappings (e.g., "844E" -> "ENT")
+            $matchingProductClasses = Device::getProductClassesMatchingDisplayName($search);
+
+            $query->where(function ($q) use ($search, $matchingProductClasses) {
                 $q->where('id', 'like', "%{$search}%")
                     ->orWhere('serial_number', 'like', "%{$search}%")
                     ->orWhere('ip_address', 'like', "%{$search}%")
+                    ->orWhere('product_class', 'like', "%{$search}%")
+                    ->orWhere('model_name', 'like', "%{$search}%")
                     ->orWhereHas('subscriber', function ($sq) use ($search) {
                         $sq->where('name', 'like', "%{$search}%")
                             ->orWhere('account', 'like', "%{$search}%");
                     });
+
+                // Also search by mapped product_class values (e.g., search "844E" finds "ENT")
+                if (!empty($matchingProductClasses)) {
+                    $q->orWhereIn('product_class', $matchingProductClasses);
+                }
             });
         }
 
@@ -124,13 +135,33 @@ class DashboardController extends Controller
             ->orderBy('model_name')
             ->pluck('model_name');
 
-        $productClasses = Device::select('product_class')
+        // Get product classes with their best display names
+        // For each product_class, we get the model_name if available (for SmartRG devices)
+        $productClassData = Device::select('product_class', 'model_name')
             ->distinct()
             ->whereNotNull('product_class')
             ->orderBy('product_class')
-            ->pluck('product_class');
+            ->get();
 
-        return view('dashboard.devices', compact('devices', 'manufacturers', 'models', 'productClasses'));
+        // Build a map of product_class => best_display_name
+        $productClassDisplayMap = [];
+        foreach ($productClassData as $row) {
+            $pc = $row->product_class;
+            if (!isset($productClassDisplayMap[$pc])) {
+                // Use explicit mapping first, then model_name, then product_class
+                if (isset(Device::PRODUCT_CLASS_DISPLAY_NAMES[$pc])) {
+                    $productClassDisplayMap[$pc] = Device::PRODUCT_CLASS_DISPLAY_NAMES[$pc];
+                } elseif (!empty($row->model_name)) {
+                    $productClassDisplayMap[$pc] = $row->model_name;
+                } else {
+                    $productClassDisplayMap[$pc] = $pc;
+                }
+            }
+        }
+        // Sort by display name for better UX
+        asort($productClassDisplayMap);
+
+        return view('dashboard.devices', compact('devices', 'manufacturers', 'models', 'productClassDisplayMap'));
     }
 
     /**
@@ -170,14 +201,24 @@ class DashboardController extends Controller
 
         // Apply the same filters as the devices list
         if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
+            // Check if search matches any display name mappings (e.g., "844E" -> "ENT")
+            $matchingProductClasses = Device::getProductClassesMatchingDisplayName($search);
+
+            $query->where(function ($q) use ($search, $matchingProductClasses) {
                 $q->where('id', 'like', "%{$search}%")
                     ->orWhere('serial_number', 'like', "%{$search}%")
                     ->orWhere('ip_address', 'like', "%{$search}%")
+                    ->orWhere('product_class', 'like', "%{$search}%")
+                    ->orWhere('model_name', 'like', "%{$search}%")
                     ->orWhereHas('subscriber', function ($sq) use ($search) {
                         $sq->where('name', 'like', "%{$search}%")
                             ->orWhere('account', 'like', "%{$search}%");
                     });
+
+                // Also search by mapped product_class values (e.g., search "844E" finds "ENT")
+                if (!empty($matchingProductClasses)) {
+                    $q->orWhereIn('product_class', $matchingProductClasses);
+                }
             });
         }
 
@@ -268,5 +309,58 @@ class DashboardController extends Controller
         $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
 
         return $response;
+    }
+
+    /**
+     * Quick device search - searches by partial serial number
+     * If single match found, redirects directly to device WiFi tab
+     * If multiple matches, shows search results
+     */
+    public function quickSearch(Request $request): View|RedirectResponse
+    {
+        $query = trim($request->get('q', ''));
+
+        if (strlen($query) < 3) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Please enter at least 3 characters to search.');
+        }
+
+        // Search by serial number (case-insensitive partial match)
+        $devices = Device::with('subscriber')
+            ->where('serial_number', 'LIKE', "%{$query}%")
+            ->orderByDesc('last_inform')
+            ->limit(50)
+            ->get();
+
+        // If exactly one match, redirect directly to WiFi tab
+        if ($devices->count() === 1) {
+            return redirect()->route('device.show', [
+                'id' => $devices->first()->id,
+                'tab' => 'wifi'
+            ]);
+        }
+
+        // If no matches by serial, also try device ID
+        if ($devices->isEmpty()) {
+            $devices = Device::with('subscriber')
+                ->where('id', 'LIKE', "%{$query}%")
+                ->orderByDesc('last_inform')
+                ->limit(50)
+                ->get();
+
+            // If exactly one match by ID, redirect to WiFi tab
+            if ($devices->count() === 1) {
+                return redirect()->route('device.show', [
+                    'id' => $devices->first()->id,
+                    'tab' => 'wifi'
+                ]);
+            }
+        }
+
+        // Multiple matches or no matches - show results page
+        return view('dashboard.quick-search-results', [
+            'devices' => $devices,
+            'query' => $query,
+        ]);
     }
 }

@@ -1,9 +1,89 @@
-@php
-    $theme = session('theme', 'standard');
-    $themeConfig = config("themes.{$theme}", config('themes.standard'));
-    $colors = $themeConfig['colors'] ?? config('themes.standard.colors');
-@endphp
-<nav x-data="{ open: false }" class="bg-white dark:bg-{{ $colors['card'] ?? 'gray-800' }} border-b border-{{ $colors['border'] ?? 'gray-200' }} shadow-lg">
+{{-- Admin Server Status Bar (Mobile-friendly) --}}
+@auth
+@if(Auth::user()->isAdmin())
+<div x-data="serverStatus()" x-init="fetchStatus(); setInterval(() => fetchStatus(), 30000)"
+     class="bg-gray-900 text-gray-300 text-xs py-1.5 px-2 sm:px-4">
+    {{-- Mobile: Compact single row with key stats --}}
+    <div class="flex items-center justify-between sm:hidden">
+        <div class="flex items-center space-x-3">
+            <span class="flex items-center">
+                <span class="text-gray-500">L:</span>
+                <span x-text="load1" :class="load1 > 10 ? 'text-red-400' : load1 > 5 ? 'text-yellow-400' : 'text-green-400'" class="ml-1 font-mono"></span>
+            </span>
+            <span class="flex items-center">
+                <span class="text-gray-500">T:</span>
+                <span x-text="tasksPending" class="ml-1 font-mono text-yellow-400"></span>
+            </span>
+        </div>
+        <span x-text="uptime" class="font-mono text-gray-400 text-xs"></span>
+    </div>
+    {{-- Desktop: Full status bar --}}
+    <div class="hidden sm:flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <span class="flex items-center">
+                <svg class="w-3 h-3 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"></path>
+                </svg>
+                <span class="text-gray-500">Load:</span>
+                <span x-text="load1" :class="load1 > 10 ? 'text-red-400' : load1 > 5 ? 'text-yellow-400' : 'text-green-400'" class="ml-1 font-mono"></span>
+                <span class="text-gray-600">/</span>
+                <span x-text="load5" class="font-mono text-gray-400"></span>
+                <span class="text-gray-600">/</span>
+                <span x-text="load15" class="font-mono text-gray-400"></span>
+            </span>
+            <span class="text-gray-600">|</span>
+            <span class="flex items-center">
+                <svg class="w-3 h-3 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="text-gray-500">Uptime:</span>
+                <span x-text="uptime" class="ml-1 font-mono text-gray-300"></span>
+            </span>
+            <span class="text-gray-600">|</span>
+            <span class="flex items-center">
+                <svg class="w-3 h-3 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+                <span class="text-gray-500">Tasks:</span>
+                <span x-text="tasksPending" class="ml-1 font-mono text-yellow-400"></span>
+                <span class="text-gray-500 ml-1">pending</span>
+            </span>
+        </div>
+        <div class="flex items-center space-x-2 text-gray-500">
+            <span x-text="lastUpdate" class="text-xs"></span>
+        </div>
+    </div>
+</div>
+<script>
+function serverStatus() {
+    return {
+        load1: '-',
+        load5: '-',
+        load15: '-',
+        uptime: '-',
+        tasksPending: '-',
+        lastUpdate: '',
+        async fetchStatus() {
+            try {
+                const response = await fetch('/server-status');
+                const data = await response.json();
+                this.load1 = data.load1;
+                this.load5 = data.load5;
+                this.load15 = data.load15;
+                this.uptime = data.uptime;
+                this.tasksPending = data.tasks_pending;
+                this.lastUpdate = new Date().toLocaleTimeString();
+            } catch (e) {
+                console.error('Failed to fetch server status', e);
+            }
+        }
+    }
+}
+</script>
+@endif
+@endauth
+
+<nav x-data="{ open: false }" class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 shadow-lg">
     <!-- Primary Navigation Menu -->
     <div class="mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -12,7 +92,7 @@
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}" class="flex items-center space-x-3">
                         <img src="{{ asset('images/hay-logo.png') }}" alt="Hay Communications" class="h-12 w-auto">
-                        <span class="text-xl font-bold text-{{ $colors['primary'] ?? 'indigo' }}-600 dark:text-{{ $colors['primary'] ?? 'indigo' }}-400">Hay ACS</span>
+                        <span class="text-xl font-bold text-indigo-600 dark:text-indigo-400">Hay ACS</span>
                     </a>
                 </div>
 
@@ -96,7 +176,7 @@
 
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-{{ $colors['text-muted'] ?? 'gray-500' }} dark:text-{{ $colors['text-muted'] ?? 'gray-400' }} bg-white dark:bg-{{ $colors['card'] ?? 'gray-800' }} hover:text-{{ $colors['text'] ?? 'gray-700' }} dark:hover:text-{{ $colors['text'] ?? 'gray-300' }} focus:outline-none transition ease-in-out duration-150">
+                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-slate-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
                             <div>{{ Auth::user()->name }}</div>
 
                             <div class="ms-1">
@@ -110,6 +190,10 @@
                     <x-slot name="content">
                         <x-dropdown-link :href="route('profile.edit')">
                             {{ __('Profile') }}
+                        </x-dropdown-link>
+
+                        <x-dropdown-link :href="route('feedback.index')">
+                            {{ __('Feedback') }}
                         </x-dropdown-link>
 
                         <!-- Authentication -->
@@ -128,7 +212,7 @@
 
             <!-- Hamburger -->
             <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-{{ $colors['text-muted'] ?? 'gray-400' }} dark:text-{{ $colors['text-muted'] ?? 'gray-500' }} hover:text-{{ $colors['text'] ?? 'gray-500' }} dark:hover:text-{{ $colors['text'] ?? 'gray-400' }} hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-{{ $colors['text'] ?? 'gray-500' }} dark:focus:text-{{ $colors['text'] ?? 'gray-400' }} transition duration-150 ease-in-out">
+                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-700 focus:text-gray-500 dark:focus:text-gray-400 transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -179,15 +263,19 @@
         </div>
 
         <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-{{ $colors['border'] ?? 'gray-200' }} dark:border-{{ $colors['border'] ?? 'gray-600' }}">
+        <div class="pt-4 pb-1 border-t border-gray-200 dark:border-slate-700">
             <div class="px-4">
-                <div class="font-medium text-base text-{{ $colors['text'] ?? 'gray-800' }} dark:text-{{ $colors['text'] ?? 'gray-200' }}">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-{{ $colors['text-muted'] ?? 'gray-500' }}">{{ Auth::user()->email }}</div>
+                <div class="font-medium text-base text-gray-800 dark:text-gray-200">{{ Auth::user()->name }}</div>
+                <div class="font-medium text-sm text-gray-500 dark:text-gray-400">{{ Auth::user()->email }}</div>
             </div>
 
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile.edit')">
                     {{ __('Profile') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('feedback.index')">
+                    {{ __('Feedback') }}
                 </x-responsive-nav-link>
 
                 <!-- Authentication -->

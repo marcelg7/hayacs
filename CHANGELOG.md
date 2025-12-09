@@ -6,6 +6,78 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Production Cutover - December 9, 2025
+
+#### Device Migration Status
+- **Total Devices Connected**: 1,364 devices (up from 9 during testing)
+- **Online Devices**: 1,262 (92.5% online rate)
+- **Calix Devices**: 872 (64%)
+- **Nokia/Beacon G6**: 379 (28%)
+- **SmartRG/Sagemcom**: 166 (12%)
+
+#### Device Breakdown by Product Class
+| Product Class | Count | Notes |
+|---------------|-------|-------|
+| Beacon G6 | 379 | Nokia TR-098 routers |
+| GigaSpire | 350 | Calix TR-181 routers |
+| ENT (844E) | 318 | Calix TR-181 ONTs |
+| GigaMesh | 96 | Calix TR-181 mesh nodes |
+| 963168MBV_17AZZ | 72 | Sagemcom DSL modems |
+| 963167GWV_004R | 48 | Sagemcom DSL modems |
+| 804Mesh | 47 | Calix TR-181 access points |
+| 963168_OT142C_B | 46 | Sagemcom DSL modems |
+| Beacon 3.1 | 3 | Nokia access points |
+| ONT | 3 | Calix ONTs |
+| XS-2426X-A | 1 | CIG managed switch |
+| Beacon 2 | 1 | Nokia access point |
+
+### Added - December 9, 2025
+
+#### User Feedback System
+- **Feedback Submission**: Users can submit feature requests, bug reports, and suggestions
+- **Upvoting**: Community upvoting for feature prioritization
+- **Comments**: Threaded discussion on feedback items
+- **Slack Integration**: Automatic notifications to Slack channel
+- **Admin Dashboard**: Review and manage feedback submissions
+- **Status Tracking**: Open, In Progress, Completed, Declined states
+
+#### Quick Search Enhancement
+- **Dashboard Quick Search**: Global device search from dashboard
+- **Serial Number Search**: Fast lookup by partial serial number
+- **MAC Address Search**: Find devices by MAC address
+- **Subscriber Search**: Link devices to subscriber records
+
+### Added - December 8, 2025
+
+#### Mobile GUI Improvements
+- **Immediate Button Feedback**: Get Everything, Refresh, and Speed Test buttons now show instant visual feedback
+  - Spinner animation on click/tap
+  - Button text changes to "Working..." / "..."
+  - Disabled state prevents double-clicks
+  - Opacity change indicates processing
+- **Task Manager Polling Fix**: `startPolling()` now calls `fetchTasks()` immediately instead of waiting for first interval
+- **Touch-Friendly Buttons**: Minimum 44px touch targets for mobile OSP technicians
+
+### Performance - December 5, 2025
+
+#### Global Search Optimization
+- **Composite Database Indexes**: Added indexes on tasks table for status/created_at and task_type/created_at
+  - Migration: `2025_12_05_102416_add_composite_index_for_task_search_performance.php`
+  - Allows `WHERE status = 'x' ORDER BY created_at DESC LIMIT N` to run entirely from index
+- **Smart Query Filtering**: Updated `looksLikeParameterSearch()` to skip expensive parameter searches for:
+  - IP addresses (e.g., `192.168`) - detected before dot check
+  - MAC addresses (e.g., `00:11:22`) - excluded from parameter search
+  - Serial number prefixes (CXNK, CP, SR, S5, 80AB, 0C7C)
+  - Only triggers parameter search for actual TR-069 parameter patterns
+- **MAC Address Search Disabled**: Global MAC address search disabled due to inherent slowness
+  - Required scanning 866k+ parameters with LIKE queries
+  - Users can still search via device parameters tab
+- **Results**: Average search response time reduced from 2000-8000ms to 69ms
+  - 14 of 15 test queries under 200ms
+  - IP searches: 2419ms → 43ms
+  - Serial number searches: 5658ms → 69ms
+  - MAC address searches: 8000ms → 26ms
+
 ### Added - November 25, 2025
 
 #### Authentication & Authorization System

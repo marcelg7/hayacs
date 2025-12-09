@@ -11,12 +11,20 @@ use App\Http\Controllers\PasswordChangeController;
 use App\Http\Controllers\Auth\PasswordSetupController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\SubscriberController;
 use App\Http\Controllers\DeviceUploadController;
 use App\Http\Controllers\DeviceGroupController;
 use App\Http\Controllers\GroupWorkflowController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\SlackWebhookController;
 use Illuminate\Support\Facades\Route;
+
+// Slack Webhook for Interactive Components (no auth, verified via signing secret)
+Route::post('/webhooks/slack/interaction', [SlackWebhookController::class, 'handleInteraction'])
+    ->name('slack.interaction')
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 
 // CWMP Endpoint for TR-069 Device Communication (Protected with HTTP Basic Auth)
 // This must be outside the auth middleware group - devices use HTTP Basic Auth
@@ -45,6 +53,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Main dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Quick device search (for mobile field techs - redirects to WiFi tab on single match)
+    Route::get('/quick-search', [DashboardController::class, 'quickSearch'])->name('quick-search');
 
     // Devices
     Route::get('/devices', [DashboardController::class, 'devices'])->name('devices.index');
@@ -97,6 +108,21 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/subscribers/{subscriber}', [SubscriberController::class, 'show'])->name('subscribers.show');
 
+    // Feedback System (accessible to all authenticated users)
+    Route::prefix('feedback')->name('feedback.')->group(function () {
+        Route::get('/', [FeedbackController::class, 'index'])->name('index');
+        Route::get('/create', [FeedbackController::class, 'create'])->name('create');
+        Route::post('/', [FeedbackController::class, 'store'])->name('store');
+        Route::get('/notifications', [FeedbackController::class, 'notifications'])->name('notifications');
+        Route::post('/notifications/mark-all-read', [FeedbackController::class, 'markAllNotificationsRead'])->name('notifications.mark-all-read');
+        Route::post('/notifications/{notification}/mark-read', [FeedbackController::class, 'markNotificationRead'])->name('notifications.mark-read');
+        Route::get('/{feedback}', [FeedbackController::class, 'show'])->name('show');
+        Route::patch('/{feedback}', [FeedbackController::class, 'update'])->name('update');
+        Route::delete('/{feedback}', [FeedbackController::class, 'destroy'])->name('destroy');
+        Route::post('/{feedback}/upvote', [FeedbackController::class, 'toggleUpvote'])->name('upvote');
+        Route::post('/{feedback}/comment', [FeedbackController::class, 'addComment'])->name('comment');
+    });
+
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -104,6 +130,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Admin-only routes
     Route::middleware(['admin'])->group(function () {
+        // Server Status API for admin status bar
+        Route::get('/server-status', [StatsController::class, 'serverStatus'])->name('server.status');
+
         // User Management
         Route::resource('users', UserController::class)->except(['show']);
         Route::post('/users/{user}/resend-welcome', [UserController::class, 'resendWelcome'])->name('users.resend-welcome');

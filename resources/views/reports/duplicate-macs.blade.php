@@ -69,7 +69,7 @@
                         </td>
                         <td class="px-4 py-3">
                             <div class="text-sm text-gray-900 dark:text-white">{{ $device->manufacturer }}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ $device->product_class }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ $device->display_name }}</div>
                         </td>
                         <td class="px-4 py-3">
                             @if($device->subscriber)

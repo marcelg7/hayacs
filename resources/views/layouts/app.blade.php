@@ -51,19 +51,92 @@
             }
 
             .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+            /* Dark mode form inputs */
+            .dark input[type="text"],
+            .dark input[type="email"],
+            .dark input[type="password"],
+            .dark input[type="number"],
+            .dark input[type="search"],
+            .dark input[type="tel"],
+            .dark input[type="url"],
+            .dark input[type="date"],
+            .dark input[type="datetime-local"],
+            .dark select,
+            .dark textarea {
+                background-color: #1e293b;
+                border-color: #475569;
+                color: #e2e8f0;
+            }
+
+            .dark input::placeholder,
+            .dark textarea::placeholder {
+                color: #64748b;
+            }
+
+            .dark input:focus,
+            .dark select:focus,
+            .dark textarea:focus {
+                border-color: #3b82f6;
+                ring-color: #3b82f6;
+            }
+
+            /* Dark mode scrollbar */
+            .dark ::-webkit-scrollbar {
+                width: 8px;
+                height: 8px;
+            }
+
+            .dark ::-webkit-scrollbar-track {
+                background: #1e293b;
+            }
+
+            .dark ::-webkit-scrollbar-thumb {
+                background: #475569;
+                border-radius: 4px;
+            }
+
+            .dark ::-webkit-scrollbar-thumb:hover {
+                background: #64748b;
+            }
         </style>
     </head>
-    <body class="font-sans antialiased bg-{{ $colors['bg'] }} dark:bg-{{ $colors['bg'] }}">
-        <!-- Global Loading Indicator -->
-        <div x-data="{ loading: false }"
-             x-on:start-loading.window="loading = true"
-             x-on:stop-loading.window="loading = false"
-             x-show="loading"
+    <body class="font-sans antialiased {{ $isDark ? 'bg-slate-900 text-slate-100' : 'bg-gray-50 text-gray-900' }}">
+        <!-- Global Loading Indicator (with delay to prevent flash) -->
+        <div x-data="{
+                loading: false,
+                showOverlay: false,
+                timeout: null,
+                startLoading() {
+                    this.loading = true;
+                    // Only show overlay after 300ms to prevent flash on quick requests
+                    this.timeout = setTimeout(() => {
+                        if (this.loading) this.showOverlay = true;
+                    }, 300);
+                },
+                stopLoading() {
+                    this.loading = false;
+                    this.showOverlay = false;
+                    if (this.timeout) {
+                        clearTimeout(this.timeout);
+                        this.timeout = null;
+                    }
+                }
+             }"
+             x-on:start-loading.window="startLoading()"
+             x-on:stop-loading.window="stopLoading()"
+             x-show="showOverlay"
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-100"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
              x-cloak
              class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-            <div class="bg-white dark:bg-{{ $colors['card'] }} rounded-lg p-8 flex flex-col items-center shadow-2xl">
+            <div class="bg-white dark:bg-slate-800 rounded-lg p-8 flex flex-col items-center shadow-2xl">
                 <div class="spinner mb-4"></div>
-                <p class="text-{{ $colors['text'] }} dark:text-{{ $colors['text'] }} font-medium">Processing...</p>
+                <p class="text-gray-900 dark:text-gray-100 font-medium">Processing...</p>
             </div>
         </div>
 
@@ -72,10 +145,10 @@
 
             <!-- Page Heading -->
             @isset($header)
-                <header class="bg-white dark:bg-{{ $colors['card'] }} shadow">
+                <header class="bg-white dark:bg-slate-800 shadow">
                     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                         <div class="flex items-center justify-between">
-                            <div class="text-{{ $colors['text'] }} dark:text-{{ $colors['text'] }}">
+                            <div class="text-gray-900 dark:text-gray-100">
                                 {{ $header }}
                             </div>
                         </div>
@@ -83,10 +156,10 @@
                 </header>
             @else
                 @hasSection('header')
-                    <header class="bg-white dark:bg-{{ $colors['card'] }} shadow">
+                    <header class="bg-white dark:bg-slate-800 shadow">
                         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                             <div class="flex items-center justify-between">
-                                <div class="text-{{ $colors['text'] }} dark:text-{{ $colors['text'] }}">
+                                <div class="text-gray-900 dark:text-gray-100">
                                     @yield('header')
                                 </div>
                             </div>

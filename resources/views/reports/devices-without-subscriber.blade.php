@@ -58,7 +58,7 @@
                         </td>
                         <td class="px-4 py-3">
                             <div class="text-sm text-gray-900 dark:text-white">{{ $device->manufacturer }}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ $device->product_class }} {{ $device->model_name }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ $device->display_name }}</div>
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 font-mono">
                             {{ $device->ip_address ?? '-' }}

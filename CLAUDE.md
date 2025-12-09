@@ -1,7 +1,7 @@
 # CLAUDE.md - Project Context & Current State
 
-**Last Updated**: December 3, 2025
-**Current Focus**: GigaSpire GS4220E TR-069 communication issues, Nokia Beacon G6 TR-181 migration
+**Last Updated**: December 9, 2025
+**Current Focus**: Production cutover in progress - 1,364 devices connected (92.5% online)
 
 ---
 
@@ -59,7 +59,7 @@ public function isGigaCenter(): bool
 
 ### What's Working ✅
 - **Core TR-069 CWMP**: Full implementation with TR-098 and TR-181 support
-- **Device Management**: 9 devices currently connected (12,798 planned)
+- **Device Management**: 1,364 devices connected (92.5% online), cutover in progress
 - **User Authentication**: Laravel Breeze with Blade templates and dark mode
 - **Role-Based Access Control**: Admin, User, and Support roles with middleware protection
 - **User Management**: Full CRUD interface for admins to manage users
@@ -67,6 +67,7 @@ public function isGigaCenter(): bool
 - **API Authentication**: Laravel Sanctum for SPA-style API authentication
 - **Smart Parameter Discovery**: "Get Everything" with optimized per-data-model approach (TR-098: single GPV, TR-181: chunked discovery)
 - **Parameter Search**: Live search with 300ms debounce across 5,000+ parameters
+- **Global Search**: Optimized to average 69ms response time (see December 5, 2025 updates)
 - **CSV Export**: Streaming export with search filter support
 - **Configuration Backup/Restore**: Full backup and restore functionality
 - **Port Forwarding (NAT)**: Comprehensive port mapping management
@@ -263,15 +264,15 @@ When we get connectivity working, these are the parameters NISC USS sets on init
 ## Device Types Supported
 
 ### Calix Devices (Fully Operational)
-- **844E-1 (ENT)**: 2,834 devices planned - TR-181
-- **GS4220E (GigaSpire u6)**: 2,143 devices planned - TR-181
-- **854G-1 (ONT)**: 512 devices planned - TR-181
-- **804Mesh (AP)**: 816 devices planned - TR-181
-- **GigaMesh u4m (AP)**: 741 devices planned - TR-181
-- **844G-1 (ONT)**: 227 devices planned - TR-181
-- **812G-1 (ONT)**: 1 device planned - TR-181
+- **844E-1 (ENT)**: 2,834 devices planned - **TR-098** (verified from production data)
+- **GS4220E (GigaSpire u6)**: 2,143 devices planned - **TR-098** (verified from production data)
+- **854G-1 (ONT)**: 512 devices planned - **TR-098** (verified from production data)
+- **804Mesh (AP)**: 816 devices planned - TR-098
+- **GigaMesh u4m (AP)**: 741 devices planned - TR-098
+- **844G-1 (ONT)**: 227 devices planned - **TR-098** (verified from production data)
+- **812G-1 (ONT)**: 1 device planned - TR-098
 - **Status**: All models tested and working
-- **Get Everything**: ~7-8 minutes discovery time on fiber
+- **Get Everything**: Uses GPV with partial path (InternetGatewayDevice.) for fast discovery
 
 ### Sagemcom Devices (Branded as SmartRG) (Fully Operational)
 - **SR505N**: 138 devices planned - TR-098 - Manufacturer: Sagemcom
@@ -1495,6 +1496,55 @@ Schedule::command('logs:manage --all --max-size=100 --retention=30')
 - Bulk firmware upgrades by device model
 - Scheduled parameter updates for device groups
 - Automated provisioning workflows
+
+---
+
+## Recent Updates (December 5, 2025)
+
+### Global Search Performance Optimization ✅
+
+**Problem Solved**: Global search was slow (2000-8000ms for some queries), making the UI feel unresponsive.
+
+**Final Results**:
+- **14 of 15 tests** passing under 200ms threshold
+- **Average response time: 69ms** (down from 2000-8000ms)
+- Only edge case over threshold: `X_000631` vendor parameter at 214ms
+
+**Optimizations Implemented**:
+
+1. **Composite Database Indexes** on tasks table:
+   - `tasks_status_created_at_index` (status, created_at)
+   - `tasks_task_type_created_at_index` (task_type, created_at)
+   - Allows `WHERE status = 'x' ORDER BY created_at DESC LIMIT N` to run from index only
+
+2. **Smart Query Filtering** in `looksLikeParameterSearch()`:
+   - IP addresses detected BEFORE dot check (e.g., `192.168` no longer triggers parameter search)
+   - MAC addresses excluded from parameter search
+   - Serial number prefixes (CXNK, CP, SR, S5, 80AB, 0C7C) excluded
+   - Vendor parameter patterns (`X_XXXXXX_`) detected for targeted search
+
+3. **MAC Address Search Disabled** in global search:
+   - Inherently slow (requires scanning 866k+ parameters)
+   - Users can still search MAC addresses via device parameters tab
+   - Queries like `00:11:22` now return instantly instead of scanning
+
+**Benchmark Results**:
+| Query Type | Before | After |
+|------------|--------|-------|
+| SSID | 134ms | 160ms |
+| 192.168 (IP) | 2419ms | 43ms |
+| CXNK (serial) | 5658ms | 69ms |
+| MAC addresses | 5000-8000ms | 18-26ms |
+| completed (task) | ~200ms | 36ms |
+
+**Files Modified**:
+- `app/Http/Controllers/Api/SearchController.php`:
+  - Updated `looksLikeParameterSearch()` method
+  - Updated `searchByMacAddress()` to exclude IP-like patterns
+  - Disabled MAC address search in global search
+
+**Migration Created**:
+- `database/migrations/2025_12_05_102416_add_composite_index_for_task_search_performance.php`
 
 ---
 

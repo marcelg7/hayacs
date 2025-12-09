@@ -59,6 +59,7 @@ class ImportSubscribersJob implements ShouldQueue
             'subscribers_created' => 0,
             'subscribers_updated' => 0,
             'equipment_created' => 0,
+            'equipment_updated' => 0,
             'devices_linked' => 0,
             'rows_processed' => 0,
         ];
@@ -183,6 +184,7 @@ class ImportSubscribersJob implements ShouldQueue
             $stats['subscribers_created'] += $rowStats['subscriber_created'];
             $stats['subscribers_updated'] += $rowStats['subscriber_updated'];
             $stats['equipment_created'] += $rowStats['equipment_created'];
+            $stats['equipment_updated'] += $rowStats['equipment_updated'];
             $stats['rows_processed']++;
             $rowsInBatch++;
 
@@ -218,6 +220,7 @@ class ImportSubscribersJob implements ShouldQueue
             'subscriber_created' => 0,
             'subscriber_updated' => 0,
             'equipment_created' => 0,
+            'equipment_updated' => 0,
         ];
 
         // Clean up data
@@ -260,22 +263,36 @@ class ImportSubscribersJob implements ShouldQueue
         $model = trim($data['Model'] ?? '');
         $serial = trim($data['Serial'] ?? '');
 
-        // Only create equipment record if there's equipment data
+        // Only create/update equipment record if there's equipment data
         if (!empty($equipItem) || !empty($serial)) {
-            SubscriberEquipment::create([
-                'subscriber_id' => $subscriber->id,
-                'customer' => $customer,
-                'account' => $account,
-                'agreement' => $agreement,
-                'equip_item' => $equipItem,
-                'equip_desc' => $equipDesc,
-                'start_date' => $startDate,
-                'manufacturer' => $manufacturer,
-                'model' => $model,
-                'serial' => $serial,
-            ]);
+            // Use serial as unique key if available, otherwise use equip_item
+            // This prevents duplicate equipment records on re-import
+            $uniqueKey = !empty($serial)
+                ? ['subscriber_id' => $subscriber->id, 'serial' => $serial]
+                : ['subscriber_id' => $subscriber->id, 'equip_item' => $equipItem];
 
-            $stats['equipment_created'] = 1;
+            $equipment = SubscriberEquipment::updateOrCreate(
+                $uniqueKey,
+                [
+                    'subscriber_id' => $subscriber->id,
+                    'customer' => $customer,
+                    'account' => $account,
+                    'agreement' => $agreement,
+                    'equip_item' => $equipItem,
+                    'equip_desc' => $equipDesc,
+                    'start_date' => $startDate,
+                    'manufacturer' => $manufacturer,
+                    'model' => $model,
+                    'serial' => $serial,
+                ]
+            );
+
+            // Track created vs updated
+            if ($equipment->wasRecentlyCreated) {
+                $stats['equipment_created'] = 1;
+            } else {
+                $stats['equipment_updated'] = 1;
+            }
         }
 
         return $stats;

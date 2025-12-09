@@ -75,7 +75,7 @@
                                 {{ $device->serial_number }}
                             </a>
                             <div class="text-xs text-gray-500 dark:text-gray-400">
-                                {{ $device->manufacturer }} {{ $device->product_class }}
+                                {{ $device->manufacturer }} {{ $device->display_name }}
                             </div>
                         </td>
                         <td class="px-4 py-3">

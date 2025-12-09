@@ -187,11 +187,10 @@
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Offline</span>
                     @endif
                 </div>
-                <div class="mt-2 flex items-center text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }} space-x-4">
-                    <span>Created: {{ $device->created_at ? $device->created_at->format('M j, Y') : 'Unknown' }}</span>
+                <div class="mt-2 flex flex-wrap items-center text-xs sm:text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }} gap-x-3 gap-y-1">
                     <span>Last Inform: {{ $device->last_inform ? $device->last_inform->diffForHumans() : 'Never' }}</span>
-                    <span>Last Refresh: {{ $device->last_refresh_at ? $device->last_refresh_at->diffForHumans() : 'Never' }}</span>
-                    <span>Last Backup: {{ $device->last_backup_at ? $device->last_backup_at->diffForHumans() : 'Never' }}</span>
+                    <span class="hidden sm:inline">Refresh: {{ $device->last_refresh_at ? $device->last_refresh_at->diffForHumans() : 'Never' }}</span>
+                    <span class="hidden sm:inline">Backup: {{ $device->last_backup_at ? $device->last_backup_at->diffForHumans() : 'Never' }}</span>
                 </div>
                 @if($device->subscriber)
                 <div class="mt-2 flex items-center text-sm">
@@ -261,6 +260,23 @@
                     })
                     ->first();
                 $configFile = $configFileParam ? $configFileParam->value : null;
+
+                // Get MAC Address (TR-098 or TR-181 - various paths by manufacturer)
+                $macAddressParam = $device->parameters()
+                    ->where(function($q) {
+                        // TR-098 WAN MAC (SmartRG, some Calix)
+                        $q->where('name', 'LIKE', 'InternetGatewayDevice.WANDevice.1.WANEthernetInterfaceConfig.MACAddress')
+                          // TR-098 LAN MAC
+                          ->orWhere('name', 'LIKE', 'InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.MACAddress')
+                          // TR-181 Ethernet Link MAC (Nokia Beacon G6)
+                          ->orWhere('name', 'LIKE', 'Device.Ethernet.Link.%.MACAddress')
+                          // TR-181 Device Info MAC
+                          ->orWhere('name', 'LIKE', 'Device.DeviceInfo.MACAddress')
+                          // TR-181 Ethernet Interface MAC
+                          ->orWhere('name', 'LIKE', 'Device.Ethernet.Interface.1.MACAddress');
+                    })
+                    ->first();
+                $macAddress = $macAddressParam ? strtoupper($macAddressParam->value) : null;
             @endphp
 
             {{-- Persistent Device Info Row --}}
@@ -270,7 +286,7 @@
                     <svg class="w-3.5 h-3.5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
                     </svg>
-                    <span class="font-medium">{{ $device->manufacturer }} {{ $device->model_name ?: $device->product_class }}</span>
+                    <span class="font-medium">{{ $device->manufacturer }} {{ $device->display_name }}</span>
                 </span>
 
                 {{-- Data Model --}}
@@ -290,6 +306,26 @@
                     <button @click="navigator.clipboard.writeText('{{ $externalIp }}'); copied = true; setTimeout(() => copied = false, 2000)"
                             class="ml-1 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                             title="Copy IP address">
+                        <svg x-show="!copied" class="w-3.5 h-3.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        <svg x-show="copied" x-cloak class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </button>
+                </span>
+                @endif
+
+                {{-- MAC Address with copy button --}}
+                @if($macAddress)
+                <span class="flex items-center" x-data="{ copied: false }">
+                    <svg class="w-3.5 h-3.5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                    </svg>
+                    <span class="font-mono" title="MAC Address">{{ $macAddress }}</span>
+                    <button @click="navigator.clipboard.writeText('{{ $macAddress }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                            class="ml-1 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                            title="Copy MAC address">
                         <svg x-show="!copied" class="w-3.5 h-3.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                         </svg>
@@ -357,8 +393,8 @@
             // Note: $externalIp already set above
         @endphp
 
-        {{-- Quick Action Buttons --}}
-        <div class="mt-4 flex flex-wrap gap-2">
+        {{-- Quick Action Buttons (Mobile-optimized with uniform sizing) --}}
+        <div class="mt-4 grid grid-cols-3 sm:flex sm:flex-wrap gap-2">
             {{-- Connect Now --}}
             <button @click="async () => {
                 try {
@@ -378,12 +414,13 @@
                 } catch (error) {
                     alert('Error: ' + error.message);
                 }
-            }" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700"
+            }" class="inline-flex items-center justify-center px-2 py-2.5 sm:px-4 sm:py-2 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700 touch-manipulation min-h-[44px]"
                title="Send connection request to device">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 sm:mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                 </svg>
-                Connect Now
+                <span class="hidden sm:inline">Connect Now</span>
+                <span class="sm:hidden ml-1 truncate">Connect</span>
             </button>
 
             {{-- Query --}}
@@ -410,9 +447,9 @@
                     taskLoading = false;
                     alert('Error querying device: ' + error.message);
                 }
-            }">
+            }" class="contents">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors['btn-secondary'] }}-600 hover:bg-{{ $colors['btn-secondary'] }}-700"
+                <button type="submit" class="inline-flex items-center justify-center px-2 py-2.5 sm:px-4 sm:py-2 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-{{ $colors['btn-secondary'] }}-600 hover:bg-{{ $colors['btn-secondary'] }}-700 touch-manipulation min-h-[44px]"
                         title="Query basic device information">
                     Query
                 </button>
@@ -443,9 +480,9 @@
                     taskLoading = false;
                     alert('Error initiating reboot: ' + error.message);
                 }
-            }">
+            }" class="contents">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700"
+                <button type="submit" class="inline-flex items-center justify-center px-2 py-2.5 sm:px-4 sm:py-2 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700 touch-manipulation min-h-[44px]"
                         title="Reboot device">
                     Reboot
                 </button>
@@ -476,11 +513,12 @@
                     taskLoading = false;
                     alert('Error initiating factory reset: ' + error.message);
                 }
-            }">
+            }" class="contents">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-danger"] }}-600 hover:bg-{{ $colors["btn-danger"] }}-700"
+                <button type="submit" class="inline-flex items-center justify-center px-2 py-2.5 sm:px-4 sm:py-2 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-{{ $colors["btn-danger"] }}-600 hover:bg-{{ $colors["btn-danger"] }}-700 touch-manipulation min-h-[44px]"
                         title="Factory Reset device and restore settings from config backup">
-                    Factory Reset
+                    <span class="sm:hidden truncate">Reset</span>
+                    <span class="hidden sm:inline">Factory Reset</span>
                 </button>
             </form>
 
@@ -512,11 +550,11 @@
                     taskLoading = false;
                     alert('Error initiating firmware upgrade: ' + error.message);
                 }
-            }">
+            }" class="contents">
                 @csrf
                 <button type="submit"
                         {{ !$hasActiveFirmware ? 'disabled' : '' }}
-                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700 {{ !$hasActiveFirmware ? 'opacity-50 cursor-not-allowed' : '' }}"
+                        class="inline-flex items-center justify-center px-2 py-2.5 sm:px-4 sm:py-2 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700 touch-manipulation min-h-[44px] {{ !$hasActiveFirmware ? 'opacity-50 cursor-not-allowed' : '' }}"
                         title="{{ $hasActiveFirmware ? 'Upgrade to latest firmware set for this device type' : 'No active firmware set for this device type' }}">
                     Upgrade
                 </button>
@@ -545,9 +583,9 @@
                     taskLoading = false;
                     alert('Error starting ping test: ' + error);
                 }
-            }">
+            }" class="contents">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-info"] }}-600 hover:bg-{{ $colors["btn-info"] }}-700"
+                <button type="submit" class="inline-flex items-center justify-center px-2 py-2.5 sm:px-4 sm:py-2 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-{{ $colors["btn-info"] }}-600 hover:bg-{{ $colors["btn-info"] }}-700 touch-manipulation min-h-[44px]"
                         title="Run ping test to 8.8.8.8">
                     Ping
                 </button>
@@ -580,7 +618,7 @@
                     taskLoading = false;
                     alert('Error starting trace route: ' + error);
                 }
-            }">
+            }" class="contents">
                 @csrf
                 <button type="submit"
                     @if($device->manufacturer === 'SmartRG')
@@ -589,10 +627,11 @@
                     @else
                         title="Trace Route to 8.8.8.8"
                     @endif
-                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-warning"] }}-600 hover:bg-{{ $colors["btn-warning"] }}-700 {{ $device->manufacturer === 'SmartRG' ? 'opacity-50 cursor-not-allowed' : '' }}">
-                    Trace Route
+                    class="inline-flex items-center justify-center px-2 py-2.5 sm:px-4 sm:py-2 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-{{ $colors["btn-warning"] }}-600 hover:bg-{{ $colors["btn-warning"] }}-700 touch-manipulation min-h-[44px] {{ $device->manufacturer === 'SmartRG' ? 'opacity-50 cursor-not-allowed' : '' }}">
+                    <span class="sm:hidden truncate">Trace</span>
+                    <span class="hidden sm:inline">Trace Route</span>
                     @if($device->manufacturer === 'SmartRG')
-                        <svg class="w-4 h-4 ml-1 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4 ml-1 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 15.636 5.636m12.728 12.728L5.636 5.636"></path>
                         </svg>
                     @endif
@@ -600,7 +639,9 @@
             </form>
 
             {{-- Speed Test --}}
-            <form @submit.prevent="async (e) => {
+            <form x-data="{ submitting: false }" @submit.prevent="async (e) => {
+                if (submitting) return;
+                submitting = true;
                 taskLoading = true;
                 taskMessage = 'Starting SpeedTest...';
 
@@ -620,25 +661,38 @@
                         startTaskTracking('Running TR-143 SpeedTest (Download & Upload)...', result.tasks[0].id);
                     } else {
                         taskLoading = false;
+                        submitting = false;
                         alert('SpeedTest started, but no task ID returned');
                     }
                 } catch (error) {
                     taskLoading = false;
+                    submitting = false;
                     alert('Error starting SpeedTest: ' + error);
                 }
-            }">
+            }" class="contents">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700"
+                <button type="submit" :disabled="submitting" :class="submitting ? 'opacity-75 cursor-not-allowed' : ''" class="inline-flex items-center justify-center px-2 py-2.5 sm:px-4 sm:py-2 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-{{ $colors["btn-success"] }}-600 hover:bg-{{ $colors["btn-success"] }}-700 touch-manipulation min-h-[44px] transition-opacity"
                         title="Initiate an upload and download speed test">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {{-- Normal icon --}}
+                    <svg x-show="!submitting" class="w-4 h-4 sm:mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                     </svg>
-                    Speed Test
+                    {{-- Spinner icon --}}
+                    <svg x-show="submitting" x-cloak class="w-4 h-4 sm:mr-2 flex-shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span x-show="!submitting" class="hidden sm:inline">Speed Test</span>
+                    <span x-show="!submitting" class="sm:hidden ml-1 truncate">Speed</span>
+                    <span x-show="submitting" x-cloak class="hidden sm:inline">Working...</span>
+                    <span x-show="submitting" x-cloak class="sm:hidden ml-1 truncate">...</span>
                 </button>
             </form>
 
             {{-- Refresh --}}
-            <form @submit.prevent="async (e) => {
+            <form x-data="{ submitting: false }" @submit.prevent="async (e) => {
+                if (submitting) return;
+                submitting = true;
                 taskLoading = true;
                 taskMessage = 'Refreshing Troubleshooting Info...';
 
@@ -654,26 +708,39 @@
                         startTaskTracking('Refreshing Troubleshooting Info...', result.task.id);
                     } else {
                         taskLoading = false;
+                        submitting = false;
                         alert('Refresh started, but no task ID returned');
                     }
                 } catch (error) {
                     taskLoading = false;
+                    submitting = false;
                     alert('Error refreshing troubleshooting info: ' + error);
                 }
-            }">
+            }" class="contents">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-info"] }}-600 hover:bg-{{ $colors["btn-info"] }}-700"
+                <button type="submit" :disabled="submitting" :class="submitting ? 'opacity-75 cursor-not-allowed' : ''" class="inline-flex items-center justify-center px-2 py-2.5 sm:px-4 sm:py-2 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-{{ $colors["btn-info"] }}-600 hover:bg-{{ $colors["btn-info"] }}-700 touch-manipulation min-h-[44px] transition-opacity"
                         title="Do a larger refresh that polls more troubleshooting information">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {{-- Normal icon --}}
+                    <svg x-show="!submitting" class="w-4 h-4 sm:mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
-                    Refresh
+                    {{-- Spinner icon --}}
+                    <svg x-show="submitting" x-cloak class="w-4 h-4 sm:mr-2 flex-shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span x-show="!submitting" class="hidden sm:inline">Refresh</span>
+                    <span x-show="!submitting" class="sm:hidden truncate">Refresh</span>
+                    <span x-show="submitting" x-cloak class="hidden sm:inline">Working...</span>
+                    <span x-show="submitting" x-cloak class="sm:hidden truncate">...</span>
                 </button>
             </form>
 
             {{-- Get Everything (Admin Only) --}}
             @if(auth()->user()?->isAdmin())
-            <form @submit.prevent="async (e) => {
+            <form x-data="{ submitting: false }" @submit.prevent="async (e) => {
+                if (submitting) return;
+                submitting = true;
                 taskLoading = true;
                 taskMessage = 'Discovering All Parameters...';
 
@@ -689,19 +756,30 @@
                         startTaskTracking('Discovering All Device Parameters...', result.task.id);
                     } else {
                         taskLoading = false;
+                        submitting = false;
                         alert('Get Everything started, but no task ID returned');
                     }
                 } catch (error) {
                     taskLoading = false;
+                    submitting = false;
                     alert('Error getting all parameters: ' + error);
                 }
-            }">
+            }" class="contents">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button type="submit" :disabled="submitting" :class="submitting ? 'opacity-75 cursor-not-allowed' : ''" class="inline-flex items-center justify-center px-2 py-2.5 sm:px-4 sm:py-2 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700 touch-manipulation min-h-[44px] transition-opacity">
+                    {{-- Normal icon --}}
+                    <svg x-show="!submitting" class="w-4 h-4 sm:mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
-                    Get Everything
+                    {{-- Spinner icon --}}
+                    <svg x-show="submitting" x-cloak class="w-4 h-4 sm:mr-2 flex-shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span x-show="!submitting" class="hidden sm:inline">Get Everything</span>
+                    <span x-show="!submitting" class="sm:hidden truncate">Get All</span>
+                    <span x-show="submitting" x-cloak class="hidden sm:inline">Working...</span>
+                    <span x-show="submitting" x-cloak class="sm:hidden truncate">...</span>
                 </button>
             </form>
             @endif
@@ -710,9 +788,11 @@
             @php
                 $merIp = null;
                 if ($device->manufacturer === 'SmartRG') {
+                    // Find MER network IP - starts with 192.168.x.x but NOT 192.168.1.x (LAN subnet)
                     $wanIpParam = $device->parameters()
                         ->where('name', 'LIKE', '%WANIPConnection%ExternalIPAddress')
                         ->where('value', 'LIKE', '192.168.%')
+                        ->where('value', 'NOT LIKE', '192.168.1.%')
                         ->first();
                     $merIp = $wanIpParam ? $wanIpParam->value : null;
                 }
@@ -763,36 +843,37 @@
                     taskLoading = false;
                     alert('Error enabling remote access: ' + error);
                 }
-            }" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700"
+            }" class="inline-flex items-center justify-center px-2 py-2.5 sm:px-4 sm:py-2 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-{{ $colors["btn-primary"] }}-600 hover:bg-{{ $colors["btn-primary"] }}-700 touch-manipulation min-h-[44px]"
                title="Open the device's Remote GUI">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 sm:mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
                 </svg>
-                GUI
+                <span class="hidden sm:inline">GUI</span>
+                <span class="sm:hidden truncate">GUI</span>
                 @if($device->manufacturer === 'SmartRG')
-                    <span class="ml-1 text-xs text-gray-300">(MER)</span>
+                    <span class="ml-1 text-xs text-gray-300 hidden sm:inline">(MER)</span>
                 @endif
             </button>
 
             {{-- Remote GUI Open Indicator --}}
-            @if($device->remote_gui_enabled_at && $device->remote_gui_enabled_at->gt(now()->subHours(1)))
-                <div class="inline-flex items-center px-3 py-1.5 rounded-md bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700">
+            @if($device->remote_support_expires_at && $device->remote_support_expires_at->gt(now()))
+                <div class="col-span-3 sm:col-span-1 inline-flex items-center justify-center px-3 py-1.5 rounded-md bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700">
                     <span class="relative flex h-2.5 w-2.5 mr-2">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500"></span>
                     </span>
                     <span class="text-xs font-medium text-yellow-800 dark:text-yellow-300">
                         Remote GUI Open
-                        <span class="text-yellow-600 dark:text-yellow-400 ml-1">({{ $device->remote_gui_enabled_at->diffForHumans() }})</span>
+                        <span class="text-yellow-600 dark:text-yellow-400 ml-1 hidden sm:inline">(expires {{ $device->remote_support_expires_at->diffForHumans() }})</span>
                     </span>
                 </div>
             @endif
         </div>
     </div>
 
-    {{-- Tab Navigation --}}
-    <div class="border-b border-gray-200 dark:border-{{ $colors['border'] }}">
-        <nav class="-mb-px flex space-x-8">
+    {{-- Tab Navigation (Mobile-scrollable) --}}
+    <div class="border-b border-gray-200 dark:border-{{ $colors['border'] }} -mx-4 sm:mx-0">
+        <nav class="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto px-4 sm:px-0 scrollbar-hide">
             <button @click="activeTab = 'dashboard'"
                     :class="activeTab === 'dashboard' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 dark:text-{{ $colors['text-muted'] }} hover:text-gray-700 hover:border-gray-300'"
                     class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
