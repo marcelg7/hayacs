@@ -1,0 +1,88 @@
+save to file fd: 22
++++Calix+++CDC+++Premise+++Header+++
+Software Version: 12.2.10.0.54
+mapagent crashed on Thu Feb 25 11:21:53 2021
+crash type: 11    SIGSEGV
+bad address 0xb86
+$ 0   : 00000000 10009900 00000000 ffff0000
+$ 4   : 00000001 00000001 768d5124 00000001
+$ 8   : 00616f08 fffffffe 00000000 fffffff0
+$12   : 007fffff 000000b0 89a80000 00000000
+$16   : 00000010 00616d30 0060bf20 00000056
+$20   : 00000000 0060ce30 00000001 0060bf60
+$24   : 00000000 773f5748                  
+$28   : 775152f0 7f972cf8 00000016 774e259c
+mdhi  : 00000000
+mdlo  : 00000000
+epc   : 774e2450
+ra    : 774e259c
+sp    : 7f972cf8
+Status: 00000000
+function backtrace:
+0x774e259c:lws_service_fd_tsi:libwebsockets.so.12:0x774d8000
+0x774e2450:lws_service_fd_tsi:libwebsockets.so.12:0x774d8000
+
+raw function backtrace:
+0x774e2450:lws_service_fd_tsi:libwebsockets.so.12:0x774d8000
+0x76867884:__ctype_b_loc:libc.so.0   :0x76855000
+0x76885404:(null)      :libc.so.0   :0x76855000
+0x7688a1b0:fputs_unlocked:libc.so.0   :0x76855000
+0x776d257c:__dl_runtime_resolve:ld-uClibc.so.0:0x776d0000
+0x776d4a78:_dl_runtime_resolve:ld-uClibc.so.0:0x776d0000
+0x774f0b7c:_lws_plat_service_tsi:libwebsockets.so.12:0x774d8000
+0x0040904c:(null)      :mapagent    :0x00400000
+0x775e2d90:dl_poll_fds_ctx:libdaemonlib.so.0:0x775d6000
+0x776d233c:_dl_fixup   :ld-uClibc.so.0:0x776d0000
+0x776d233c:_dl_fixup   :ld-uClibc.so.0:0x776d0000
+0x776d233c:_dl_fixup   :ld-uClibc.so.0:0x776d0000
+0x776d233c:_dl_fixup   :ld-uClibc.so.0:0x776d0000
+0x776d233c:_dl_fixup   :ld-uClibc.so.0:0x776d0000
+0x768b25d8:(null)      :libc.so.0   :0x76855000
+0x768b27ec:(null)      :libc.so.0   :0x76855000
+0x768abd34:(null)      :libc.so.0   :0x76855000
+0x76862df8:ioctl       :libc.so.0   :0x76855000
+0x76867884:__ctype_b_loc:libc.so.0   :0x76855000
+0x773f26b4:pthread_mutex_unlock:libpthread.so.0:0x773ec000
+0x773f2440:pthread_mutex_lock:libpthread.so.0:0x773ec000
+0x773effe4:_pthread_cleanup_pop_restore:libpthread.so.0:0x773ec000
+0x773f2440:pthread_mutex_lock:libpthread.so.0:0x773ec000
+0x773f26b4:pthread_mutex_unlock:libpthread.so.0:0x773ec000
+0x768a91b0:free        :libc.so.0   :0x76855000
+0x773effe4:_pthread_cleanup_pop_restore:libpthread.so.0:0x773ec000
+0x76889b24:(null)      :libc.so.0   :0x76855000
+0x776d257c:__dl_runtime_resolve:ld-uClibc.so.0:0x776d0000
+0x776d4a78:_dl_runtime_resolve:ld-uClibc.so.0:0x776d0000
+0x76867884:__ctype_b_loc:libc.so.0   :0x76855000
+0x76885404:(null)      :libc.so.0   :0x76855000
+0x76867884:__ctype_b_loc:libc.so.0   :0x76855000
+
+0x7f972cf8: 00000000  76867884  774fb55c  7f972d24  
+0x7f972d08: 00000000  00000000  0000002d  0000006d  
+0x7f972d18: 775152f0  76885404  6037cea1  6d617000  
+0x7f972d28: 34392e39  382e3338  008d74d0  76867860  
+0x7f972d38: 00000000  00000000  7fffffff  00000008  
+0x7f972d48: 00000008  00000000  00000030  0000006d  
+0x7f972d58: 7f972e70  775e85dc  00000025  76885280  
+0x7f972d68: 768d74d0  7688a8f0  0000002a  76867860  
+0x7f972d78: 0ccccccc  00000000  768baef3  76885000  
+0x7f972d88: 768baed4  7688a1b0  00000030  7f972d98  
+0x7f972d98: 768d74d0  7f972f60  768d74d0  768baed4  
+0x7f972da8: 776ed010  0000001f  768577f4  7685ce04  
+0x7f972db8: 00000000  776d0000  f0000000  00000001  
+0x7f972dc8: 0060bf60  00000157  7750d300  00000059  
+0x7f972dd8: 00000068  774db6c3  004b3ad4  00679b9c  
+0x7f972de8: 7f972df0  776d257c  768ba1c5  00000004  
+0x7f972df8: 00000044  0042ebc4  00000000  00000020  
+0x7f972e08: 776ed010  00000001  0060bf60  0060bf20  
+0x7f972e18: 00000000  00000000  00615300  7688a8f0  
+0x7f972e28: 00000055  776d4a78  0060bf60  0060bf20  
+0x7f972e38: 00000000  00000001  00000000  774fc44c  
+0x7f972e48: 004b3ad4  00679b9c  7f973078  774f0b7c  
+0x7f972e58: 7f972e80  0000001f  00000000  00000000  
+0x7f972e68: 00000000  00000000  775152f0  ffffffff  
+0x7f972e78: 00000000  00000064  00000000  00000000  
+0x7f972e88: 00000000  00000000  00000000  00000000  
+0x7f972e98: 00000000  00000000  00000000  00000000  
+0x7f972ea8: 00000000  00000000  00000000  00000000  
+0x7f972eb8: 00000000  00000000  00000000  00000000  
+0x7f972ec8: 00000000  00000000  00000000  00000000  

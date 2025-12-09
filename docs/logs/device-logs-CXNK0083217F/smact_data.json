@@ -1,0 +1,170 @@
+{
+	"Version":	"1.2",
+	"ActivationCode":	{
+		"value":	"0000000000",
+		"default":	"0000000000",
+		"maxLen":	10
+	},
+	"RegistrationId":	{
+		"value":	"",
+		"default":	"",
+		"maxLen":	10
+	},
+	"RgWanIfProtocol":	{
+		"value":	"AUTO",
+		"default":	"AUTO",
+		"maxLen":	6
+	},
+	"RgWanIfTagged":	{
+		"value":	"un-tagged",
+		"default":	"un-tagged",
+		"maxLen":	10
+	},
+	"RgWanIfVid":	{
+		"value":	0,
+		"default":	0,
+		"maxVal":	4095,
+		"minVal":	0
+	},
+	"RgWanIfPbit":	{
+		"value":	0,
+		"default":	0,
+		"maxVal":	7,
+		"minVal":	0
+	},
+	"pppOeUserName":	{
+		"value":	"cxnk_user",
+		"default":	"",
+		"maxLen":	64
+	},
+	"pppOePassword":	{
+		"value":	"cxnk_pwd",
+		"default":	"",
+		"maxLen":	64
+	},
+	"tr69ClientAdminState":	{
+		"value":	"enabled",
+		"default":	"enabled",
+		"maxLen":	8
+	},
+	"acsURL":	{
+		"value":	"http://gcs6.calix.local:8080",
+		"default":	"",
+		"maxLen":	256
+	},
+	"acsURL_DHCPConfigurable":	{
+		"value":	1,
+		"default":	1,
+		"maxVal":	1,
+		"minVal":	0
+	},
+	"acsUsername":	{
+		"value":	"000631-ENT-CXNK0083217F",
+		"default":	"",
+		"maxLen":	256
+	},
+	"acsPassword":	{
+		"value":	"activate-cxnk",
+		"default":	"",
+		"maxLen":	256
+	},
+	"acsIpVersion":	{
+		"value":	"IPv4",
+		"default":	"IPv4",
+		"maxLen":	8
+	},
+	"acsVid":	{
+		"value":	0,
+		"default":	0,
+		"maxVal":	4095,
+		"minVal":	0
+	},
+	"acsPbit":	{
+		"value":	0,
+		"default":	0,
+		"maxVal":	7,
+		"minVal":	0
+	},
+	"spl_acsURL":	{
+		"value":	"https://gcs6.calix.com:8443",
+		"default":	"",
+		"maxLen":	256
+	},
+	"spl_acsURL_DHCPConfigurable":	{
+		"value":	1,
+		"default":	1,
+		"maxVal":	1,
+		"minVal":	0
+	},
+	"spl_acsUsername":	{
+		"value":	"000631-ENT-CXNK0083217F",
+		"default":	"",
+		"maxLen":	256
+	},
+	"spl_acsPassword":	{
+		"value":	"activate-cxnk",
+		"default":	"",
+		"maxLen":	256
+	},
+	"spl_acsIpVersion":	{
+		"value":	"IPv4",
+		"default":	"IPv4",
+		"maxLen":	8
+	},
+	"timeZone":	{
+		"value":	"UTC",
+		"default":	"UTC",
+		"maxLen":	16
+	},
+	"staticIpCfg":	{
+		"ipAddress":	{
+			"value":	"0.0.0.0",
+			"default":	"0.0.0.0",
+			"maxLen":	15
+		},
+		"subnetMask":	{
+			"value":	"0.0.0.0",
+			"default":	"0.0.0.0",
+			"maxLen":	15
+		},
+		"defaultGateway":	{
+			"value":	"0.0.0.0",
+			"default":	"0.0.0.0",
+			"maxLen":	15
+		},
+		"dnsServer":	{
+			"value":	"0.0.0.0",
+			"default":	"0.0.0.0",
+			"maxLen":	15
+		}
+	},
+	"snmpServerUrl":	{
+		"value":	"",
+		"default":	"",
+		"maxLen":	128
+	},
+	"ntpServerUrl":	{
+		"value":	"",
+		"default":	"",
+		"maxLen":	128
+	},
+	"syslogServerUrl":	{
+		"value":	"",
+		"default":	"",
+		"maxLen":	128
+	},
+	"tftpServerUrl":	{
+		"value":	"",
+		"default":	"",
+		"maxLen":	128
+	},
+	"restoreSAFlag":	{
+		"value":	1
+	},
+	"crc":	{
+		"value":	0
+	},
+	"WanFrameDetected":	{
+		"value":	1
+	}
+}

@@ -1,0 +1,11 @@
+11-18-2025 09:03:12.209601 mapconfig: ../../src/cmd_parser.c.255: cp_cmd_add_attr: vtype=(WIFI_ENCRYPT) not found, fix it!
+11-18-2025 09:03:12.216826 mapconfig: ../../src/cmd_parser.c.255: cp_cmd_add_attr: vtype=(WIFI_ENCRYPT) not found, fix it!
+11-18-2025 09:03:12.217718 mapconfig: ../../src/cmd_parser.c.255: cp_cmd_add_attr: vtype=(WIFI_ENCRYPT) not found, fix it!
+11-18-2025 09:03:12.256159 mapconfig: map_config_p1.c.454: Bind is ok
+
+11-18-2025 09:03:12.678623 mapconfig: map_config_p1.c.406: Enter map_config_handle_socket
+
+11-18-2025 09:03:12.830284 mapconfig: map_config_p1.c.406: Enter map_config_handle_socket
+
+11-18-2025 09:03:18.159908 mapconfig: map_config_p1.c.406: Enter map_config_handle_socket
+

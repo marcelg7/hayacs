@@ -1,0 +1,183 @@
+2024/12/02|21:58:29|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2024/12/02|22:00:59|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+1969/12/31|19:01:00|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|smd|fail_2rd_collect_radvd_1675|
+2024/12/02|22:38:33|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2024/12/02|22:41:05|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+1969/12/31|19:01:00|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|smd|fail_2rd_collect_radvd_1680|
+2024/12/03|01:08:11|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2024/12/03|01:10:42|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+2024/12/03|02:02:58|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2024/12/03|02:05:28|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+2024/12/03|04:47:57|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2024/12/03|04:50:29|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+1969/12/31|19:01:00|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|smd|fail_2rd_collect_radvd_1683|
+1969/12/31|19:01:26|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|smd|fail_2rd_collect_radvd_2404|
+2024/12/03|07:35:29|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2024/12/03|07:38:00|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+2024/12/07|00:27:44|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+2024/12/09|11:27:12|CXNK0083217F|422007015365|12.2.13.0.49|Critical|wlanmgr|QUANTENNA_LOADER_PING_FAILED_REBOOT_QTN|
+2024/12/09|11:27:12|CXNK0083217F|422007015365|12.2.13.0.49|Critical|wlanmgr|QUANTENNA_INIT_FIRMWARE_LOAD_FAILED_REBOOT_QTN|
+2024/12/09|11:27:12|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|power_off-qtn-device|
+2024/12/09|11:28:07|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2024/12/09|11:30:37|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+1969/12/31|19:01:00|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|smd|fail_2rd_collect_radvd_1688|
+2024/12/12|14:39:26|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2024/12/12|14:41:58|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+1969/12/31|19:00:59|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|smd|fail_2rd_collect_radvd_1680|
+2024/12/15|11:59:01|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2024/12/15|12:01:33|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+2024/12/25|07:30:04|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2024/12/25|09:21:04|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2024/12/30|02:51:35|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/01/02|18:14:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/01/13|20:27:24|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/01/13|21:38:54|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/01/23|03:11:35|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/02/05|04:41:24|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/02/05|08:27:54|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/02/06|19:34:44|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+2025/02/18|11:49:16|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/02/18|11:51:48|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+2025/02/20|12:07:55|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/02/20|13:44:55|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+1969/12/31|19:00:35|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:35|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+2025/02/23|09:36:03|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/02/23|09:38:33|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+2025/02/25|10:34:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/02/25|10:51:04|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+2025/02/25|11:22:01|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/02/25|11:24:30|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+2025/03/02|09:29:40|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/03/02|09:32:11|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+2025/03/03|02:20:36|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|upgrade.sh|Set-fw_upgrade-ENABLED|
+2025/03/03|02:20:36|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|upgrade.sh|upgrading-with-options...|
+2025/03/03|02:20:36|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|upgrade-with-option|upgrading-with-image-file-../calix_fw.img-opts-0x00000080|
+2025/03/03|02:20:36|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|upgrade-with-option|going-to-writeValidatedImageEx-0x00000080|
+2025/03/03|02:20:36|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|image|going-to-flash-image|
+2025/03/03|02:20:36|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|image|get-in-flashImage|
+2025/03/03|02:21:05|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|image|Succeed-to-flash-opts-0x00000080-wont-reset-board|
+2025/03/03|02:21:05|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|upgrade-with-option|done-to-writeValidatedImageEx-0x00000080|
+2025/03/03|02:21:05|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|upgrade.sh|Set-fw_upgrade-DISABLED|
+2025/03/03|02:21:05|CXNK0083217F|422007015365|12.2.13.0.49|Event_NORMAL|upgrade.sh|Clear-console-log|
+2025/03/03|02:21:05|CXNK0083217F|422007015365|12.2.13.0.49|Reset_System|reboot-after-successful-upgrade|
+2025/03/03|02:21:05|CXNK0083217F|422007015365|12.2.13.0.49|Critical|healthmgr|/usr/bin/hm-kill.sh DCLI &|
+2025/03/03|02:21:27|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+2025/03/03|02:22:16|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|smd|fail_2rd_collect_dhcpc_2370|
+2025/03/03|02:23:29|CXNK0083217F|422007015365|12.2.12.9.1|Critical|wlanmgr|QUANTENNA_LOADER_PING_FAILED_REBOOT_QTN|
+2025/03/03|02:23:29|CXNK0083217F|422007015365|12.2.12.9.1|Critical|wlanmgr|QUANTENNA_INIT_FIRMWARE_LOAD_FAILED_REBOOT_QTN|
+2025/03/03|02:23:29|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|power_off-qtn-device|
+2025/03/03|02:24:28|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/03/03|02:26:59|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+2025/03/07|17:04:54|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/03/07|23:00:24|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/03/11|20:02:04|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/03/19|18:18:04|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/03/19|21:18:04|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/03/29|13:41:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+2025/04/03|08:38:14|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/04/03|08:40:45|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+2025/04/13|04:53:04|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+1969/12/31|19:01:26|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|smd|fail_2rd_collect_radvd_2667|
+2025/04/23|02:38:49|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/04/23|02:41:20|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+2025/05/01|04:01:44|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/05/13|07:43:19|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|smd|fail_2rd_collect_radvd_9542|
+2025/05/23|17:45:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+2025/05/25|07:06:24|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/05/25|07:08:53|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+2025/06/01|13:49:04|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/06/01|15:47:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/06/01|16:37:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/06/01|19:07:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+2025/06/01|22:07:25|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/06/01|22:09:55|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+2025/06/04|12:48:27|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|smd|fail_2rd_collect_dhcpc_10837|
+2025/06/07|17:42:44|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/06/07|20:19:44|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/06/19|03:11:55|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+2025/07/15|05:47:28|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/07/15|05:49:58|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+2025/07/22|04:18:14|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/07/29|11:24:45|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/08/08|02:08:04|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/08/18|10:36:15|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/09/03|15:42:45|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+2025/09/04|11:21:39|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/09/04|11:24:10|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+2025/09/05|02:00:14|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/09/05|19:31:04|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/09/06|04:38:04|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/09/08|15:32:44|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/09/12|16:46:44|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/09/12|21:39:14|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+2025/09/20|16:26:14|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+1969/12/31|19:01:00|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|smd|fail_2rd_collect_radvd_1685|
+2025/09/22|00:22:56|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/09/22|00:25:27|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+1969/12/31|19:01:00|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|smd|fail_2rd_collect_radvd_1682|
+2025/09/23|07:51:06|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/09/23|07:53:37|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+2025/10/08|21:06:15|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|resource mon: /var/tmp/shmem_usage Err(-4006) 0x0001|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+1969/12/31|19:01:26|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|smd|fail_2rd_collect_radvd_2644|
+2025/10/25|08:24:56|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/10/25|08:27:27|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+1969/12/31|19:00:34|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|Cold boot flag set, possible power up restart|
+2025/11/11|01:36:51|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/11/11|01:39:23|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+2025/11/18|08:46:06|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|Missed keep alive for task wlanmgr|
+2025/11/18|08:46:07|CXNK0083217F|422007015365|12.2.12.9.1|Reset_System|ngx_reboot.sh|
+2025/11/18|08:46:07|CXNK0083217F|422007015365|12.2.12.9.1|Critical|healthmgr|/usr/bin/hm-kill.sh DCLI &|
+2025/11/18|08:47:10|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+2025/11/18|05:48:23|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/11/18|05:50:51|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
+2025/11/18|05:57:10|CXNK0083217F|422007015365|12.2.12.9.1|Reset_System|ngx_reboot.sh|
+2025/11/18|05:57:10|CXNK0083217F|422007015365|12.2.12.9.1|Critical|healthmgr|/usr/bin/hm-kill.sh DCLI &|
+2025/11/18|05:57:59|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+2025/11/18|05:59:40|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/11/18|06:01:18|CXNK0083217F|422007015365|12.2.12.9.1|Reset_System|ngx_reboot.sh|
+2025/11/18|06:01:18|CXNK0083217F|422007015365|12.2.12.9.1|Critical|healthmgr|/usr/bin/hm-kill.sh DCLI &|
+2025/11/18|06:02:05|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|healthmgr|WAN's wanIfNames initialized to eth5|
+2025/11/18|09:03:38|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|qtn_client_create_success|
+2025/11/18|09:06:11|CXNK0083217F|422007015365|12.2.12.9.1|Event_NORMAL|wlanmgr|QT_HOSTAPD_UP|
