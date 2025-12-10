@@ -64,6 +64,10 @@ class ImportSubscribersJob implements ShouldQueue
             'rows_processed' => 0,
         ];
 
+        // Benchmarking timers
+        $timings = [];
+        $totalStart = microtime(true);
+
         try {
             $importStatus->update([
                 'status' => 'processing',
@@ -71,36 +75,68 @@ class ImportSubscribersJob implements ShouldQueue
             ]);
 
             // Count total rows first for progress tracking
+            $phaseStart = microtime(true);
             $totalRows = 0;
             foreach ($this->filePaths as $filePath) {
                 if (file_exists($filePath)) {
                     $totalRows += $this->countLines($filePath) - 1; // Subtract header row
                 }
             }
-
             $importStatus->update(['total_rows' => $totalRows]);
+            $timings['count_rows'] = round(microtime(true) - $phaseStart, 2);
 
-            // Truncate if requested
+            // Hybrid approach: Keep subscribers (upsert), truncate equipment only
             if ($this->truncate) {
-                Log::info('ImportSubscribersJob: Truncating existing data');
-                DB::table('subscriber_equipment')->truncate();
-                DB::table('subscribers')->truncate();
+                Log::info('ImportSubscribersJob: Using hybrid approach - keeping subscribers, truncating equipment');
+
+                // Phase 1: Clear device links
+                $phaseStart = microtime(true);
+                $importStatus->update(['message' => 'Clearing device links...']);
                 DB::table('devices')->update(['subscriber_id' => null]);
+                $timings['clear_device_links'] = round(microtime(true) - $phaseStart, 2);
+
+                // Phase 2: Truncate equipment only (NOT subscribers)
+                $phaseStart = microtime(true);
+                $importStatus->update(['message' => 'Truncating equipment table...']);
+                DB::statement('SET FOREIGN_KEY_CHECKS=0');
+                DB::table('subscriber_equipment')->truncate();
+                // Note: subscribers table NOT truncated - will use upsert
+                DB::statement('SET FOREIGN_KEY_CHECKS=1');
+                $timings['truncate_equipment'] = round(microtime(true) - $phaseStart, 2);
             }
 
-            // Process each file
+            // Phase 3: Process each file
+            $phaseStart = microtime(true);
             foreach ($this->filePaths as $filePath) {
                 if (!file_exists($filePath)) {
                     Log::warning('ImportSubscribersJob: File not found', ['path' => $filePath]);
                     continue;
                 }
 
+                $importStatus->update(['message' => 'Processing ' . basename($filePath) . '...']);
                 $this->processFile($filePath, $stats, $importStatus);
             }
+            $timings['process_files'] = round(microtime(true) - $phaseStart, 2);
 
-            // Link devices to subscribers
+            // Phase 4: Link devices to subscribers
+            $phaseStart = microtime(true);
             $importStatus->update(['message' => 'Linking devices to subscribers...']);
             $stats['devices_linked'] = $this->linkDevicesToSubscribers();
+            $timings['link_devices'] = round(microtime(true) - $phaseStart, 2);
+
+            // Calculate total time
+            $timings['total'] = round(microtime(true) - $totalStart, 2);
+
+            // Build timing summary for message
+            $timingSummary = sprintf(
+                'Timings: count=%ss, clear_links=%ss, truncate=%ss, process=%ss, link=%ss, total=%ss',
+                $timings['count_rows'] ?? 0,
+                $timings['clear_device_links'] ?? 0,
+                $timings['truncate_equipment'] ?? 0,
+                $timings['process_files'] ?? 0,
+                $timings['link_devices'] ?? 0,
+                $timings['total']
+            );
 
             // Mark as completed
             $importStatus->update([
@@ -111,10 +147,10 @@ class ImportSubscribersJob implements ShouldQueue
                 'equipment_created' => $stats['equipment_created'],
                 'devices_linked' => $stats['devices_linked'],
                 'processed_rows' => $stats['rows_processed'],
-                'message' => 'Import completed successfully!',
+                'message' => 'Import completed! ' . $timingSummary,
             ]);
 
-            Log::info('ImportSubscribersJob: Completed', $stats);
+            Log::info('ImportSubscribersJob: Completed', array_merge($stats, ['timings' => $timings]));
 
         } catch (\Exception $e) {
             Log::error('ImportSubscribersJob: Failed', [
@@ -300,28 +336,27 @@ class ImportSubscribersJob implements ShouldQueue
 
     /**
      * Link devices to subscribers by serial number.
+     * Uses bulk UPDATE with JOIN - fast with indexes on both tables.
      */
     protected function linkDevicesToSubscribers(): int
     {
-        $linkedCount = 0;
+        // Use bulk UPDATE with JOIN - requires index on devices.serial_number
+        // and subscriber_equipment.serial (both exist)
+        $affected = DB::update("
+            UPDATE devices d
+            INNER JOIN subscriber_equipment e
+                ON d.serial_number = e.serial
+            SET d.subscriber_id = e.subscriber_id
+            WHERE e.serial IS NOT NULL
+                AND e.serial != ''
+                AND e.subscriber_id IS NOT NULL
+        ");
 
-        // Get all equipment records with serial numbers
-        $equipmentWithSerials = SubscriberEquipment::whereNotNull('serial')
-            ->where('serial', '!=', '')
-            ->get();
+        Log::info('ImportSubscribersJob: Bulk device linking completed', [
+            'devices_linked' => $affected,
+        ]);
 
-        foreach ($equipmentWithSerials as $equipment) {
-            // Find device by serial number (case-insensitive)
-            $device = Device::whereRaw('LOWER(serial_number) = ?', [strtolower($equipment->serial)])->first();
-
-            if ($device && $equipment->subscriber_id) {
-                $device->subscriber_id = $equipment->subscriber_id;
-                $device->save();
-                $linkedCount++;
-            }
-        }
-
-        return $linkedCount;
+        return $affected;
     }
 
     /**

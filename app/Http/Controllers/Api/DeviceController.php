@@ -1317,6 +1317,11 @@ class DeviceController extends Controller
             ];
         }
 
+        // Store password in DeviceWifiCredential for display in Standard WiFi section
+        if (isset($validated['password'])) {
+            $this->storeWifiPasswordFromAdvanced($device, $instance, $validated['password']);
+        }
+
         // Create task to set parameters
         $task = Task::create([
             'device_id' => $device->id,
@@ -1523,6 +1528,64 @@ class DeviceController extends Controller
     }
 
     /**
+     * Store WiFi password from advanced section in DeviceWifiCredential
+     * This ensures the password is available in the Standard WiFi section
+     */
+    private function storeWifiPasswordFromAdvanced(Device $device, int $instance, string $password): void
+    {
+        $isCalix = $device->isCalix();
+        $isNokia = $device->isNokia();
+
+        // Determine which network type this instance belongs to
+        $isGuestNetwork = false;
+        $isMainNetwork = false;
+
+        if ($isCalix) {
+            $isGigaSpire = strtolower($device->product_class ?? '') === 'gigaspire';
+
+            if ($isGigaSpire) {
+                // GigaSpire: 5GHz uses instances 1-8, 2.4GHz uses instances 9-16
+                $guestInstances = [2, 10]; // inst5Guest=2, inst24Guest=10
+                $mainInstances = [1, 9];   // inst5Primary=1, inst24Primary=9
+            } else {
+                // GigaCenter: 2.4GHz uses instances 1-8, 5GHz uses instances 9-16
+                $guestInstances = [2, 10]; // inst24Guest=2, inst5Guest=10
+                $mainInstances = [1, 9];   // inst24Primary=1, inst5Primary=9
+            }
+
+            $isGuestNetwork = in_array($instance, $guestInstances);
+            $isMainNetwork = in_array($instance, $mainInstances);
+        } elseif ($isNokia) {
+            // Nokia TR-098: Instance 4=Guest 2.4GHz, 8=Guest 5GHz, 1=Main 2.4GHz, 5=Main 5GHz
+            $isGuestNetwork = in_array($instance, [4, 8]);
+            $isMainNetwork = in_array($instance, [1, 5]);
+        }
+
+        // Only store if it's a recognized main or guest network
+        if (!$isGuestNetwork && !$isMainNetwork) {
+            return;
+        }
+
+        // Update or create the credential record
+        $credential = DeviceWifiCredential::firstOrNew(['device_id' => $device->id]);
+
+        if ($isGuestNetwork) {
+            $credential->guest_password = $password;
+        } elseif ($isMainNetwork) {
+            $credential->main_password = $password;
+        }
+
+        $credential->set_by = 'advanced_wifi';
+        $credential->save();
+
+        Log::info('Stored WiFi password from advanced section', [
+            'device_id' => $device->id,
+            'instance' => $instance,
+            'network_type' => $isGuestNetwork ? 'guest' : 'main',
+        ]);
+    }
+
+    /**
      * Get WiFi configuration for TR-098 devices
      */
     private function getWifiConfigTr098(Device $device): JsonResponse
@@ -1681,11 +1744,16 @@ class DeviceController extends Controller
 
         // Parameters to query and enable parameters vary by device type
         // Priority: Check data model first, then vendor-specific overrides
+        // Get support password from .env
+        $supportPassword = env('SUPPORT_PASSWORD', 'keepOut-72863!!!');
+
         if ($isNokia && $dataModel === 'TR-181') {
             // Nokia Beacon G6 with TR-181 data model - use Device. paths with Nokia vendor extensions
             $parametersToQuery = [
                 'Device.Users.User.1.Username',
                 'Device.Users.User.1.Password',
+                'Device.Users.User.2.Username',
+                'Device.Users.User.2.Password',
                 'Device.UserInterface.RemoteAccess.Port',
                 'Device.UserInterface.RemoteAccess.Enable',
                 'Device.X_ALU_COM_RemoteGUI.Enable',
@@ -1695,6 +1763,11 @@ class DeviceController extends Controller
                 'Device.UserInterface.RemoteAccess.Enable' => [
                     'value' => true,
                     'type' => 'xsd:boolean',
+                ],
+                // Set superadmin password to known value for remote access
+                'Device.Users.User.2.Password' => [
+                    'value' => $supportPassword,
+                    'type' => 'xsd:string',
                 ],
             ];
             // Nokia defaults
@@ -1721,11 +1794,16 @@ class DeviceController extends Controller
                 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_ALU-COM_WanAccessCfg.HttpsDisabled',
                 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress',
             ];
-            // Enable HTTPS remote access (HttpsDisabled = false means enabled)
+            // Enable HTTPS remote access (HttpsDisabled = false means enabled) and set password
             $enableParams = [
                 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_ALU-COM_WanAccessCfg.HttpsDisabled' => [
                     'value' => false,
                     'type' => 'xsd:boolean',
+                ],
+                // Set superadmin password to known value for remote access
+                'InternetGatewayDevice.X_Authentication.WebAccount.Password' => [
+                    'value' => $supportPassword,
+                    'type' => 'xsd:string',
                 ],
             ];
             // Nokia defaults
@@ -1750,6 +1828,11 @@ class DeviceController extends Controller
                 'InternetGatewayDevice.UserInterface.RemoteAccess.Enable',
                 'InternetGatewayDevice.User.2.RemoteAccessCapable',
             ];
+
+            // Get support password from .env
+            $supportPassword = env('GIGASPIRE_SUPPORT_PASSWORD', 'keepOut-72863!!!');
+            $supportUsername = env('GIGASPIRE_SUPPORT_USER', 'support');
+
             $enableParams = [
                 'InternetGatewayDevice.UserInterface.RemoteAccess.Enable' => [
                     'value' => true,
@@ -1759,10 +1842,16 @@ class DeviceController extends Controller
                     'value' => true,
                     'type' => 'xsd:boolean',
                 ],
+                'InternetGatewayDevice.User.2.Password' => [
+                    'value' => $supportPassword,
+                    'type' => 'xsd:string',
+                ],
             ];
+
             // GigaSpire uses HTTP on port 8080
             $port = 8080;
             $protocol = 'http';
+            $username = $supportUsername;
 
             // TR-098: External IP is in WANIPConnection
             $externalIpParam = $device->parameters()
@@ -1826,8 +1915,49 @@ class DeviceController extends Controller
                 ->first();
             $externalIp = $lanIpParam ? $lanIpParam->value : '192.168.1.1'; // Default to 192.168.1.1
 
+        } elseif ($isCalix) {
+            // Calix GigaCenter devices (ENT/ONT/804Mesh) - TR-098 data model
+            // User.1 = admin (local), User.2 = support (remote access capable)
+            $supportUsername = env('GIGASPIRE_SUPPORT_USER', 'support');
+
+            $parametersToQuery = [
+                'InternetGatewayDevice.User.1.Username',
+                'InternetGatewayDevice.User.1.Password',
+                'InternetGatewayDevice.User.2.Username',
+                'InternetGatewayDevice.User.2.Password',
+                'InternetGatewayDevice.UserInterface.RemoteAccess.Port',
+                'InternetGatewayDevice.UserInterface.RemoteAccess.Enable',
+                'InternetGatewayDevice.User.2.RemoteAccessCapable',
+            ];
+            $enableParams = [
+                'InternetGatewayDevice.UserInterface.RemoteAccess.Enable' => [
+                    'value' => true,
+                    'type' => 'xsd:boolean',
+                ],
+                'InternetGatewayDevice.User.2.RemoteAccessCapable' => [
+                    'value' => true,
+                    'type' => 'xsd:boolean',
+                ],
+                // Set support password to known value for remote access
+                'InternetGatewayDevice.User.2.Password' => [
+                    'value' => $supportPassword,
+                    'type' => 'xsd:string',
+                ],
+            ];
+
+            // GigaCenter uses HTTP on port 8080 (same as GigaSpire)
+            $port = 8080;
+            $protocol = 'http';
+            $username = $supportUsername;
+
+            // TR-098: External IP is in WANIPConnection
+            $externalIpParam = $device->parameters()
+                ->where('name', 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress')
+                ->first();
+            $externalIp = $externalIpParam ? $externalIpParam->value : null;
+
         } else {
-            // Generic TR-098 devices
+            // Generic TR-098 devices (fallback)
             $parametersToQuery = [
                 'InternetGatewayDevice.User.1.Username',
                 'InternetGatewayDevice.User.1.Password',
@@ -1843,6 +1973,11 @@ class DeviceController extends Controller
                 'InternetGatewayDevice.User.2.RemoteAccessCapable' => [
                     'value' => true,
                     'type' => 'xsd:boolean',
+                ],
+                // Set support password to known value for remote access
+                'InternetGatewayDevice.User.2.Password' => [
+                    'value' => $supportPassword,
+                    'type' => 'xsd:string',
                 ],
             ];
 
@@ -1893,6 +2028,109 @@ class DeviceController extends Controller
             'message' => $isSmartRG
                 ? 'Remote access enabled. Use the LAN IP from the backend/MER network.'
                 : 'Remote access is being enabled...',
+        ]);
+    }
+
+    /**
+     * Close remote GUI access and reset password to random value
+     */
+    public function closeRemoteAccess(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        // Skip SmartRG devices - they use MER network access, not remote GUI
+        if ($device->isSmartRG()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'SmartRG devices use MER network access - no remote access to disable.',
+            ]);
+        }
+
+        $dataModel = $device->getDataModel();
+        $isNokia = $device->isNokia();
+        $isCalix = $device->isCalix();
+
+        // Generate random password (16 chars alphanumeric + special)
+        $randomPassword = bin2hex(random_bytes(8)) . '!' . rand(10, 99);
+
+        // Build disable parameters based on device type
+        $disableParams = [];
+
+        if ($isNokia && $dataModel === 'TR-181') {
+            $disableParams = [
+                'Device.UserInterface.RemoteAccess.Enable' => [
+                    'value' => false,
+                    'type' => 'xsd:boolean',
+                ],
+                'Device.Users.User.2.Password' => [
+                    'value' => $randomPassword,
+                    'type' => 'xsd:string',
+                ],
+            ];
+        } elseif ($isNokia && $dataModel === 'TR-098') {
+            $disableParams = [
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_ALU-COM_WanAccessCfg.HttpsDisabled' => [
+                    'value' => true,
+                    'type' => 'xsd:boolean',
+                ],
+                'InternetGatewayDevice.X_Authentication.WebAccount.Password' => [
+                    'value' => $randomPassword,
+                    'type' => 'xsd:string',
+                ],
+            ];
+        } elseif ($isCalix || $device->product_class === 'GigaSpire') {
+            $disableParams = [
+                'InternetGatewayDevice.UserInterface.RemoteAccess.Enable' => [
+                    'value' => false,
+                    'type' => 'xsd:boolean',
+                ],
+                'InternetGatewayDevice.User.2.RemoteAccessCapable' => [
+                    'value' => false,
+                    'type' => 'xsd:boolean',
+                ],
+                'InternetGatewayDevice.User.2.Password' => [
+                    'value' => $randomPassword,
+                    'type' => 'xsd:string',
+                ],
+            ];
+        } else {
+            // Generic TR-098 fallback
+            $disableParams = [
+                'InternetGatewayDevice.UserInterface.RemoteAccess.Enable' => [
+                    'value' => false,
+                    'type' => 'xsd:boolean',
+                ],
+                'InternetGatewayDevice.User.2.RemoteAccessCapable' => [
+                    'value' => false,
+                    'type' => 'xsd:boolean',
+                ],
+                'InternetGatewayDevice.User.2.Password' => [
+                    'value' => $randomPassword,
+                    'type' => 'xsd:string',
+                ],
+            ];
+        }
+
+        // Create task to disable remote access and reset password
+        $task = Task::create([
+            'device_id' => $device->id,
+            'task_type' => 'set_parameter_values',
+            'description' => 'Close remote access and reset password',
+            'status' => 'pending',
+            'parameters' => $disableParams,
+        ]);
+
+        // Clear the remote support expiry time
+        $device->remote_support_expires_at = null;
+        $device->save();
+
+        // Trigger connection request to apply changes
+        $this->connectionRequestService->sendConnectionRequest($device);
+
+        return response()->json([
+            'success' => true,
+            'task' => $task,
+            'message' => 'Remote access is being disabled and password reset to random value.',
         ]);
     }
 
@@ -5157,8 +5395,10 @@ class DeviceController extends Controller
         $prefix = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration';
 
         // TR-098 uses BeaconType for security mode
-        // WPAand11i = WPA + WPA2 mixed mode (most compatible)
-        $beaconType = 'WPAand11i';
+        // 11iandWPA3 = WPA2 + WPA3 transitional (best security with backward compatibility)
+        $beaconType = '11iandWPA3';
+        $authMode = 'SAEandPSKAuthentication';  // WPA3-SAE + WPA2-PSK
+        $encryptionMode = 'AESEncryption';
 
         // Build network configurations grouped by radio (like TR-181 Nokia)
         // This minimizes radio restarts
@@ -5171,12 +5411,16 @@ class DeviceController extends Controller
                     "{$prefix}.1.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
                     "{$prefix}.1.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
                     "{$prefix}.1.BeaconType" => $beaconType,
+                    "{$prefix}.1.IEEE11iAuthenticationMode" => $authMode,
+                    "{$prefix}.1.IEEE11iEncryptionModes" => $encryptionMode,
                     "{$prefix}.1.PreSharedKey.1.KeyPassphrase" => $password,
                     // Instance 2 - Dedicated 2.4GHz
                     "{$prefix}.2.SSID" => $ssid . '-2.4GHz',
                     "{$prefix}.2.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
                     "{$prefix}.2.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
                     "{$prefix}.2.BeaconType" => $beaconType,
+                    "{$prefix}.2.IEEE11iAuthenticationMode" => $authMode,
+                    "{$prefix}.2.IEEE11iEncryptionModes" => $encryptionMode,
                     "{$prefix}.2.PreSharedKey.1.KeyPassphrase" => $password,
                     // Instance 3 - Unused (disabled)
                     "{$prefix}.3.Enable" => ['value' => false, 'type' => 'xsd:boolean'],
@@ -5185,6 +5429,8 @@ class DeviceController extends Controller
                     "{$prefix}.4.Enable" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
                     "{$prefix}.4.SSIDAdvertisementEnabled" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
                     "{$prefix}.4.BeaconType" => $beaconType,
+                    "{$prefix}.4.IEEE11iAuthenticationMode" => $authMode,
+                    "{$prefix}.4.IEEE11iEncryptionModes" => $encryptionMode,
                     "{$prefix}.4.PreSharedKey.1.KeyPassphrase" => $guestPassword,
                 ],
             ],
@@ -5196,12 +5442,16 @@ class DeviceController extends Controller
                     "{$prefix}.5.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
                     "{$prefix}.5.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
                     "{$prefix}.5.BeaconType" => $beaconType,
+                    "{$prefix}.5.IEEE11iAuthenticationMode" => $authMode,
+                    "{$prefix}.5.IEEE11iEncryptionModes" => $encryptionMode,
                     "{$prefix}.5.PreSharedKey.1.KeyPassphrase" => $password,
                     // Instance 6 - Dedicated 5GHz
                     "{$prefix}.6.SSID" => $ssid . '-5GHz',
                     "{$prefix}.6.Enable" => ['value' => true, 'type' => 'xsd:boolean'],
                     "{$prefix}.6.SSIDAdvertisementEnabled" => ['value' => true, 'type' => 'xsd:boolean'],
                     "{$prefix}.6.BeaconType" => $beaconType,
+                    "{$prefix}.6.IEEE11iAuthenticationMode" => $authMode,
+                    "{$prefix}.6.IEEE11iEncryptionModes" => $encryptionMode,
                     "{$prefix}.6.PreSharedKey.1.KeyPassphrase" => $password,
                     // Instance 7 - Unused (disabled)
                     "{$prefix}.7.Enable" => ['value' => false, 'type' => 'xsd:boolean'],
@@ -5210,6 +5460,8 @@ class DeviceController extends Controller
                     "{$prefix}.8.Enable" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
                     "{$prefix}.8.SSIDAdvertisementEnabled" => ['value' => $enableGuest, 'type' => 'xsd:boolean'],
                     "{$prefix}.8.BeaconType" => $beaconType,
+                    "{$prefix}.8.IEEE11iAuthenticationMode" => $authMode,
+                    "{$prefix}.8.IEEE11iEncryptionModes" => $encryptionMode,
                     "{$prefix}.8.PreSharedKey.1.KeyPassphrase" => $guestPassword,
                 ],
             ],
@@ -5313,15 +5565,16 @@ class DeviceController extends Controller
         $isGigaSpire = strtolower($device->product_class ?? '') === 'gigaspire';
 
         // Security settings differ between GigaCenter and GigaSpire:
-        // GigaCenter: BeaconType = WPAand11i (WPA/WPA2 mixed)
-        // GigaSpire: BeaconType = 11iandWPA3 (WPA2/WPA3 transitional) with IEEE11i settings
+        // GigaCenter: Does NOT support WPA3, use WPA/WPA2 mixed mode
+        // GigaSpire: Supports WPA3, use WPA2/WPA3 transitional
         if ($isGigaSpire) {
             $beaconType = '11iandWPA3';
             $authMode = 'SAEandPSKAuthentication';  // WPA3-SAE + WPA2-PSK
             $encryptionMode = 'AESEncryption';
         } else {
-            $beaconType = 'WPAand11i';  // WPA/WPA2 mixed for older GigaCenter
-            $authMode = null;  // GigaCenter doesn't need explicit auth mode
+            // GigaCenter - WPA/WPA2 mixed (best available)
+            $beaconType = 'WPAand11i';
+            $authMode = null;
             $encryptionMode = null;
         }
 
@@ -5381,8 +5634,8 @@ class DeviceController extends Controller
             $params24ghz["{$prefix}.{$inst24Guest}.X_000631_IntraSsidIsolation"] = ['value' => true, 'type' => 'xsd:boolean'];
         }
 
-        // Add GigaSpire-specific security parameters (WPA3 transitional mode)
-        if ($isGigaSpire && $authMode && $encryptionMode) {
+        // Add WPA2/WPA3 transitional security parameters (GigaSpire only)
+        if ($authMode && $encryptionMode) {
             // Primary 2.4GHz security
             $params24ghz["{$prefix}.{$inst24Primary}.IEEE11iAuthenticationMode"] = $authMode;
             $params24ghz["{$prefix}.{$inst24Primary}.IEEE11iEncryptionModes"] = $encryptionMode;
@@ -5426,25 +5679,24 @@ class DeviceController extends Controller
             $params5ghz["{$prefix}.{$inst5Guest}.X_000631_IntraSsidIsolation"] = ['value' => true, 'type' => 'xsd:boolean'];
         }
 
-        // Add GigaSpire-specific parameters for 5GHz
+        // Add GigaSpire-specific parameters for 5GHz (MU-MIMO)
         if ($isGigaSpire) {
-            // MU-MIMO enable for 5GHz
             $params5ghz["{$prefix}.{$inst5Primary}.X_000631_EnableMUMIMO"] = ['value' => true, 'type' => 'xsd:boolean'];
             $params5ghz["{$prefix}.{$inst5Guest}.X_000631_EnableMUMIMO"] = ['value' => true, 'type' => 'xsd:boolean'];
             $params5ghz["{$prefix}.{$inst5Dedicated}.X_000631_EnableMUMIMO"] = ['value' => true, 'type' => 'xsd:boolean'];
+        }
 
-            // Security parameters (WPA3 transitional mode)
-            if ($authMode && $encryptionMode) {
-                // Primary 5GHz security
-                $params5ghz["{$prefix}.{$inst5Primary}.IEEE11iAuthenticationMode"] = $authMode;
-                $params5ghz["{$prefix}.{$inst5Primary}.IEEE11iEncryptionModes"] = $encryptionMode;
-                // Guest 5GHz security
-                $params5ghz["{$prefix}.{$inst5Guest}.IEEE11iAuthenticationMode"] = $authMode;
-                $params5ghz["{$prefix}.{$inst5Guest}.IEEE11iEncryptionModes"] = $encryptionMode;
-                // Dedicated 5GHz security
-                $params5ghz["{$prefix}.{$inst5Dedicated}.IEEE11iAuthenticationMode"] = $authMode;
-                $params5ghz["{$prefix}.{$inst5Dedicated}.IEEE11iEncryptionModes"] = $encryptionMode;
-            }
+        // Add WPA2/WPA3 transitional security parameters for 5GHz (GigaSpire only)
+        if ($authMode && $encryptionMode) {
+            // Primary 5GHz security
+            $params5ghz["{$prefix}.{$inst5Primary}.IEEE11iAuthenticationMode"] = $authMode;
+            $params5ghz["{$prefix}.{$inst5Primary}.IEEE11iEncryptionModes"] = $encryptionMode;
+            // Guest 5GHz security
+            $params5ghz["{$prefix}.{$inst5Guest}.IEEE11iAuthenticationMode"] = $authMode;
+            $params5ghz["{$prefix}.{$inst5Guest}.IEEE11iEncryptionModes"] = $encryptionMode;
+            // Dedicated 5GHz security
+            $params5ghz["{$prefix}.{$inst5Dedicated}.IEEE11iAuthenticationMode"] = $authMode;
+            $params5ghz["{$prefix}.{$inst5Dedicated}.IEEE11iEncryptionModes"] = $encryptionMode;
         }
 
         // Initialize networks with 2.4GHz and 5GHz

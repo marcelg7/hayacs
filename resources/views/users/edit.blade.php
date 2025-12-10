@@ -98,6 +98,63 @@
                 </div>
             </div>
 
+            <!-- Two-Factor Authentication Section -->
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Two-Factor Authentication</h3>
+
+                @if($user->hasTwoFactorEnabled())
+                    <div class="flex items-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg mb-4">
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-green-800 dark:text-green-200">
+                                Two-factor authentication is enabled
+                            </p>
+                            <p class="text-xs text-green-600 dark:text-green-400">
+                                Enabled on {{ $user->two_factor_enabled_at->format('M d, Y \a\t g:i A') }}
+                            </p>
+                        </div>
+                    </div>
+                @else
+                    <div class="flex items-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg mb-4">
+                        <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                                Two-factor authentication is not enabled
+                            </p>
+                            @if($user->isInTwoFactorGracePeriod())
+                                <p class="text-xs text-yellow-600 dark:text-yellow-400">
+                                    {{ $user->getTwoFactorGraceDaysRemaining() }} days remaining in grace period
+                                </p>
+                            @else
+                                <p class="text-xs text-red-600 dark:text-red-400">
+                                    Grace period has expired - user will be required to set up 2FA on next login
+                                </p>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
+                @if($user->hasTwoFactorEnabled() && $user->id !== auth()->id())
+                    <form action="{{ route('users.reset-2fa', $user) }}" method="POST"
+                          onsubmit="return confirm('Are you sure you want to reset two-factor authentication for this user? They will need to set it up again.');">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-yellow-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-700 focus:bg-yellow-700 active:bg-yellow-900 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Reset Two-Factor Authentication
+                        </button>
+                    </form>
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        This will disable their 2FA and give them a new 14-day grace period to set it up again.
+                    </p>
+                @endif
+            </div>
+
             <!-- Submit Button -->
             <div class="flex justify-end space-x-3">
                 <a href="{{ route('users.index') }}" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">

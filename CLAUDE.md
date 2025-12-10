@@ -1,7 +1,7 @@
 # CLAUDE.md - Project Context & Current State
 
-**Last Updated**: December 9, 2025
-**Current Focus**: Production cutover in progress - 1,364 devices connected (92.5% online)
+**Last Updated**: December 10, 2025
+**Current Focus**: Production cutover complete - 9,775 devices connected, automated billing sync active
 
 ---
 
@@ -61,6 +61,7 @@ public function isGigaCenter(): bool
 - **Core TR-069 CWMP**: Full implementation with TR-098 and TR-181 support
 - **Device Management**: 1,364 devices connected (92.5% online), cutover in progress
 - **User Authentication**: Laravel Breeze with Blade templates and dark mode
+- **Two-Factor Authentication (2FA)**: TOTP-based 2FA with 14-day grace period (December 9, 2025)
 - **Role-Based Access Control**: Admin, User, and Support roles with middleware protection
 - **User Management**: Full CRUD interface for admins to manage users
 - **Password Enforcement**: Mandatory password change on first login
@@ -68,18 +69,95 @@ public function isGigaCenter(): bool
 - **Smart Parameter Discovery**: "Get Everything" with optimized per-data-model approach (TR-098: single GPV, TR-181: chunked discovery)
 - **Parameter Search**: Live search with 300ms debounce across 5,000+ parameters
 - **Global Search**: Optimized to average 69ms response time (see December 5, 2025 updates)
+- **Reports Page**: Optimized from 46s to 6s cold / 1ms cached (see December 10, 2025 updates)
 - **CSV Export**: Streaming export with search filter support
 - **Configuration Backup/Restore**: Full backup and restore functionality
 - **Port Forwarding (NAT)**: Comprehensive port mapping management
 - **WiFi Scanning**: Interference detection and channel analysis
-- **WiFi Configuration**: Full WiFi management with verification system for slow devices
+- **WiFi Configuration**: Full WiFi management with verification system, WPA2/WPA3 support, guest password customization
 - **Enhanced Refresh**: Device refresh surpassing USS capabilities
 - **Firmware Management**: Upload and deploy firmware updates
 - **Dashboard**: Real-time device overview and statistics with proper authentication
 - **Task Queue**: Asynchronous device operations with status tracking and smart timeouts
 - **Theme Switcher**: Dark/light mode toggle in navigation
-- **Subscriber Management**: Import from CSV, link devices by serial number
+- **Subscriber Management**: Import from CSV, link devices by serial number, device links in subscriber view
+- **Automated Billing Sync**: SFTP-based sync with NISC Ivue every 15 minutes (see below)
 - **Background Job Processing**: Queue-based imports with progress tracking
+- **Remote GUI Access**: Secure temporary access with password rotation (see below)
+
+---
+
+## Remote GUI Password Management
+
+### Overview
+Devices have a random support/superadmin password set as an extra layer of security. When a technician needs GUI access, the password is temporarily reset to a known value, then randomized again after the session expires.
+
+### Password Parameters by Device Type
+
+| Device Type | OUI | Password Parameter | Username | Protocol/Port |
+|-------------|-----|-------------------|----------|---------------|
+| Calix GigaCenter (ENT/ONT) | Various | `InternetGatewayDevice.User.2.Password` | support | HTTP:8080 |
+| Calix GigaSpire | Various | `InternetGatewayDevice.User.2.Password` | support | HTTP:8080 |
+| Nokia TR-181 | 0C7C28 | `Device.Users.User.2.Password` | superadmin | HTTPS:443 |
+| Nokia TR-098 | 80AB4D | `InternetGatewayDevice.X_Authentication.WebAccount.Password` | superadmin | HTTPS:443 |
+
+### Remote Access Enable Parameters
+
+| Device Type | Enable Parameter | Value |
+|-------------|-----------------|-------|
+| Calix GigaSpire/GigaCenter | `InternetGatewayDevice.UserInterface.RemoteAccess.Enable` | true |
+| Calix GigaSpire/GigaCenter | `InternetGatewayDevice.User.2.RemoteAccessCapable` | true |
+| Nokia TR-181 | `Device.UserInterface.RemoteAccess.Enable` | true |
+| Nokia TR-098 | `InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_ALU-COM_WanAccessCfg.HttpsDisabled` | false |
+
+### GUI Button Flow
+
+**When user clicks GUI button:**
+1. Reset support/superadmin password to known value from `.env` (`SUPPORT_PASSWORD`)
+2. Enable remote access on device
+3. Set `remote_support_expires_at` to 1 hour from now
+4. Send connection request to device
+5. Open browser to device GUI
+
+**When remote access expires (or user clicks "Close Remote Access"):**
+1. Disable remote access on device
+2. Reset support/superadmin password to random value
+3. Clear `remote_support_expires_at`
+
+### Environment Variables
+```env
+# Known support password (set on GUI access)
+SUPPORT_PASSWORD=keepOut-72863!!!
+GIGASPIRE_SUPPORT_USER=support
+GIGASPIRE_SUPPORT_PASSWORD=keepOut-72863!!!
+```
+
+### Scheduled Tasks
+
+**Nightly Audit (10 PM)** - `devices:audit-remote-access`
+- Finds all devices with remote access still enabled (except SmartRG)
+- Disables remote access
+- Resets password to random value
+- Runs at 10 PM when My Support team closes
+
+**Expired Session Cleanup (every 5 min)** - `devices:reset-expired-remote-support`
+- Finds devices where `remote_support_expires_at < now()`
+- Disables remote access
+- Resets password to random value
+
+### Initial Setup
+Run once to set random passwords for all devices:
+```bash
+php artisan devices:randomize-support-passwords
+```
+
+### Files
+- `app/Http/Controllers/Api/DeviceController.php` - `remoteGui()`, `closeRemoteAccess()` methods
+- `app/Console/Commands/ResetExpiredRemoteSupport.php` - Handles expired sessions
+- `app/Console/Commands/AuditRemoteAccess.php` - Nightly audit at 10 PM
+- `app/Console/Commands/RandomizeSupportPasswords.php` - Initial password randomization
+
+---
 
 ### Beacon G6 Debugging - RESOLVED ✅
 
@@ -434,6 +512,57 @@ $user->isAdminOrSupport()  // Returns true if role is 'admin' or 'support'
 - Minimum 8 characters
 - Confirmation required
 - Laravel's default password validation rules
+
+### Two-Factor Authentication (2FA)
+**Implemented**: December 9, 2025
+
+**Method**: TOTP (Time-based One-Time Password)
+- Works with Google Authenticator, Microsoft Authenticator, Authy, 1Password
+- QR code scanning for easy setup
+- Manual secret key entry fallback
+- Zero cost (no external APIs)
+
+**Enforcement**:
+- **14-day grace period** for new users to set up 2FA
+- After grace period expires, 2FA setup is mandatory
+- Yellow banner reminder shown during grace period
+
+**User Flow**:
+1. Login with email/password
+2. If 2FA enabled: Enter 6-digit code from authenticator app
+3. If grace period active: Can set up now or defer
+4. If grace period expired: Must complete 2FA setup
+
+**Admin Features**:
+- View 2FA status in user list (Enabled/Grace Period/Required)
+- Reset user's 2FA if they lose access to authenticator
+- Reset gives user new 14-day grace period
+
+**User Model Methods**:
+```php
+$user->hasTwoFactorEnabled()       // Check if 2FA is active
+$user->isInTwoFactorGracePeriod()  // Check if within 14-day grace
+$user->requiresTwoFactorSetup()    // Check if setup is required
+$user->getTwoFactorGraceDaysRemaining()  // Days left in grace
+$user->enableTwoFactor($secret)    // Enable 2FA with secret
+$user->disableTwoFactor()          // Admin reset (restarts grace)
+```
+
+**Routes**:
+- `/two-factor/challenge` - Enter code after login
+- `/two-factor/setup` - QR code and setup instructions
+- `/two-factor/verify` - Verify code
+- `/two-factor/enable` - Enable 2FA
+- `/users/{user}/reset-2fa` - Admin reset (POST)
+
+**Middleware**:
+- `EnsureTwoFactorChallenge` - Redirects to challenge if 2FA enabled but not verified
+- `EnsureTwoFactorSetup` - Redirects to setup if grace period expired
+
+**Database Fields** (users table):
+- `two_factor_secret` - Encrypted TOTP secret key
+- `two_factor_enabled_at` - When 2FA was enabled
+- `two_factor_grace_started_at` - When grace period started
 
 ### API Authentication
 **Stack**: Laravel Sanctum for SPA authentication
@@ -1556,6 +1685,258 @@ Schedule::command('logs:manage --all --max-size=100 --retention=30')
 | `tasks:timeout-pending` | Hourly | Handle stuck pending tasks |
 | `workflows:process` | Every minute | Execute group workflows |
 | `devices:reset-expired-remote-support` | Every 5 min | Reset expired SSH passwords |
+| `devices:mark-offline --threshold=20` | Every 5 min | Mark stale devices as offline |
+| `devices:audit-remote-access` | Daily 10 PM | Disable stale remote access sessions |
+| `billing:sync` | Every 15 min | Sync subscriber data from NISC Ivue |
 | `logs:manage --all` | Daily 3 AM | Rotate, compress, cleanup logs |
+
+---
+
+## Recent Updates (December 10, 2025)
+
+### Automated Billing System Sync ✅
+
+**Purpose**: Automatically sync subscriber and equipment data from NISC Ivue billing system to Hay ACS, linking TR-069 devices to subscribers by serial number.
+
+**SFTP Configuration**:
+| Setting | Value |
+|---------|-------|
+| Host | `webapps.hay.net` (163.182.253.70) |
+| Port | `22` |
+| Username | `billingsync` |
+| Upload Directory | `/uploads/` |
+| Chroot Jail | `/home/billingsync` |
+
+**File Format** (from NISC Ivue):
+- `Ivue-Equipment-Agreement-Based{timestamp}.csv` - Primary file (~2.5MB, 16,160 rows)
+- `Ivue-Equipment-Location-Based{timestamp}.csv` - Secondary file (~160KB, 1,000 rows)
+- Headers: `Customer,Account,Agreement,Name,Serv Type,Conn Dt,Equip Item,Equip Desc,Start Dt,Manufacturer,Model,Serial`
+
+**Hybrid Import Approach**:
+The sync uses a "hybrid" approach that balances data freshness with ID stability:
+1. **Subscribers**: Upsert (updateOrCreate) - IDs stay stable across syncs
+2. **Equipment**: Full truncate and reimport - always fresh from billing system
+3. **Device Links**: Clear and rebuild via bulk UPDATE with JOIN
+
+This approach handles device swaps correctly (old device loses link, new device gets link) while keeping subscriber IDs stable for foreign key relationships.
+
+**Performance Benchmarks**:
+| Phase | Time | Notes |
+|-------|------|-------|
+| Count rows | ~0s | Fast file line counting |
+| Clear device links | 0.11s | `UPDATE devices SET subscriber_id = NULL` |
+| Truncate equipment | 0.02s | With FK checks disabled |
+| Process files | ~53s | 17,160 rows via updateOrCreate |
+| Link devices | **0.26s** | Bulk UPDATE with JOIN (requires index) |
+| **TOTAL** | **~53s** | Well under 15-minute interval |
+
+**Critical Index**:
+```sql
+CREATE INDEX devices_serial_number_index ON devices (serial_number);
+```
+Without this index, device linking takes 280+ seconds. With the index, it takes <1 second.
+
+**Change Detection**:
+- Uses MD5 file hash comparison to skip processing when files are identical
+- Even if new files are uploaded with same name, content is compared
+- Skipping saves full ~53 seconds when data hasn't changed
+
+**Command Usage**:
+```bash
+# Normal sync (detects changes, processes if needed)
+php artisan billing:sync
+
+# Force sync even if files unchanged
+php artisan billing:sync --force
+
+# Preview without syncing
+php artisan billing:sync --dry-run
+
+# Sync but keep old files (don't cleanup)
+php artisan billing:sync --keep-files
+```
+
+**Current Statistics** (as of December 10, 2025):
+- **Subscribers**: 9,305 records
+- **Equipment**: 17,131 records
+- **Devices Linked**: 9,772 (99.7% of 9,775 TR-069 devices)
+- **Link Rate**: Near 100% for TR-069 managed devices
+
+**Files Created/Modified**:
+- `app/Console/Commands/SyncBillingData.php` - Main sync command
+- `app/Jobs/ImportSubscribersJob.php` - Hybrid import with benchmarking
+- `database/migrations/2025_12_10_135829_add_serial_number_index_to_devices_table.php`
+- `routes/console.php` - Added scheduler entry
+
+**Storage Paths**:
+- SFTP uploads: `/home/billingsync/uploads/`
+- Symlink: `/var/www/hayacs/storage/billing-sync` → `/home/billingsync/uploads`
+- Logs: `storage/logs/billing-sync.log`
+
+**Troubleshooting**:
+```bash
+# Check sync logs
+tail -f storage/logs/billing-sync.log
+
+# Check last sync cache
+php artisan tinker --execute="print_r(Cache::get('billing_sync_last_files'));"
+
+# Manual device linking test
+php artisan tinker --execute="
+\$start = microtime(true);
+\$affected = DB::update('UPDATE devices d INNER JOIN subscriber_equipment e ON d.serial_number = e.serial SET d.subscriber_id = e.subscriber_id WHERE e.serial IS NOT NULL AND e.subscriber_id IS NOT NULL');
+echo \"Linked \$affected devices in \" . round(microtime(true) - \$start, 2) . 's';
+"
+```
+
+### Reports Page Performance Optimization ✅
+
+**Problem**: The `/reports` page was taking 46+ seconds to load due to expensive database queries.
+
+**Solution**: Optimized queries and added strategic caching.
+
+**Results**:
+| Scenario | Before | After | Improvement |
+|----------|--------|-------|-------------|
+| Cold cache | 46 seconds | 6.1 seconds | **7.6x faster** |
+| Warm cache | N/A | 1ms | **Instant** |
+
+**Key Changes**:
+1. **Duplicate MAC query** (`getDuplicateMacCount()`):
+   - Changed from `LIKE '%MACAddress%' AND LIKE '%WAN%'` to fulltext search
+   - Uses existing `parameters_name_fulltext` index
+   - Query time: 45s → 4.7s (10x faster)
+   - Added 30-minute cache (`reports.duplicate_macs_count`)
+
+2. **Excessive informs query** (`getExcessiveInformsCount()`):
+   - Added 30-minute cache (`reports.excessive_informs_count`)
+
+3. **Detailed duplicate MACs report** (`duplicateMacs()`):
+   - Also updated to use fulltext search
+
+**Cache Strategy**:
+- Summary counts: 5-minute cache
+- Expensive queries (MAC duplicates, excessive informs): 30-minute cache
+- Users can force refresh via the refresh button
+
+### Standard WiFi Setup Enhancements ✅
+
+**Guest Password Field**:
+- Added optional guest WiFi password field in Standard WiFi Setup
+- Shows only when "Enable Guest" is checked
+- Leave blank to auto-generate a memorable password (e.g., "BlueSky472")
+- Enter custom password (8+ chars) to use your own
+- Dynamic hints show validation status
+
+**Advanced WiFi Password Storage**:
+- When setting a password in the Advanced WiFi section, it now stores in `DeviceWifiCredential`
+- This makes the password visible in the Standard WiFi "Current Configuration" section
+- Works for both main and guest network passwords
+- Instance detection by device type:
+
+| Device Type | Main Network Instances | Guest Network Instances |
+|-------------|------------------------|-------------------------|
+| Calix GigaCenter | 1, 9 | 2, 10 |
+| Calix GigaSpire | 1, 9 | 2, 10 |
+| Nokia TR-098 | 1, 5 | 4, 8 |
+
+### WiFi Security Mode Configuration ✅
+
+**Updated all Standard WiFi Setup to use proper WPA2/WPA3 security where supported**:
+
+| Device Type | Security Mode | BeaconType | IEEE11i Parameters |
+|-------------|---------------|------------|-------------------|
+| **Nokia TR-098** | WPA2/WPA3 | `11iandWPA3` | `SAEandPSKAuthentication`, `AESEncryption` |
+| **Nokia TR-181** | WPA3-Personal-Transition | N/A | `ModeEnabled` |
+| **Calix GigaSpire** | WPA2/WPA3 | `11iandWPA3` | `SAEandPSKAuthentication`, `AESEncryption` |
+| **Calix GigaCenter** | WPA/WPA2 | `WPAand11i` | None (doesn't support WPA3) |
+
+**Note**: GigaCenters do NOT support WPA3, so they remain on WPA/WPA2 mixed mode which is the best available option for those devices.
+
+### Subscriber Page Device Links ✅
+
+**Equipment Section**:
+- TR-069 devices now take priority for linking (green link with lightning bolt icon)
+- Cable modems only show cable portal link if there's no matching TR-069 device
+- Fallback to plain serial number if no match
+
+**Connected TR-069 Devices Section**:
+- Serial numbers are now clickable links to the device view page
+- Styled with green background and lightning bolt icon (consistent with equipment section)
+
+### Automated Initial Backup Workflow ✅
+
+**Purpose**: Systematically run "Get Everything" on all devices to create initial configuration backups, rate-limited to avoid server overload.
+
+**Device Group**: "Devices Needing Initial Backup" (ID: 3)
+- Rule: `initial_backup_created = false`
+- Dynamically matches devices as they join the ACS
+
+**Workflow**: "Initial Backup (Get Everything)" (ID: 15)
+| Setting | Value |
+|---------|-------|
+| Task Type | `get_parameter_names` |
+| Rate Limit | 100 devices/hour |
+| Max Concurrent | 10 |
+| Retries | 2 (30 min delay) |
+| Run Once Per Device | Yes |
+
+**Auto Data Model Detection**:
+- Workflow automatically detects device data model (TR-098 vs TR-181)
+- Sets correct root path: `InternetGatewayDevice.` or `Device.`
+- `for_initial_backup: true` flag triggers backup creation on completion
+
+**Files Modified**:
+- `app/Models/DeviceGroupRule.php` - Added `initial_backup_created` to MATCHABLE_FIELDS
+- `app/Services/DeviceGroupService.php` - Added boolean field SQL handling
+- `app/Services/WorkflowExecutionService.php` - Added `buildGetParameterNamesParams()` method
+- `app/Http/Controllers/DeviceGroupController.php` - Added dropdown values for new field
+
+### Workflow Execution Bug Fix ✅
+
+**Problem**: Workflow executions stayed "queued" even after tasks completed, blocking the concurrent limit and stalling workflows.
+
+**Root Cause**: `handleGetParameterNamesResponse()` called `$task->markAsCompleted()` but NOT `$this->workflowExecutionService->onTaskCompleted($task)`.
+
+**Fix**: Added `onTaskCompleted()` call at line 789 of `CwmpController.php`.
+
+**Same bug existed in**: `handleTransferCompleteResponse()` (fixed earlier for firmware upgrades).
+
+**Impact**: Workflow executions now properly transition from "queued" → "completed" when tasks finish.
+
+### Device Online Status Tracking ✅
+
+**Problem**: All devices showed `online=true` even if they hadn't checked in for hours/days. No mechanism existed to mark devices offline.
+
+**Solution**: Created `devices:mark-offline` command that marks devices offline if they haven't sent an Inform within the threshold period.
+
+**Command**: `php artisan devices:mark-offline`
+```bash
+# Mark offline if no inform in 20 minutes (default)
+php artisan devices:mark-offline
+
+# Custom threshold
+php artisan devices:mark-offline --threshold=30
+
+# Preview without changes
+php artisan devices:mark-offline --dry-run
+```
+
+**Scheduled**: Every 5 minutes via `routes/console.php`
+
+**Files Created**:
+- `app/Console/Commands/MarkOfflineDevices.php`
+
+**Current Statistics** (December 10, 2025):
+- Total devices: 9,965
+- Online: 8,451 (84.8%)
+- Offline: 1,514 (15.2%)
+
+**Offline Breakdown by Age**:
+| Last Inform Age | Count | Likely Cause |
+|-----------------|-------|--------------|
+| 20-60 min | 660 | Longer inform intervals |
+| 1-6 hours | 828 | Network issues or USS migration |
+| 6+ hours | 26 | Truly offline/powered down |
 
 ---

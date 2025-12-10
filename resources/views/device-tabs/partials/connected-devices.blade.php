@@ -76,6 +76,7 @@
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Device</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">IP Address</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">MAC Address</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Interface</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Signal</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Down / Up Rate</th>
@@ -203,6 +204,13 @@
                                 </div>
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-{{ $colors['text'] }} font-mono">{{ $connHost['IPAddress'] ?? '-' }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                @if($connHostMac)
+                                    <x-mac-address :mac="$connHostMac" />
+                                @else
+                                    <span class="text-gray-400 dark:text-{{ $colors['text-muted'] }}">-</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-{{ $colors['text-muted'] }}">{{ $connInterfaceType }}</td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm">
                                 @if($connSignalStrength !== null)

@@ -291,6 +291,8 @@ class DeviceGroupController extends Controller
             'data_model' => ['TR-098', 'TR-181'],
 
             'online' => ['true', 'false'],
+
+            'initial_backup_created' => ['true', 'false'],
         ];
     }
 }

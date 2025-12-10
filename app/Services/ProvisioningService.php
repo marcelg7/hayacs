@@ -244,13 +244,13 @@ class ProvisioningService
             // Base TR-098 config - management server settings
             // Must include proper types for strict devices like Calix 844E
             $config = [
-                // Enable periodic inform every 5 minutes
+                // Enable periodic inform every 15 minutes
                 'InternetGatewayDevice.ManagementServer.PeriodicInformEnable' => [
                     'value' => '1',
                     'type' => 'xsd:boolean',
                 ],
                 'InternetGatewayDevice.ManagementServer.PeriodicInformInterval' => [
-                    'value' => '300',
+                    'value' => '900',
                     'type' => 'xsd:unsignedInt',
                 ],
 
@@ -287,13 +287,13 @@ class ProvisioningService
             }
         } else { // TR-181
             $config = [
-                // Enable periodic inform every 5 minutes
+                // Enable periodic inform every 15 minutes
                 'Device.ManagementServer.PeriodicInformEnable' => [
                     'value' => 'true',
                     'type' => 'xsd:boolean',
                 ],
                 'Device.ManagementServer.PeriodicInformInterval' => [
-                    'value' => '300',
+                    'value' => '900',
                     'type' => 'xsd:unsignedInt',
                 ],
 

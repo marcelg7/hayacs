@@ -11,8 +11,16 @@
                 <span x-text="load1" :class="load1 > 10 ? 'text-red-400' : load1 > 5 ? 'text-yellow-400' : 'text-green-400'" class="ml-1 font-mono"></span>
             </span>
             <span class="flex items-center">
-                <span class="text-gray-500">T:</span>
-                <span x-text="tasksPending" class="ml-1 font-mono text-yellow-400"></span>
+                <span class="text-gray-500">M:</span>
+                <span x-text="memoryPercent + '%'" :class="memoryPercent > 90 ? 'text-red-400' : memoryPercent > 80 ? 'text-yellow-400' : 'text-green-400'" class="ml-1 font-mono"></span>
+            </span>
+            <span class="flex items-center">
+                <span class="text-gray-500">Q:</span>
+                <span x-text="queuePending" :class="queuePending > 100 ? 'text-yellow-400' : 'text-gray-400'" class="ml-1 font-mono"></span>
+            </span>
+            <span class="flex items-center">
+                <span class="text-gray-500">D:</span>
+                <span x-text="diskPercent + '%'" :class="diskPercent > 90 ? 'text-red-400' : diskPercent > 80 ? 'text-yellow-400' : 'text-green-400'" class="ml-1 font-mono"></span>
             </span>
         </div>
         <span x-text="uptime" class="font-mono text-gray-400 text-xs"></span>
@@ -48,6 +56,54 @@
                 <span x-text="tasksPending" class="ml-1 font-mono text-yellow-400"></span>
                 <span class="text-gray-500 ml-1">pending</span>
             </span>
+            <span class="text-gray-600">|</span>
+            <span class="flex items-center">
+                <svg class="w-3 h-3 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                </svg>
+                <span class="text-gray-500">Disk:</span>
+                <span x-text="diskUsedGb + '/' + diskTotalGb + 'GB'" class="ml-1 font-mono text-gray-400"></span>
+                <span x-text="'(' + diskPercent + '%)'" :class="diskPercent > 90 ? 'text-red-400' : diskPercent > 80 ? 'text-yellow-400' : 'text-green-400'" class="ml-1 font-mono"></span>
+            </span>
+            <span class="text-gray-600">|</span>
+            <span class="flex items-center">
+                <svg class="w-3 h-3 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
+                </svg>
+                <span class="text-gray-500">MySQL:</span>
+                <span x-text="mysqlThreads + ' conn'" class="ml-1 font-mono text-gray-400"></span>
+                <span class="text-gray-500 mx-1">/</span>
+                <span x-text="mysqlQps + ' qps'" class="font-mono text-gray-400"></span>
+            </span>
+            <span class="text-gray-600">|</span>
+            <span class="flex items-center">
+                <svg class="w-3 h-3 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                </svg>
+                <span class="text-gray-500">Mem:</span>
+                <span x-text="memoryUsedMb + '/' + memoryTotalMb + 'MB'" class="ml-1 font-mono text-gray-400"></span>
+                <span x-text="'(' + memoryPercent + '%)'" :class="memoryPercent > 90 ? 'text-red-400' : memoryPercent > 80 ? 'text-yellow-400' : 'text-green-400'" class="ml-1 font-mono"></span>
+            </span>
+            <span class="text-gray-600">|</span>
+            <span class="flex items-center">
+                <svg class="w-3 h-3 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                <span class="text-gray-500">Queue:</span>
+                <span x-text="queuePending" :class="queuePending > 100 ? 'text-yellow-400' : 'text-gray-400'" class="ml-1 font-mono"></span>
+                <template x-if="queueFailed > 0">
+                    <span class="text-red-400 font-mono ml-1">(<span x-text="queueFailed"></span> failed)</span>
+                </template>
+            </span>
+            <span class="text-gray-600">|</span>
+            <span class="flex items-center">
+                <svg class="w-3 h-3 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+                <span class="text-gray-500">Cache:</span>
+                <span x-text="cacheEntries" class="ml-1 font-mono text-gray-400"></span>
+                <span x-text="'(' + cacheSizeKb + 'KB)'" class="ml-1 font-mono text-gray-500"></span>
+            </span>
         </div>
         <div class="flex items-center space-x-2 text-gray-500">
             <span x-text="lastUpdate" class="text-xs"></span>
@@ -62,16 +118,42 @@ function serverStatus() {
         load15: '-',
         uptime: '-',
         tasksPending: '-',
+        diskUsedGb: '-',
+        diskTotalGb: '-',
+        diskPercent: 0,
+        mysqlThreads: '-',
+        mysqlQps: '-',
+        memoryUsedMb: '-',
+        memoryTotalMb: '-',
+        memoryPercent: 0,
+        queuePending: 0,
+        queueFailed: 0,
+        cacheEntries: 0,
+        cacheSizeKb: 0,
         lastUpdate: '',
         async fetchStatus() {
             try {
-                const response = await fetch('/server-status');
+                const response = await fetch('/server-status', {
+                    headers: { 'X-Background-Poll': 'true' }
+                });
                 const data = await response.json();
                 this.load1 = data.load1;
                 this.load5 = data.load5;
                 this.load15 = data.load15;
                 this.uptime = data.uptime;
                 this.tasksPending = data.tasks_pending;
+                this.diskUsedGb = data.disk_used_gb;
+                this.diskTotalGb = data.disk_total_gb;
+                this.diskPercent = data.disk_percent;
+                this.mysqlThreads = data.mysql_threads;
+                this.mysqlQps = data.mysql_qps;
+                this.memoryUsedMb = data.memory_used_mb;
+                this.memoryTotalMb = data.memory_total_mb;
+                this.memoryPercent = data.memory_percent;
+                this.queuePending = data.queue_pending;
+                this.queueFailed = data.queue_failed;
+                this.cacheEntries = data.cache_entries;
+                this.cacheSizeKb = data.cache_size_kb;
                 this.lastUpdate = new Date().toLocaleTimeString();
             } catch (e) {
                 console.error('Failed to fetch server status', e);
@@ -110,9 +192,11 @@ function serverStatus() {
                     <x-nav-link :href="route('subscribers.index')" :active="request()->routeIs('subscribers.*')">
                         {{ __('Subscribers') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
-                        {{ __('Reports') }}
-                    </x-nav-link>
+                    @if(Auth::user()->isAdmin())
+                        <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
+                            {{ __('Reports') }}
+                        </x-nav-link>
+                    @endif
                     @if(Auth::user()->isAdmin())
                         {{-- Automation Dropdown (Groups & Workflows) --}}
                         <div class="hidden sm:flex sm:items-center" x-data="{ open: false }">
@@ -237,9 +321,11 @@ function serverStatus() {
             <x-responsive-nav-link :href="route('subscribers.index')" :active="request()->routeIs('subscribers.*')">
                 {{ __('Subscribers') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
-                {{ __('Reports') }}
-            </x-responsive-nav-link>
+            @if(Auth::user()->isAdmin())
+                <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
+                    {{ __('Reports') }}
+                </x-responsive-nav-link>
+            @endif
             @if(Auth::user()->isAdmin())
                 <div class="border-t border-gray-200 dark:border-gray-600 pt-2 mt-2">
                     <div class="px-4 py-1 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase">Automation</div>

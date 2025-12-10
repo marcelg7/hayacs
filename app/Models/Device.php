@@ -331,22 +331,35 @@ class Device extends Model
     }
 
     /**
-     * Get the TR-069 parameter path for the WebAccount/superadmin password
+     * Get the TR-069 parameter path for the support/superadmin password
+     * Returns the password parameter path based on device type
      */
     public function getPasswordParameterPath(): ?string
     {
-        if (!$this->isNokiaBeacon()) {
+        $dataModel = $this->getDataModel();
+
+        // Nokia devices
+        if ($this->isNokia()) {
+            if ($dataModel === 'TR-098') {
+                return 'InternetGatewayDevice.X_Authentication.WebAccount.Password';
+            } else {
+                // TR-181: User.2 is superadmin
+                return 'Device.Users.User.2.Password';
+            }
+        }
+
+        // Calix devices (GigaSpire, GigaCenter) - User.2 is support account
+        if ($this->isCalix()) {
+            return 'InternetGatewayDevice.User.2.Password';
+        }
+
+        // SmartRG devices don't need password management (use MER network)
+        if ($this->isSmartRG()) {
             return null;
         }
 
-        $dataModel = $this->getDataModel();
-
-        if ($dataModel === 'TR-098') {
-            return 'InternetGatewayDevice.X_Authentication.WebAccount.Password';
-        } else {
-            // TR-181: User.2 is superadmin
-            return 'Device.Users.User.2.Password';
-        }
+        // Generic TR-098 fallback - assume User.2 is support
+        return 'InternetGatewayDevice.User.2.Password';
     }
 
     /**
@@ -423,19 +436,80 @@ class Device extends Model
     }
 
     /**
-     * Disable remote support - resets password to device-specific password
+     * Disable remote support - resets password to random value and disables remote access
      */
     public function disableRemoteSupport(): ?Task
     {
-        if (!$this->isNokiaBeacon()) {
+        // SmartRG devices don't need password management (use MER network access)
+        if ($this->isSmartRG()) {
+            // Just clear the expiry time
+            $this->update([
+                'remote_support_expires_at' => null,
+                'remote_support_enabled_by' => null,
+            ]);
             return null;
         }
 
-        // Create task to reset to device-specific password
-        $task = $this->createSetPasswordTask(
-            $this->getDevicePassword(),
-            'Disable remote support - reset to device password'
-        );
+        $paramPath = $this->getPasswordParameterPath();
+        if (!$paramPath) {
+            return null;
+        }
+
+        // Generate random password (16 chars alphanumeric + special)
+        $randomPassword = bin2hex(random_bytes(8)) . '!' . rand(10, 99);
+
+        // Build parameters to disable remote access and reset password
+        $dataModel = $this->getDataModel();
+        $disableParams = [];
+
+        if ($this->isNokia() && $dataModel === 'TR-181') {
+            $disableParams = [
+                'Device.UserInterface.RemoteAccess.Enable' => [
+                    'value' => false,
+                    'type' => 'xsd:boolean',
+                ],
+                $paramPath => [
+                    'value' => $randomPassword,
+                    'type' => 'xsd:string',
+                ],
+            ];
+        } elseif ($this->isNokia() && $dataModel === 'TR-098') {
+            $disableParams = [
+                'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_ALU-COM_WanAccessCfg.HttpsDisabled' => [
+                    'value' => true,
+                    'type' => 'xsd:boolean',
+                ],
+                $paramPath => [
+                    'value' => $randomPassword,
+                    'type' => 'xsd:string',
+                ],
+            ];
+        } else {
+            // Calix and generic TR-098 devices
+            $disableParams = [
+                'InternetGatewayDevice.UserInterface.RemoteAccess.Enable' => [
+                    'value' => false,
+                    'type' => 'xsd:boolean',
+                ],
+                'InternetGatewayDevice.User.2.RemoteAccessCapable' => [
+                    'value' => false,
+                    'type' => 'xsd:boolean',
+                ],
+                $paramPath => [
+                    'value' => $randomPassword,
+                    'type' => 'xsd:string',
+                ],
+            ];
+        }
+
+        // Create task to disable remote access and reset password
+        $task = Task::create([
+            'device_id' => $this->id,
+            'task_type' => 'set_parameter_values',
+            'description' => 'Disable remote support - reset password to random',
+            'status' => 'pending',
+            'parameters' => $disableParams,
+        ]);
 
         if ($task) {
             // Clear remote support tracking

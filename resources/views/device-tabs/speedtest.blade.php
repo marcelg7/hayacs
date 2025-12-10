@@ -1,5 +1,25 @@
 {{-- Speed Test Tab --}}
 <div x-show="activeTab === 'speedtest'" class="space-y-6">
+    @if($device->isGigaSpire())
+    {{-- GigaSpire Not Supported Message --}}
+    <div class="bg-white dark:bg-{{ $colors['card'] }} shadow rounded-lg p-12">
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-700">
+                <svg class="h-10 w-10 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke-width="2"/>
+                    <path stroke-linecap="round" stroke-width="2" d="M4 4l16 16"/>
+                </svg>
+            </div>
+            <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-{{ $colors['text'] }}">Speed Tests Not Currently Supported</h3>
+            <p class="mt-2 text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}">
+                GigaSpire devices do not currently support speed tests via TR-069.
+            </p>
+            <p class="mt-1 text-xs text-gray-400 dark:text-{{ $colors['text-muted'] }}">
+                This feature is on our roadmap for future development.
+            </p>
+        </div>
+    </div>
+    @else
     {{-- Current Results Card --}}
     <div class="bg-white dark:bg-{{ $colors['card'] }} shadow rounded-lg p-6"
          x-data="{
@@ -376,6 +396,7 @@
             </p>
         </div>
     </div>
+    @endif
 </div>
 
 {{-- Load Chart.js if not already loaded --}}

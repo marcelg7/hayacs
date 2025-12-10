@@ -176,7 +176,17 @@
                                                         @php
                                                             $isValidMac = strlen(preg_replace('/[^a-fA-F0-9]/', '', $equipment->serial)) === 12;
                                                         @endphp
-                                                        @if($subscriber->isCableInternet() && $isValidMac)
+                                                        @if($matchingDevice)
+                                                            {{-- TR-069 device link --}}
+                                                            <a href="{{ route('device.show', $matchingDevice->id) }}"
+                                                               class="inline-flex items-center bg-green-100 dark:bg-green-900 px-2 py-1 rounded text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800 transition-colors">
+                                                                {{ $equipment->serial }}
+                                                                <svg class="w-3 h-3 ml-1.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                                                </svg>
+                                                            </a>
+                                                        @elseif($subscriber->isCableInternet() && $isValidMac)
+                                                            {{-- Cable modem link (no TR-069 match) --}}
                                                             @php
                                                                 $cleanMac = strtolower(preg_replace('/[^a-fA-F0-9]/', '', $equipment->serial));
                                                             @endphp
@@ -194,14 +204,6 @@
                                                                 Cartograph
                                                                 <svg class="w-3 h-3 ml-1 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                                                </svg>
-                                                            </a>
-                                                        @elseif($matchingDevice)
-                                                            <a href="{{ route('device.show', $matchingDevice->id) }}"
-                                                               class="inline-flex items-center bg-green-100 dark:bg-green-900 px-2 py-1 rounded text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800 transition-colors">
-                                                                {{ $equipment->serial }}
-                                                                <svg class="w-3 h-3 ml-1.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                                                 </svg>
                                                             </a>
                                                         @else
@@ -248,7 +250,12 @@
                                 @foreach($subscriber->devices as $device)
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                                         <td class="px-4 py-3 text-sm font-mono">
-                                            <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{{ $device->serial_number }}</span>
+                                            <a href="{{ route('device.show', $device->id) }}" class="inline-flex items-center bg-green-100 dark:bg-green-900 px-2 py-1 rounded text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800 transition-colors">
+                                                {{ $device->serial_number }}
+                                                <svg class="w-3 h-3 ml-1.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                                </svg>
+                                            </a>
                                         </td>
                                         <td class="px-4 py-3 text-sm">{{ $device->manufacturer }}</td>
                                         <td class="px-4 py-3 text-sm">{{ $device->display_name }}</td>

@@ -316,23 +316,13 @@
                 </span>
                 @endif
 
-                {{-- MAC Address with copy button --}}
+                {{-- MAC Address with OUI lookup tooltip --}}
                 @if($macAddress)
-                <span class="flex items-center" x-data="{ copied: false }">
+                <span class="flex items-center">
                     <svg class="w-3.5 h-3.5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
                     </svg>
-                    <span class="font-mono" title="MAC Address">{{ $macAddress }}</span>
-                    <button @click="navigator.clipboard.writeText('{{ $macAddress }}'); copied = true; setTimeout(() => copied = false, 2000)"
-                            class="ml-1 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                            title="Copy MAC address">
-                        <svg x-show="!copied" class="w-3.5 h-3.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                        <svg x-show="copied" x-cloak class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                    </button>
+                    <x-mac-address :mac="$macAddress" />
                 </span>
                 @endif
 
@@ -638,7 +628,8 @@
                 </button>
             </form>
 
-            {{-- Speed Test --}}
+            {{-- Speed Test (hidden for GigaSpires - not currently supported) --}}
+            @if(!$device->isGigaSpire())
             <form x-data="{ submitting: false }" @submit.prevent="async (e) => {
                 if (submitting) return;
                 submitting = true;
@@ -688,6 +679,7 @@
                     <span x-show="submitting" x-cloak class="sm:hidden ml-1 truncate">...</span>
                 </button>
             </form>
+            @endif
 
             {{-- Refresh --}}
             <form x-data="{ submitting: false }" @submit.prevent="async (e) => {
@@ -855,17 +847,47 @@
                 @endif
             </button>
 
-            {{-- Remote GUI Open Indicator --}}
+            {{-- Remote GUI Open Indicator with Close Button --}}
             @if($device->remote_support_expires_at && $device->remote_support_expires_at->gt(now()))
-                <div class="col-span-3 sm:col-span-1 inline-flex items-center justify-center px-3 py-1.5 rounded-md bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700">
-                    <span class="relative flex h-2.5 w-2.5 mr-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500"></span>
-                    </span>
-                    <span class="text-xs font-medium text-yellow-800 dark:text-yellow-300">
-                        Remote GUI Open
-                        <span class="text-yellow-600 dark:text-yellow-400 ml-1 hidden sm:inline">(expires {{ $device->remote_support_expires_at->diffForHumans() }})</span>
-                    </span>
+                <div class="col-span-3 sm:col-span-2 inline-flex items-center justify-center gap-2">
+                    <div class="inline-flex items-center px-3 py-1.5 rounded-md bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700">
+                        <span class="relative flex h-2.5 w-2.5 mr-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500"></span>
+                        </span>
+                        <span class="text-xs font-medium text-yellow-800 dark:text-yellow-300">
+                            Remote GUI Open
+                            <span class="text-yellow-600 dark:text-yellow-400 ml-1 hidden sm:inline">(expires {{ $device->remote_support_expires_at->diffForHumans() }})</span>
+                        </span>
+                    </div>
+                    <button @click="async () => {
+                        if (!confirm('Close remote access? This will disable remote GUI and reset the password.')) return;
+                        taskLoading = true;
+                        taskMessage = 'Closing remote access...';
+                        try {
+                            const response = await fetch('/api/devices/{{ $device->id }}/close-remote-access', {
+                                method: 'POST',
+                                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                            });
+                            const result = await response.json();
+                            if (result.success) {
+                                taskMessage = 'Remote access closed successfully';
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                taskLoading = false;
+                                alert('Failed to close remote access');
+                            }
+                        } catch (error) {
+                            taskLoading = false;
+                            alert('Error: ' + error);
+                        }
+                    }" class="inline-flex items-center px-2 py-1.5 rounded-md text-xs font-medium text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 hover:bg-red-200 dark:hover:bg-red-900/50"
+                       title="Close remote access and reset password">
+                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Close
+                    </button>
                 </div>
             @endif
         </div>

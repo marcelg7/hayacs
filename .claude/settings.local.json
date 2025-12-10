@@ -31,7 +31,11 @@
       "Bash(sudo ls:*)",
       "Bash(pkill:*)",
       "Bash(tshark:*)",
-      "Bash(xargs basename:*)"
+      "Bash(xargs basename:*)",
+      "Bash(sudo chown:*)",
+      "Bash(composer require:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)"
     ],
     "deny": [],
     "ask": []

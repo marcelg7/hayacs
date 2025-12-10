@@ -9,6 +9,7 @@ use App\Models\Parameter;
 use App\Models\Task;
 use App\Models\WorkflowExecution;
 use App\Models\WorkflowLog;
+use App\Services\ConnectionRequestService;
 use App\Services\Tr181MigrationService;
 use App\Services\NokiaSshService;
 use Illuminate\Support\Facades\Log;
@@ -84,9 +85,50 @@ class WorkflowExecutionService
         // If task is already completed (e.g., cached backup), trigger completion callback
         if ($task->status === 'completed') {
             $this->onTaskCompleted($task);
+        } else {
+            // Send connection request to trigger immediate task execution
+            // Don't wait for periodic inform (could be 15+ minutes)
+            $this->sendConnectionRequestForTask($device, $workflow, $task);
         }
 
         return $task;
+    }
+
+    /**
+     * Send connection request to trigger immediate task execution
+     */
+    private function sendConnectionRequestForTask(Device $device, GroupWorkflow $workflow, Task $task): void
+    {
+        try {
+            $connectionService = app(ConnectionRequestService::class);
+            $result = $connectionService->sendConnectionRequest($device);
+
+            if ($result['success']) {
+                Log::info('Connection request sent for workflow task', [
+                    'workflow_id' => $workflow->id,
+                    'workflow_name' => $workflow->name,
+                    'task_id' => $task->id,
+                    'device_id' => $device->id,
+                    'device_serial' => $device->serial_number,
+                ]);
+            } else {
+                Log::warning('Connection request failed for workflow task', [
+                    'workflow_id' => $workflow->id,
+                    'task_id' => $task->id,
+                    'device_id' => $device->id,
+                    'error' => $result['message'] ?? 'Unknown error',
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Don't fail the workflow if connection request fails
+            // Device will pick up task on next periodic inform
+            Log::warning('Exception sending connection request for workflow task', [
+                'workflow_id' => $workflow->id,
+                'task_id' => $task->id,
+                'device_id' => $device->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -308,6 +350,7 @@ class WorkflowExecutionService
             'firmware_upgrade' => $this->buildFirmwareUpgradeParams($config, $device),
             'set_parameter_values' => $this->buildSetParamsParams($config, $device),
             'get_parameter_values' => $this->buildGetParamsParams($config),
+            'get_parameter_names' => $this->buildGetParameterNamesParams($config, $device),
             'download' => $this->buildDownloadParams($config),
             'upload' => $this->buildUploadParams($config),
             'reboot', 'factory_reset' => null,
@@ -412,6 +455,25 @@ class WorkflowExecutionService
     {
         return [
             'names' => $config['names'] ?? $config['parameters'] ?? [],
+        ];
+    }
+
+    /**
+     * Build get_parameter_names parameters (for Get Everything / initial backup)
+     */
+    private function buildGetParameterNamesParams(array $config, Device $device): array
+    {
+        // Auto-detect root path based on device data model
+        $path = $config['path'] ?? null;
+        if (empty($path) || !empty($config['auto_detect_root'])) {
+            $dataModel = $device->getDataModel();
+            $path = $dataModel === 'TR-181' ? 'Device.' : 'InternetGatewayDevice.';
+        }
+
+        return [
+            'path' => $path,
+            'next_level' => $config['next_level'] ?? false,
+            'for_initial_backup' => $config['for_initial_backup'] ?? false,
         ];
     }
 

@@ -328,120 +328,6 @@
         </div>
     </div>
 
-    <!-- WiFi Radio Status -->
-    @php
-        // Get all WiFi-related parameters
-        $wifiParams = $device->parameters()
-            ->where(function($q) {
-                $q->where('name', 'LIKE', '%WiFi.Radio.%')
-                  ->orWhere('name', 'LIKE', '%WiFi.SSID.%')
-                  ->orWhere('name', 'LIKE', '%WLANConfiguration%');
-            })
-            ->get();
-
-        // Organize by radio (1 = 2.4GHz, 2 = 5GHz typically)
-        $radios = [];
-        foreach ($wifiParams as $param) {
-            if (preg_match('/Radio\.(\d+)/', $param->name, $matches)) {
-                $radioNum = $matches[1];
-                if (!isset($radios[$radioNum])) {
-                    $radios[$radioNum] = [];
-                }
-                $radios[$radioNum][$param->name] = $param->value;
-            } elseif (preg_match('/WLANConfiguration\.(\d+)/', $param->name, $matches)) {
-                $radioNum = $matches[1];
-                if (!isset($radios[$radioNum])) {
-                    $radios[$radioNum] = [];
-                }
-                $radios[$radioNum][$param->name] = $param->value;
-            }
-        }
-    @endphp
-
-    @if(count($radios) > 0)
-    <div class="bg-white dark:bg-{{ $colors['card'] }} shadow overflow-hidden sm:rounded-lg mb-6">
-        <div class="px-4 py-5 sm:px-6 bg-purple-50 dark:bg-purple-900/20 flex items-center justify-between">
-            <div>
-                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-{{ $colors['text'] }}">WiFi Networks</h3>
-                <p class="mt-1 text-sm text-gray-600 dark:text-{{ $colors['text-muted'] }}">Wireless radio configuration and status</p>
-            </div>
-            <button @click="activeTab = 'wifi'" class="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium">
-                Configure WiFi &rarr;
-            </button>
-        </div>
-        <div class="border-t border-gray-200 dark:border-{{ $colors['border'] }} p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                @foreach($radios as $radioNum => $radioData)
-                    @php
-                        $ssid = '';
-                        $enabled = false;
-                        $channel = '-';
-                        $band = '-';
-                        $standard = '-';
-                        $txPower = '-';
-
-                        foreach ($radioData as $key => $value) {
-                            if (str_contains($key, '.SSID') && !str_contains($key, 'BSSID') && !str_contains($key, 'Enable')) {
-                                $ssid = $value;
-                            } elseif (str_contains($key, '.Enable')) {
-                                $enabled = ($value === 'true' || $value === '1');
-                            } elseif (str_contains($key, '.Channel')) {
-                                $channel = $value;
-                            } elseif (str_contains($key, 'OperatingFrequencyBand')) {
-                                $band = $value;
-                            } elseif (str_contains($key, 'TransmitPower')) {
-                                $txPower = $value;
-                            } elseif (str_contains($key, 'Standard') || str_contains($key, 'OperatingStandards')) {
-                                $standard = $value;
-                            }
-                        }
-
-                        // Detect band from channel if not found
-                        if ($band === '-' && is_numeric($channel)) {
-                            $band = (int)$channel <= 14 ? '2.4GHz' : '5GHz';
-                        }
-                    @endphp
-
-                    <div class="bg-gray-50 dark:bg-{{ $colors['bg'] }} rounded-lg p-4 border {{ $enabled ? 'border-green-200 dark:border-green-800' : 'border-gray-200 dark:border-' . $colors['border'] }}">
-                        <div class="flex items-center justify-between mb-3">
-                            <h4 class="text-sm font-semibold text-gray-900 dark:text-{{ $colors['text'] }}">
-                                {{ $ssid ?: "Radio $radioNum" }}
-                            </h4>
-                            @if($enabled)
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>
-                            @else
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">Disabled</span>
-                            @endif
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 text-xs">
-                            <div>
-                                <span class="text-gray-500 dark:text-{{ $colors['text-muted'] }}">Band:</span>
-                                <span class="ml-1 text-gray-900 dark:text-{{ $colors['text'] }} font-mono">{{ $band }}</span>
-                            </div>
-                            <div>
-                                <span class="text-gray-500 dark:text-{{ $colors['text-muted'] }}">Channel:</span>
-                                <span class="ml-1 text-gray-900 dark:text-{{ $colors['text'] }} font-mono">{{ $channel }}</span>
-                            </div>
-                            @if($standard !== '-')
-                            <div>
-                                <span class="text-gray-500 dark:text-{{ $colors['text-muted'] }}">Standard:</span>
-                                <span class="ml-1 text-gray-900 dark:text-{{ $colors['text'] }} font-mono">{{ $standard }}</span>
-                            </div>
-                            @endif
-                            @if($txPower !== '-')
-                            <div>
-                                <span class="text-gray-500 dark:text-{{ $colors['text-muted'] }}">TX Power:</span>
-                                <span class="ml-1 text-gray-900 dark:text-{{ $colors['text'] }} font-mono">{{ $txPower }}%</span>
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-    @endif
-
     <!-- Connected Devices Section -->
     <div class="bg-white dark:bg-{{ $colors['card'] }} shadow overflow-hidden sm:rounded-lg mb-6">
         <div class="px-4 py-5 sm:px-6 bg-yellow-50 dark:bg-yellow-900/20">
@@ -692,7 +578,13 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-{{ $colors['text'] }} font-mono">{{ $host['IPAddress'] ?? '-' }}</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-{{ $colors['text'] }} font-mono">{{ $hostMac }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                    @if($hostMac)
+                                        <x-mac-address :mac="$hostMac" />
+                                    @else
+                                        <span class="text-gray-400 dark:text-{{ $colors['text-muted'] }}">-</span>
+                                    @endif
+                                </td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-{{ $colors['text-muted'] }}">{{ $deviceTypeInfo['type'] }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-{{ $colors['text-muted'] }}">{{ $interfaceType }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm">

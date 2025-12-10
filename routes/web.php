@@ -12,6 +12,7 @@ use App\Http\Controllers\Auth\PasswordSetupController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\StatsController;
+use App\Http\Controllers\Api\OuiController;
 use App\Http\Controllers\SubscriberController;
 use App\Http\Controllers\DeviceUploadController;
 use App\Http\Controllers\DeviceGroupController;
@@ -19,6 +20,8 @@ use App\Http\Controllers\GroupWorkflowController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\SlackWebhookController;
+use App\Http\Controllers\Auth\TwoFactorController;
+use App\Http\Controllers\Admin\TwoFactorResetController;
 use Illuminate\Support\Facades\Route;
 
 // Slack Webhook for Interactive Components (no auth, verified via signing secret)
@@ -45,11 +48,43 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/change-password', [PasswordChangeController::class, 'show'])->name('password.change')->withoutMiddleware('App\Http\Middleware\EnsurePasswordChanged');
     Route::post('/change-password', [PasswordChangeController::class, 'update'])->name('password.change.update')->withoutMiddleware('App\Http\Middleware\EnsurePasswordChanged');
 
+    // Two-Factor Authentication Challenge (after login, before app access)
+    Route::get('/two-factor/challenge', [TwoFactorController::class, 'showChallenge'])
+        ->name('two-factor.challenge')
+        ->withoutMiddleware([
+            \App\Http\Middleware\EnsurePasswordChanged::class,
+            \App\Http\Middleware\EnsureTwoFactorChallenge::class,
+            \App\Http\Middleware\EnsureTwoFactorSetup::class,
+        ]);
+    Route::post('/two-factor/verify', [TwoFactorController::class, 'verify'])
+        ->name('two-factor.verify')
+        ->withoutMiddleware([
+            \App\Http\Middleware\EnsurePasswordChanged::class,
+            \App\Http\Middleware\EnsureTwoFactorChallenge::class,
+            \App\Http\Middleware\EnsureTwoFactorSetup::class,
+        ]);
+
+    // Two-Factor Authentication Setup (voluntary during grace, required after)
+    Route::get('/two-factor/setup', [TwoFactorController::class, 'showSetup'])
+        ->name('two-factor.setup')
+        ->withoutMiddleware([
+            \App\Http\Middleware\EnsureTwoFactorSetup::class,
+        ]);
+    Route::post('/two-factor/enable', [TwoFactorController::class, 'enable'])
+        ->name('two-factor.enable')
+        ->withoutMiddleware([
+            \App\Http\Middleware\EnsureTwoFactorSetup::class,
+        ]);
+
     // Theme switcher
     Route::get('/theme/{theme}', [ThemeController::class, 'set'])->name('theme.set');
 
     // Global Search (web session auth) - excluded from password change check for AJAX
     Route::get('/search', [SearchController::class, 'search'])->name('search')->withoutMiddleware(\App\Http\Middleware\EnsurePasswordChanged::class);
+
+    // MAC OUI Lookup (web session auth)
+    Route::get('/oui/lookup', [OuiController::class, 'lookup'])->name('oui.lookup')->withoutMiddleware(\App\Http\Middleware\EnsurePasswordChanged::class);
+    Route::post('/oui/bulk', [OuiController::class, 'bulkLookup'])->name('oui.bulk')->withoutMiddleware(\App\Http\Middleware\EnsurePasswordChanged::class);
 
     // Main dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -65,9 +100,10 @@ Route::middleware(['auth'])->group(function () {
     // Analytics
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
 
-    // Reports
-    Route::prefix('reports')->name('reports.')->group(function () {
+    // Reports (Admin only)
+    Route::middleware(['admin'])->prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
+        Route::get('/refresh', [ReportController::class, 'refresh'])->name('refresh');
         Route::get('/offline-devices', [ReportController::class, 'offlineDevices'])->name('offline-devices');
         Route::get('/inactive-devices', [ReportController::class, 'inactiveDevices'])->name('inactive-devices');
         Route::get('/devices-without-subscriber', [ReportController::class, 'devicesWithoutSubscriber'])->name('devices-without-subscriber');
@@ -136,6 +172,7 @@ Route::middleware(['auth'])->group(function () {
         // User Management
         Route::resource('users', UserController::class)->except(['show']);
         Route::post('/users/{user}/resend-welcome', [UserController::class, 'resendWelcome'])->name('users.resend-welcome');
+        Route::post('/users/{user}/reset-2fa', [TwoFactorResetController::class, 'reset'])->name('users.reset-2fa');
 
         // Device Types Management
         Route::resource('device-types', DeviceTypeController::class);

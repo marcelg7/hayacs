@@ -42,7 +42,9 @@
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 overflow-hidden">
             <div class="px-4 py-3 bg-indigo-50 dark:bg-indigo-900/30 border-b border-indigo-200 dark:border-indigo-800">
                 <div class="flex justify-between items-center">
-                    <h3 class="font-semibold text-gray-900 dark:text-white font-mono">{{ $dup->value }}</h3>
+                    <h3 class="font-semibold text-gray-900 dark:text-white">
+                        <x-mac-address :mac="$dup->value" />
+                    </h3>
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
                         {{ $dup->count }} devices
                     </span>

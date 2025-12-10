@@ -39,6 +39,7 @@ class DeviceGroupRule extends Model
         'tags' => 'Tags',
         'last_inform' => 'Last Inform Time',
         'created_at' => 'First Seen Date',
+        'initial_backup_created' => 'Has Initial Backup',
     ];
 
     /**
@@ -117,6 +118,7 @@ class DeviceGroupRule extends Model
             'tags' => $device->tags,
             'last_inform' => $device->last_inform,
             'created_at' => $device->created_at,
+            'initial_backup_created' => $device->initial_backup_created ? 'true' : 'false',
             default => null,
         };
     }

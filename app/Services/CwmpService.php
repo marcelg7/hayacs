@@ -613,8 +613,15 @@ class CwmpService
     /**
      * Create Download RPC (for firmware upgrades, config files, etc.)
      */
-    public function createDownload(string $url, string $fileType = '1 Firmware Upgrade Image', string $username = '', string $password = '', ?int $taskId = null): string
-    {
+    public function createDownload(
+        string $url,
+        string $fileType = '1 Firmware Upgrade Image',
+        string $username = '',
+        string $password = '',
+        ?int $taskId = null,
+        int $fileSize = 0,
+        string $targetFileName = ''
+    ): string {
         $dom = new DOMDocument('1.0', 'UTF-8');
         $dom->formatOutput = true;
 
@@ -643,11 +650,11 @@ class CwmpService
         $passwordEl = $dom->createElement('Password', htmlspecialchars($password));
         $download->appendChild($passwordEl);
 
-        $fileSize = $dom->createElement('FileSize', '0');
-        $download->appendChild($fileSize);
+        $fileSizeEl = $dom->createElement('FileSize', (string) $fileSize);
+        $download->appendChild($fileSizeEl);
 
-        $targetFileName = $dom->createElement('TargetFileName', '');
-        $download->appendChild($targetFileName);
+        $targetFileNameEl = $dom->createElement('TargetFileName', htmlspecialchars($targetFileName));
+        $download->appendChild($targetFileNameEl);
 
         $delaySeconds = $dom->createElement('DelaySeconds', '0');
         $download->appendChild($delaySeconds);

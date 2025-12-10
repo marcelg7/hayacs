@@ -25,6 +25,10 @@ class User extends Authenticatable
         'role',
         'password_changed_at',
         'must_change_password',
+        'two_factor_secret',
+        'two_factor_enabled_at',
+        'two_factor_grace_started_at',
+        'last_login_at',
     ];
 
     /**
@@ -35,6 +39,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
     ];
 
     /**
@@ -49,6 +54,10 @@ class User extends Authenticatable
             'password' => 'hashed',
             'password_changed_at' => 'datetime',
             'must_change_password' => 'boolean',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_enabled_at' => 'datetime',
+            'two_factor_grace_started_at' => 'datetime',
+            'last_login_at' => 'datetime',
         ];
     }
 
@@ -74,5 +83,82 @@ class User extends Authenticatable
     public function isAdminOrSupport(): bool
     {
         return in_array($this->role, ['admin', 'support']);
+    }
+
+    /**
+     * Check if user has 2FA enabled
+     */
+    public function hasTwoFactorEnabled(): bool
+    {
+        return !is_null($this->two_factor_enabled_at) && !is_null($this->two_factor_secret);
+    }
+
+    /**
+     * Check if user is still within 2FA grace period
+     */
+    public function isInTwoFactorGracePeriod(): bool
+    {
+        if ($this->hasTwoFactorEnabled()) {
+            return false;
+        }
+
+        $graceStart = $this->two_factor_grace_started_at ?? $this->created_at;
+
+        if (!$graceStart) {
+            return true;
+        }
+
+        return $graceStart->addDays(14)->isFuture();
+    }
+
+    /**
+     * Check if 2FA setup is required (grace period expired)
+     */
+    public function requiresTwoFactorSetup(): bool
+    {
+        return !$this->hasTwoFactorEnabled() && !$this->isInTwoFactorGracePeriod();
+    }
+
+    /**
+     * Get days remaining in grace period
+     */
+    public function getTwoFactorGraceDaysRemaining(): int
+    {
+        if ($this->hasTwoFactorEnabled()) {
+            return 0;
+        }
+
+        $graceStart = $this->two_factor_grace_started_at ?? $this->created_at;
+
+        if (!$graceStart) {
+            return 14;
+        }
+
+        $graceEnd = $graceStart->addDays(14);
+
+        return max(0, (int) now()->diffInDays($graceEnd, false));
+    }
+
+    /**
+     * Enable 2FA for user (called after first successful verification)
+     */
+    public function enableTwoFactor(string $secret): void
+    {
+        $this->update([
+            'two_factor_secret' => $secret,
+            'two_factor_enabled_at' => now(),
+        ]);
+    }
+
+    /**
+     * Disable 2FA for user (admin reset)
+     */
+    public function disableTwoFactor(): void
+    {
+        $this->update([
+            'two_factor_secret' => null,
+            'two_factor_enabled_at' => null,
+            'two_factor_grace_started_at' => now(),
+        ]);
     }
 }

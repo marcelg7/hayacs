@@ -41,3 +41,23 @@ Schedule::command('devices:reset-expired-remote-support')
 Schedule::command('logs:manage --all --max-size=100 --retention=30')
     ->dailyAt('03:00')
     ->withoutOverlapping();
+
+// Nightly remote access audit at 10 PM (when My Support team closes)
+// Disables any remaining remote access and resets passwords to random values
+Schedule::command('devices:audit-remote-access')
+    ->dailyAt('22:00')
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/remote-access-audit.log'));
+
+// Sync billing data from NISC Ivue every 15 minutes
+// Watches /home/billingsync/uploads for new CSV exports, truncates and reimports
+Schedule::command('billing:sync')
+    ->everyFifteenMinutes()
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/billing-sync.log'));
+
+// Mark devices offline if they haven't checked in within threshold (default 20 min)
+// Runs every 5 minutes to keep online status accurate
+Schedule::command('devices:mark-offline --threshold=20')
+    ->everyFiveMinutes()
+    ->withoutOverlapping();

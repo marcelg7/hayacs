@@ -2,6 +2,8 @@
 
 use App\Http\Middleware\CwmpAuth;
 use App\Http\Middleware\EnsurePasswordChanged;
+use App\Http\Middleware\EnsureTwoFactorChallenge;
+use App\Http\Middleware\EnsureTwoFactorSetup;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserIsAdminOrSupport;
 use Illuminate\Console\Scheduling\Schedule;
@@ -45,6 +47,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             EnsurePasswordChanged::class,
+            EnsureTwoFactorChallenge::class,
+            EnsureTwoFactorSetup::class,
         ]);
 
         $middleware->api(prepend: [
@@ -55,12 +59,19 @@ return Application::configure(basePath: dirname(__DIR__))
             'cwmp.auth' => CwmpAuth::class,
             'admin' => EnsureUserIsAdmin::class,
             'admin.support' => EnsureUserIsAdminOrSupport::class,
+            '2fa.challenge' => EnsureTwoFactorChallenge::class,
+            '2fa.setup' => EnsureTwoFactorSetup::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
             'cwmp',
             'device-upload/*', // TR-069 Upload RPC file reception
             'webhooks/slack/*', // Slack interactive components webhook
+        ]);
+
+        // Don't encrypt the 2FA remember cookie - we handle it as a plain token
+        $middleware->encryptCookies(except: [
+            '2fa_remember',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

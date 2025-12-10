@@ -9,6 +9,7 @@ use App\Models\CwmpSession;
 use App\Models\Task;
 use App\Services\ConnectionRequestService;
 use App\Services\CwmpService;
+use App\Services\DeviceGroupService;
 use App\Services\ProvisioningService;
 use App\Services\WorkflowExecutionService;
 use Illuminate\Http\Request;
@@ -21,7 +22,8 @@ class CwmpController extends Controller
         private CwmpService $cwmpService,
         private ProvisioningService $provisioningService,
         private ConnectionRequestService $connectionRequestService,
-        private WorkflowExecutionService $workflowExecutionService
+        private WorkflowExecutionService $workflowExecutionService,
+        private DeviceGroupService $deviceGroupService
     ) {}
 
     /**
@@ -229,9 +231,27 @@ class CwmpController extends Controller
 
             // Queue "Get Everything" task to discover all parameters for initial backup
             // This replaces the old immediate 8-parameter backup with a comprehensive one
-            if (!$device->initial_backup_created) {
-                $this->queueGetEverythingForInitialBackup($device);
+            // DISABLED during migration to reduce CPU load - re-enable after cutover stabilizes
+            // if (!$device->initial_backup_created) {
+            //     $this->queueGetEverythingForInitialBackup($device);
+            // }
+        }
+
+        // Process workflows for this device (on_connect and immediate for new group members)
+        try {
+            $queuedWorkflows = $this->deviceGroupService->processWorkflowsForDevice($device);
+            if (!empty($queuedWorkflows)) {
+                Log::info('Workflows queued for device', [
+                    'device_id' => $device->id,
+                    'workflows' => $queuedWorkflows,
+                ]);
             }
+        } catch (\Exception $e) {
+            // Don't let workflow errors break the Inform response
+            Log::error('Failed to process workflows for device', [
+                'device_id' => $device->id,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         // Fetch connection request credentials if missing
@@ -765,6 +785,9 @@ class CwmpController extends Controller
                 'total_parameters' => count($parameterList),
             ]);
 
+            // Notify workflow service about task completion
+            $this->workflowExecutionService->onTaskCompleted($task);
+
             // Optionally create a follow-up task to retrieve values for all discovered parameters
             // Only retrieve leaf parameters (these are actual values, not just object nodes)
             $leafParams = array_filter($parameterList, fn($param) => !str_ends_with($param['name'], '.'));
@@ -1083,6 +1106,9 @@ class CwmpController extends Controller
 
             if ($faultCode === 0) {
                 $task->markAsCompleted($resultData);
+
+                // Notify workflow execution service that task completed
+                $this->workflowExecutionService->onTaskCompleted($task);
 
                 Log::info('Transfer completed successfully', [
                     'device_id' => $task->device_id,
@@ -1461,7 +1487,9 @@ class CwmpController extends Controller
                 $task->parameters['file_type'] ?? '1 Firmware Upgrade Image',
                 $task->parameters['username'] ?? '',
                 $task->parameters['password'] ?? '',
-                $task->id  // Include task ID in command_key for orphan recovery
+                $task->id,  // Include task ID in command_key for orphan recovery
+                (int) ($task->parameters['file_size'] ?? 0),
+                $task->parameters['target_filename'] ?? ''
             ),
             'upload' => $this->cwmpService->createUpload(
                 $task->parameters['url'] ?? '',
@@ -1475,7 +1503,9 @@ class CwmpController extends Controller
                 $task->parameters['file_type'] ?? '3 Vendor Configuration File',
                 $task->parameters['username'] ?? '',
                 $task->parameters['password'] ?? '',
-                $task->id  // Include task ID in command_key for orphan recovery
+                $task->id,  // Include task ID in command_key for orphan recovery
+                (int) ($task->parameters['file_size'] ?? 0),
+                $task->parameters['target_filename'] ?? ''
             ),
             'ping_diagnostics' => $this->generatePingDiagnostics($task),
             'traceroute_diagnostics' => $this->generateTracerouteDiagnostics($task),

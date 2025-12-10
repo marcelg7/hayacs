@@ -543,7 +543,13 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-{{ $colors['text'] }} font-mono">{{ $host['IPAddress'] ?? '-' }}</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-{{ $colors['text'] }} font-mono">{{ $hostMac }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                    @if($hostMac)
+                                        <x-mac-address :mac="$hostMac" />
+                                    @else
+                                        <span class="text-gray-400 dark:text-{{ $colors['text-muted'] }}">-</span>
+                                    @endif
+                                </td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-{{ $colors['text-muted'] }}">{{ $deviceTypeInfo['type'] }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-{{ $colors['text-muted'] }}">{{ $interfaceType }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm">
