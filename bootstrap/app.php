@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CwmpAuth;
+use App\Http\Middleware\EnsureAllowedAccess;
 use App\Http\Middleware\EnsurePasswordChanged;
 use App\Http\Middleware\EnsureTwoFactorChallenge;
 use App\Http\Middleware\EnsureTwoFactorSetup;
@@ -61,6 +62,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.support' => EnsureUserIsAdminOrSupport::class,
             '2fa.challenge' => EnsureTwoFactorChallenge::class,
             '2fa.setup' => EnsureTwoFactorSetup::class,
+            'allowed.access' => EnsureAllowedAccess::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
@@ -69,11 +71,40 @@ return Application::configure(basePath: dirname(__DIR__))
             'webhooks/slack/*', // Slack interactive components webhook
         ]);
 
-        // Don't encrypt the 2FA remember cookie - we handle it as a plain token
+        // Don't encrypt these cookies - we handle them as plain tokens
         $middleware->encryptCookies(except: [
             '2fa_remember',
+            'trusted_device_token',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Handle 419 CSRF token mismatch - redirect to login
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            \Log::info('TokenMismatchException handler triggered', [
+                'path' => $request->path(),
+                'expects_json' => $request->expectsJson(),
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Session expired. Please refresh the page.'], 419);
+            }
+
+            return redirect()->route('login')->with('status', 'Your session has expired. Please log in again.');
+        });
+
+        // Also catch any other CSRF-related exception
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, $request) {
+            if ($e->getStatusCode() === 419) {
+                \Log::info('419 HttpException handler triggered', [
+                    'path' => $request->path(),
+                    'message' => $e->getMessage(),
+                ]);
+
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => 'Session expired. Please refresh the page.'], 419);
+                }
+
+                return redirect()->route('login')->with('status', 'Your session has expired. Please log in again.');
+            }
+        });
     })->create();

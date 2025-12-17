@@ -39,6 +39,15 @@
                     <div class="flex items-center gap-3 mt-2 text-xs text-gray-400 dark:text-gray-500">
                         <span>#{{ $task->id }}</span>
                         <span>{{ $task->created_at->diffForHumans() }}</span>
+                        <span class="inline-flex items-center">
+                            @if($task->initiated_by_user_id)
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                {{ $task->getInitiatorDisplayName() }}
+                            @else
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                ACS
+                            @endif
+                        </span>
                     </div>
                     @if($task->status === 'failed' && $task->error)
                         <p class="text-xs text-red-600 dark:text-red-400 mt-2 bg-red-50 dark:bg-red-900/20 p-2 rounded">{{ $task->error }}</p>
@@ -69,6 +78,7 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">ID</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Type</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Description</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Initiated By</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Status</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Created</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-{{ $colors['text-muted'] }} uppercase tracking-wider">Completed</th>
@@ -89,6 +99,19 @@
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}" title="{{ $task->description }}">
                     {{ $task->description ? Str::limit($task->description, 50) : '-' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    @if($task->initiated_by_user_id)
+                        <span class="inline-flex items-center text-gray-700 dark:text-gray-300">
+                            <svg class="w-4 h-4 mr-1.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                            {{ $task->getInitiatorDisplayName() }}
+                        </span>
+                    @else
+                        <span class="inline-flex items-center text-gray-500 dark:text-gray-400">
+                            <svg class="w-4 h-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            ACS
+                        </span>
+                    @endif
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     @if($task->status === 'pending')
@@ -121,7 +144,7 @@
             </tr>
             @if(($task->task_type === 'ping_diagnostics' || $task->task_type === 'traceroute_diagnostics') && $task->result)
             <tr x-show="expandedTask === {{ $task->id }}" x-cloak class="bg-gray-50 dark:bg-{{ $colors['bg'] }}">
-                <td colspan="6" class="px-6 py-4">
+                <td colspan="7" class="px-6 py-4">
                     <div class="bg-white dark:bg-{{ $colors['card'] }} rounded-lg p-4 shadow-sm">
                         <h4 class="font-semibold text-gray-900 dark:text-{{ $colors['text'] }} mb-3">Diagnostic Results</h4>
                         @if($task->task_type === 'ping_diagnostics')
@@ -255,7 +278,7 @@
             @endif
             @empty
             <tr>
-                <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}">No tasks found.</td>
+                <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-{{ $colors['text-muted'] }}">No tasks found.</td>
             </tr>
             @endforelse
         </tbody>

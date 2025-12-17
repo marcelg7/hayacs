@@ -5,6 +5,10 @@
 
     RewriteEngine On
 
+    # Allow server-status and php-fpm-status through without any processing
+    RewriteRule ^server-status - [L]
+    RewriteRule ^php-fpm-status - [L]
+
     # Set environment variables for IP restriction bypass BEFORE any redirects
     # These use THE_REQUEST which contains the original request line
     # Must use RewriteRule with [E=] flag since SetEnvIf doesn't support THE_REQUEST in .htaccess
@@ -25,6 +29,7 @@
     RewriteCond %{THE_REQUEST} !^[A-Z]+\ /device-config/
     RewriteCond %{REQUEST_URI} !^/storage/firmware/
     RewriteCond %{REQUEST_URI} !^/speedtest
+    RewriteCond %{REQUEST_URI} !^/server-status
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
     # Handle Authorization Header

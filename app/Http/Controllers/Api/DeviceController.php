@@ -207,6 +207,7 @@ class DeviceController extends Controller
 
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => $validated['type'],
             'parameters' => $validated['parameters'] ?? null,
             'status' => 'pending',
@@ -257,6 +258,7 @@ class DeviceController extends Controller
         // Query essential device info parameters
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'get_params',
             'parameters' => [
                 'names' => [
@@ -298,6 +300,7 @@ class DeviceController extends Controller
 
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'discover_troubleshooting',
             'parameters' => [
                 'names' => $discoveryParams,
@@ -370,6 +373,70 @@ class DeviceController extends Controller
             // Calix TR-098 and Nokia Beacon G6 TR-098 - use explicit parameter names only
             // These devices return SOAP Fault 9000 "Method not supported" for partial paths
             // Also, Calix rejects entire request if ANY parameter doesn't exist
+
+            // Check if this is a mesh AP (804Mesh, GigaMesh) - they have fewer parameters
+            $isMeshAP = $device && $device->isMeshDevice();
+
+            if ($isMeshAP) {
+                // Mesh APs (804Mesh, GigaMesh) have a reduced parameter set
+                // - No STUN/NAT parameters
+                // - No *NumberOfEntries parameters (device returns Fault 9005 for these)
+
+                // Base parameters for all mesh APs
+                $meshParams = [
+                    // Device Info
+                    'InternetGatewayDevice.DeviceInfo.Manufacturer',
+                    'InternetGatewayDevice.DeviceInfo.ManufacturerOUI',
+                    'InternetGatewayDevice.DeviceInfo.ModelName',
+                    'InternetGatewayDevice.DeviceInfo.SerialNumber',
+                    'InternetGatewayDevice.DeviceInfo.SoftwareVersion',
+                    'InternetGatewayDevice.DeviceInfo.HardwareVersion',
+                    'InternetGatewayDevice.DeviceInfo.UpTime',
+
+                    // Management Server (mesh APs don't have STUN)
+                    'InternetGatewayDevice.ManagementServer.URL',
+                    'InternetGatewayDevice.ManagementServer.PeriodicInformEnable',
+                    'InternetGatewayDevice.ManagementServer.PeriodicInformInterval',
+                    'InternetGatewayDevice.ManagementServer.ConnectionRequestURL',
+
+                    // Gateway serial number (who is this mesh AP connected to)
+                    'InternetGatewayDevice.X_000631_Device.GatewayInfo.SerialNumber',
+                ];
+
+                // GigaMesh (u4m/GM1028) has ExosMesh parameters that 804Mesh doesn't have
+                $productClass = strtolower($device->product_class ?? '');
+                $isGigaMesh = stripos($productClass, 'gigamesh') !== false
+                    || stripos($productClass, 'u4m') !== false
+                    || stripos($productClass, 'gm1028') !== false;
+
+                if ($isGigaMesh) {
+                    // GigaMesh has ExosMesh stats for backhaul info
+                    $meshParams = array_merge($meshParams, [
+                        // ExosMesh - Mesh network role and backhaul type
+                        'InternetGatewayDevice.X_000631_Device.ExosMesh.OperationalRole',
+                        'InternetGatewayDevice.X_000631_Device.ExosMesh.WapBackhaul',
+
+                        // ExosMesh Stats - Signal quality metrics
+                        // Note: NoiseFloor doesn't exist on all GigaMesh devices
+                        'InternetGatewayDevice.X_000631_Device.ExosMesh.Stats.Channel',
+                        'InternetGatewayDevice.X_000631_Device.ExosMesh.Stats.SignalStrength',
+                        'InternetGatewayDevice.X_000631_Device.ExosMesh.Stats.PhyRateTx',
+                        'InternetGatewayDevice.X_000631_Device.ExosMesh.Stats.PhyRateRx',
+
+                        // ExosMesh WapHostInfo - Connection to gateway (mesh "WAN" info)
+                        'InternetGatewayDevice.X_000631_Device.ExosMesh.WapHostInfo.ConnectionStatus',
+                        'InternetGatewayDevice.X_000631_Device.ExosMesh.WapHostInfo.ExternalIPAddress',
+                        'InternetGatewayDevice.X_000631_Device.ExosMesh.WapHostInfo.DefaultGateway',
+                        'InternetGatewayDevice.X_000631_Device.ExosMesh.WapHostInfo.DNSServers',
+                        'InternetGatewayDevice.X_000631_Device.ExosMesh.WapHostInfo.SubnetMask',
+                        'InternetGatewayDevice.X_000631_Device.ExosMesh.WapHostInfo.MACAddress',
+                        'InternetGatewayDevice.X_000631_Device.ExosMesh.WapHostInfo.Uptime',
+                    ]);
+                }
+
+                return $meshParams;
+            }
+
             return [
                 // Device Info (explicit params only - no MemoryStatus as it doesn't exist on all models)
                 'InternetGatewayDevice.DeviceInfo.Manufacturer',
@@ -699,6 +766,7 @@ class DeviceController extends Controller
 
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'reboot',
             'status' => 'pending',
         ]);
@@ -753,6 +821,7 @@ class DeviceController extends Controller
 
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'factory_reset',
             'status' => 'pending',
         ]);
@@ -780,6 +849,7 @@ class DeviceController extends Controller
 
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'get_params',
             'parameters' => [
                 'names' => $validated['names'],
@@ -814,6 +884,7 @@ class DeviceController extends Controller
 
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'set_params',
             'parameters' => [
                 'values' => $validated['values'],
@@ -849,24 +920,15 @@ class DeviceController extends Controller
         $dataModel = $device->getDataModel();
         $root = $dataModel === 'TR-181' ? 'Device.' : 'InternetGatewayDevice.';
 
-        // TR-098 devices support GetParameterValues with partial path
-        // This returns ALL parameters with values in one response (like USS does)
-        if ($dataModel === 'TR-098') {
+        // TR-181 devices: use GetParameterNames discovery approach (returns names only, then chunks for values)
+        // TR-098 devices (Calix, SmartRG, Nokia): use GetParameterValues with partial path
+        // This returns ALL parameters with values in one response (~24 seconds for Nokia, ~10s for Calix)
+        if ($dataModel === 'TR-181') {
             $task = Task::create([
                 'device_id' => $device->id,
-                'task_type' => 'get_params',
-                'parameters' => [
-                    'names' => [$root],  // Partial path returns all parameters below it
-                ],
-                'status' => 'pending',
-            ]);
-
-            $message = 'Get all parameters task created - fetching all parameters with values in single request';
-        } else {
-            // TR-181 devices: use GetParameterNames discovery approach
-            $task = Task::create([
-                'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                 'task_type' => 'get_parameter_names',
+                'description' => 'Get Everything: Discover all parameters',
                 'parameters' => [
                     'path' => $root,
                     'next_level' => false, // Get ALL parameters recursively
@@ -875,15 +937,53 @@ class DeviceController extends Controller
             ]);
 
             $message = 'Get all parameters task created - discovering all device parameters';
+        } else {
+            // Calix, SmartRG TR-098 devices support GetParameterValues with partial path
+            // This returns ALL parameters with values in one response (like USS does)
+            $task = Task::create([
+                'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
+                'task_type' => 'get_params',
+                'description' => 'Get Everything: Fetch all parameters',
+                'parameters' => [
+                    'names' => [$root],  // Partial path returns all parameters below it
+                ],
+                'status' => 'pending',
+            ]);
+
+            $message = 'Get all parameters task created - fetching all parameters with values in single request';
         }
 
-        // Trigger immediate connection
-        $this->triggerConnectionRequestForTask($device);
+        // Try to trigger immediate connection and capture result
+        $connectionRequestResult = $this->tryConnectionRequest($device);
+
+        // Calculate estimated next inform if device not immediately reachable
+        $deviceReachability = [
+            'connection_request_success' => $connectionRequestResult['success'],
+            'connection_request_message' => $connectionRequestResult['message'] ?? null,
+        ];
+
+        if (!$connectionRequestResult['success']) {
+            // Get periodic inform interval to estimate next check-in
+            $intervalParam = $device->getParameter('Device.ManagementServer.PeriodicInformInterval')
+                ?? $device->getParameter('InternetGatewayDevice.ManagementServer.PeriodicInformInterval');
+            $intervalSeconds = $intervalParam ? (int) $intervalParam : 600;
+
+            $lastInform = $device->last_inform;
+            if ($lastInform) {
+                $nextInformEstimate = $lastInform->copy()->addSeconds($intervalSeconds);
+                $deviceReachability['last_inform'] = $lastInform->toIso8601String();
+                $deviceReachability['periodic_inform_interval'] = $intervalSeconds;
+                $deviceReachability['estimated_next_inform'] = $nextInformEstimate->toIso8601String();
+                $deviceReachability['seconds_until_next_inform'] = max(0, now()->diffInSeconds($nextInformEstimate, false));
+            }
+        }
 
         return response()->json([
             'message' => $message,
             'task' => $task,
             'approach' => $dataModel === 'TR-098' ? 'partial_path_gpv' : 'parameter_discovery',
+            'device_reachability' => $deviceReachability,
         ], 201);
     }
 
@@ -897,6 +997,7 @@ class DeviceController extends Controller
         // Set STUN parameters using Google's public STUN server
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'set_params',
             'parameters' => [
                 'values' => [
@@ -983,6 +1084,7 @@ class DeviceController extends Controller
 
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'download',
             'parameters' => [
                 'url' => $downloadUrl,
@@ -1022,6 +1124,7 @@ class DeviceController extends Controller
         // Create task first to get task ID
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'upload',
             'parameters' => [
                 'url' => '', // Will be set below
@@ -1067,6 +1170,7 @@ class DeviceController extends Controller
         // Create task first to get task ID
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'upload',
             'description' => 'Config backup request',
             'parameters' => [
@@ -1099,6 +1203,7 @@ class DeviceController extends Controller
 
         Log::info('Config backup requested', [
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_id' => $task->id,
             'upload_url' => $url,
         ]);
@@ -1128,6 +1233,7 @@ class DeviceController extends Controller
 
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'ping_diagnostics',
             'parameters' => [
                 'host' => $validated['host'] ?? '8.8.8.8',
@@ -1161,6 +1267,7 @@ class DeviceController extends Controller
 
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'traceroute_diagnostics',
             'parameters' => [
                 'host' => $validated['host'] ?? '8.8.8.8',
@@ -1217,9 +1324,37 @@ class DeviceController extends Controller
                 // Log but don't fail the task creation
                 \Log::warning('Failed to trigger connection request after task creation', [
                     'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                     'error' => $e->getMessage(),
                 ]);
             }
+        }
+    }
+
+    /**
+     * Helper: Try connection request and return result for UI feedback
+     * Returns success/failure info so user can be informed if device is unreachable
+     */
+    private function tryConnectionRequest(Device $device): array
+    {
+        if (!$device->connection_request_url) {
+            return [
+                'success' => false,
+                'message' => 'No connection request URL configured',
+            ];
+        }
+
+        try {
+            $result = $this->connectionRequestService->sendConnectionRequestWithFallback($device);
+            return [
+                'success' => $result['success'] ?? false,
+                'message' => $result['message'] ?? 'Connection request sent',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Device unreachable: ' . $e->getMessage(),
+            ];
         }
     }
 
@@ -1325,6 +1460,7 @@ class DeviceController extends Controller
         // Create task to set parameters
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'set_params',
             'parameters' => [
                 'values' => $values,
@@ -1505,6 +1641,7 @@ class DeviceController extends Controller
 
         return response()->json([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'data_model' => 'TR-181',
             'wlan_configurations' => array_values($instances),
         ]);
@@ -1580,6 +1717,7 @@ class DeviceController extends Controller
 
         Log::info('Stored WiFi password from advanced section', [
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'instance' => $instance,
             'network_type' => $isGuestNetwork ? 'guest' : 'main',
         ]);
@@ -1668,6 +1806,7 @@ class DeviceController extends Controller
 
         return response()->json([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'data_model' => 'TR-098',
             'wlan_configurations' => array_values($instances),
         ]);
@@ -1707,6 +1846,7 @@ class DeviceController extends Controller
         // Create task to set parameters
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'set_params',
             'parameters' => [
                 'values' => $values,
@@ -1749,27 +1889,33 @@ class DeviceController extends Controller
 
         if ($isNokia && $dataModel === 'TR-181') {
             // Nokia Beacon G6 with TR-181 data model - use Device. paths with Nokia vendor extensions
+            // NOTE: Nokia TR-181 password validation requires:
+            // - 3-part format: {serial}_{middle}_{suffix}
+            // - Mixed case OR special characters (all lowercase fails)
+            // Use fixed middle part so My Support knows what password to use
+            // Nokia TR-181 requires hex middle part + _random suffix
+            // Using a fixed hex string that My Support can memorize
+            $nokiaPassword = $device->serial_number . '_a1b2c3d4_random';
+
             $parametersToQuery = [
-                'Device.Users.User.1.Username',
-                'Device.Users.User.1.Password',
                 'Device.Users.User.2.Username',
-                'Device.Users.User.2.Password',
                 'Device.UserInterface.RemoteAccess.Port',
                 'Device.UserInterface.RemoteAccess.Enable',
-                'Device.X_ALU_COM_RemoteGUI.Enable',
-                'Device.X_ALU_COM_RemoteGUI.Port',
+                'Device.UserInterface.RemoteAccess.Protocol',
             ];
+            // Nokia TR-181: Must set password FIRST (alone), then enable access separately
+            // Setting Enable=true + password together fails with 9007
             $enableParams = [
-                'Device.UserInterface.RemoteAccess.Enable' => [
-                    'value' => true,
-                    'type' => 'xsd:boolean',
-                ],
-                // Set superadmin password to known value for remote access
+                // Only set password - enable will be in a follow-up task
                 'Device.Users.User.2.Password' => [
-                    'value' => $supportPassword,
+                    'value' => $nokiaPassword,
                     'type' => 'xsd:string',
                 ],
             ];
+            // NOTE: Nokia TR-181 does NOT allow setting RemoteAccess.Enable=true via TR-069
+            // (always returns 9007 Invalid parameter value)
+            // Just set the password - the GUI may be accessible without Enable=true
+            // If not, this feature may not be possible on TR-181 Nokia devices
             // Nokia defaults
             $port = 443;
             $username = 'superadmin';
@@ -1945,9 +2091,9 @@ class DeviceController extends Controller
                 ],
             ];
 
-            // GigaCenter uses HTTP on port 8080 (same as GigaSpire)
-            $port = 8080;
-            $protocol = 'http';
+            // GigaCenter (844E/854G/844G) uses HTTPS on port 8443
+            $port = 8443;
+            $protocol = 'https';
             $username = $supportUsername;
 
             // TR-098: External IP is in WANIPConnection
@@ -1992,15 +2138,19 @@ class DeviceController extends Controller
         // Create task to query parameters and enable remote access
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'get_parameter_values',
+            'description' => 'Remote GUI: Query access parameters',
             'status' => 'pending',
             'parameters' => $parametersToQuery,
         ]);
 
-        // Also create a task to enable remote access
+        // Also create a task to enable remote access (password for Nokia TR-181)
         $enableTask = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'set_parameter_values',
+            'description' => 'Remote GUI: Set password',
             'status' => 'pending',
             'parameters' => $enableParams,
         ]);
@@ -2014,6 +2164,14 @@ class DeviceController extends Controller
 
         $isSmartRG = $device->isSmartRG();
 
+        // Determine the password being set for the response
+        // MUST match what was set above in $enableParams
+        $passwordForDisplay = $supportPassword; // Default
+        if ($isNokia && $dataModel === 'TR-181') {
+            // Extract the password we set from $enableParams
+            $passwordForDisplay = $enableParams['Device.Users.User.2.Password']['value'] ?? $nokiaPassword;
+        }
+
         return response()->json([
             'task' => $task,
             'enable_task' => $enableTask,
@@ -2021,6 +2179,7 @@ class DeviceController extends Controller
             'port' => $port,
             'protocol' => $protocol,
             'username' => $username,
+            'password' => $passwordForDisplay,
             'is_nokia' => $isNokia,
             'is_calix' => $isCalix,
             'is_smartrg' => $isSmartRG,
@@ -2051,19 +2210,22 @@ class DeviceController extends Controller
         $isCalix = $device->isCalix();
 
         // Generate random password (16 chars alphanumeric + special)
-        $randomPassword = bin2hex(random_bytes(8)) . '!' . rand(10, 99);
+        // Nokia TR-181 doesn't accept certain special chars, use $ instead of !
+        $randomPassword = bin2hex(random_bytes(8)) . '$' . rand(10, 99);
 
         // Build disable parameters based on device type
         $disableParams = [];
 
         if ($isNokia && $dataModel === 'TR-181') {
+            // Nokia uses {serial}_stay$away format to avoid password rejection
+            $nokiaRandomPassword = $device->serial_number . '_' . bin2hex(random_bytes(4)) . '_random';
             $disableParams = [
                 'Device.UserInterface.RemoteAccess.Enable' => [
                     'value' => false,
                     'type' => 'xsd:boolean',
                 ],
                 'Device.Users.User.2.Password' => [
-                    'value' => $randomPassword,
+                    'value' => $nokiaRandomPassword,
                     'type' => 'xsd:string',
                 ],
             ];
@@ -2114,6 +2276,7 @@ class DeviceController extends Controller
         // Create task to disable remote access and reset password
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'set_parameter_values',
             'description' => 'Close remote access and reset password',
             'status' => 'pending',
@@ -2216,6 +2379,7 @@ class DeviceController extends Controller
         if ($parameterCount === 0) {
             Log::warning('Skipping pre-operation backup - no parameters', [
                 'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                 'operation' => $operation,
             ]);
             return null;
@@ -2237,6 +2401,7 @@ class DeviceController extends Controller
 
         Log::info('Pre-operation backup created', [
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'operation' => $operation,
             'backup_id' => $backup->id,
             'parameter_count' => $parameterCount,
@@ -2502,6 +2667,7 @@ class DeviceController extends Controller
         // Create task to restore the parameters
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'set_parameter_values',
             'status' => 'pending',
             'parameters' => $writableParams,
@@ -2511,6 +2677,7 @@ class DeviceController extends Controller
         // Uses wait_for_next_session to ensure it runs in a new session after restore
         $refreshTask = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'get_params',
             'status' => 'pending',
             'parameters' => ['names' => array_keys($writableParams)],
@@ -2667,6 +2834,7 @@ class DeviceController extends Controller
             'hayacs_backup_version' => '1.0',
             'exported_at' => now()->toIso8601String(),
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'device_manufacturer' => $device->manufacturer,
             'device_model' => $device->model_name,
             'backup' => [
@@ -2743,6 +2911,7 @@ class DeviceController extends Controller
 
             Log::info('Backup imported from file', [
                 'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                 'backup_id' => $backup->id,
                 'parameter_count' => count($parameterData),
                 'original_backup_id' => $backupData['id'] ?? null,
@@ -2761,6 +2930,7 @@ class DeviceController extends Controller
         } catch (\Exception $e) {
             Log::error('Backup import failed', [
                 'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                 'error' => $e->getMessage(),
             ]);
 
@@ -2811,6 +2981,7 @@ class DeviceController extends Controller
         // Create config restore task (uses Download RPC)
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'config_restore',
             'description' => 'Native config restore from uploaded file',
             'parameters' => [
@@ -2836,6 +3007,7 @@ class DeviceController extends Controller
 
         Log::info('Native config restore initiated', [
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_id' => $task->id,
             'source_task_id' => $sourceTask->id,
             'source_file' => $sourceFile,
@@ -3077,12 +3249,14 @@ class DeviceController extends Controller
 
             Log::info('Cleared existing TR-181 port mapping parameters before refresh', [
                 'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                 'parameters_deleted' => $deletedCount,
             ]);
 
             // Task 1: Get the PortMappingNumberOfEntries
             $countTask = Task::create([
                 'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                 'task_type' => 'get_params',
                 'status' => 'pending',
                 'parameters' => [
@@ -3093,6 +3267,7 @@ class DeviceController extends Controller
             // Task 2: Use GetParameterNames to discover all port mapping entries
             Task::create([
                 'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                 'task_type' => 'get_parameter_names',
                 'status' => 'pending',
                 'parameters' => [
@@ -3175,6 +3350,7 @@ class DeviceController extends Controller
 
         Log::info('Cleared existing port mapping parameters before refresh', [
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'parameters_deleted' => $deletedCount,
         ]);
 
@@ -3187,6 +3363,7 @@ class DeviceController extends Controller
         // Task 1: Get the current PortMappingNumberOfEntries from all WAN interfaces
         $countTask = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'get_params',
             'status' => 'pending',
             'parameters' => [
@@ -3199,6 +3376,7 @@ class DeviceController extends Controller
         foreach ($wanPaths as $index => $wanPath) {
             Task::create([
                 'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                 'task_type' => 'get_parameter_names',
                 'status' => 'pending',
                 'parameters' => [
@@ -3411,6 +3589,7 @@ class DeviceController extends Controller
             if ($isDevice2 || $isSmartRG || $isNokia || $isCalix) {
                 $task = Task::create([
                     'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                     'task_type' => 'add_object',
                     'description' => "Create port mapping instance ({$protocol})",
                     'status' => 'pending',
@@ -3423,6 +3602,7 @@ class DeviceController extends Controller
                 // TR-098 devices (non-SmartRG, non-Nokia) - directly set parameters
                 $task = Task::create([
                     'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                     'task_type' => 'set_parameter_values',
                     'description' => "Add port mapping ({$protocol})",
                     'status' => 'pending',
@@ -3516,6 +3696,7 @@ class DeviceController extends Controller
         // Create task to delete the port mapping
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'delete_object',
             'description' => 'Delete port mapping',
             'status' => 'pending',
@@ -3540,6 +3721,77 @@ class DeviceController extends Controller
     {
         $device = Device::findOrFail($id);
         $connectedDevices = [];
+
+        // Build mesh AP mapping (Calix uses MAC, Nokia uses BeaconInfo index)
+        $meshApMap = [];
+        $meshApMacs = [];
+        $nokiaBeaconMap = [];
+
+        if ($device->isCalix()) {
+            $meshDevices = Device::where('product_class', 'LIKE', '%Mesh%')
+                ->whereHas('parameters', function ($q) use ($device) {
+                    $q->where('name', 'LIKE', '%GatewayInfo.SerialNumber')
+                        ->where('value', $device->serial_number);
+                })
+                ->get();
+
+            foreach ($meshDevices as $meshDev) {
+                $meshMacParam = $meshDev->parameters()->where('name', 'LIKE', '%WapHostInfo.MACAddress')->first();
+                if (!$meshMacParam) {
+                    $meshMacParam = $meshDev->parameters()->where('name', 'LIKE', '%WANEthernetInterfaceConfig.MACAddress')->first();
+                }
+                if ($meshMacParam && $meshMacParam->value) {
+                    $mac = strtolower($meshMacParam->value);
+                    $meshApMap[$mac] = [
+                        'id' => $meshDev->id,
+                        'serial' => $meshDev->serial_number,
+                        'type' => $meshDev->product_class,
+                    ];
+                    $meshApMacs[] = strtolower(str_replace([':', '-'], '', $mac));
+                }
+            }
+        } elseif ($device->isNokia()) {
+            // Nokia: Build beacon index map from X_ALU-COM_BeaconInfo.Beacon.N
+            $beaconParams = $device->parameters()
+                ->where('name', 'LIKE', '%X_ALU-COM_BeaconInfo.Beacon.%')
+                ->get();
+
+            $beaconData = [];
+            foreach ($beaconParams as $param) {
+                if (preg_match('/BeaconInfo\.Beacon\.(\d+)\.(.+)/', $param->name, $m)) {
+                    $idx = $m[1];
+                    $field = $m[2];
+                    if (!isset($beaconData[$idx])) {
+                        $beaconData[$idx] = [];
+                    }
+                    $beaconData[$idx][$field] = $param->value;
+                }
+            }
+
+            foreach ($beaconData as $idx => $info) {
+                $serial = $info['SerialNumber'] ?? null;
+                $mac = strtolower($info['MACAddress'] ?? '');
+                if ($serial) {
+                    $beaconDevice = Device::where('serial_number', $serial)->first();
+                    $nokiaBeaconMap[$idx] = [
+                        'id' => $beaconDevice?->id,
+                        'serial' => $serial,
+                        'mac' => $mac,
+                        'type' => $beaconDevice?->product_class ?? 'Beacon',
+                        'status' => $info['Status'] ?? 'Unknown',
+                    ];
+                    if ($mac) {
+                        $meshApMacs[] = strtolower(str_replace([':', '-'], '', $mac));
+                    }
+                }
+            }
+        }
+
+        // Get gateway's LAN MAC
+        $gatewayLanMac = $device->parameters()
+            ->where('name', 'LIKE', '%LANEthernetInterfaceConfig.%.MACAddress%')
+            ->first();
+        $gatewayMac = $gatewayLanMac ? strtolower($gatewayLanMac->value) : '';
 
         // Try to get LAN hosts from device parameters
         // Different data models use different paths
@@ -3581,13 +3833,56 @@ class DeviceController extends Controller
                 $activeValue = $hostData['Active'] ?? 'false';
                 $active = in_array($activeValue, ['true', '1', 1, true], true) || $activeValue === '1';
 
+                // Filter out mesh APs themselves from the host list
+                $normalizedMac = $macAddress ? strtolower(str_replace([':', '-'], '', $macAddress)) : '';
+                if (in_array($normalizedMac, $meshApMacs)) {
+                    continue;
+                }
+
                 // Only include active devices with valid IP addresses
                 if ($active && $ipAddress && filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                    // Determine which AP this device is connected through
+                    // Calix uses X_000631_AccessPoint (MAC), Nokia uses X_ALU-COM_IsBeacon (index)
+                    $accessPointMac = strtolower($hostData['X_000631_AccessPoint'] ?? '');
+                    $isBeacon = $hostData['X_ALU-COM_IsBeacon'] ?? null;
+                    $connectedTo = null;
+                    $connectedToType = 'gateway';
+                    $connectedToDeviceId = null;
+
+                    if (!empty($nokiaBeaconMap) && $isBeacon !== null) {
+                        // Nokia: Use beacon index
+                        if (isset($nokiaBeaconMap[$isBeacon])) {
+                            $beaconInfo = $nokiaBeaconMap[$isBeacon];
+                            $connectedTo = $beaconInfo['type'] . ' (' . $beaconInfo['serial'] . ')';
+                            $connectedToType = 'mesh';
+                            $connectedToDeviceId = $beaconInfo['id'];
+                        } else {
+                            $connectedTo = 'Gateway';
+                            $connectedToType = 'gateway';
+                        }
+                    } elseif (empty($accessPointMac) || $accessPointMac === $gatewayMac) {
+                        $connectedTo = 'Gateway';
+                        $connectedToType = 'gateway';
+                    } elseif (isset($meshApMap[$accessPointMac])) {
+                        // Calix: Use MAC
+                        $meshInfo = $meshApMap[$accessPointMac];
+                        $connectedTo = $meshInfo['type'] . ' (' . $meshInfo['serial'] . ')';
+                        $connectedToType = 'mesh';
+                        $connectedToDeviceId = $meshInfo['id'];
+                    } else {
+                        $connectedTo = 'AP ' . substr($accessPointMac, -8);
+                        $connectedToType = 'unknown';
+                    }
+
                     $connectedDevices[] = [
                         'ip' => $ipAddress,
                         'mac' => $macAddress,
                         'hostname' => $hostname ?: 'Unknown Device',
                         'label' => ($hostname ?: 'Unknown Device') . ' (' . $ipAddress . ')',
+                        'interface_type' => $hostData['InterfaceType'] ?? null,
+                        'connected_to' => $connectedTo,
+                        'connected_to_type' => $connectedToType,
+                        'connected_to_device_id' => $connectedToDeviceId,
                     ];
                 }
             }
@@ -3606,6 +3901,8 @@ class DeviceController extends Controller
         return response()->json([
             'connected_devices' => $connectedDevices,
             'count' => count($connectedDevices),
+            'mesh_aps' => $meshApMap,
+            'nokia_beacons' => $nokiaBeaconMap,
         ]);
     }
 
@@ -3621,6 +3918,7 @@ class DeviceController extends Controller
         // Create task to trigger the scan
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'wifi_scan',
             'description' => 'WiFi Interference Scan',
             'status' => 'pending',
@@ -3775,6 +4073,7 @@ class DeviceController extends Controller
                 // Task 1: Set NumberOfConnections
                 $configTask1 = Task::create([
                     'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                     'task_type' => 'set_parameter_values',
                     'status' => 'pending',
                     'parameters' => [
@@ -3789,6 +4088,7 @@ class DeviceController extends Controller
                 // Task 2: Set TimeBasedTestDuration (CRITICAL - USS sets this for download too!)
                 $configTask2 = Task::create([
                     'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                     'task_type' => 'set_parameter_values',
                     'status' => 'pending',
                     'parameters' => [
@@ -3803,6 +4103,7 @@ class DeviceController extends Controller
                 // Task 3: Set DiagnosticsState + DownloadURL to trigger test
                 $downloadTask = Task::create([
                     'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                     'task_type' => 'download_diagnostics',
                     'description' => 'Speed test (download)',
                     'status' => 'pending',
@@ -3822,6 +4123,7 @@ class DeviceController extends Controller
                 // Standard devices: Separate config and trigger tasks
                 $configTask = Task::create([
                     'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                     'task_type' => 'set_parameter_values',
                     'status' => 'pending',
                     'parameters' => [
@@ -3848,6 +4150,7 @@ class DeviceController extends Controller
 
                 $downloadTask = Task::create([
                     'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                     'task_type' => 'download_diagnostics',
                     'description' => 'Speed test (download)',
                     'status' => 'pending',
@@ -3881,6 +4184,7 @@ class DeviceController extends Controller
                 // Task 1: Set NumberOfConnections
                 $configTask1 = Task::create([
                     'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                     'task_type' => 'set_parameter_values',
                     'status' => 'pending',
                     'parameters' => [
@@ -3895,6 +4199,7 @@ class DeviceController extends Controller
                 // Task 2: Set TimeBasedTestDuration
                 $configTask2 = Task::create([
                     'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                     'task_type' => 'set_parameter_values',
                     'status' => 'pending',
                     'parameters' => [
@@ -3909,6 +4214,7 @@ class DeviceController extends Controller
                 // Task 3: Set DiagnosticsState + UploadURL + TestFileLength together to trigger test
                 $uploadTask = Task::create([
                     'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                     'task_type' => 'upload_diagnostics',
                     'description' => 'Speed test (upload)',
                     'status' => 'pending',
@@ -3933,6 +4239,7 @@ class DeviceController extends Controller
                 // USS uses 2 connections for upload, not 10
                 $configTask1 = Task::create([
                     'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                     'task_type' => 'set_parameter_values',
                     'status' => 'pending',
                     'parameters' => [
@@ -3948,6 +4255,7 @@ class DeviceController extends Controller
                 // Then set TimeBasedTestDuration
                 $configTask2 = Task::create([
                     'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                     'task_type' => 'set_parameter_values',
                     'status' => 'pending',
                     'parameters' => [
@@ -3978,6 +4286,7 @@ class DeviceController extends Controller
 
                 $uploadTask = Task::create([
                     'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                     'task_type' => 'upload_diagnostics',
                     'description' => 'Speed test (upload)',
                     'status' => 'pending',
@@ -4014,6 +4323,7 @@ class DeviceController extends Controller
         if ($testType === 'download' || $testType === 'both') {
             $task = Task::create([
                 'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                 'task_type' => 'download',
                 'description' => 'Speed test - 25MB download',
                 'status' => 'pending',
@@ -4156,6 +4466,7 @@ class DeviceController extends Controller
 
                     SpeedTestResult::create([
                         'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                         'download_speed_mbps' => $downloadSpeedBps ? round($downloadSpeedBps / 1000000, 2) : null,
                         'upload_speed_mbps' => $uploadSpeedBps ? round($uploadSpeedBps / 1000000, 2) : null,
                         'download_bytes' => $downloadParams['TestBytesReceived'] ?? null,
@@ -4293,6 +4604,7 @@ class DeviceController extends Controller
             if (!$existingResult) {
                 SpeedTestResult::create([
                     'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                     'download_speed_mbps' => $downloadSpeedMbps,
                     'upload_speed_mbps' => null, // Calix doesn't support Upload RPC
                     'download_bytes' => $downloadTask->parameters['file_size'] ?? null,
@@ -4382,6 +4694,7 @@ class DeviceController extends Controller
 
         return response()->json([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'results' => $results,
             'count' => $results->count(),
         ]);
@@ -4667,6 +4980,7 @@ class DeviceController extends Controller
                     // Create set_parameter_values task
                     $task = Task::create([
                         'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                         'task_type' => 'set_parameter_values',
                         'status' => 'pending',
                         'parameters' => [$paramName => $paramValue],
@@ -4685,6 +4999,7 @@ class DeviceController extends Controller
                     'template_id' => $template->id,
                     'template_name' => $template->name,
                     'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                     'parameters_set' => count($parametersToSet),
                 ]);
             } catch (\Exception $e) {
@@ -5305,6 +5620,7 @@ class DeviceController extends Controller
             foreach ($networks as $networkKey => $network) {
                 $taskData = [
                     'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                     'task_type' => 'set_parameter_values',
                     'description' => $network['description'],
                     'parameters' => $network['params'],
@@ -5329,6 +5645,7 @@ class DeviceController extends Controller
 
             $task = Task::create([
                 'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                 'task_type' => 'set_parameter_values',
                 'description' => "WiFi: Configure all networks (SSID: {$ssid})",
                 'parameters' => $allParams,
@@ -5476,6 +5793,7 @@ class DeviceController extends Controller
         foreach ($networks as $networkKey => $network) {
             $taskData = [
                 'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                 'task_type' => 'set_parameter_values',
                 'description' => $network['description'],
                 'parameters' => $network['params'],
@@ -5722,6 +6040,7 @@ class DeviceController extends Controller
         foreach ($networks as $networkKey => $network) {
             $taskData = [
                 'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                 'task_type' => 'set_parameter_values',
                 'description' => $network['description'],
                 'parameters' => $network['params'],
@@ -5787,6 +6106,7 @@ class DeviceController extends Controller
         }
         $refreshTask = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'get_parameter_values',
             'description' => 'WiFi: Refresh parameters after configuration',
             'parameters' => ['names' => $refreshParams],
@@ -5891,6 +6211,7 @@ class DeviceController extends Controller
 
         $task = Task::create([
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'task_type' => 'set_parameter_values',
             'description' => 'WiFi: ' . ($enabled ? 'Enable' : 'Disable') . ' guest network',
             'parameters' => $values,
@@ -5907,6 +6228,97 @@ class DeviceController extends Controller
 
         return response()->json([
             'message' => 'Guest network ' . ($enabled ? 'enabled' : 'disabled'),
+            'task' => $task,
+        ], 201);
+    }
+
+    /**
+     * Update only the guest WiFi password (without changing main network settings)
+     */
+    public function updateGuestPassword(Request $request, string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+        $dataModel = $device->getDataModel();
+
+        $isNokia = $device->isNokia();
+        $isCalix = $device->isCalix();
+
+        // Check for supported device types
+        if ($dataModel !== 'TR-181' && !($dataModel === 'TR-098' && ($isNokia || $isCalix))) {
+            return response()->json([
+                'error' => 'Guest password update is only supported for TR-181 devices, TR-098 Nokia, and TR-098 Calix devices',
+            ], 400);
+        }
+
+        $validated = $request->validate([
+            'password' => 'required|string|min:8|max:63',
+        ]);
+
+        $guestPassword = $validated['password'];
+
+        // Build parameter values based on data model and manufacturer
+        if ($dataModel === 'TR-098' && $isNokia) {
+            // TR-098 Nokia: WLANConfiguration 4 (2.4GHz guest), 8 (5GHz guest)
+            $prefix = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration';
+            $values = [
+                "{$prefix}.4.PreSharedKey.1.KeyPassphrase" => $guestPassword,
+                "{$prefix}.8.PreSharedKey.1.KeyPassphrase" => $guestPassword,
+            ];
+        } elseif ($dataModel === 'TR-098' && $isCalix) {
+            // Calix TR-098: Instance numbers depend on device model
+            $prefix = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration';
+            $isGigaSpire = $device->isGigaSpire();
+
+            if ($isGigaSpire) {
+                // GigaSpire: 1-8 = 5GHz, 9-16 = 2.4GHz
+                // Guest instances: 2 (5GHz), 10 (2.4GHz)
+                $inst24Guest = 10;
+                $inst5Guest = 2;
+            } else {
+                // GigaCenter: 1-8 = 2.4GHz, 9-16 = 5GHz
+                // Guest instances: 2 (2.4GHz), 10 (5GHz)
+                $inst24Guest = 2;
+                $inst5Guest = 10;
+            }
+
+            $values = [
+                "{$prefix}.{$inst24Guest}.PreSharedKey.1.KeyPassphrase" => $guestPassword,
+                "{$prefix}.{$inst5Guest}.PreSharedKey.1.KeyPassphrase" => $guestPassword,
+            ];
+        } else {
+            // TR-181: Nokia uses AP.4/AP.8 for guest, others use AP.3/AP.7
+            if ($isNokia) {
+                $values = [
+                    'Device.WiFi.AccessPoint.4.Security.KeyPassphrase' => $guestPassword,
+                    'Device.WiFi.AccessPoint.8.Security.KeyPassphrase' => $guestPassword,
+                ];
+            } else {
+                $values = [
+                    'Device.WiFi.AccessPoint.3.Security.KeyPassphrase' => $guestPassword,
+                    'Device.WiFi.AccessPoint.7.Security.KeyPassphrase' => $guestPassword,
+                ];
+            }
+        }
+
+        $task = Task::create([
+            'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
+            'task_type' => 'set_parameter_values',
+            'description' => 'WiFi: Update guest network password',
+            'parameters' => $values,
+            'status' => 'pending',
+        ]);
+
+        $this->connectionRequestService->sendConnectionRequest($device);
+
+        // Update stored credentials
+        $storedCredentials = DeviceWifiCredential::where('device_id', $device->id)->first();
+        if ($storedCredentials) {
+            $storedCredentials->update(['guest_password' => $guestPassword]);
+        }
+
+        return response()->json([
+            'message' => 'Guest password update queued',
             'task' => $task,
         ], 201);
     }
@@ -6118,6 +6530,7 @@ class DeviceController extends Controller
 
         Log::info('WiFi passwords retrieved for support', [
             'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
             'networks' => $passwords->count(),
             'user' => auth()->user()?->email ?? 'system',
         ]);
@@ -6169,6 +6582,7 @@ class DeviceController extends Controller
         } catch (\Exception $e) {
             Log::error('WiFi extraction failed', [
                 'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
                 'error' => $e->getMessage(),
             ]);
 
@@ -6476,5 +6890,480 @@ class DeviceController extends Controller
         // Default: assume NOT writable for safety
         // This is very conservative - only restore parameters we KNOW are writable
         return false;
+    }
+
+    /**
+     * Refresh connected devices signal and rate data
+     *
+     * Nokia TR-098: Uses InternetGatewayDevice.DataElements. partial path to get fresh
+     * STA (station) data including SignalStrength, LastDataDownlinkRate, LastDataUplinkRate
+     *
+     * Calix/SmartRG: Uses WLANConfiguration.AssociatedDevice partial paths
+     */
+    public function refreshConnectedDevices(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+
+        $dataModel = $device->getDataModel();
+        $isDevice2 = $dataModel === 'TR-181';
+
+        // Determine which parameters to query based on device type
+        $params = [];
+
+        if ($device->isNokia()) {
+            if ($isDevice2) {
+                // Nokia TR-181 (OUI 0C7C28)
+                $params = [
+                    'Device.WiFi.DataElements.',
+                    'Device.Hosts.',
+                ];
+            } else {
+                // Nokia TR-098 (OUI 80AB4D) - supports partial paths!
+                // This gets STA signal/rate data: DataElements.Network.Device.{d}.Radio.{r}.BSS.{b}.STA.{s}.*
+                $params = [
+                    'InternetGatewayDevice.DataElements.',
+                    'InternetGatewayDevice.LANDevice.1.Hosts.',
+                ];
+            }
+        } elseif ($device->isCalix()) {
+            if ($isDevice2) {
+                // Calix TR-181
+                $params = [
+                    'Device.WiFi.AccessPoint.',
+                    'Device.Hosts.',
+                ];
+            } else {
+                // Calix TR-098 - need explicit params for AssociatedDevice
+                // Query full WLANConfiguration tree for WiFi data
+                $params = [
+                    'InternetGatewayDevice.LANDevice.1.WLANConfiguration.',
+                    'InternetGatewayDevice.LANDevice.1.Hosts.',
+                ];
+            }
+        } else {
+            // Generic TR-098/TR-181
+            if ($isDevice2) {
+                $params = [
+                    'Device.WiFi.AccessPoint.',
+                    'Device.Hosts.',
+                ];
+            } else {
+                $params = [
+                    'InternetGatewayDevice.LANDevice.1.WLANConfiguration.',
+                    'InternetGatewayDevice.LANDevice.1.Hosts.',
+                ];
+            }
+        }
+
+        $task = Task::create([
+            'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
+            'task_type' => 'get_params',
+            'description' => 'Refresh connected devices signal data',
+            'parameters' => ['names' => $params],
+            'status' => 'pending',
+        ]);
+
+        // Trigger connection request
+        $this->triggerConnectionRequestForTask($device);
+
+        return response()->json([
+            'message' => 'Connected devices refresh task created',
+            'task' => $task,
+        ], 201);
+    }
+
+    /**
+     * Get current LAN configuration
+     */
+    public function getLanConfig(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+        $dataModel = $device->getDataModel();
+        $isDevice2 = $dataModel === 'TR-181';
+
+        if ($isDevice2) {
+            // TR-181 (Nokia)
+            $lanIp = $device->parameters()->where('name', 'Device.IP.Interface.1.IPv4Address.1.IPAddress')->first()?->value;
+            $subnetMask = $device->parameters()->where('name', 'Device.IP.Interface.1.IPv4Address.1.SubnetMask')->first()?->value;
+            $dhcpStart = $device->parameters()->where('name', 'Device.DHCPv4.Server.Pool.1.MinAddress')->first()?->value;
+            $dhcpEnd = $device->parameters()->where('name', 'Device.DHCPv4.Server.Pool.1.MaxAddress')->first()?->value;
+            $dhcpEnabled = $device->parameters()->where('name', 'Device.DHCPv4.Server.Pool.1.Enable')->first()?->value;
+        } else {
+            // TR-098 (Calix, SmartRG, Nokia TR-098)
+            $lanPrefix = 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement';
+            $lanIp = $device->parameters()->where('name', "{$lanPrefix}.IPInterface.1.IPInterfaceIPAddress")->first()?->value;
+            $subnetMask = $device->parameters()->where('name', "{$lanPrefix}.IPInterface.1.IPInterfaceSubnetMask")->first()?->value;
+            $dhcpStart = $device->parameters()->where('name', "{$lanPrefix}.MinAddress")->first()?->value;
+            $dhcpEnd = $device->parameters()->where('name', "{$lanPrefix}.MaxAddress")->first()?->value;
+            $dhcpEnabled = $device->parameters()->where('name', "{$lanPrefix}.DHCPServerEnable")->first()?->value;
+        }
+
+        return response()->json([
+            'lan_ip' => $lanIp,
+            'subnet_mask' => $subnetMask ?? '255.255.255.0',
+            'dhcp_start' => $dhcpStart,
+            'dhcp_end' => $dhcpEnd,
+            'dhcp_enabled' => in_array($dhcpEnabled, ['1', 'true', true], true),
+            'data_model' => $dataModel,
+        ]);
+    }
+
+    /**
+     * Update LAN configuration (LAN IP, DHCP Start, DHCP End)
+     */
+    public function updateLanConfig(Request $request, string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+        $dataModel = $device->getDataModel();
+        $isDevice2 = $dataModel === 'TR-181';
+
+        // Custom validation rules
+        $validated = $request->validate([
+            'lan_ip' => 'nullable|ip',
+            'dhcp_start' => 'nullable|ip',
+            'dhcp_end' => 'nullable|ip',
+            'subnet_mask' => 'nullable|ip',
+        ]);
+
+        // Get current subnet mask if not provided
+        $subnetMask = $validated['subnet_mask'] ?? null;
+        if (!$subnetMask) {
+            if ($isDevice2) {
+                $subnetMask = $device->parameters()->where('name', 'Device.IP.Interface.1.IPv4Address.1.SubnetMask')->first()?->value;
+            } else {
+                $subnetMask = $device->parameters()->where('name', 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceSubnetMask')->first()?->value;
+            }
+        }
+        $subnetMask = $subnetMask ?? '255.255.255.0';
+
+        // Network validation
+        $errors = $this->validateLanConfiguration(
+            $validated['lan_ip'] ?? null,
+            $validated['dhcp_start'] ?? null,
+            $validated['dhcp_end'] ?? null,
+            $subnetMask
+        );
+
+        if (!empty($errors)) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $errors,
+            ], 422);
+        }
+
+        // Build parameter values array
+        $values = [];
+
+        if ($isDevice2) {
+            // TR-181 (Nokia)
+            if (isset($validated['lan_ip'])) {
+                $values['Device.IP.Interface.1.IPv4Address.1.IPAddress'] = $validated['lan_ip'];
+            }
+            if (isset($validated['dhcp_start'])) {
+                $values['Device.DHCPv4.Server.Pool.1.MinAddress'] = $validated['dhcp_start'];
+            }
+            if (isset($validated['dhcp_end'])) {
+                $values['Device.DHCPv4.Server.Pool.1.MaxAddress'] = $validated['dhcp_end'];
+            }
+            if (isset($validated['subnet_mask'])) {
+                $values['Device.IP.Interface.1.IPv4Address.1.SubnetMask'] = $validated['subnet_mask'];
+            }
+        } else {
+            // TR-098 (Calix, SmartRG, Nokia TR-098)
+            $lanPrefix = 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement';
+            if (isset($validated['lan_ip'])) {
+                $values["{$lanPrefix}.IPInterface.1.IPInterfaceIPAddress"] = $validated['lan_ip'];
+            }
+            if (isset($validated['dhcp_start'])) {
+                $values["{$lanPrefix}.MinAddress"] = $validated['dhcp_start'];
+            }
+            if (isset($validated['dhcp_end'])) {
+                $values["{$lanPrefix}.MaxAddress"] = $validated['dhcp_end'];
+            }
+            if (isset($validated['subnet_mask'])) {
+                $values["{$lanPrefix}.IPInterface.1.IPInterfaceSubnetMask"] = $validated['subnet_mask'];
+            }
+        }
+
+        if (empty($values)) {
+            return response()->json([
+                'message' => 'No changes provided',
+            ], 400);
+        }
+
+        // Create LAN config task
+        $task = Task::create([
+            'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
+            'task_type' => 'set_parameter_values',
+            'description' => 'Update LAN configuration',
+            'parameters' => ['values' => $values],
+            'status' => 'pending',
+        ]);
+
+        // Create follow-up reboot task (LAN changes require reboot to take effect)
+        // Use wait_for_next_session to ensure LAN settings are applied before reboot
+        $rebootTask = Task::create([
+            'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
+            'task_type' => 'reboot',
+            'description' => 'Reboot after LAN configuration change',
+            'parameters' => [],
+            'status' => 'pending',
+            'wait_for_next_session' => true,
+        ]);
+
+        // Trigger connection request
+        $this->triggerConnectionRequestForTask($device);
+
+        return response()->json([
+            'message' => 'LAN configuration update task created (reboot will follow)',
+            'task' => $task,
+            'reboot_task' => $rebootTask,
+            'values' => $values,
+        ], 201);
+    }
+
+    /**
+     * Validate LAN configuration (IP addresses must be in same network, DHCP range valid)
+     */
+    private function validateLanConfiguration(?string $lanIp, ?string $dhcpStart, ?string $dhcpEnd, string $subnetMask): array
+    {
+        $errors = [];
+
+        // Convert subnet mask to CIDR for calculations
+        $cidr = $this->subnetMaskToCidr($subnetMask);
+        if ($cidr === null) {
+            $errors['subnet_mask'] = 'Invalid subnet mask format';
+            return $errors;
+        }
+
+        // Helper to get network address
+        $getNetwork = function($ip, $cidr) {
+            $ipLong = ip2long($ip);
+            $maskLong = $cidr > 0 ? (~0 << (32 - $cidr)) : 0;
+            return $ipLong & $maskLong;
+        };
+
+        // Helper to get broadcast address
+        $getBroadcast = function($ip, $cidr) use ($getNetwork) {
+            $network = $getNetwork($ip, $cidr);
+            $hostBits = 32 - $cidr;
+            return $network | ((1 << $hostBits) - 1);
+        };
+
+        // Validate each IP is valid
+        if ($lanIp && !filter_var($lanIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            $errors['lan_ip'] = 'Invalid IPv4 address';
+        }
+        if ($dhcpStart && !filter_var($dhcpStart, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            $errors['dhcp_start'] = 'Invalid IPv4 address';
+        }
+        if ($dhcpEnd && !filter_var($dhcpEnd, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            $errors['dhcp_end'] = 'Invalid IPv4 address';
+        }
+
+        // Stop if basic validation failed
+        if (!empty($errors)) {
+            return $errors;
+        }
+
+        // Use LAN IP as reference for network calculations
+        $referenceIp = $lanIp ?? $dhcpStart ?? $dhcpEnd;
+        if (!$referenceIp) {
+            return $errors; // No IPs provided, nothing to validate
+        }
+
+        $networkAddr = $getNetwork($referenceIp, $cidr);
+        $broadcastAddr = $getBroadcast($referenceIp, $cidr);
+
+        // Validate LAN IP is not network or broadcast address
+        if ($lanIp) {
+            $lanIpLong = ip2long($lanIp);
+            if ($lanIpLong === $networkAddr) {
+                $errors['lan_ip'] = 'LAN IP cannot be the network address (' . long2ip($networkAddr) . ')';
+            } elseif ($lanIpLong === $broadcastAddr) {
+                $errors['lan_ip'] = 'LAN IP cannot be the broadcast address (' . long2ip($broadcastAddr) . ')';
+            }
+        }
+
+        // Validate DHCP Start is in the same network
+        if ($dhcpStart) {
+            $dhcpStartLong = ip2long($dhcpStart);
+            $dhcpStartNetwork = $getNetwork($dhcpStart, $cidr);
+            if ($dhcpStartNetwork !== $networkAddr) {
+                $errors['dhcp_start'] = 'DHCP Start must be in the same network as LAN IP (network: ' . long2ip($networkAddr) . '/' . $cidr . ')';
+            } elseif ($dhcpStartLong === $networkAddr) {
+                $errors['dhcp_start'] = 'DHCP Start cannot be the network address';
+            } elseif ($dhcpStartLong === $broadcastAddr) {
+                $errors['dhcp_start'] = 'DHCP Start cannot be the broadcast address';
+            }
+        }
+
+        // Validate DHCP End is in the same network
+        if ($dhcpEnd) {
+            $dhcpEndLong = ip2long($dhcpEnd);
+            $dhcpEndNetwork = $getNetwork($dhcpEnd, $cidr);
+            if ($dhcpEndNetwork !== $networkAddr) {
+                $errors['dhcp_end'] = 'DHCP End must be in the same network as LAN IP (network: ' . long2ip($networkAddr) . '/' . $cidr . ')';
+            } elseif ($dhcpEndLong === $networkAddr) {
+                $errors['dhcp_end'] = 'DHCP End cannot be the network address';
+            } elseif ($dhcpEndLong === $broadcastAddr) {
+                $errors['dhcp_end'] = 'DHCP End cannot be the broadcast address';
+            }
+        }
+
+        // Validate DHCP Start <= DHCP End
+        if ($dhcpStart && $dhcpEnd) {
+            $dhcpStartLong = ip2long($dhcpStart);
+            $dhcpEndLong = ip2long($dhcpEnd);
+            if ($dhcpStartLong > $dhcpEndLong) {
+                $errors['dhcp_end'] = 'DHCP End must be greater than or equal to DHCP Start';
+            }
+        }
+
+        // Validate LAN IP is not within DHCP range
+        if ($lanIp && $dhcpStart && $dhcpEnd) {
+            $lanIpLong = ip2long($lanIp);
+            $dhcpStartLong = ip2long($dhcpStart);
+            $dhcpEndLong = ip2long($dhcpEnd);
+            if ($lanIpLong >= $dhcpStartLong && $lanIpLong <= $dhcpEndLong) {
+                $errors['lan_ip'] = 'LAN IP cannot be within the DHCP range (' . $dhcpStart . ' - ' . $dhcpEnd . ')';
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Convert subnet mask to CIDR notation
+     */
+    private function subnetMaskToCidr(string $subnetMask): ?int
+    {
+        $long = ip2long($subnetMask);
+        if ($long === false) {
+            return null;
+        }
+
+        // Count the number of 1 bits
+        $binary = sprintf('%032b', $long);
+
+        // Valid subnet masks should be contiguous 1s followed by 0s
+        if (!preg_match('/^1*0*$/', $binary)) {
+            return null;
+        }
+
+        return substr_count($binary, '1');
+    }
+
+    /**
+     * Get admin credentials for a device (customer-facing admin, not support/superadmin)
+     */
+    public function getAdminCredentials(string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+        $dataModel = $device->getDataModel();
+        $isDevice2 = $dataModel === 'TR-181';
+
+        // Determine parameter paths based on device type
+        // Nokia TR-098 uses X_Authentication.Account for customer admin
+        // Calix/SmartRG use User.1 for customer admin
+        if ($device->isNokia()) {
+            if ($isDevice2) {
+                // Nokia TR-181: User.1 = admin, User.2 = superadmin
+                $usernameParam = 'Device.Users.User.1.Username';
+                $passwordParam = 'Device.Users.User.1.Password';
+            } else {
+                // Nokia TR-098: X_Authentication.Account is customer admin
+                // NOTE: Password is WRITE-ONLY, will return empty
+                $usernameParam = 'InternetGatewayDevice.X_Authentication.Account.UserName';
+                $passwordParam = 'InternetGatewayDevice.X_Authentication.Account.Password';
+            }
+        } else {
+            // Calix, SmartRG, and other TR-098 devices
+            $usernameParam = 'InternetGatewayDevice.User.1.Username';
+            $passwordParam = 'InternetGatewayDevice.User.1.Password';
+        }
+
+        $username = $device->parameters()->where('name', $usernameParam)->first()?->value;
+        $password = $device->parameters()->where('name', $passwordParam)->first()?->value;
+
+        return response()->json([
+            'username' => $username ?? 'admin',
+            'password' => $password,
+            'username_param' => $usernameParam,
+            'password_param' => $passwordParam,
+        ]);
+    }
+
+    /**
+     * Reset admin password to a new random value
+     */
+    public function resetAdminPassword(Request $request, string $id): JsonResponse
+    {
+        $device = Device::findOrFail($id);
+        $dataModel = $device->getDataModel();
+        $isDevice2 = $dataModel === 'TR-181';
+
+        // Allow custom password or generate random one
+        $validated = $request->validate([
+            'password' => 'nullable|string|min:6|max:32',
+        ]);
+
+        // Generate a random password if not provided (8 chars, alphanumeric)
+        $newPassword = $validated['password'] ?? $this->generateRandomPassword(8);
+
+        // Determine parameter path based on device type
+        // Nokia TR-098 uses X_Authentication.Account for customer admin
+        // Calix/SmartRG use User.1 for customer admin
+        if ($device->isNokia()) {
+            if ($isDevice2) {
+                // Nokia TR-181
+                $passwordParam = 'Device.Users.User.1.Password';
+            } else {
+                // Nokia TR-098: X_Authentication.Account is customer admin
+                $passwordParam = 'InternetGatewayDevice.X_Authentication.Account.Password';
+            }
+        } else {
+            // Calix, SmartRG, others
+            $passwordParam = 'InternetGatewayDevice.User.1.Password';
+        }
+
+        // Create task to set the password
+        $task = Task::create([
+            'device_id' => $device->id,
+            'initiated_by_user_id' => auth()->id(),
+            'task_type' => 'set_parameter_values',
+            'description' => 'Reset admin password',
+            'parameters' => [
+                'values' => [
+                    $passwordParam => $newPassword,
+                ],
+            ],
+            'status' => 'pending',
+        ]);
+
+        // Trigger connection request
+        $this->triggerConnectionRequestForTask($device);
+
+        return response()->json([
+            'message' => 'Admin password reset task created',
+            'task' => $task,
+            'new_password' => $newPassword,
+        ], 201);
+    }
+
+    /**
+     * Generate a random alphanumeric password
+     */
+    private function generateRandomPassword(int $length = 8): string
+    {
+        $chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        $password = '';
+        for ($i = 0; $i < $length; $i++) {
+            $password .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+        return $password;
     }
 }

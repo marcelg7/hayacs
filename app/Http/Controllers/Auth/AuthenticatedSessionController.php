@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\TwoFactorRememberedDevice;
+use App\Services\TrustedDeviceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +13,13 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
+    protected TrustedDeviceService $trustedDeviceService;
+
+    public function __construct(TrustedDeviceService $trustedDeviceService)
+    {
+        $this->trustedDeviceService = $trustedDeviceService;
+    }
+
     /**
      * Display the login view.
      */
@@ -33,7 +41,25 @@ class AuthenticatedSessionController extends Controller
 
         // Check if user has 2FA enabled
         if ($user->hasTwoFactorEnabled()) {
-            // Check for remembered device cookie - skip 2FA challenge if valid
+            // First, check for trusted device token (90-day trust + IP bypass)
+            $trustedDevice = $this->trustedDeviceService->getValidTrustedDevice($request);
+            if ($trustedDevice && $trustedDevice->user_id === $user->id) {
+                // Trusted device - skip 2FA challenge
+                session(['two_factor_verified' => true]);
+                $fingerprintMatched = $this->trustedDeviceService->verifyFingerprint($request, $trustedDevice);
+                $trustedDevice->recordUse('login_2fa_skip', $fingerprintMatched);
+                $user->update(['last_login_at' => now()]);
+
+                \Log::info('2FA skipped via trusted device during login', [
+                    'user_id' => $user->id,
+                    'trusted_device_id' => $trustedDevice->id,
+                    'fingerprint_matched' => $fingerprintMatched,
+                ]);
+
+                return redirect()->intended(route('dashboard', absolute: false));
+            }
+
+            // Check for remembered device cookie (48-day 2FA remember)
             $rememberToken = $request->cookie('2fa_remember');
             if ($rememberToken) {
                 $rememberedDevice = TwoFactorRememberedDevice::findValidByToken($rememberToken);
@@ -48,7 +74,7 @@ class AuthenticatedSessionController extends Controller
                 }
             }
 
-            // No valid remembered device - redirect to 2FA challenge
+            // No valid trusted/remembered device - redirect to 2FA challenge
             return redirect()->route('two-factor.challenge');
         }
 

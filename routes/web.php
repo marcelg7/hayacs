@@ -22,6 +22,9 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\SlackWebhookController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Admin\TwoFactorResetController;
+use App\Http\Controllers\Admin\TrustedDeviceController;
+use App\Http\Controllers\Admin\TaskController as AdminTaskController;
+use App\Http\Controllers\DocsController;
 use Illuminate\Support\Facades\Route;
 
 // Slack Webhook for Interactive Components (no auth, verified via signing secret)
@@ -100,6 +103,10 @@ Route::middleware(['auth'])->group(function () {
     // Analytics
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
 
+    // Documentation
+    Route::get('/docs', [DocsController::class, 'index'])->name('docs.index');
+    Route::get('/docs/{section}/{page?}', [DocsController::class, 'show'])->name('docs.show');
+
     // Reports (Admin only)
     Route::middleware(['admin'])->prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
@@ -116,6 +123,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/stun-devices', [ReportController::class, 'stunDevices'])->name('stun-devices');
         Route::get('/nat-devices', [ReportController::class, 'natDevices'])->name('nat-devices');
         Route::get('/smartrg-on-non-dsl', [ReportController::class, 'smartrgOnNonDsl'])->name('smartrg-on-non-dsl');
+        Route::get('/daily-activity', [ReportController::class, 'dailyActivity'])->name('daily-activity');
         Route::get('/export/all-devices', [ReportController::class, 'exportAllDevices'])->name('export-all-devices');
 
         // Actions
@@ -167,7 +175,8 @@ Route::middleware(['auth'])->group(function () {
     // Admin-only routes
     Route::middleware(['admin'])->group(function () {
         // Server Status API for admin status bar
-        Route::get('/server-status', [StatsController::class, 'serverStatus'])->name('server.status');
+        // Note: /server-status conflicts with Apache mod_status, so we use /admin/system-status
+        Route::get('/admin/system-status', [StatsController::class, 'serverStatus'])->name('server.status');
 
         // User Management
         Route::resource('users', UserController::class)->except(['show']);
@@ -201,6 +210,23 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/workflows/{workflow}/cancel', [GroupWorkflowController::class, 'cancel'])->name('workflows.cancel');
         Route::patch('/workflows/{workflow}/retry-failed', [GroupWorkflowController::class, 'retryFailed'])->name('workflows.retry-failed');
         Route::get('/workflows/{workflow}/stats', [GroupWorkflowController::class, 'stats'])->name('workflows.stats');
+
+        // Trusted Devices Management
+        Route::prefix('admin/trusted-devices')->name('admin.trusted-devices.')->group(function () {
+            Route::get('/', [TrustedDeviceController::class, 'index'])->name('index');
+            Route::get('/logs', [TrustedDeviceController::class, 'logs'])->name('logs');
+            Route::get('/{trustedDevice}', [TrustedDeviceController::class, 'show'])->name('show');
+            Route::delete('/{trustedDevice}/revoke', [TrustedDeviceController::class, 'revoke'])->name('revoke');
+            Route::delete('/users/{user}/revoke-all', [TrustedDeviceController::class, 'revokeAll'])->name('revoke-all');
+        });
+
+        // Admin Tasks Management
+        Route::prefix('admin/tasks')->name('admin.tasks.')->group(function () {
+            Route::get('/', [AdminTaskController::class, 'index'])->name('index');
+            Route::get('/{task}', [AdminTaskController::class, 'show'])->name('show');
+            Route::post('/{task}/cancel', [AdminTaskController::class, 'cancel'])->name('cancel');
+            Route::post('/bulk-cancel', [AdminTaskController::class, 'bulkCancel'])->name('bulk-cancel');
+        });
     });
 });
 

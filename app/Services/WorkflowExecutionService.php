@@ -151,6 +151,33 @@ class WorkflowExecutionService
             return $this->executeExtractWifiSsh($workflow, $device);
         }
 
+        // Handle special case: get_parameter_names on TR-098 devices
+        // TR-098 devices (Calix, SmartRG, Nokia TR-098) support GetParameterValues with partial path
+        // which returns ALL parameters with values in a single fast request (~10 seconds)
+        // This is much faster than get_parameter_names + chunked follow-ups (~5 minutes)
+        if ($workflow->task_type === 'get_parameter_names') {
+            $dataModel = $device->getDataModel();
+            if ($dataModel !== 'TR-181') {
+                // TR-098: Use fast get_params with partial path
+                $root = 'InternetGatewayDevice.';
+                Log::info('Workflow using fast get_params for TR-098 device', [
+                    'workflow_id' => $workflow->id,
+                    'device_id' => $device->id,
+                    'data_model' => $dataModel,
+                ]);
+                return Task::create([
+                    'device_id' => $device->id,
+                    'task_type' => 'get_params',
+                    'description' => "Workflow: {$workflow->name}",
+                    'parameters' => [
+                        'names' => [$root],  // Partial path returns all parameters below it
+                    ],
+                    'status' => 'pending',
+                ]);
+            }
+            // TR-181: Fall through to use get_parameter_names (chunked approach is required)
+        }
+
         // For task types that require parameters, fail if parameters are null
         $requiresParams = ['firmware_upgrade', 'set_parameter_values', 'get_parameter_values', 'download', 'upload', 'restore'];
         if (in_array($workflow->task_type, $requiresParams) && $parameters === null) {
@@ -162,15 +189,29 @@ class WorkflowExecutionService
             return null;
         }
 
+        // Build task description - include version numbers for firmware upgrades
+        $description = "Workflow: {$workflow->name}";
+        if ($workflow->task_type === 'firmware_upgrade' && $parameters !== null) {
+            $fromVersion = $parameters['_from_version'] ?? null;
+            $toVersion = $parameters['_to_version'] ?? null;
+            if ($fromVersion && $toVersion) {
+                $description = "Firmware upgrade: {$fromVersion} → {$toVersion}";
+            } elseif ($toVersion) {
+                $description = "Firmware upgrade to {$toVersion}";
+            }
+        }
+
         $taskData = [
             'device_id' => $device->id,
             'task_type' => $this->mapTaskType($workflow->task_type),
             'status' => 'pending',
-            'description' => "Workflow: {$workflow->name}",
+            'description' => $description,
         ];
 
         if ($parameters !== null) {
-            $taskData['parameters'] = $parameters;
+            // Remove metadata keys from parameters (they start with _)
+            $cleanParams = array_filter($parameters, fn($key) => !str_starts_with($key, '_'), ARRAY_FILTER_USE_KEY);
+            $taskData['parameters'] = $cleanParams;
         }
 
         return Task::create($taskData);
@@ -247,16 +288,25 @@ class WorkflowExecutionService
     private function createCachedBackupTask(GroupWorkflow $workflow, Device $device, array $parameters): ?Task
     {
         // Query WiFi parameters from database
-        $patterns = $parameters['wifi_param_patterns'] ?? ['%WLANConfiguration%'];
+        // OPTIMIZED: Fetch all device params first (uses device_id index), then filter in PHP
+        // This avoids slow LIKE queries with leading wildcards on 9M+ row table
+        $patterns = $parameters['wifi_param_patterns'] ?? ['WLANConfiguration'];
 
-        $query = Parameter::where('device_id', $device->id);
-        $query->where(function($q) use ($patterns) {
+        // Fetch all parameters for this device (fast indexed query)
+        $allParams = Parameter::where('device_id', $device->id)
+            ->get(['name', 'value', 'type', 'writable']);
+
+        // Filter in PHP using str_contains (much faster than SQL LIKE with leading wildcards)
+        $wifiParams = $allParams->filter(function($param) use ($patterns) {
             foreach ($patterns as $pattern) {
-                $q->orWhere('name', 'like', $pattern);
+                // Remove % wildcards from patterns for str_contains matching
+                $cleanPattern = str_replace('%', '', $pattern);
+                if (str_contains($param->name, $cleanPattern)) {
+                    return true;
+                }
             }
+            return false;
         });
-
-        $wifiParams = $query->get(['name', 'value', 'type', 'writable']);
 
         if ($wifiParams->isEmpty()) {
             Log::error('No WiFi parameters found in database for cached backup', [
@@ -377,6 +427,7 @@ class WorkflowExecutionService
     private function buildFirmwareUpgradeParams(array $config, Device $device): ?array
     {
         $firmware = null;
+        $deviceCurrentVersion = $this->extractFirmwareCode($device->software_version);
 
         // Check if using active firmware for the device type
         if (!empty($config['use_active_firmware']) && $config['use_active_firmware'] === '1') {
@@ -394,6 +445,21 @@ class WorkflowExecutionService
                         'device_id' => $device->id,
                     ]);
                     return null;
+                }
+
+                // Check if device needs intermediate firmware upgrade (Nokia Beacon G6 specific)
+                $intermediateFirmware = $this->checkIntermediateFirmwareRequired($device, $firmware);
+                if ($intermediateFirmware) {
+                    Log::info('Using intermediate firmware for Nokia upgrade path', [
+                        'device_id' => $device->id,
+                        'device_serial' => $device->serial_number,
+                        'current_version' => $deviceCurrentVersion,
+                        'intermediate_firmware_id' => $intermediateFirmware->id,
+                        'intermediate_version' => $this->extractFirmwareCode($intermediateFirmware->file_name),
+                        'target_firmware_id' => $firmware->id,
+                        'target_version' => $this->extractFirmwareCode($firmware->file_name),
+                    ]);
+                    $firmware = $intermediateFirmware;
                 }
 
                 Log::info('Using active firmware for device type', [
@@ -424,12 +490,85 @@ class WorkflowExecutionService
         // Build download URL
         $downloadUrl = $firmware->getFullDownloadUrl();
 
+        // Extract version codes for task description
+        $targetVersion = $this->extractFirmwareCode($firmware->file_name);
+
         return [
             'file_type' => $config['file_type'] ?? '1 Firmware Upgrade Image',
             'url' => $downloadUrl,
             'file_size' => $firmware->file_size,
             'target_filename' => $firmware->file_name,
+            // Metadata for task description
+            '_from_version' => $deviceCurrentVersion,
+            '_to_version' => $targetVersion,
+            '_firmware_id' => $firmware->id,
         ];
+    }
+
+    /**
+     * Check if device requires intermediate firmware before upgrading to target
+     * Nokia Beacon G6 specific: IJKJ16 cannot upgrade directly to IJMK14, needs IJLJ03 first
+     */
+    private function checkIntermediateFirmwareRequired(Device $device, Firmware $targetFirmware): ?Firmware
+    {
+        // Only applies to Nokia Beacon G6 (OUI 80AB4D)
+        if (strtoupper($device->oui ?? '') !== '80AB4D') {
+            return null;
+        }
+
+        $currentVersion = $this->extractFirmwareCode($device->software_version);
+        $targetVersion = $this->extractFirmwareCode($targetFirmware->file_name);
+
+        // Nokia Beacon G6 upgrade paths:
+        // IJKJ16 -> IJLJ03 -> IJMK14 (two-step upgrade required)
+        // IJLJ03 -> IJMK14 (direct upgrade OK)
+        // IJMK14 is already current, no upgrade needed
+
+        // If device is on IJKJ16 and target is IJMK14, use IJLJ03 as intermediate
+        if ($currentVersion === 'IJKJ16' && $targetVersion === 'IJMK14') {
+            // Find the IJLJ03 intermediate firmware for this device type
+            $intermediateFirmware = Firmware::where('device_type_id', $targetFirmware->device_type_id)
+                ->where(function ($query) {
+                    $query->where('file_name', 'LIKE', '%IJLJ03%')
+                        ->orWhere('version', 'LIKE', '%24.02%');
+                })
+                ->first();
+
+            if ($intermediateFirmware) {
+                return $intermediateFirmware;
+            }
+
+            Log::warning('Intermediate firmware IJLJ03 not found for Nokia upgrade path', [
+                'device_id' => $device->id,
+                'current_version' => $currentVersion,
+                'target_version' => $targetVersion,
+            ]);
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract firmware code from version string
+     * e.g., "3FE49996IJKJ16" -> "IJKJ16", "FE49996IJLJ03-Beacon-G6-2402" -> "IJLJ03"
+     */
+    private function extractFirmwareCode(?string $version): ?string
+    {
+        if (!$version) {
+            return null;
+        }
+
+        // Nokia firmware codes follow pattern: IJ[A-Z]{2}[0-9]{2}
+        if (preg_match('/IJ[A-Z]{2}\d{2}/', $version, $matches)) {
+            return $matches[0];
+        }
+
+        // Fallback: return last 6 chars if it looks like a version code
+        if (preg_match('/[A-Z]{2}\d{2}$/', $version, $matches)) {
+            return $matches[0];
+        }
+
+        return $version;
     }
 
     /**
@@ -814,40 +953,80 @@ class WorkflowExecutionService
 
     /**
      * Get WiFi parameters that actually exist on this device from our database
+     *
+     * OPTIMIZED: Fetch all device params first (uses device_id index), then filter in PHP.
+     * This avoids slow LIKE queries with leading wildcards on 9M+ row table.
      */
     private function getDeviceWifiParams(Device $device): array
     {
-        return Parameter::where('device_id', $device->id)
-            ->where(function($q) {
-                $q->where('name', 'like', '%WLANConfiguration.1.%')
-                  ->orWhere('name', 'like', '%WLANConfiguration.2.%')
-                  ->orWhere('name', 'like', '%WLANConfiguration.5.%')
-                  ->orWhere('name', 'like', '%WLANConfiguration.6.%')
-                  ->orWhere('name', 'like', '%X_ALU-COM_Wifi%')
-                  ->orWhere('name', 'like', '%X_ALU-COM_BandSteering%')
-                  ->orWhere('name', 'like', '%X_ALU-COM_WifiSchedule%')
-                  ->orWhere('name', 'like', '%X_ALU-COM_NokiaParentalControl%');
-            })
-            ->where(function($q) {
-                // Only essential config parameters (not stats, not AC categories)
-                $q->where('name', 'like', '%.SSID')
-                  ->orWhere('name', 'like', '%.Enable')
-                  ->orWhere('name', 'like', '%.KeyPassphrase')
-                  ->orWhere('name', 'like', '%.PreSharedKey')
-                  ->orWhere('name', 'like', '%.Channel')
-                  ->orWhere('name', 'like', '%.BeaconType')
-                  ->orWhere('name', 'like', '%.SSIDAdvertisementEnabled')
-                  ->orWhere('name', 'like', '%.RadioEnabled')
-                  ->orWhere('name', 'like', '%SteeringEnable')
-                  ->orWhere('name', 'like', '%MLOEnable');
-            })
-            // Skip stats and internal params that can't be restored
-            ->where('name', 'not like', '%.Stats.%')
-            ->where('name', 'not like', '%.AC.%')
-            ->orderBy('name')
+        // Step 1: Fetch ALL parameter names for this device (uses device_id index - very fast!)
+        $allParams = Parameter::where('device_id', $device->id)
             ->pluck('name')
-            ->values()
             ->toArray();
+
+        // Step 2: Define WiFi-related patterns (WiFi config paths)
+        $wifiPatterns = [
+            'WLANConfiguration.1.',
+            'WLANConfiguration.2.',
+            'WLANConfiguration.5.',
+            'WLANConfiguration.6.',
+            'X_ALU-COM_Wifi',
+            'X_ALU-COM_BandSteering',
+            'X_ALU-COM_WifiSchedule',
+            'X_ALU-COM_NokiaParentalControl',
+        ];
+
+        // Step 3: Define essential config suffix patterns
+        $configSuffixes = [
+            '.SSID',
+            '.Enable',
+            '.KeyPassphrase',
+            '.PreSharedKey',
+            '.Channel',
+            '.BeaconType',
+            '.SSIDAdvertisementEnabled',
+            '.RadioEnabled',
+            'SteeringEnable',
+            'MLOEnable',
+        ];
+
+        // Step 4: Filter in PHP (much faster than SQL LIKE on 9M rows)
+        $result = [];
+        foreach ($allParams as $name) {
+            // Skip stats and internal params
+            if (str_contains($name, '.Stats.') || str_contains($name, '.AC.')) {
+                continue;
+            }
+
+            // Check if matches any WiFi pattern
+            $matchesWifi = false;
+            foreach ($wifiPatterns as $pattern) {
+                if (str_contains($name, $pattern)) {
+                    $matchesWifi = true;
+                    break;
+                }
+            }
+            if (!$matchesWifi) {
+                continue;
+            }
+
+            // Check if matches any config suffix
+            $matchesConfig = false;
+            foreach ($configSuffixes as $suffix) {
+                if (str_contains($name, $suffix)) {
+                    $matchesConfig = true;
+                    break;
+                }
+            }
+            if (!$matchesConfig) {
+                continue;
+            }
+
+            $result[] = $name;
+        }
+
+        sort($result);
+        return $result;
     }
 
     /**

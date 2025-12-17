@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b113ec56819f05e1eeec3775bcbf671f",
+    "content-hash": "1cdd37d3c40c37d47437e7616315870c",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -612,6 +612,68 @@
                 }
             ],
             "time": "2025-03-06T22:45:56+00:00"
+        },
+        {
+            "name": "fabiang/xmpp",
+            "version": "0.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/fabiang/xmpp.git",
+                "reference": "2d8947f97ab6ee1dfd71698ffab3bfabbab3779f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/fabiang/xmpp/zipball/2d8947f97ab6ee1dfd71698ffab3bfabbab3779f",
+                "reference": "2d8947f97ab6ee1dfd71698ffab3bfabbab3779f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3",
+                "psr/log": "*"
+            },
+            "require-dev": {
+                "behat/behat": "2.5.*@stable",
+                "monolog/monolog": "*",
+                "phpunit/phpunit": "~3.7"
+            },
+            "suggest": {
+                "monolog/monolog": "Allows more advanced logging of the application flow"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Fabiang\\Xmpp\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-2-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Fabian Grutschus",
+                    "email": "f.grutschus@lubyte.de",
+                    "homepage": "http://www.lubyte.de/",
+                    "role": "developer"
+                }
+            ],
+            "description": "Library for XMPP protocol (Jabber) connections",
+            "homepage": "https://github.com/fabiang/xmpp",
+            "keywords": [
+                "jabber",
+                "xmpp"
+            ],
+            "support": {
+                "issues": "https://github.com/fabiang/xmpp/issues",
+                "source": "https://github.com/fabiang/xmpp/tree/develop"
+            },
+            "abandoned": true,
+            "time": "2014-02-28T22:31:27+00:00"
         },
         {
             "name": "fruitcake/php-cors",

@@ -15,11 +15,26 @@ class UserController extends Controller
     /**
      * Display a listing of users
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::orderBy('created_at', 'desc')->paginate(20);
+        $sortField = $request->get('sort', 'created_at');
+        $sortDirection = $request->get('direction', 'desc');
 
-        return view('users.index', compact('users'));
+        // Validate sort field to prevent SQL injection
+        $allowedSortFields = ['name', 'email', 'role', 'must_change_password', 'two_factor_enabled_at', 'last_login_at', 'created_at'];
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'created_at';
+        }
+
+        // Validate direction
+        $sortDirection = strtolower($sortDirection) === 'asc' ? 'asc' : 'desc';
+
+        $users = User::orderBy($sortField, $sortDirection)->paginate(20);
+
+        // Preserve sort parameters in pagination links
+        $users->appends(['sort' => $sortField, 'direction' => $sortDirection]);
+
+        return view('users.index', compact('users', 'sortField', 'sortDirection'));
     }
 
     /**

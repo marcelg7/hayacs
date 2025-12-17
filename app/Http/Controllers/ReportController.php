@@ -621,6 +621,7 @@ class ReportController extends Controller
                 // PeriodicInformInterval must be xsd:unsignedInt, not xsd:string
                 $task = Task::create([
                     'device_id' => $device->id,
+                    'initiated_by_user_id' => auth()->id(),
                     'task_type' => 'set_params',
                     'status' => 'pending',
                     'parameters' => [
@@ -750,5 +751,265 @@ class ReportController extends Controller
                     ->orWhere('manufacturer', 'LIKE', '%Sagemcom%');
             })
             ->count();
+    }
+
+    /**
+     * Daily Activity Report - Shows all ACS activity for a specific day
+     * Used for monitoring usage, troubleshooting, and activity tracking
+     * Optimized to use aggregate queries and caching to avoid memory exhaustion
+     */
+    public function dailyActivity(Request $request)
+    {
+        $dateStr = $request->get('date');
+        $reportDate = $dateStr ? Carbon::parse($dateStr) : Carbon::yesterday();
+        $forceRefresh = $request->boolean('refresh');
+
+        // Cache key based on date
+        $cacheKey = 'daily_activity_report_' . $reportDate->format('Y-m-d');
+
+        // Cache duration: 1 hour for past days, 5 minutes for today
+        $isToday = $reportDate->isToday();
+        $cacheDuration = $isToday ? now()->addMinutes(5) : now()->addHour();
+
+        // Clear cache if refresh requested
+        if ($forceRefresh) {
+            Cache::forget($cacheKey);
+        }
+
+        // Try to get cached data
+        $cachedData = Cache::get($cacheKey);
+        if ($cachedData) {
+            return view('reports.daily-activity', array_merge($cachedData, [
+                'reportDate' => $reportDate,
+                'cached' => true,
+                'cacheTime' => Cache::get($cacheKey . '_time'),
+            ]));
+        }
+
+        $startOfDay = $reportDate->copy()->startOfDay();
+        $endOfDay = $reportDate->copy()->endOfDay();
+
+        // Use aggregate queries instead of loading all tasks
+        $taskStats = DB::table('tasks')
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->selectRaw('
+                COUNT(*) as total,
+                SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN status = "failed" THEN 1 ELSE 0 END) as failed,
+                SUM(CASE WHEN status = "pending" THEN 1 ELSE 0 END) as pending,
+                AVG(CASE WHEN status = "completed" AND sent_at IS NOT NULL AND completed_at IS NOT NULL
+                    THEN TIMESTAMPDIFF(SECOND, sent_at, completed_at) END) as avg_duration
+            ')
+            ->first();
+
+        // Tasks by type using aggregate query
+        $tasksByType = DB::table('tasks')
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->select('task_type', DB::raw('COUNT(*) as count'))
+            ->groupBy('task_type')
+            ->orderByDesc('count')
+            ->pluck('count', 'task_type');
+
+        // Tasks by user using aggregate query
+        $userTaskStats = DB::table('tasks')
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->select(
+                'initiated_by_user_id',
+                DB::raw('COUNT(*) as total'),
+                DB::raw('SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed'),
+                DB::raw('SUM(CASE WHEN status = "failed" THEN 1 ELSE 0 END) as failed'),
+                DB::raw('SUM(CASE WHEN status = "pending" THEN 1 ELSE 0 END) as pending'),
+                DB::raw('COUNT(DISTINCT device_id) as devices')
+            )
+            ->groupBy('initiated_by_user_id')
+            ->orderByDesc('total')
+            ->get();
+
+        // Get user names for the user stats
+        $userIds = $userTaskStats->pluck('initiated_by_user_id')->filter()->unique();
+        $users = \App\Models\User::whereIn('id', $userIds)->pluck('name', 'id');
+
+        $tasksByUser = $userTaskStats->map(function ($stat) use ($users) {
+            return [
+                'user_id' => $stat->initiated_by_user_id,
+                'user_name' => $stat->initiated_by_user_id ? ($users[$stat->initiated_by_user_id] ?? 'Unknown') : 'System (ACS)',
+                'total' => $stat->total,
+                'completed' => $stat->completed,
+                'failed' => $stat->failed,
+                'pending' => $stat->pending,
+                'devices' => $stat->devices,
+            ];
+        });
+
+        // Tasks by device (top 20) using aggregate query
+        $deviceTaskStats = DB::table('tasks')
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->select(
+                'device_id',
+                DB::raw('COUNT(*) as total'),
+                DB::raw('SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed'),
+                DB::raw('SUM(CASE WHEN status = "failed" THEN 1 ELSE 0 END) as failed')
+            )
+            ->groupBy('device_id')
+            ->orderByDesc('total')
+            ->limit(20)
+            ->get();
+
+        // Get device details for the top devices
+        $deviceIds = $deviceTaskStats->pluck('device_id')->filter()->unique();
+        $devices = Device::with('subscriber')->whereIn('id', $deviceIds)->get()->keyBy('id');
+
+        $tasksByDevice = $deviceTaskStats->map(function ($stat) use ($devices) {
+            $device = $devices[$stat->device_id] ?? null;
+            return [
+                'device_id' => $stat->device_id,
+                'serial_number' => $device?->serial_number ?? 'Unknown',
+                'subscriber' => $device?->subscriber?->name ?? 'N/A',
+                'product_class' => $device?->product_class ?? 'Unknown',
+                'total' => $stat->total,
+                'completed' => $stat->completed,
+                'failed' => $stat->failed,
+            ];
+        });
+
+        // Failed tasks - only load limited records for display
+        $failedTaskDetails = Task::whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->where('status', 'failed')
+            ->with(['device.subscriber', 'initiator'])
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'type' => $task->task_type,
+                    'description' => $task->description,
+                    'device_id' => $task->device_id,
+                    'device_serial' => $task->device?->serial_number ?? 'Unknown',
+                    'subscriber' => $task->device?->subscriber?->name ?? 'N/A',
+                    'user' => $task->getInitiatorDisplayName(),
+                    'error' => $this->extractErrorMessage($task->result),
+                    'created_at' => $task->created_at,
+                    'duration' => $task->sent_at && $task->completed_at
+                        ? $task->completed_at->diffInSeconds($task->sent_at)
+                        : null,
+                ];
+            });
+
+        // Slowest tasks - only load limited records
+        $slowestTasks = Task::whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->where('status', 'completed')
+            ->whereNotNull('sent_at')
+            ->whereNotNull('completed_at')
+            ->with(['device.subscriber', 'initiator'])
+            ->orderByRaw('TIMESTAMPDIFF(SECOND, sent_at, completed_at) DESC')
+            ->limit(10)
+            ->get()
+            ->map(function ($task) {
+                $duration = $task->completed_at->diffInSeconds($task->sent_at);
+                return [
+                    'id' => $task->id,
+                    'type' => $task->task_type,
+                    'description' => $task->description,
+                    'device_serial' => $task->device?->serial_number ?? 'Unknown',
+                    'subscriber' => $task->device?->subscriber?->name ?? 'N/A',
+                    'user' => $task->getInitiatorDisplayName(),
+                    'duration_seconds' => $duration,
+                    'created_at' => $task->created_at,
+                ];
+            });
+
+        // Device events using aggregate queries
+        $eventStats = DB::table('device_events')
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->selectRaw('
+                COUNT(*) as total,
+                COUNT(DISTINCT device_id) as unique_devices
+            ')
+            ->first();
+
+        $eventsByType = DB::table('device_events')
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->select('event_type', DB::raw('COUNT(*) as count'))
+            ->groupBy('event_type')
+            ->orderByDesc('count')
+            ->pluck('count', 'event_type');
+
+        // Hourly breakdown using aggregate query
+        $hourlyBreakdown = DB::table('tasks')
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->selectRaw('
+                DATE_FORMAT(created_at, "%H:00") as hour,
+                COUNT(*) as total,
+                SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN status = "failed" THEN 1 ELSE 0 END) as failed
+            ')
+            ->groupBy('hour')
+            ->orderBy('hour')
+            ->get()
+            ->keyBy('hour')
+            ->map(fn($h) => [
+                'total' => $h->total,
+                'completed' => $h->completed,
+                'failed' => $h->failed,
+            ]);
+
+        // Recent tasks for the collapsible list (limited to 100)
+        $recentTasks = Task::whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->with(['device', 'initiator'])
+            ->orderByDesc('created_at')
+            ->limit(100)
+            ->get();
+
+        // Build the data array
+        $data = [
+            'tasks' => $recentTasks,
+            'taskStats' => [
+                'total' => $taskStats->total ?? 0,
+                'completed' => $taskStats->completed ?? 0,
+                'failed' => $taskStats->failed ?? 0,
+                'pending' => $taskStats->pending ?? 0,
+                'avg_duration' => $taskStats->avg_duration ? round($taskStats->avg_duration, 1) : null,
+            ],
+            'tasksByType' => $tasksByType,
+            'tasksByUser' => $tasksByUser,
+            'tasksByDevice' => $tasksByDevice,
+            'failedTasks' => $failedTaskDetails,
+            'slowestTasks' => $slowestTasks,
+            'deviceEvents' => [
+                'total' => $eventStats->total ?? 0,
+                'by_type' => $eventsByType,
+                'unique_devices' => $eventStats->unique_devices ?? 0,
+            ],
+            'hourlyBreakdown' => $hourlyBreakdown,
+        ];
+
+        // Cache the data
+        Cache::put($cacheKey, $data, $cacheDuration);
+        Cache::put($cacheKey . '_time', now(), $cacheDuration);
+
+        return view('reports.daily-activity', array_merge($data, [
+            'reportDate' => $reportDate,
+            'cached' => false,
+        ]));
+    }
+
+    /**
+     * Helper: Extract error message from task result
+     */
+    private function extractErrorMessage($result): ?string
+    {
+        if (is_string($result)) {
+            $decoded = json_decode($result, true);
+            if ($decoded) {
+                $result = $decoded;
+            }
+        }
+
+        if (is_array($result)) {
+            return $result['error'] ?? $result['message'] ?? $result['faultstring'] ?? json_encode($result);
+        }
+
+        return $result ? (string) $result : null;
     }
 }

@@ -20,6 +20,9 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+        <!-- Page-specific styles -->
+        @stack('styles')
+
         <style>
             [x-cloak] { display: none !important; }
 

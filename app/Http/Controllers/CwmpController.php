@@ -18,6 +18,12 @@ use Illuminate\Support\Facades\Log;
 
 class CwmpController extends Controller
 {
+    /**
+     * Maximum number of times a task can be resent before being marked as failed.
+     * This prevents infinite loops where a task keeps getting resent but never completes.
+     */
+    public const MAX_RESEND_COUNT = 3;
+
     public function __construct(
         private CwmpService $cwmpService,
         private ProvisioningService $provisioningService,
@@ -145,14 +151,10 @@ class CwmpController extends Controller
             ]
         );
 
-        // Store parameters from Inform
-        foreach ($parsed['parameters'] as $name => $param) {
-            $device->setParameter(
-                $name,
-                $param['value'],
-                $param['type'],
-                false
-            );
+        // Store parameters from Inform using bulk upsert for efficiency
+        // With 10K+ devices checking in every 10 min, this reduces DB load significantly
+        if (!empty($parsed['parameters'])) {
+            $device->setParametersBulk($parsed['parameters']);
         }
 
         // Update specific device info from parameters
@@ -214,7 +216,52 @@ class CwmpController extends Controller
             }
         }
 
+        // Capture XMPP Connection info for Nokia devices (Beacons use XMPP for connection requests)
+        $xmppJid = null;
+        $xmppEnabled = false;
+
+        // Check TR-098 XMPP parameters (Nokia Beacon G6)
+        if (isset($parsed['parameters']['InternetGatewayDevice.XMPP.Connection.1.JabberID'])) {
+            $xmppJid = $parsed['parameters']['InternetGatewayDevice.XMPP.Connection.1.JabberID']['value'];
+        }
+        if (isset($parsed['parameters']['InternetGatewayDevice.XMPP.Connection.1.Enable'])) {
+            $xmppEnabled = in_array(strtolower($parsed['parameters']['InternetGatewayDevice.XMPP.Connection.1.Enable']['value']), ['true', '1']);
+        }
+        // Check Nokia-specific XMPP enable
+        if (isset($parsed['parameters']['InternetGatewayDevice.ManagementServer.X_ALU_COM_XMPP_Enable'])) {
+            $xmppEnabled = $xmppEnabled || in_array(strtolower($parsed['parameters']['InternetGatewayDevice.ManagementServer.X_ALU_COM_XMPP_Enable']['value']), ['true', '1']);
+        }
+
+        // Check TR-181 XMPP parameters
+        if (isset($parsed['parameters']['Device.XMPP.Connection.1.JabberID'])) {
+            $xmppJid = $parsed['parameters']['Device.XMPP.Connection.1.JabberID']['value'];
+        }
+        if (isset($parsed['parameters']['Device.XMPP.Connection.1.Enable'])) {
+            $xmppEnabled = in_array(strtolower($parsed['parameters']['Device.XMPP.Connection.1.Enable']['value']), ['true', '1']);
+        }
+
+        // Update device XMPP info if found
+        if ($xmppJid && !empty($xmppJid)) {
+            $device->xmpp_jid = $xmppJid;
+            $device->xmpp_enabled = $xmppEnabled;
+            $device->xmpp_last_seen = now();
+            if ($xmppEnabled) {
+                $device->xmpp_status = 'active';
+            }
+            Log::info('XMPP connection info received', [
+                'device_id' => $device->id,
+                'jid' => $xmppJid,
+                'enabled' => $xmppEnabled,
+            ]);
+        }
+
         $device->save();
+
+        // Update mesh topology for Nokia mesh APs (Beacon 2, 3.1)
+        // This links them to their parent gateway (Beacon G6) based on DataElements parameters
+        if ($device->isNokiaMeshAP()) {
+            $device->updateMeshParentFromDataElements();
+        }
 
         // Store device ID in session for response handler matching
         // This ensures responses are matched to the correct device's tasks
@@ -344,6 +391,56 @@ class CwmpController extends Controller
                     'task_id' => $uptimeTask->id,
                     'events' => $parsed['events'],
                 ]);
+            }
+        }
+
+        // Check for TRANSFER COMPLETE event (firmware download completed)
+        // The device may send 7 TRANSFER COMPLETE in the Inform before the TransferComplete RPC
+        // Extract task IDs from M Download command_keys and auto-complete those tasks
+        $hasTransferComplete = collect($parsed['events'])->contains(function ($event) {
+            return $event['code'] === '7 TRANSFER COMPLETE';
+        });
+
+        if ($hasTransferComplete) {
+            // Find download task IDs from M Download events
+            // Command key format: download_{task_id}_{timestamp}
+            $downloadTaskIds = collect($parsed['events'])
+                ->filter(fn($e) => $e['code'] === 'M Download' && !empty($e['command_key']))
+                ->map(function ($e) {
+                    if (preg_match('/^download_(\d+)_/', $e['command_key'], $matches)) {
+                        return (int) $matches[1];
+                    }
+                    return null;
+                })
+                ->filter()
+                ->values()
+                ->toArray();
+
+            if (!empty($downloadTaskIds)) {
+                // Auto-complete these download tasks
+                $downloadTasks = $device->tasks()
+                    ->whereIn('id', $downloadTaskIds)
+                    ->whereIn('status', ['sent', 'pending'])
+                    ->where('task_type', 'download')
+                    ->get();
+
+                foreach ($downloadTasks as $downloadTask) {
+                    $downloadTask->markAsCompleted([
+                        'verified_via' => 'transfer_complete_event',
+                        'events' => collect($parsed['events'])
+                            ->filter(fn($e) => in_array($e['code'], ['7 TRANSFER COMPLETE', 'M Download', '1 BOOT']))
+                            ->toArray(),
+                    ]);
+
+                    Log::info('Download task auto-completed via TRANSFER COMPLETE event', [
+                        'device_id' => $device->id,
+                        'task_id' => $downloadTask->id,
+                        'description' => $downloadTask->description,
+                    ]);
+
+                    // Notify workflow service about task completion
+                    $this->workflowExecutionService->onTaskCompleted($downloadTask);
+                }
             }
         }
 
@@ -677,10 +774,13 @@ class CwmpController extends Controller
 
                 // Create a get_params task for each chunk
                 $taskIds = [];
+                $totalChunks = count($paramChunks);
                 foreach ($paramChunks as $chunkIndex => $chunk) {
+                    $chunkNum = $chunkIndex + 1;
                     $detailedTask = Task::create([
                         'device_id' => $device->id,
                         'task_type' => 'get_params',
+                        'description' => "Refresh: Fetch parameters (chunk {$chunkNum}/{$totalChunks})",
                         'parameters' => [
                             'names' => $chunk,
                         ],
@@ -701,14 +801,9 @@ class CwmpController extends Controller
                 // Subsequent chunks will be picked up in following sessions
                 $this->connectionRequestService->sendConnectionRequest($device);
             } else {
-                // Regular get_params - store parameters in device
-                foreach ($parsed['parameters'] as $name => $param) {
-                    $device->setParameter(
-                        $name,
-                        $param['value'],
-                        $param['type']
-                    );
-                }
+                // Regular get_params - store parameters in device using bulk upsert
+                // This is MUCH faster than individual setParameter() calls (5s vs 5min for 5000 params)
+                $device->setParametersBulk($parsed['parameters']);
 
                 // Mark task as completed
                 $task->markAsCompleted($parsed['parameters']);
@@ -1411,7 +1506,46 @@ class CwmpController extends Controller
             return $this->cwmpService->createEmptyResponse();
         }
 
-        // Task found - mark it as failed with detailed error message
+        // Task found - check if this is a "parameter not found" error for host queries
+        // Fault code 9005 = Invalid parameter name - this is expected when hosts disconnect
+        $isHostQuery = false;
+        $params = $task->parameters ?? [];
+
+        // Check if task was querying Hosts.Host.* parameters
+        if (isset($params['names']) && is_array($params['names'])) {
+            foreach ($params['names'] as $paramName) {
+                if (str_contains($paramName, 'Hosts.Host.') || str_contains($paramName, 'LANDevice.1.Hosts.Host.')) {
+                    $isHostQuery = true;
+                    break;
+                }
+            }
+        }
+
+        // For host queries with 9005 error, mark as completed (hosts just disconnected)
+        if ($faultCode === '9005' && $isHostQuery) {
+            Log::info('Host query returned 9005 - hosts no longer connected, marking as completed', [
+                'task_id' => $task->id,
+                'fault_string' => $faultString,
+            ]);
+
+            $task->markAsCompleted([
+                'status' => 'partial',
+                'message' => 'Some hosts disconnected before query completed',
+                'fault_code' => $faultCode,
+            ]);
+
+            // Continue to check for more pending tasks
+            if ($task->device) {
+                $nextTask = $this->getNextPendingTask($task->device);
+                if ($nextTask) {
+                    return $this->dispatchTask($task->device, $nextTask);
+                }
+            }
+
+            return $this->cwmpService->createEmptyResponse();
+        }
+
+        // Standard error handling for other faults
         $errorMessage = "SOAP Fault {$faultCode}: {$faultString}";
 
         if (!empty($parameterFaults)) {
@@ -1909,15 +2043,44 @@ class CwmpController extends Controller
             ->first();
 
         if ($recentlySentTask) {
-            Log::info('Resending recently sent task (device may have sent GetRPCMethods first)', [
-                'device_id' => $device->id,
-                'task_id' => $recentlySentTask->id,
-                'task_type' => $recentlySentTask->task_type,
-                'sent_seconds_ago' => $recentlySentTask->updated_at->diffInSeconds(now()),
-            ]);
-            // Reset to pending so markAsSent() works correctly
-            $recentlySentTask->update(['status' => 'pending']);
-            return $recentlySentTask;
+            // Check if task has exceeded max resend attempts
+            $newResendCount = ($recentlySentTask->resend_count ?? 0) + 1;
+
+            if ($newResendCount > self::MAX_RESEND_COUNT) {
+                Log::warning('Task exceeded max resend count, marking as failed', [
+                    'device_id' => $device->id,
+                    'task_id' => $recentlySentTask->id,
+                    'task_type' => $recentlySentTask->task_type,
+                    'resend_count' => $recentlySentTask->resend_count,
+                    'max_resend_count' => self::MAX_RESEND_COUNT,
+                ]);
+
+                $recentlySentTask->update([
+                    'status' => 'failed',
+                    'result' => json_encode([
+                        'error' => 'Task failed after ' . self::MAX_RESEND_COUNT . ' resend attempts',
+                        'message' => 'Device did not respond to command after multiple attempts. This may indicate the device does not support this operation or the parameters are invalid.',
+                        'resend_count' => $recentlySentTask->resend_count,
+                    ]),
+                ]);
+
+                // Continue to find next pending task instead of returning failed task
+            } else {
+                Log::info('Resending recently sent task (device may have sent GetRPCMethods first)', [
+                    'device_id' => $device->id,
+                    'task_id' => $recentlySentTask->id,
+                    'task_type' => $recentlySentTask->task_type,
+                    'sent_seconds_ago' => $recentlySentTask->updated_at->diffInSeconds(now()),
+                    'resend_count' => $newResendCount,
+                ]);
+
+                // Increment resend count and reset to pending so markAsSent() works correctly
+                $recentlySentTask->update([
+                    'status' => 'pending',
+                    'resend_count' => $newResendCount,
+                ]);
+                return $recentlySentTask;
+            }
         }
 
         // Check if there are diagnostic tasks waiting for completion (in 'sent' status)

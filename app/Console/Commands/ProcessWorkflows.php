@@ -31,6 +31,9 @@ class ProcessWorkflows extends Command
         $limit = (int) $this->option('limit');
         $workflowId = $this->option('workflow');
 
+        // Reset stale "queued" executions back to "pending" (stuck for >5 minutes)
+        $this->resetStaleQueuedExecutions();
+
         $this->info('Processing workflows...');
 
         // Get active workflows that should run now
@@ -68,13 +71,13 @@ class ProcessWorkflows extends Command
     {
         $this->line("Processing workflow: {$workflow->name} (ID: {$workflow->id})");
 
-        // Check rate limit
-        $executionsThisHour = $this->getExecutionsThisHour($workflow);
+        // Check rate limit (per minute)
+        $executionsThisMinute = $this->getExecutionsThisMinute($workflow);
         $rateLimit = $workflow->rate_limit > 0 ? $workflow->rate_limit : PHP_INT_MAX;
-        $available = max(0, $rateLimit - $executionsThisHour);
+        $available = max(0, $rateLimit - $executionsThisMinute);
 
         if ($available <= 0) {
-            $this->warn("  Rate limit reached ({$rateLimit}/hour)");
+            $this->warn("  Rate limit reached ({$rateLimit}/min)");
             return 0;
         }
 
@@ -127,9 +130,9 @@ class ProcessWorkflows extends Command
                 continue;
             }
 
-            // Check if device is online (for immediate execution)
-            if (!$device->online && $workflow->schedule_type !== 'on_connect') {
-                // For scheduled/recurring, we still create the task - it will run when device connects
+            // Skip offline devices for immediate workflows - they'll be processed when they come online
+            if (!$device->online && $workflow->schedule_type === 'immediate') {
+                continue; // Don't process - leave pending for when device comes online
             }
 
             // Check dependency
@@ -156,10 +159,10 @@ class ProcessWorkflows extends Command
         return $processed;
     }
 
-    private function getExecutionsThisHour(GroupWorkflow $workflow): int
+    private function getExecutionsThisMinute(GroupWorkflow $workflow): int
     {
         return WorkflowExecution::where('group_workflow_id', $workflow->id)
-            ->where('started_at', '>=', now()->subHour())
+            ->where('started_at', '>=', now()->subMinute())
             ->count();
     }
 
@@ -174,5 +177,22 @@ class ProcessWorkflows extends Command
     {
         // Only initialize if no executions exist yet
         return !WorkflowExecution::where('group_workflow_id', $workflow->id)->exists();
+    }
+
+    private function resetStaleQueuedExecutions(): void
+    {
+        // Find "queued" executions older than 5 minutes and reset to "pending"
+        // This handles cases where a task was created but the device never responded
+        $staleCount = WorkflowExecution::where('status', 'queued')
+            ->where('started_at', '<', now()->subMinutes(5))
+            ->update([
+                'status' => 'pending',
+                'started_at' => null,
+                'task_id' => null,
+            ]);
+
+        if ($staleCount > 0) {
+            $this->warn("Reset {$staleCount} stale queued executions back to pending");
+        }
     }
 }

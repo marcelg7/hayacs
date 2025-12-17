@@ -4,7 +4,7 @@
     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
         <div>
             <h3 class="text-sm font-medium text-blue-900">Troubleshooting Information</h3>
-            <p class="mt-1 text-sm text-blue-700">Click refresh to fetch the latest WAN, LAN, WiFi, and connected device information from the device.</p>
+            <p class="mt-1 text-sm text-blue-700">Click <strong>Get Everything</strong> (above) to fetch all device parameters including WAN, LAN, WiFi, and connected devices.</p>
         </div>
         <form @submit.prevent="async (e) => {
             try {
@@ -60,10 +60,24 @@
         </div>
         <div class="border-t border-gray-200 dark:border-{{ $colors['border'] }}">
             <dl>
+                @php
+                    // Check if this is a GigaMesh device - uses ExosMesh.WapHostInfo for WAN info
+                    $isGigaMesh = $device->isMeshDevice() && (
+                        stripos($device->product_class ?? '', 'gigamesh') !== false ||
+                        stripos($device->product_class ?? '', 'u4m') !== false ||
+                        stripos($device->product_class ?? '', 'gm1028') !== false
+                    );
+                @endphp
                 @if($isDevice2)
                     @php
                         $wanPrefix = 'Device.IP.Interface.1';
                         $pppPrefix = 'Device.PPP.Interface.1';
+                    @endphp
+                @elseif($isGigaMesh)
+                    @php
+                        // GigaMesh uses ExosMesh.WapHostInfo for mesh backhaul connection info
+                        $wanPrefix = 'InternetGatewayDevice.X_000631_Device.ExosMesh.WapHostInfo';
+                        $pppPrefix = null; // No PPP on mesh devices
                     @endphp
                 @else
                     @php

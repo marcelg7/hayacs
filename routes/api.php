@@ -43,6 +43,23 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/devices/{id}/tasks', [DeviceController::class, 'createTask']);
     Route::delete('/devices/{id}/tasks/{taskId}', [DeviceController::class, 'cancelTask']);
 
+    // Task Status (for polling)
+    Route::get('/tasks/{taskId}', function ($taskId) {
+        $task = \App\Models\Task::find($taskId);
+        if (!$task) {
+            return response()->json(['error' => 'Task not found'], 404);
+        }
+        return response()->json([
+            'id' => $task->id,
+            'status' => $task->status,
+            'task_type' => $task->task_type,
+            'description' => $task->description,
+            'result' => $task->result,
+            'created_at' => $task->created_at,
+            'updated_at' => $task->updated_at,
+        ]);
+    });
+
     // Device Actions
     Route::post('/devices/{id}/query', [DeviceController::class, 'query']);
     Route::post('/devices/{id}/refresh-troubleshooting', [DeviceController::class, 'refreshTroubleshooting']);
@@ -67,6 +84,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/devices/{id}/standard-wifi', [DeviceController::class, 'getStandardWifiConfig']);
     Route::post('/devices/{id}/standard-wifi', [DeviceController::class, 'applyStandardWifiConfig']);
     Route::post('/devices/{id}/guest-network', [DeviceController::class, 'toggleGuestNetwork']);
+    Route::post('/devices/{id}/guest-password', [DeviceController::class, 'updateGuestPassword']);
+
+    // LAN Configuration
+    Route::get('/devices/{id}/lan-config', [DeviceController::class, 'getLanConfig']);
+    Route::post('/devices/{id}/lan-config', [DeviceController::class, 'updateLanConfig']);
+
+    // Admin Credentials (customer-facing, not support/superadmin)
+    Route::get('/devices/{id}/admin-credentials', [DeviceController::class, 'getAdminCredentials']);
+    Route::post('/devices/{id}/admin-credentials/reset', [DeviceController::class, 'resetAdminPassword']);
 
     // Configuration Backups
     Route::get('/devices/{id}/backups', [DeviceController::class, 'getBackups']);
@@ -87,6 +113,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/devices/{id}/port-mappings', [DeviceController::class, 'deletePortMapping']);
     Route::post('/devices/{id}/port-mappings/refresh', [DeviceController::class, 'refreshPortMappings']);
     Route::get('/devices/{id}/connected-devices', [DeviceController::class, 'getConnectedDevices']);
+    Route::post('/devices/{id}/connected-devices/refresh', [DeviceController::class, 'refreshConnectedDevices']);
 
     // WiFi Interference Scan
     Route::post('/devices/{id}/wifi-scan', [DeviceController::class, 'startWiFiScan']);

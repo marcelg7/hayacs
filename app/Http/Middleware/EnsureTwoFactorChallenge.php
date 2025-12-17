@@ -2,13 +2,22 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\TrustedDevice;
 use App\Models\TwoFactorRememberedDevice;
+use App\Services\TrustedDeviceService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureTwoFactorChallenge
 {
+    protected TrustedDeviceService $trustedDeviceService;
+
+    public function __construct(TrustedDeviceService $trustedDeviceService)
+    {
+        $this->trustedDeviceService = $trustedDeviceService;
+    }
+
     /**
      * Routes that should be accessible during 2FA challenge
      */
@@ -39,7 +48,21 @@ class EnsureTwoFactorChallenge
 
         // Check if user has 2FA enabled and session is not verified
         if ($user->hasTwoFactorEnabled() && !session('two_factor_verified')) {
-            // Check for remembered device cookie
+            // First, check for trusted device token (used for IP bypass AND 2FA skip)
+            $trustedDevice = $this->trustedDeviceService->getValidTrustedDevice($request);
+            if ($trustedDevice && $trustedDevice->user_id === $user->id) {
+                // Mark session as verified and record use
+                session(['two_factor_verified' => true]);
+                $fingerprintMatched = $this->trustedDeviceService->verifyFingerprint($request, $trustedDevice);
+                $trustedDevice->recordUse('two_fa_skip', $fingerprintMatched);
+
+                // Update last login time
+                $user->update(['last_login_at' => now()]);
+
+                return $next($request);
+            }
+
+            // Check for remembered device cookie (2FA remember only, 48 days)
             $rememberToken = $request->cookie('2fa_remember');
             if ($rememberToken) {
                 $rememberedDevice = TwoFactorRememberedDevice::findValidByToken($rememberToken);

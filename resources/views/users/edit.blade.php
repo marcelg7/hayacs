@@ -138,21 +138,6 @@
                     </div>
                 @endif
 
-                @if($user->hasTwoFactorEnabled() && $user->id !== auth()->id())
-                    <form action="{{ route('users.reset-2fa', $user) }}" method="POST"
-                          onsubmit="return confirm('Are you sure you want to reset two-factor authentication for this user? They will need to set it up again.');">
-                        @csrf
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-yellow-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-700 focus:bg-yellow-700 active:bg-yellow-900 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                            </svg>
-                            Reset Two-Factor Authentication
-                        </button>
-                    </form>
-                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                        This will disable their 2FA and give them a new 14-day grace period to set it up again.
-                    </p>
-                @endif
             </div>
 
             <!-- Submit Button -->
@@ -166,6 +151,28 @@
             </div>
         </form>
     </div>
+
+    <!-- Reset 2FA Section (moved outside main form to avoid nested forms) -->
+    @if($user->hasTwoFactorEnabled() && $user->id !== auth()->id())
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div class="p-6">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Reset Two-Factor Authentication</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                This will disable their 2FA and give them a new 14-day grace period to set it up again.
+            </p>
+            <form action="{{ route('users.reset-2fa', $user) }}" method="POST"
+                  onsubmit="return confirm('Are you sure you want to reset two-factor authentication for this user? They will need to set it up again.');">
+                @csrf
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-yellow-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-700 focus:bg-yellow-700 active:bg-yellow-900 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Reset Two-Factor Authentication
+                </button>
+            </form>
+        </div>
+    </div>
+    @endif
 
     <!-- Delete User Section -->
     @if($user->id !== auth()->id())

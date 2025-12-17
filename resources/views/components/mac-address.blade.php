@@ -22,6 +22,7 @@
 
     {{-- Info Icon with Tooltip --}}
     <span class="relative ml-1"
+          x-ref="trigger"
           @mouseenter="openTooltip()"
           @mouseleave="startCloseTimer()">
         <button type="button"
@@ -33,21 +34,23 @@
             </svg>
         </button>
 
-        {{-- Tooltip --}}
+        {{-- Tooltip - positioned dynamically above or below based on available space --}}
         <div x-show="showTooltip"
              x-cloak
              x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 translate-y-1"
-             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
              x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 translate-y-0"
-             x-transition:leave-end="opacity-0 translate-y-1"
-             class="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-72 p-3 text-sm bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             :class="positionAbove ? 'bottom-full mb-2' : 'top-full mt-2'"
+             class="absolute z-[100] left-1/2 transform -translate-x-1/2 w-72 p-3 text-sm bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
              @mouseenter="cancelCloseTimer()"
              @mouseleave="startCloseTimer()">
 
-            {{-- Arrow --}}
-            <div class="absolute left-1/2 transform -translate-x-1/2 -bottom-2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white dark:border-t-gray-800"></div>
+            {{-- Arrow - points down when above, points up when below --}}
+            <div x-show="positionAbove" class="absolute left-1/2 transform -translate-x-1/2 -bottom-2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white dark:border-t-gray-800"></div>
+            <div x-show="!positionAbove" class="absolute left-1/2 transform -translate-x-1/2 -top-2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-white dark:border-b-gray-800"></div>
 
             <template x-if="loading">
                 <div class="flex items-center justify-center py-2">
@@ -157,10 +160,26 @@ function macOuiLookup(mac) {
         copied: false,
         copiedAll: false,
         closeTimer: null,
+        positionAbove: false,
 
         openTooltip() {
             this.cancelCloseTimer();
+            this.calculatePosition();
             this.showTooltip = true;
+        },
+
+        calculatePosition() {
+            // Get the trigger element's position
+            const trigger = this.$refs.trigger;
+            if (!trigger) return;
+
+            const rect = trigger.getBoundingClientRect();
+            const tooltipHeight = 180; // Approximate tooltip height
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+
+            // Position above if there's not enough space below but enough above
+            this.positionAbove = spaceBelow < tooltipHeight && spaceAbove > tooltipHeight;
         },
 
         startCloseTimer() {

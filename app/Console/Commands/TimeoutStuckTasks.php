@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Task;
+use App\Services\ConnectionRequestService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -180,5 +181,45 @@ class TimeoutStuckTasks extends Command
         ]);
 
         $this->info("Task {$task->id} (WiFi) timed out - queued verification task {$verificationTask->id}");
+
+        // Send connection request to bring device back quickly for verification
+        // This prevents waiting up to 15 minutes for the next periodic inform
+        $this->sendConnectionRequestForVerification($device, $task->id, $verificationTask->id);
+    }
+
+    /**
+     * Send a connection request to bring the device back for verification
+     */
+    private function sendConnectionRequestForVerification($device, int $originalTaskId, int $verificationTaskId): void
+    {
+        try {
+            $connectionService = app(ConnectionRequestService::class);
+            $result = $connectionService->sendConnectionRequest($device);
+
+            if ($result['success']) {
+                Log::info('Connection request sent for WiFi verification', [
+                    'device_id' => $device->id,
+                    'original_task_id' => $originalTaskId,
+                    'verification_task_id' => $verificationTaskId,
+                ]);
+                $this->info("  → Connection request sent to device for faster verification");
+            } else {
+                Log::warning('Connection request failed for WiFi verification', [
+                    'device_id' => $device->id,
+                    'original_task_id' => $originalTaskId,
+                    'verification_task_id' => $verificationTaskId,
+                    'error' => $result['message'],
+                ]);
+                $this->warn("  → Connection request failed: {$result['message']} (will verify on next periodic inform)");
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception sending connection request for WiFi verification', [
+                'device_id' => $device->id,
+                'original_task_id' => $originalTaskId,
+                'verification_task_id' => $verificationTaskId,
+                'error' => $e->getMessage(),
+            ]);
+            $this->warn("  → Connection request error: {$e->getMessage()}");
+        }
     }
 }

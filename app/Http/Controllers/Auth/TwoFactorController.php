@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\TwoFactorRememberedDevice;
+use App\Services\TrustedDeviceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
@@ -17,10 +18,12 @@ use BaconQrCode\Writer;
 class TwoFactorController extends Controller
 {
     protected Google2FA $google2fa;
+    protected TrustedDeviceService $trustedDeviceService;
 
-    public function __construct()
+    public function __construct(TrustedDeviceService $trustedDeviceService)
     {
         $this->google2fa = new Google2FA();
+        $this->trustedDeviceService = $trustedDeviceService;
     }
 
     /**
@@ -49,6 +52,7 @@ class TwoFactorController extends Controller
         $request->validate([
             'code' => ['required', 'string', 'digits:6'],
             'remember_device' => ['nullable', 'boolean'],
+            'trust_device' => ['nullable', 'boolean'],
         ]);
 
         $user = $request->user();
@@ -81,8 +85,15 @@ class TwoFactorController extends Controller
         $response = redirect()->route('dashboard')
             ->with('success', 'Two-factor authentication verified.');
 
-        // If user requested to remember this device, create a remembered device token
-        if ($request->boolean('remember_device')) {
+        // If user requested to TRUST this device (IP bypass + 2FA skip, 90 days)
+        // Only allow if they're currently on an allowed IP (VPN)
+        if ($request->boolean('trust_device') && $this->trustedDeviceService->isAllowedIp($request->ip())) {
+            $trustedDevice = $this->trustedDeviceService->trustDevice($user, $request);
+            $response->withCookie($this->trustedDeviceService->getTrustCookie($trustedDevice));
+            $response->with('success', 'Two-factor authentication verified. This device is now trusted for 90 days.');
+        }
+        // If user only requested to remember this device for 2FA skip (48 days)
+        elseif ($request->boolean('remember_device')) {
             $deviceName = $this->getDeviceName($request);
             $rememberedDevice = TwoFactorRememberedDevice::createForUser(
                 $user,

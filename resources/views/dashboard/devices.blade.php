@@ -123,6 +123,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             <a href="{{ $sortUrl('model_name') }}" class="hover:text-gray-700 dark:hover:text-gray-100">Model {{ $sortIcon('model_name') }}</a>
                         </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Mesh</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             <a href="{{ $sortUrl('serial_number') }}" class="hover:text-gray-700 dark:hover:text-gray-100">Serial Number {{ $sortIcon('serial_number') }}</a>
                         </th>
@@ -155,6 +156,41 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $device->manufacturer ?? '-' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $device->display_name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            @if($device->isMeshDevice())
+                                @php
+                                    $meshInfo = $device->getMeshInfo();
+                                    $gateway = $device->getMeshGateway();
+                                @endphp
+                                <div class="flex flex-col space-y-1">
+                                    @if($gateway)
+                                        <div class="flex items-center space-x-1">
+                                            <svg class="h-3 w-3 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.14 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path>
+                                            </svg>
+                                            <a href="{{ route('device.show', $gateway->id) }}" class="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 font-medium">
+                                                {{ $gateway->subscriber?->name ?? Str::limit($gateway->serial_number, 12) }}
+                                            </a>
+                                        </div>
+                                    @endif
+                                    @if($meshInfo['backhaul'])
+                                        <div class="flex items-center space-x-1 text-xs">
+                                            @if($meshInfo['backhaul'] === 'WiFi')
+                                                <span class="px-1.5 py-0.5 rounded {{ $meshInfo['signal_strength'] !== null && $meshInfo['signal_strength'] >= -60 ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : ($meshInfo['signal_strength'] !== null && $meshInfo['signal_strength'] >= -70 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300') }}">
+                                                    WiFi {{ $meshInfo['signal_strength'] !== null ? $meshInfo['signal_strength'] . 'dBm' : '' }}
+                                                </span>
+                                            @else
+                                                <span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                                                    {{ $meshInfo['backhaul'] }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="text-gray-400 dark:text-gray-500">-</span>
+                            @endif
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $device->serial_number ?? '-' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" title="{{ $device->software_version }}">{{ Str::limit($device->software_version, 20) ?? '-' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -177,7 +213,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="px-6 py-12 text-center">
+                        <td colspan="10" class="px-6 py-12 text-center">
                             <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
                             </svg>

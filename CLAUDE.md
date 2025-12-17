@@ -1,7 +1,25 @@
 # CLAUDE.md - Project Context & Current State
 
-**Last Updated**: December 10, 2025
+**Last Updated**: December 15, 2025
 **Current Focus**: Production cutover complete - 9,775 devices connected, automated billing sync active
+
+---
+
+## File Permissions (Auto-Configured)
+
+**Default ACLs are set** on key directories (`views/`, `app/`, `config/`, `routes/`, `database/`) so new files automatically inherit read permissions for Apache.
+
+If you still encounter permission errors:
+```bash
+chmod 644 /path/to/file.php
+```
+
+ACLs were configured with:
+```bash
+setfacl -R -d -m o::rx /var/www/hayacs/resources/views/
+setfacl -R -d -m o::rx /var/www/hayacs/app/
+# etc.
+```
 
 ---
 
@@ -762,35 +780,115 @@ SmartRG devices (SR505N, SR515ac, SR516ac) only process ONE TR-069 RPC per CWMP 
 - 10-second grace period prevents false positives during normal session flow
 - Abandoned tasks show: "Device started new TR-069 session without responding to command"
 
-### Nokia Beacon G6 TR-098 GetParameterValues Limitations
-Nokia Beacon G6 devices in TR-098 mode do NOT support GetParameterValues with partial path prefixes (paths ending in `.`).
+### Calix 804Mesh/GigaMesh Parameter Query Limitations
 
-**Problem**: Queries like `GetParameterValues("InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.")` fail silently - the device starts a new CWMP session without responding to the command.
+Calix mesh APs (804Mesh, GigaMesh) have several TR-069 quirks:
 
-**Working Alternative**: Use explicit full parameter names with the `{"names": [...]}` format:
+**Problem 1: "NumberOfEntries" Parameters**
+Mesh APs return SOAP Fault 9005 (Invalid parameter name) when querying `*NumberOfEntries` parameters via GetParameterValues, even though these parameters exist on the device and were discovered via GetParameterNames.
+
+**Affected Parameters**:
+- `InternetGatewayDevice.WANDeviceNumberOfEntries` - Fails
+- `InternetGatewayDevice.LANDeviceNumberOfEntries` - Fails
+
+**Problem 2: No STUN Support**
+Mesh APs don't have STUN parameters - no STUNEnable, NATDetected, or UDPConnectionRequestAddress.
+
+**Problem 3: Reduced Parameter Set**
+Mesh APs have a different structure than gateways - no LANWLANConfigurationNumberOfEntries, different WAN structure.
+
+**Solution Implemented**: Custom parameter list for mesh AP troubleshooting discovery:
+
+**Base Parameters (804Mesh and GigaMesh)**:
 ```php
-$wanParams = [
-    'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress',
-    'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.DefaultGateway',
-    'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.DNSServers',
-    // ... more specific params
-];
-$task->parameters = ['names' => $wanParams];
+// 12 base parameters that work on all mesh APs
+[
+    'InternetGatewayDevice.DeviceInfo.Manufacturer',
+    'InternetGatewayDevice.DeviceInfo.ManufacturerOUI',
+    'InternetGatewayDevice.DeviceInfo.ModelName',
+    'InternetGatewayDevice.DeviceInfo.SerialNumber',
+    'InternetGatewayDevice.DeviceInfo.SoftwareVersion',
+    'InternetGatewayDevice.DeviceInfo.HardwareVersion',
+    'InternetGatewayDevice.DeviceInfo.UpTime',
+    'InternetGatewayDevice.ManagementServer.URL',
+    'InternetGatewayDevice.ManagementServer.PeriodicInformEnable',
+    'InternetGatewayDevice.ManagementServer.PeriodicInformInterval',
+    'InternetGatewayDevice.ManagementServer.ConnectionRequestURL',
+    'InternetGatewayDevice.X_000631_Device.GatewayInfo.SerialNumber', // Gateway serial
+]
 ```
 
-**Impact on "Get Everything"**: The `GetParameterNames` RPC also fails on this device. As a result:
-- "Get Everything" feature does not work for TR-098 Nokia devices
-- Must use specific parameter retrieval tasks instead
-- Current workaround: Pre-defined parameter lists for key device info
+**GigaMesh (u4m/GM1028) Additional ExosMesh Parameters**:
+GigaMesh devices have ExosMesh parameters that 804Mesh devices don't support:
+```php
+// Additional 9 parameters for GigaMesh only (804Mesh returns Fault 9005 for these)
+[
+    'InternetGatewayDevice.X_000631_Device.ExosMesh.OperationalRole',     // "Satellite" or "Base"
+    'InternetGatewayDevice.X_000631_Device.ExosMesh.WapBackhaul',         // "WIFI" or "ETHERNET"
+    'InternetGatewayDevice.X_000631_Device.ExosMesh.Stats.Channel',       // e.g., 36
+    'InternetGatewayDevice.X_000631_Device.ExosMesh.Stats.SignalStrength', // e.g., -69 dBm
+    'InternetGatewayDevice.X_000631_Device.ExosMesh.Stats.PhyRateTx',     // e.g., 1201000 bps
+    'InternetGatewayDevice.X_000631_Device.ExosMesh.Stats.PhyRateRx',     // e.g., 1201000 bps
+    'InternetGatewayDevice.X_000631_Device.ExosMesh.WapHostInfo.ConnectionStatus', // "Connected"
+    'InternetGatewayDevice.X_000631_Device.ExosMesh.WapHostInfo.ExternalIPAddress', // LAN IP
+    'InternetGatewayDevice.X_000631_Device.ExosMesh.WapHostInfo.MACAddress',
+]
+// Note: NoiseFloor doesn't exist on all GigaMesh devices - excluded from discovery
+```
 
-**Key TR-098 WAN Parameters**:
-- `InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.DefaultGateway`
-- `InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.DNSServers`
-- `InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress`
-- `InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.SubnetMask`
-- `InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ConnectionStatus`
+**Detection Logic**:
+```php
+$isGigaMesh = stripos($productClass, 'gigamesh') !== false
+    || stripos($productClass, 'u4m') !== false
+    || stripos($productClass, 'gm1028') !== false;
+```
 
-**Note**: This limitation applies to TR-098 mode Beacon G6 devices. TR-181 mode Beacon G6 devices (identified by OUI `0C7C28`) work correctly with partial path queries.
+**Connection Request for Mesh APs**:
+Mesh APs are behind NAT on the gateway's LAN. To send connection requests:
+1. Set up port forward on gateway:
+   - **804Mesh**: External port → Internal IP:30005
+   - **GigaMesh (u4m)**: External port → Internal IP:60002
+2. Store forwarded URL in `mesh_forwarded_url` field
+3. ConnectionRequestService uses forwarded URL automatically
+
+**Port Forward Setup**:
+```bash
+# Scan for existing port forwards and update mesh devices
+php artisan mesh:setup-port-forwards --scan
+
+# Setup port forward for specific mesh device
+php artisan mesh:setup-port-forwards --device=CCBE59-804Mesh-261807039818
+```
+
+**Key Files**:
+- `DeviceController.php:buildDiscoveryParameters()` - Returns mesh-specific param list
+- `Device.php:isMeshDevice()` - Detects 804Mesh/GigaMesh devices
+- `SetupMeshPortForwards.php` - Artisan command for port forward management
+- `ConnectionRequestService.php` - Uses mesh_forwarded_url for mesh APs
+
+### Nokia Beacon G6 TR-098 GetParameterValues - WORKS!
+Nokia Beacon G6 devices in TR-098 mode (OUI: 80AB4D) **fully support** GetParameterValues with partial path prefixes.
+
+**"Get Everything" Works**: Using `GetParameterValues("InternetGatewayDevice.")` successfully retrieves 6,000-7,000+ parameters in ~10-15 seconds.
+
+**Common Gotcha - Fault 9005 "Invalid parameter name"**:
+If you see Fault 9005 errors, it's usually NOT because partial paths don't work. Check for:
+1. **Stale tasks blocking the queue** - Old tasks stuck in "sent" status that request non-existent parameters (like Host.8 when only Host.1-7 exist)
+2. **Invalid parameter indices** - Requesting `LANDevice.1.Hosts.Host.15` when the device only has 12 hosts
+3. **Session management issues** - Tasks not being associated with the correct device session
+
+**Troubleshooting**:
+```bash
+# Check for stuck tasks
+php artisan tinker --execute="App\Models\Task::where('device_id', 'YOUR_DEVICE_ID')->whereIn('status', ['pending', 'sent'])->get(['id', 'task_type', 'status', 'created_at']);"
+
+# Clear stuck tasks
+php artisan tinker --execute="App\Models\Task::where('device_id', 'YOUR_DEVICE_ID')->whereIn('status', ['pending', 'sent'])->update(['status' => 'failed']);"
+```
+
+**Both OUI variants work**:
+- OUI `80AB4D` (TR-098): Works with `InternetGatewayDevice.` partial path
+- OUI `0C7C28` (TR-181): Works with `Device.` partial path
 
 ### Nokia Beacon G6 TR-181 WiFi Task Verification System
 
@@ -1061,619 +1159,110 @@ The project can be run locally using Laravel Herd on Windows. The local environm
 
 ---
 
-## Recent Updates (November 25, 2025)
+## Development History
 
-### Authentication & User Management ✅
-- **Laravel Breeze Installation**: Complete authentication scaffolding with Blade templates
-- **Role-Based Access Control**: Three-tier role system (Admin, Support, User)
-- **User Management Interface**: Full CRUD for admins at `/users`
-- **Password Enforcement**: Mandatory password change on first login
-- **API Authentication**: Laravel Sanctum for API token management
-- **Middleware Protection**: Custom middleware for role-based route protection
-- **Layout Compatibility**: Support for both component and inheritance Blade syntax
-- **Theme Support**: Dark/light mode switcher integrated into navigation
+For detailed changelog of all feature development, bug fixes, and optimizations from November-December 2025, see **[docs/CHANGELOG.md](docs/CHANGELOG.md)**.
 
-### Database Migrations
-- `2025_11_24_171758_add_role_to_users_table.php` - Adds role column (admin, user, support)
-- Breeze authentication tables (users, password_resets, sessions, etc.)
-
-### Files Modified
-**Controllers**:
-- `app/Http/Controllers/UserController.php` - User CRUD operations
-- `app/Http/Controllers/PasswordChangeController.php` - Password enforcement
-
-**Models**:
-- `app/Models/User.php` - Added role helpers and Sanctum support
-
-**Middleware**:
-- `app/Http/Middleware/EnsureUserIsAdmin.php` - Admin-only routes
-- `app/Http/Middleware/EnsureUserIsAdminOrSupport.php` - Support-level routes
-- `app/Http/Middleware/EnsurePasswordChanged.php` - Password enforcement
-
-**Routes**:
-- `routes/web.php` - Protected with auth middleware, role-based route groups
-- `routes/api.php` - Protected with auth:sanctum middleware
-
-**Views**:
-- `resources/views/users/` - Index, create, edit views
-- `resources/views/layouts/navigation.blade.php` - Admin-only links, theme switcher
-- `resources/views/layouts/app.blade.php` - Dual syntax support
-
-**Config**:
-- `bootstrap/app.php` - Middleware registration, Sanctum configuration
+Key milestones:
+- **Nov 25**: Authentication & user management (Laravel Breeze, RBAC)
+- **Nov 26**: Subscriber management system with background imports
+- **Nov 28**: TR-181 Nokia WiFi task verification system
+- **Nov 29**: Calix speed test, WiFi password reveal
+- **Dec 1**: Calix TR-098 Standard WiFi Setup
+- **Dec 2-3**: Remote support system, log management, device groups/workflows
+- **Dec 5**: Global search optimization (69ms average)
+- **Dec 10**: Automated billing sync, reports optimization, device online tracking
+- **Dec 12**: XMPP connection request infrastructure for Nokia Beacons
 
 ---
 
-**For Claude Code**: This ACS is production-ready with all major features implemented, including full authentication and user management. Current focus is preparing for phased rollout of 12,798 devices. All core features tested and working:
-- TR-069 CWMP with multi-vendor support (Calix, SmartRG, Nokia)
-- User authentication with role-based access control
-- "Get Everything" smart parameter discovery
-- Live parameter search and CSV export
-- Configuration backup/restore
-- Port forwarding management (full CRUD with auto-refresh)
-- WiFi interference scanning
-- Task queue with real-time status tracking
+## XMPP Connection Requests for Nokia Beacon Mesh APs
 
-**Next Steps**: Test port forwarding on remaining device models (SR505n, SR515ac, Calix, Nokia), user feedback system, global search, device view consolidation.
+### Overview
 
----
+Nokia Beacon mesh APs (Beacon 2, Beacon 3.1) are behind NAT and cannot receive HTTP connection requests directly. They support XMPP connection requests (TR-069 Annex K) which allows the ACS to send connection requests via an XMPP server.
 
-## Port Forwarding Testing Status (November 25, 2025)
+### Current State
 
-| Device Model | Add | Delete | Auto-Refresh | Notes |
-|--------------|-----|--------|--------------|-------|
-| SR516ac | ✅ | ✅ | ✅ | ~8 seconds for add, instant delete |
-| SR505n | 🔄 | 🔄 | 🔄 | Testing in progress |
-| SR515ac | 🔄 | 🔄 | 🔄 | Testing in progress |
-| Calix (TR-098) | ⏳ | ⏳ | ⏳ | Pending testing |
-| Nokia Beacon G6 | ⏳ | ⏳ | ⏳ | Pending testing |
+- **884 Nokia devices** have XMPP parameters and support XMPP connection requests
+- **USS JabberID format**: `ussprod_hay_[OUI]-[ProductClass]-[SerialNumber]@nisc-uss.coop/xmpp`
+- **Devices currently pointing to**: `nisc-uss.coop` (old USS server, port 443)
 
-Legend: ✅ Working | 🔄 Testing | ⏳ Pending | ❌ Issue
+### Infrastructure Status
 
----
+| Component | Status |
+|-----------|--------|
+| Database migration | Completed - `xmpp_jid`, `xmpp_enabled`, `xmpp_last_seen`, `xmpp_status` columns |
+| Config file | `config/xmpp.php` |
+| XmppService | `app/Services/XmppService.php` - XMPP client using fabiang/xmpp |
+| ConnectionRequestService | Updated to try XMPP first, fallback to UDP/HTTP |
+| Device model | XMPP helper methods added |
+| Artisan commands | `devices:enable-xmpp`, `devices:xmpp-status` |
+| XMPP server (Prosody) | **NOT YET INSTALLED** |
 
-## Recent Updates (November 26, 2025)
+### Artisan Commands
 
-### Subscriber Management System ✅
-
-**Background Import Processing**:
-- Large CSV imports now processed via Laravel queue jobs (no more timeouts)
-- Real-time progress tracking with Alpine.js polling
-- Supervisor queue worker for persistent job processing
-- Import status history with success/failure tracking
-
-**Files Created**:
-- `app/Jobs/ImportSubscribersJob.php` - Background job with 1-hour timeout
-- `app/Models/ImportStatus.php` - Track import progress and statistics
-- `database/migrations/2025_11_26_141702_create_import_statuses_table.php`
-- `hayacs-queue-worker.conf` - Supervisor configuration
-
-**Subscriber List Enhancements**:
-- Sortable columns: Customer, Name, Service Type, Devices
-- Filters: Search (name/customer/account), Service Type dropdown, Has Devices filter
-- Efficient device counting using `withCount('devices')`
-
-**Subscriber Hierarchy** (Customer > Account > Agreement):
-- Customer: Top-level billing entity (can have multiple accounts)
-- Account: Service account under a customer
-- Agreement: Contract/service agreement (equipment tied to agreements)
-- Related accounts shown when viewing subscriber details
-- Equipment grouped by agreement with visual separation
-
-**Device Linking**:
-- Case-insensitive serial number matching
-- Links TR-069 devices to subscribers via equipment serial numbers
-- 167 devices currently linked to subscribers
-
-**Import Statistics** (as of Nov 26, 2025):
-- **Subscribers**: 9,305 records
-- **Equipment**: 40,242 records
-- **Linked Devices**: 167 devices matched
-
-### BOOTSTRAP 0 Process Documentation
-
-The factory reset restore system is fully documented:
-
-**New Device Path**:
-1. Device sends BOOTSTRAP 0 Inform
-2. Provisioning rules applied (set_params task created)
-3. "Get Everything" queued for parameter discovery
-4. Initial backup created automatically
-
-**Factory Reset Path** (backup age > 1 minute):
-1. Device sends BOOTSTRAP 0 Inform
-2. System detects existing backup older than 1 minute
-3. Restore task queued (excludes ManagementServer.URL and credentials)
-4. Device restored to pre-reset configuration
-
-**SmartRG Considerations**:
-- One task per session limitation
-- Restore tasks chunked into 50-parameter batches
-- Sequential sessions required for full restore
-
-### Nokia Beacon TR-098 → TR-181 Migration (Planning)
-
-**Status**: Brainstorming phase - awaiting flowchart from user
-
-**Planned Flow**:
-1. Connect both TR-098 and TR-181 Beacon G6 devices for analysis
-2. Run "Get Everything" on both to compare parameter trees
-3. Build parameter mapping table for critical settings
-4. Implement "Transitionary Backup" system for TR-098 backups
-5. Factory reset to trigger TR-181 conversion
-6. Convert backup from TR-098 to TR-181 format
-7. Restore converted backup to TR-181 device
-
-**Key Challenges Identified**:
-| Aspect | TR-098 | TR-181 |
-|--------|--------|--------|
-| Root Object | `InternetGatewayDevice.` | `Device.` |
-| WiFi Path | `...LANDevice.1.WLANConfiguration.` | `...WiFi.Radio.` / `...WiFi.SSID.` |
-| NAT/Port Forwarding | `...WANIPConnection.1.PortMapping.` | `...NAT.PortMapping.` |
-| DHCP | `...LANHostConfigManagement.` | `...DHCPv4.Server.` |
-
-**Mitigation Strategy**:
-1. Create parameter mapping table for critical settings only
-2. Focus on: WiFi credentials, port forwards, trusted networks
-3. Post-restore verification via Get Everything
-4. Keep TR-098 backup as fallback until TR-181 restore confirmed
-
-**Next Steps**:
-- User to connect both TR-098 and TR-181 Beacon G6 devices
-- Compare parameter trees to build mapping table
-- Await flowchart for complete migration process
-
----
-
-## Recent Updates (November 28, 2025)
-
-### TR-181 Nokia Beacon G6 WiFi Task Verification System ✅
-
-**Problem Solved**: TR-181 Nokia Beacon G6 devices take ~2.5 minutes per radio to apply WiFi changes. During this time, the device doesn't respond to TR-069 commands, causing tasks to timeout and be marked as "failed" even though settings were successfully applied.
-
-**Solution Implemented**:
-- **Smart timeout system** with task-type-specific timeouts
-- **WiFi verification on timeout** - instead of failing, queues a get_params task to verify settings
-- **Write-only field handling** - skips password/passphrase fields that return empty for security
-- **80% threshold** - tasks marked as successful if 80%+ of verifiable parameters match
-
-**Files Created/Modified**:
-- `app/Console/Commands/TimeoutStuckTasks.php` - Added WiFi detection and verification queueing
-- `app/Http/Controllers/CwmpController.php` - Added verification processing methods:
-  - `isWifiVerificationTask()` - Detects verification tasks
-  - `processWifiVerification()` - Compares expected vs actual values
-  - `normalizeValueForComparison()` - Handles boolean/string normalization
-
-**Task Status Flow**:
-```
-pending → sent → (timeout) → verifying → completed/failed
-```
-
-**Test Results**:
-- Task 11728 (2.4GHz WiFi): 76.5% match → Failed (before write-only fix)
-- Task 11729 (5GHz WiFi): **92.9% match, 3 write-only skipped → Success** ✅
-
-**Configuration**:
-- WiFi tasks: 3-minute timeout with verification
-- Firmware downloads: 20-minute timeout
-- Reboots/factory resets: 5-minute timeout
-- Default: 2-minute timeout
-
-**Recommended**: Set TR-181 Beacon G6 periodic inform to 900 seconds (15 minutes) to prevent interruptions during WiFi processing.
-
----
-
-## Recent Updates (December 1, 2025)
-
-### Calix TR-098 Standard WiFi Setup ✅
-
-**Complete WiFi configuration for Calix TR-098 devices via Standard WiFi Setup:**
-
-**Features Implemented**:
-1. **RadioEnabled Control** - Now properly enables radios (was causing "disabled" display)
-2. **Dedicated Network Support** - Creates `{ssid}-2.4GHz` and `{ssid}-5GHz` SSIDs
-3. **Performance Optimizations** - Disables AirtimeFairness and MulticastForward on primary
-4. **Password Refresh** - Reads back `X_000631_KeyPassphrase` to update displayed password
-5. **Auto Page Refresh** - Page automatically reloads when WiFi tasks complete
-
-**Instance Configuration**:
-- Instance 1: Primary 2.4GHz (band-steered)
-- Instance 2: Guest 2.4GHz (with client isolation)
-- Instance 3: Dedicated 2.4GHz (`{ssid}-2.4GHz`)
-- Instance 9: Primary 5GHz (band-steered)
-- Instance 10: Guest 5GHz (with client isolation)
-- Instance 12: Dedicated 5GHz (`{ssid}-5GHz`)
-
-**Files Modified**:
-- `app/Http/Controllers/Api/DeviceController.php`:
-  - `getStandardWifiConfig()` - Added dedicated network detection
-  - `applyTr098CalixWifiConfig()` - Added dedicated networks and RadioEnabled
-- `resources/views/device-tabs/wifi.blade.php` - Display actual dedicated SSIDs
-- `resources/views/components/task-manager.blade.php` - WiFi task completion detection
-- `resources/views/dashboard/device.blade.php` - WiFi refresh event listener
-
----
-
-## Recent Updates (November 29, 2025)
-
-### Speed Test Implementation for Calix Devices ✅
-
-**Download Speed Test via TR-069 Download RPC**:
-- Uses TR-069 Download RPC to transfer a test file from a speed test server
-- Calculates speed from file size and transfer duration in TransferComplete response
-- Works reliably on all Calix devices tested
-
-**Implementation Details**:
-- **File**: 10MB test file from speedtest.tele2.net
-- **URL**: `http://speedtest.tele2.net/10MB.zip`
-- **Calculation**: `(file_size_bytes * 8) / duration_seconds / 1_000_000 = Mbps`
-
-**Test Results**:
-- Calix 844E (CXNK0083217F): **104.86 Mbps** download measured successfully
-
-**Upload Speed Test - NOT SUPPORTED on Calix**:
-- Attempted implementing upload speed test via TR-069 Upload RPC
-- **Finding**: Calix devices do NOT support Upload RPC
-- Device ignores the Upload command and starts a new CWMP session
-- Code updated to show "Not supported" for upload speed on Calix devices
-
-**Files Modified**:
-- `app/Http/Controllers/Api/DeviceController.php`:
-  - `startDownloadRpcSpeedTest()` - Creates download task, skips upload for Calix
-  - `getDownloadRpcSpeedTestStatus()` - Returns download results only
-- `app/Http/Controllers/CwmpController.php`:
-  - `handleTransferComplete()` - Extracts file_size from progress_info for speed calculation
-
-**Key Code**:
-```php
-// Calix OUI detection for upload exclusion
-$calixOuis = ['D0768F', '00236A', '0021D8', '50C7BF', '487746'];
-$isCalix = strtolower($device->manufacturer ?? '') === 'calix' ||
-    in_array(strtoupper($device->oui ?? ''), $calixOuis);
-
-// Speed calculation from TransferComplete
-$fileSizeBytes = $progressInfo['file_size'] ?? 10 * 1024 * 1024; // Default 10MB
-$speedMbps = ($fileSizeBytes * 8) / $durationSeconds / 1_000_000;
-```
-
----
-
-### Session Management Bug Fix ✅
-
-**Problem**: SOAP faults from one device could incorrectly fail tasks belonging to a different device when `deviceId` was null in the session.
-
-**Root Cause**: `handleFaultResponse()` was failing tasks without verifying the device ID matched.
-
-**Solution**: Added device ID validation before failing any task:
-```php
-$deviceId = $this->getSessionDeviceId();
-if (!$deviceId) {
-    Log::warning('Cannot associate SOAP Fault with a device - no device ID in session');
-    return $this->cwmpService->createEmptyResponse();
-}
-```
-
-**File Modified**: `app/Http/Controllers/CwmpController.php` lines 1226-1237
-
----
-
-### Calix WiFi Password Reveal Feature ✅
-
-**Discovery**: Calix devices expose WiFi passwords in clear text via the `X_000631_KeyPassphrase` parameter (both TR-098 and TR-181).
-
-**Implementation**:
-- Added eye icon toggle button to WiFi password fields for Calix devices
-- Password displayed in placeholder when revealed (not in the input value to avoid accidental changes)
-- Green hint text: "Current password available - click eye to reveal"
-
-**Calix OUI Detection**:
-```php
-$calixOuis = ['D0768F', '00236A', '0021D8', '50C7BF', '487746', '000631', 'CCBE59', '60DB98'];
-$isCalix = in_array(strtoupper($device->oui ?? ''), $calixOuis) ||
-    strtolower($device->manufacturer ?? '') === 'calix';
-```
-
-**Files Modified**:
-- `resources/views/device-tabs/wifi.blade.php`:
-  - Added Calix detection logic
-  - Passes `isCalix` flag to wifi-card partial
-- `resources/views/device-tabs/partials/wifi-card-tr181.blade.php`:
-  - Added Alpine.js toggle for password visibility
-  - Eye icon button (show/hide) appears only for Calix devices with passwords
-  - Password shown in placeholder when revealed
-
-**UI Behavior**:
-- Default: Password field shows "Leave blank to keep current"
-- Eye icon click: Reveals current password in placeholder
-- Works for both 2.4GHz and 5GHz SSIDs
-- Supports both TR-098 and TR-181 Calix devices
-
----
-
-### Device Status Verification
-
-**Current Offline Devices** (verified Nov 29, 2025):
-| Serial Number | Model | Manufacturer | Last Seen |
-|---------------|-------|--------------|-----------|
-| CP2144TE03324 | 844E-1 | Calix | 2025-11-28 10:42 |
-| CXNK01CB5D4E | 854G-1 | Calix | 2025-11-28 06:17 |
-| CXNK01D73C26 | 844G-1 | Calix | 2025-11-27 08:23 |
-| CXNK022C9D84 | GS4220E | Calix | 2025-11-27 08:13 |
-| 80AB4D30B35C | Beacon 6 | Nokia | 2025-11-27 16:58 |
-| 0C7C28BD4CB4 | Beacon 6 | Nokia | 2025-11-27 17:04 |
-| 0C7C2889A4A0 | Beacon 6 | Nokia | 2025-11-27 17:07 |
-| S518072009 | SR505N | Sagemcom | 2025-11-27 16:36 |
-| S515081011 | SR515ac | Sagemcom | 2025-11-28 06:03 |
-
-**Online Devices**: 5 devices actively connected
-- CXNK0083217F (Calix 844E-1) - Used for speed test and WiFi testing
-
----
-
-### Calix Device. Prefix WiFi Parameter Structure (TR-098 variant)
-
-**Note**: Calix devices are TR-098, but some use Device. prefix instead of InternetGatewayDevice. prefix.
-These are still TR-098 devices, just with vendor-specific parameter paths.
-
-**Key WiFi Parameters** (discovered from CXNK0083217F):
-```
-Device.WiFi.Radio.1.Enable = true (2.4GHz radio)
-Device.WiFi.Radio.2.Enable = true (5GHz radio)
-Device.WiFi.SSID.1.Enable = true (Primary 2.4GHz)
-Device.WiFi.SSID.2.Enable = true (Primary 5GHz)
-Device.WiFi.SSID.3.Enable = false (Guest 2.4GHz)
-Device.WiFi.SSID.4.Enable = false (Guest 5GHz)
-Device.WiFi.AccessPoint.1.Security.KeyPassphrase = <password>
-Device.WiFi.AccessPoint.1.Security.ModeEnabled = WPA2-Personal
-```
-
-**SSID Mapping**:
-- SSID 1 → Radio 1 (2.4GHz) - Main network
-- SSID 2 → Radio 2 (5GHz) - Main network
-- SSID 3 → Radio 1 (2.4GHz) - Guest network
-- SSID 4 → Radio 2 (5GHz) - Guest network
-- SSID 5-8 → Additional SSIDs (typically disabled)
-
-**Calix-Specific Vendor Parameters**:
-- `X_000631_KeyPassphrase` - WiFi password in clear text (READ-ONLY)
-- `X_000631_OperatingChannelBandwidth` - Channel bandwidth setting
-- `X_000631_AirtimeFairness` - Legacy feature, should be disabled for better performance
-- `X_000631_MulticastForwardEnable` - Legacy feature, should be disabled
-
----
-
-### Calix TR-098 WiFi Parameter Structure
-
-**Instance Mapping** (InternetGatewayDevice.LANDevice.1.WLANConfiguration.{i}):
-
-| Instance | Band | Network Type | Description |
-|----------|------|--------------|-------------|
-| 1 | 2.4GHz | Primary | Band-steered main network |
-| 2 | 2.4GHz | Guest | Guest network with client isolation |
-| 3 | 2.4GHz | Dedicated | 2.4GHz-only SSID (`{ssid}-2.4GHz`) |
-| 4-8 | 2.4GHz | Additional | Typically disabled |
-| 9 | 5GHz | Primary | Band-steered main network |
-| 10 | 5GHz | Guest | Guest network with client isolation |
-| 11 | 5GHz | Additional | Typically disabled |
-| 12 | 5GHz | Dedicated | 5GHz-only SSID (`{ssid}-5GHz`) |
-| 13-16 | 5GHz | Additional | Typically disabled |
-
-**Key Parameters per Instance**:
-```
-{prefix}.{i}.RadioEnabled = 1/0 (master switch for radio)
-{prefix}.{i}.Enable = 1/0 (enable this SSID)
-{prefix}.{i}.SSID = "NetworkName"
-{prefix}.{i}.SSIDAdvertisementEnabled = 1/0 (broadcast SSID)
-{prefix}.{i}.BeaconType = "WPAand11i" (WPA/WPA2)
-{prefix}.{i}.PreSharedKey.1.KeyPassphrase = "password" (WRITE)
-{prefix}.{i}.PreSharedKey.1.X_000631_KeyPassphrase = "password" (READ-ONLY)
-{prefix}.{i}.X_000631_IntraSsidIsolation = 1/0 (client isolation for guest)
-```
-
-**Standard WiFi Setup Creates**:
-1. **Primary Network** - Same SSID on instances 1 & 9 (band-steered)
-2. **Dedicated 2.4GHz** - Instance 3 with `{ssid}-2.4GHz`
-3. **Dedicated 5GHz** - Instance 12 with `{ssid}-5GHz`
-4. **Guest Network** - Instances 2 & 10 with `{ssid}-Guest` (if enabled)
-
-**Performance Optimizations Applied**:
-- `X_000631_AirtimeFairness = false` (disabled on primary)
-- `X_000631_MulticastForwardEnable = false` (disabled on primary)
-- `X_000631_IntraSsidIsolation = true` (enabled on guest for security)
-
----
-
-## Recent Updates (December 2-3, 2025)
-
-### Remote Support System for Nokia Beacon G6 ✅
-
-**Feature**: Enable temporary SSH access for field technicians via TR-069.
-
-**Mechanism**:
-- Sets device-specific temporary SSH password via TR-069
-- Uses `Device.Users.User.3.Password` (superadmin account)
-- Configures session expiration time (1-24 hours)
-- Automatic password reset via scheduled command after session expires
-
-**Files Created**:
-- `app/Console/Commands/ResetExpiredRemoteSupport.php` - Resets passwords after expiration
-- `app/Models/DeviceSshCredential.php` - Tracks temporary credentials and expiration
-- `app/Models/DeviceWifiConfig.php` - Stores WiFi config for restoration
-- `app/Services/NokiaSshService.php` - SSH interaction for Nokia devices
-- `database/migrations/2025_12_01_085705_add_remote_support_fields_to_devices_table.php`
-- `database/migrations/2025_12_01_122305_create_device_ssh_credentials_table.php`
-- `database/migrations/2025_12_01_122306_create_device_wifi_configs_table.php`
-
-**Scheduled Task** (runs every 5 minutes):
-```php
-Schedule::command('devices:reset-expired-remote-support')
-    ->everyFiveMinutes()
-    ->withoutOverlapping()
-    ->appendOutputTo(storage_path('logs/remote-support.log'));
-```
-
-### Log Management System ✅
-
-**Problem Solved**: Laravel log file grew to 2.1GB, impacting disk space and performance.
-
-**Solution Implemented**: Automated log rotation, compression, and retention.
-
-**Files Created**:
-- `app/Console/Commands/ManageLogs.php` - Log management command
-
-**Command Options**:
 ```bash
-php artisan logs:manage                    # Show status
-php artisan logs:manage --all              # Run all operations
-php artisan logs:manage --rotate           # Rotate large logs only
-php artisan logs:manage --compress         # Compress only
-php artisan logs:manage --cleanup          # Delete old logs only
-php artisan logs:manage --dry-run --all    # Preview without changes
-php artisan logs:manage --max-size=100     # Rotate at 100MB (default)
-php artisan logs:manage --retention=30     # Keep 30 days (default)
+# Check XMPP status for devices
+php artisan devices:xmpp-status                  # Show all devices
+php artisan devices:xmpp-status --nokia          # Nokia devices only
+php artisan devices:xmpp-status --supports-xmpp  # Devices that support XMPP
+php artisan devices:xmpp-status --device=SERIAL  # Specific device details
+php artisan devices:xmpp-status --test           # Test XMPP server connection
+
+# Enable XMPP on devices (creates TR-069 tasks)
+php artisan devices:enable-xmpp --device=ID      # Single device
+php artisan devices:enable-xmpp --nokia-beacons  # All Nokia Beacon mesh APs
+php artisan devices:enable-xmpp --type="Beacon 3.1" --dry-run
 ```
 
-**Features**:
-- **Rotation**: Moves logs > 100MB to dated files (e.g., `laravel-2025-12-02_162632.log`)
-- **Compression**: Uses xz (-9 max compression, multi-threaded) for 84%+ reduction
-- **Cleanup**: Deletes compressed logs older than retention period
-- **Status Display**: Shows all log files with sizes and modification times
+### Environment Configuration
 
-**Scheduled Task** (runs daily at 3 AM):
-```php
-Schedule::command('logs:manage --all --max-size=100 --retention=30')
-    ->dailyAt('03:00')
-    ->withoutOverlapping();
+```env
+# Add to .env when XMPP server is set up
+XMPP_ENABLED=true
+XMPP_SERVER=hayacs.hay.net
+XMPP_PORT=5222
+XMPP_DOMAIN=hayacs.hay.net
+XMPP_USERNAME=acs
+XMPP_PASSWORD=secure-password-here
 ```
 
-**Results**:
-- 2.1GB laravel.log compressed to 334MB (84.4% reduction)
-- Fresh empty log file created for new entries
-- System-level Apache/PHP logs handled separately by logrotate
+### Next Steps for XMPP Setup
 
-### Nokia Beacon G6 TR-181 Migration Testing ✅
+1. **Install Prosody** XMPP server on webapps.hay.net
+   ```bash
+   sudo dnf install prosody
+   ```
 
-**Progress**: Successfully converted test device from TR-098 to TR-181.
+2. **Configure Prosody** for TR-069 connection requests
+   - Listen on port 5222 (standard) and 443 (for Nokia devices)
+   - Enable TLS with Let's Encrypt certificate
+   - Create ACS account: `acs@hayacs.hay.net`
 
-**Test Device**: ALCLFD0A7959 (80AB4D → 0C7C28 OUI change after conversion)
+3. **Migrate devices** from USS to Hay ACS XMPP
+   ```bash
+   php artisan devices:enable-xmpp --nokia-beacons --dry-run
+   # Review output, then:
+   php artisan devices:enable-xmpp --nokia-beacons
+   ```
 
-**Migration Steps Tested**:
-1. Pre-config file download via TR-069 Download RPC
-2. Device firmware upgrade to TR-181 version
-3. WiFi configuration restoration via TR-181 parameters
-4. Verification of parameter mapping accuracy
+4. **Connection request flow** will then be:
+   - XMPP (if enabled) → UDP/STUN (if available) → HTTP (fallback)
 
-**Key Findings**:
-- OUI changes from `80AB4D` (TR-098) to `0C7C28` (TR-181)
-- WiFi paths change from `InternetGatewayDevice.LANDevice.1.WLANConfiguration.{i}` to `Device.WiFi.SSID.{i}`
-- Password2 required for SSH access (device-specific, generated by Nokia internal tool)
+### Device XMPP Parameters (Nokia)
 
-**Pre-config File**: `docs/beacon-g6-pre-config-hayacs-tr181.xml`
-- Configures ACS URL, credentials, and TR-181 mode
-- Must be served from accessible HTTP endpoint
-
-### GS4220E (Calix GigaSpire) SOAP Response Investigation
-
-**Issue**: Device appears to abandon session after GetRPCMethodsResponse.
-
-**Analysis**: Captured and analyzed full TR-069 traces comparing USS vs Hay ACS responses.
-
-**Files Created**:
-- `docs/traces/gs4220e-periodic-inform.txt` - Trace from USS during periodic inform
-- `docs/traces/gs4220e-refresh.txt` - Trace from USS during refresh
-- `docs/traces/gs4220e-quick-trace.txt` - Quick trace comparison
-- `docs/traces/gs4220e-right-after-pointing-to-uss-bootstrap-0-due-to-acs-url-change.txt`
-
-**Finding**: SOAP envelope format differences between implementations. Updated to match USS format with `soap-env` prefix.
-
-### Analytics Page Fix ✅
-
-**Issue**: Analytics page showed blank Task Performance and SpeedTest Results sections.
-
-**Root Cause**: Routes were defined in `api.php` but JavaScript was calling them without proper credentials.
-
-**Solution**:
-1. Moved analytics routes from `api.php` to `web.php` for session-based auth
-2. Added `credentials: 'include'` to fetch calls
-3. Optimized `AnalyticsController` to use database aggregates instead of fetching all records
-
-**Files Modified**:
-- `routes/web.php` - Added analytics API routes
-- `routes/api.php` - Removed duplicate routes
-- `app/Http/Controllers/AnalyticsController.php` - Optimized queries
-- `resources/views/analytics/index.blade.php` - Added credentials to fetch
-
-### Device Groups and Workflows System (In Progress)
-
-**Schema designed for batch device operations**:
-
-**Tables Created**:
-- `device_groups` - Named groups with membership rules
-- `device_group_rules` - Dynamic membership criteria (model, firmware, etc.)
-- `group_workflows` - Scheduled/triggered operations for groups
-- `workflow_executions` - Tracks workflow run history
-- `workflow_logs` - Detailed per-device execution logs
-
-**Files Created**:
-- `app/Models/DeviceGroup.php`, `DeviceGroupRule.php`, `GroupWorkflow.php`
-- `app/Models/WorkflowExecution.php`, `WorkflowLog.php`
-- `app/Services/DeviceGroupService.php`, `WorkflowExecutionService.php`
-- `app/Console/Commands/ProcessWorkflows.php`
-- `resources/views/device-groups/` - UI views
-
-**Use Cases**:
-- Bulk firmware upgrades by device model
-- Scheduled parameter updates for device groups
-- Automated provisioning workflows
-
----
-
-## Recent Updates (December 5, 2025)
-
-### Global Search Performance Optimization ✅
-
-**Problem Solved**: Global search was slow (2000-8000ms for some queries), making the UI feel unresponsive.
-
-**Final Results**:
-- **14 of 15 tests** passing under 200ms threshold
-- **Average response time: 69ms** (down from 2000-8000ms)
-- Only edge case over threshold: `X_000631` vendor parameter at 214ms
-
-**Optimizations Implemented**:
-
-1. **Composite Database Indexes** on tasks table:
-   - `tasks_status_created_at_index` (status, created_at)
-   - `tasks_task_type_created_at_index` (task_type, created_at)
-   - Allows `WHERE status = 'x' ORDER BY created_at DESC LIMIT N` to run from index only
-
-2. **Smart Query Filtering** in `looksLikeParameterSearch()`:
-   - IP addresses detected BEFORE dot check (e.g., `192.168` no longer triggers parameter search)
-   - MAC addresses excluded from parameter search
-   - Serial number prefixes (CXNK, CP, SR, S5, 80AB, 0C7C) excluded
-   - Vendor parameter patterns (`X_XXXXXX_`) detected for targeted search
-
-3. **MAC Address Search Disabled** in global search:
-   - Inherently slow (requires scanning 866k+ parameters)
-   - Users can still search MAC addresses via device parameters tab
-   - Queries like `00:11:22` now return instantly instead of scanning
-
-**Benchmark Results**:
-| Query Type | Before | After |
-|------------|--------|-------|
-| SSID | 134ms | 160ms |
-| 192.168 (IP) | 2419ms | 43ms |
-| CXNK (serial) | 5658ms | 69ms |
-| MAC addresses | 5000-8000ms | 18-26ms |
-| completed (task) | ~200ms | 36ms |
-
-**Files Modified**:
-- `app/Http/Controllers/Api/SearchController.php`:
-  - Updated `looksLikeParameterSearch()` method
-  - Updated `searchByMacAddress()` to exclude IP-like patterns
-  - Disabled MAC address search in global search
-
-**Migration Created**:
-- `database/migrations/2025_12_05_102416_add_composite_index_for_task_search_performance.php`
+| Parameter | Description |
+|-----------|-------------|
+| `InternetGatewayDevice.ManagementServer.X_ALU_COM_XMPP_Enable` | Master XMPP enable |
+| `InternetGatewayDevice.XMPP.Connection.1.Enable` | Connection enable |
+| `InternetGatewayDevice.XMPP.Connection.1.Domain` | XMPP server domain |
+| `InternetGatewayDevice.XMPP.Connection.1.Username` | XMPP username |
+| `InternetGatewayDevice.XMPP.Connection.1.Password` | XMPP password |
+| `InternetGatewayDevice.XMPP.Connection.1.UseTLS` | TLS enabled |
+| `InternetGatewayDevice.XMPP.Connection.1.X_ALU_COM_XMPP_Port` | XMPP port (443 for Nokia) |
+| `InternetGatewayDevice.XMPP.Connection.1.JabberID` | Current JID (read-only) |
+| `InternetGatewayDevice.ManagementServer.SupportedConnReqMethods` | "HTTP,XMPP" |
 
 ---
 
@@ -1689,254 +1278,5 @@ Schedule::command('logs:manage --all --max-size=100 --retention=30')
 | `devices:audit-remote-access` | Daily 10 PM | Disable stale remote access sessions |
 | `billing:sync` | Every 15 min | Sync subscriber data from NISC Ivue |
 | `logs:manage --all` | Daily 3 AM | Rotate, compress, cleanup logs |
-
----
-
-## Recent Updates (December 10, 2025)
-
-### Automated Billing System Sync ✅
-
-**Purpose**: Automatically sync subscriber and equipment data from NISC Ivue billing system to Hay ACS, linking TR-069 devices to subscribers by serial number.
-
-**SFTP Configuration**:
-| Setting | Value |
-|---------|-------|
-| Host | `webapps.hay.net` (163.182.253.70) |
-| Port | `22` |
-| Username | `billingsync` |
-| Upload Directory | `/uploads/` |
-| Chroot Jail | `/home/billingsync` |
-
-**File Format** (from NISC Ivue):
-- `Ivue-Equipment-Agreement-Based{timestamp}.csv` - Primary file (~2.5MB, 16,160 rows)
-- `Ivue-Equipment-Location-Based{timestamp}.csv` - Secondary file (~160KB, 1,000 rows)
-- Headers: `Customer,Account,Agreement,Name,Serv Type,Conn Dt,Equip Item,Equip Desc,Start Dt,Manufacturer,Model,Serial`
-
-**Hybrid Import Approach**:
-The sync uses a "hybrid" approach that balances data freshness with ID stability:
-1. **Subscribers**: Upsert (updateOrCreate) - IDs stay stable across syncs
-2. **Equipment**: Full truncate and reimport - always fresh from billing system
-3. **Device Links**: Clear and rebuild via bulk UPDATE with JOIN
-
-This approach handles device swaps correctly (old device loses link, new device gets link) while keeping subscriber IDs stable for foreign key relationships.
-
-**Performance Benchmarks**:
-| Phase | Time | Notes |
-|-------|------|-------|
-| Count rows | ~0s | Fast file line counting |
-| Clear device links | 0.11s | `UPDATE devices SET subscriber_id = NULL` |
-| Truncate equipment | 0.02s | With FK checks disabled |
-| Process files | ~53s | 17,160 rows via updateOrCreate |
-| Link devices | **0.26s** | Bulk UPDATE with JOIN (requires index) |
-| **TOTAL** | **~53s** | Well under 15-minute interval |
-
-**Critical Index**:
-```sql
-CREATE INDEX devices_serial_number_index ON devices (serial_number);
-```
-Without this index, device linking takes 280+ seconds. With the index, it takes <1 second.
-
-**Change Detection**:
-- Uses MD5 file hash comparison to skip processing when files are identical
-- Even if new files are uploaded with same name, content is compared
-- Skipping saves full ~53 seconds when data hasn't changed
-
-**Command Usage**:
-```bash
-# Normal sync (detects changes, processes if needed)
-php artisan billing:sync
-
-# Force sync even if files unchanged
-php artisan billing:sync --force
-
-# Preview without syncing
-php artisan billing:sync --dry-run
-
-# Sync but keep old files (don't cleanup)
-php artisan billing:sync --keep-files
-```
-
-**Current Statistics** (as of December 10, 2025):
-- **Subscribers**: 9,305 records
-- **Equipment**: 17,131 records
-- **Devices Linked**: 9,772 (99.7% of 9,775 TR-069 devices)
-- **Link Rate**: Near 100% for TR-069 managed devices
-
-**Files Created/Modified**:
-- `app/Console/Commands/SyncBillingData.php` - Main sync command
-- `app/Jobs/ImportSubscribersJob.php` - Hybrid import with benchmarking
-- `database/migrations/2025_12_10_135829_add_serial_number_index_to_devices_table.php`
-- `routes/console.php` - Added scheduler entry
-
-**Storage Paths**:
-- SFTP uploads: `/home/billingsync/uploads/`
-- Symlink: `/var/www/hayacs/storage/billing-sync` → `/home/billingsync/uploads`
-- Logs: `storage/logs/billing-sync.log`
-
-**Troubleshooting**:
-```bash
-# Check sync logs
-tail -f storage/logs/billing-sync.log
-
-# Check last sync cache
-php artisan tinker --execute="print_r(Cache::get('billing_sync_last_files'));"
-
-# Manual device linking test
-php artisan tinker --execute="
-\$start = microtime(true);
-\$affected = DB::update('UPDATE devices d INNER JOIN subscriber_equipment e ON d.serial_number = e.serial SET d.subscriber_id = e.subscriber_id WHERE e.serial IS NOT NULL AND e.subscriber_id IS NOT NULL');
-echo \"Linked \$affected devices in \" . round(microtime(true) - \$start, 2) . 's';
-"
-```
-
-### Reports Page Performance Optimization ✅
-
-**Problem**: The `/reports` page was taking 46+ seconds to load due to expensive database queries.
-
-**Solution**: Optimized queries and added strategic caching.
-
-**Results**:
-| Scenario | Before | After | Improvement |
-|----------|--------|-------|-------------|
-| Cold cache | 46 seconds | 6.1 seconds | **7.6x faster** |
-| Warm cache | N/A | 1ms | **Instant** |
-
-**Key Changes**:
-1. **Duplicate MAC query** (`getDuplicateMacCount()`):
-   - Changed from `LIKE '%MACAddress%' AND LIKE '%WAN%'` to fulltext search
-   - Uses existing `parameters_name_fulltext` index
-   - Query time: 45s → 4.7s (10x faster)
-   - Added 30-minute cache (`reports.duplicate_macs_count`)
-
-2. **Excessive informs query** (`getExcessiveInformsCount()`):
-   - Added 30-minute cache (`reports.excessive_informs_count`)
-
-3. **Detailed duplicate MACs report** (`duplicateMacs()`):
-   - Also updated to use fulltext search
-
-**Cache Strategy**:
-- Summary counts: 5-minute cache
-- Expensive queries (MAC duplicates, excessive informs): 30-minute cache
-- Users can force refresh via the refresh button
-
-### Standard WiFi Setup Enhancements ✅
-
-**Guest Password Field**:
-- Added optional guest WiFi password field in Standard WiFi Setup
-- Shows only when "Enable Guest" is checked
-- Leave blank to auto-generate a memorable password (e.g., "BlueSky472")
-- Enter custom password (8+ chars) to use your own
-- Dynamic hints show validation status
-
-**Advanced WiFi Password Storage**:
-- When setting a password in the Advanced WiFi section, it now stores in `DeviceWifiCredential`
-- This makes the password visible in the Standard WiFi "Current Configuration" section
-- Works for both main and guest network passwords
-- Instance detection by device type:
-
-| Device Type | Main Network Instances | Guest Network Instances |
-|-------------|------------------------|-------------------------|
-| Calix GigaCenter | 1, 9 | 2, 10 |
-| Calix GigaSpire | 1, 9 | 2, 10 |
-| Nokia TR-098 | 1, 5 | 4, 8 |
-
-### WiFi Security Mode Configuration ✅
-
-**Updated all Standard WiFi Setup to use proper WPA2/WPA3 security where supported**:
-
-| Device Type | Security Mode | BeaconType | IEEE11i Parameters |
-|-------------|---------------|------------|-------------------|
-| **Nokia TR-098** | WPA2/WPA3 | `11iandWPA3` | `SAEandPSKAuthentication`, `AESEncryption` |
-| **Nokia TR-181** | WPA3-Personal-Transition | N/A | `ModeEnabled` |
-| **Calix GigaSpire** | WPA2/WPA3 | `11iandWPA3` | `SAEandPSKAuthentication`, `AESEncryption` |
-| **Calix GigaCenter** | WPA/WPA2 | `WPAand11i` | None (doesn't support WPA3) |
-
-**Note**: GigaCenters do NOT support WPA3, so they remain on WPA/WPA2 mixed mode which is the best available option for those devices.
-
-### Subscriber Page Device Links ✅
-
-**Equipment Section**:
-- TR-069 devices now take priority for linking (green link with lightning bolt icon)
-- Cable modems only show cable portal link if there's no matching TR-069 device
-- Fallback to plain serial number if no match
-
-**Connected TR-069 Devices Section**:
-- Serial numbers are now clickable links to the device view page
-- Styled with green background and lightning bolt icon (consistent with equipment section)
-
-### Automated Initial Backup Workflow ✅
-
-**Purpose**: Systematically run "Get Everything" on all devices to create initial configuration backups, rate-limited to avoid server overload.
-
-**Device Group**: "Devices Needing Initial Backup" (ID: 3)
-- Rule: `initial_backup_created = false`
-- Dynamically matches devices as they join the ACS
-
-**Workflow**: "Initial Backup (Get Everything)" (ID: 15)
-| Setting | Value |
-|---------|-------|
-| Task Type | `get_parameter_names` |
-| Rate Limit | 100 devices/hour |
-| Max Concurrent | 10 |
-| Retries | 2 (30 min delay) |
-| Run Once Per Device | Yes |
-
-**Auto Data Model Detection**:
-- Workflow automatically detects device data model (TR-098 vs TR-181)
-- Sets correct root path: `InternetGatewayDevice.` or `Device.`
-- `for_initial_backup: true` flag triggers backup creation on completion
-
-**Files Modified**:
-- `app/Models/DeviceGroupRule.php` - Added `initial_backup_created` to MATCHABLE_FIELDS
-- `app/Services/DeviceGroupService.php` - Added boolean field SQL handling
-- `app/Services/WorkflowExecutionService.php` - Added `buildGetParameterNamesParams()` method
-- `app/Http/Controllers/DeviceGroupController.php` - Added dropdown values for new field
-
-### Workflow Execution Bug Fix ✅
-
-**Problem**: Workflow executions stayed "queued" even after tasks completed, blocking the concurrent limit and stalling workflows.
-
-**Root Cause**: `handleGetParameterNamesResponse()` called `$task->markAsCompleted()` but NOT `$this->workflowExecutionService->onTaskCompleted($task)`.
-
-**Fix**: Added `onTaskCompleted()` call at line 789 of `CwmpController.php`.
-
-**Same bug existed in**: `handleTransferCompleteResponse()` (fixed earlier for firmware upgrades).
-
-**Impact**: Workflow executions now properly transition from "queued" → "completed" when tasks finish.
-
-### Device Online Status Tracking ✅
-
-**Problem**: All devices showed `online=true` even if they hadn't checked in for hours/days. No mechanism existed to mark devices offline.
-
-**Solution**: Created `devices:mark-offline` command that marks devices offline if they haven't sent an Inform within the threshold period.
-
-**Command**: `php artisan devices:mark-offline`
-```bash
-# Mark offline if no inform in 20 minutes (default)
-php artisan devices:mark-offline
-
-# Custom threshold
-php artisan devices:mark-offline --threshold=30
-
-# Preview without changes
-php artisan devices:mark-offline --dry-run
-```
-
-**Scheduled**: Every 5 minutes via `routes/console.php`
-
-**Files Created**:
-- `app/Console/Commands/MarkOfflineDevices.php`
-
-**Current Statistics** (December 10, 2025):
-- Total devices: 9,965
-- Online: 8,451 (84.8%)
-- Offline: 1,514 (15.2%)
-
-**Offline Breakdown by Age**:
-| Last Inform Age | Count | Likely Cause |
-|-----------------|-------|--------------|
-| 20-60 min | 660 | Longer inform intervals |
-| 1-6 hours | 828 | Network issues or USS migration |
-| 6+ hours | 26 | Truly offline/powered down |
 
 ---

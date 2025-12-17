@@ -28,19 +28,45 @@
             <x-input-error :messages="$errors->get('code')" class="mt-2" />
         </div>
 
-        <div class="mt-4">
-            <label for="remember_device" class="flex items-center">
+        <div class="mt-4 space-y-3">
+            <label for="remember_device" class="flex items-start">
                 <input
                     id="remember_device"
                     type="checkbox"
                     name="remember_device"
                     value="1"
-                    class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800"
+                    class="mt-0.5 rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800"
                 >
                 <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">
-                    {{ __('Remember this device for 48 days') }}
+                    {{ __('Skip 2FA on this device for 48 days') }}
                 </span>
             </label>
+
+            @if(app(\App\Services\TrustedDeviceService::class)->isAllowedIp(request()->ip()))
+            <label for="trust_device" class="flex items-start">
+                <input
+                    id="trust_device"
+                    type="checkbox"
+                    name="trust_device"
+                    value="1"
+                    class="mt-0.5 rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-green-600 shadow-sm focus:ring-green-500 dark:focus:ring-green-600 dark:focus:ring-offset-gray-800"
+                >
+                <div class="ms-2">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">
+                        {{ __('Trust this device for remote access (90 days)') }}
+                    </span>
+                    <p class="text-xs text-green-600 dark:text-green-400 mt-1">
+                        Allows login from any IP without VPN. Skip 2FA included.
+                    </p>
+                </div>
+            </label>
+            @else
+            <div class="p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+                <p class="text-sm text-yellow-700 dark:text-yellow-300">
+                    <strong>Remote Access:</strong> Connect via VPN to enable "Trust this device" for future access without VPN.
+                </p>
+            </div>
+            @endif
         </div>
 
         <div class="flex items-center justify-end mt-6">

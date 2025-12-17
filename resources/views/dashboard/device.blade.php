@@ -21,6 +21,7 @@
     taskLoading: false,
     taskMessage: '',
     taskId: null,
+    guiCredentials: null,
     timerInterval: null,
 
     init() {
@@ -91,6 +92,27 @@
                 window.location.reload();
             }, 500);
         });
+
+        // Listen for Get Everything completion - refresh page to show updated parameters
+        window.addEventListener('get-everything-completed', (event) => {
+            const taskId = event.detail?.taskId;
+            if (!taskId) return;
+
+            // Check if we already refreshed for this task
+            const refreshedKey = `getEverythingRefreshed_${taskId}`;
+            if (sessionStorage.getItem(refreshedKey)) {
+                console.log('Already refreshed for Get Everything task', taskId);
+                return;
+            }
+
+            console.log('Get Everything completed, reloading page for task', taskId);
+            sessionStorage.setItem(refreshedKey, 'true');
+
+            // Reload page after a short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+        });
     },
 
     startTaskTracking(message, taskId) {
@@ -108,75 +130,78 @@
     {{-- Header Section --}}
     <div>
         <div class="flex-1 min-w-0">
-            @php
-                $failedTasks = $device->tasks()
-                    ->where('status', 'failed')
-                    ->where('updated_at', '>=', now()->subHours(24))
-                    ->orderBy('updated_at', 'desc')
-                    ->get();
-                $failedCount = $failedTasks->count();
-            @endphp
-
             <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-{{ $colors['text'] }} sm:text-3xl inline-flex items-center gap-2">
                 {{ $device->id }}
 
-                @if($failedCount > 0)
-                    <span x-data="{ showDetails: false }" class="relative inline-block">
-                        <button @click="showDetails = !showDetails" @click.away="showDetails = false"
-                                class="flex items-center justify-center w-7 h-7 rounded-full bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all"
-                                title="{{$failedCount}} failed task(s) in last 24 hours">
-                            <svg class="w-5 h-5 text-white font-bold" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                        <span class="absolute inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 text-xs font-bold leading-none text-white bg-red-800 rounded-full pointer-events-none" style="top: -4px; right: -8px;">{{ $failedCount }}</span>
+                {{-- Failed Tasks Warning Badge - Admin Only --}}
+                @if(Auth::user()->isAdmin())
+                    @php
+                        $failedTasks = $device->tasks()
+                            ->where('status', 'failed')
+                            ->where('updated_at', '>=', now()->subHours(24))
+                            ->orderBy('updated_at', 'desc')
+                            ->get();
+                        $failedCount = $failedTasks->count();
+                    @endphp
 
-                        {{-- Failed Tasks Details Dropdown --}}
-                        <div x-show="showDetails"
-                             x-cloak
-                             x-transition:enter="transition ease-out duration-200"
-                             x-transition:enter-start="opacity-0 transform scale-95"
-                             x-transition:enter-end="opacity-100 transform scale-100"
-                             x-transition:leave="transition ease-in duration-150"
-                             x-transition:leave-start="opacity-100 transform scale-100"
-                             x-transition:leave-end="opacity-0 transform scale-95"
-                             class="absolute left-0 mt-2 w-[500px] rounded-md shadow-lg bg-white dark:bg-{{ $colors['card'] }} ring-1 ring-black ring-opacity-5 z-50">
-                            <div class="py-3 px-4 border-b border-gray-200 dark:border-{{ $colors['border'] }}">
-                                <h3 class="text-sm font-semibold text-gray-900 dark:text-{{ $colors['text'] }}">Failed Tasks (Last 24 Hours)</h3>
-                            </div>
-                            <div class="max-h-96 overflow-y-auto">
-                                @foreach($failedTasks as $task)
-                                    <div class="px-4 py-3 border-b border-gray-100 dark:border-{{ $colors['border'] }} hover:bg-gray-50 dark:hover:bg-{{ $colors['bg'] }}">
-                                        <div class="flex items-start justify-between">
-                                            <div class="flex-1">
-                                                <p class="text-sm font-medium text-gray-900 dark:text-{{ $colors['text'] }}">
-                                                    {{ ucfirst(str_replace('_', ' ', $task->task_type)) }}
-                                                </p>
-                                                <p class="mt-1 text-xs text-gray-500 dark:text-{{ $colors['text-muted'] }}">
-                                                    {{ $task->updated_at->format('M d, Y H:i:s') }} ({{ $task->updated_at->diffForHumans() }})
-                                                </p>
-                                                @if($task->result && isset($task->result['error']))
-                                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">
-                                                        <strong>Error:</strong> {{ $task->result['error'] }}
+                    @if($failedCount > 0)
+                        <span x-data="{ showDetails: false }" class="relative inline-block">
+                            <button @click="showDetails = !showDetails" @click.away="showDetails = false"
+                                    class="flex items-center justify-center w-7 h-7 rounded-full bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all"
+                                    title="{{$failedCount}} failed task(s) in last 24 hours">
+                                <svg class="w-5 h-5 text-white font-bold" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <span class="absolute inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 text-xs font-bold leading-none text-white bg-red-800 rounded-full pointer-events-none" style="top: -4px; right: -8px;">{{ $failedCount }}</span>
+
+                            {{-- Failed Tasks Details Dropdown --}}
+                            <div x-show="showDetails"
+                                 x-cloak
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 transform scale-95"
+                                 x-transition:enter-end="opacity-100 transform scale-100"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 transform scale-100"
+                                 x-transition:leave-end="opacity-0 transform scale-95"
+                                 class="absolute left-0 mt-2 w-[500px] rounded-md shadow-lg bg-white dark:bg-{{ $colors['card'] }} ring-1 ring-black ring-opacity-5 z-50">
+                                <div class="py-3 px-4 border-b border-gray-200 dark:border-{{ $colors['border'] }}">
+                                    <h3 class="text-sm font-semibold text-gray-900 dark:text-{{ $colors['text'] }}">Failed Tasks (Last 24 Hours)</h3>
+                                </div>
+                                <div class="max-h-96 overflow-y-auto">
+                                    @foreach($failedTasks as $task)
+                                        <div class="px-4 py-3 border-b border-gray-100 dark:border-{{ $colors['border'] }} hover:bg-gray-50 dark:hover:bg-{{ $colors['bg'] }}">
+                                            <div class="flex items-start justify-between">
+                                                <div class="flex-1">
+                                                    <p class="text-sm font-medium text-gray-900 dark:text-{{ $colors['text'] }}">
+                                                        {{ ucfirst(str_replace('_', ' ', $task->task_type)) }}
                                                     </p>
-                                                @endif
-                                                @if($task->parameters)
-                                                    <details class="mt-2" @click.stop>
-                                                        <summary class="text-xs text-blue-600 dark:text-blue-400 cursor-pointer hover:underline">What was being attempted</summary>
-                                                        <div class="mt-1 pl-3 border-l-2 border-gray-200 dark:border-{{ $colors['border'] }}">
-                                                            <p class="text-xs text-gray-700 dark:text-{{ $colors['text-muted'] }} font-mono bg-gray-50 dark:bg-{{ $colors['bg'] }} p-2 rounded">
-                                                                {{ json_encode($task->parameters, JSON_PRETTY_PRINT) }}
-                                                            </p>
-                                                        </div>
-                                                    </details>
-                                                @endif
+                                                    <p class="mt-1 text-xs text-gray-500 dark:text-{{ $colors['text-muted'] }}">
+                                                        {{ $task->updated_at->format('M d, Y H:i:s') }} ({{ $task->updated_at->diffForHumans() }})
+                                                    </p>
+                                                    @if($task->result && isset($task->result['error']))
+                                                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">
+                                                            <strong>Error:</strong> {{ $task->result['error'] }}
+                                                        </p>
+                                                    @endif
+                                                    @if($task->parameters)
+                                                        <details class="mt-2" @click.stop>
+                                                            <summary class="text-xs text-blue-600 dark:text-blue-400 cursor-pointer hover:underline">What was being attempted</summary>
+                                                            <div class="mt-1 pl-3 border-l-2 border-gray-200 dark:border-{{ $colors['border'] }}">
+                                                                <p class="text-xs text-gray-700 dark:text-{{ $colors['text-muted'] }} font-mono bg-gray-50 dark:bg-{{ $colors['bg'] }} p-2 rounded">
+                                                                    {{ json_encode($task->parameters, JSON_PRETTY_PRINT) }}
+                                                                </p>
+                                                            </div>
+                                                        </details>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                @endforeach
+                                    @endforeach
+                                </div>
                             </div>
-                        </div>
-                    </span>
+                        </span>
+                    @endif
                 @endif
             </h2>
             <div class="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
@@ -728,13 +753,12 @@
                 </button>
             </form>
 
-            {{-- Get Everything (Admin Only) --}}
-            @if(auth()->user()?->isAdmin())
-            <form x-data="{ submitting: false }" @submit.prevent="async (e) => {
+            {{-- Get Everything --}}
+            <form x-data="{ submitting: false }"
+                  @get-everything-completed.window="submitting = false"
+                  @submit.prevent="async () => {
                 if (submitting) return;
                 submitting = true;
-                taskLoading = true;
-                taskMessage = 'Discovering All Parameters...';
 
                 try {
                     const response = await fetch('/api/devices/{{ $device->id }}/get-all-parameters', {
@@ -745,14 +769,31 @@
                     });
                     const result = await response.json();
                     if (result.task && result.task.id) {
-                        startTaskTracking('Discovering All Device Parameters...', result.task.id);
+                        // Check device reachability and update message accordingly
+                        let message = 'Discovering All Device Parameters...';
+                        if (result.device_reachability && !result.device_reachability.connection_request_success) {
+                            const reachability = result.device_reachability;
+                            if (reachability.seconds_until_next_inform !== undefined) {
+                                const seconds = reachability.seconds_until_next_inform;
+                                if (seconds <= 0) {
+                                    message = 'Device offline - should check in any moment...';
+                                } else {
+                                    const mins = Math.ceil(seconds / 60);
+                                    message = `Device offline - waiting for check-in (~${mins} min)...`;
+                                }
+                            } else {
+                                message = 'Device offline - waiting for check-in...';
+                            }
+                        }
+                        // Dispatch event to trigger task manager - works across Alpine scopes
+                        window.dispatchEvent(new CustomEvent('task-started', {
+                            detail: { message, taskId: result.task.id }
+                        }));
                     } else {
-                        taskLoading = false;
                         submitting = false;
                         alert('Get Everything started, but no task ID returned');
                     }
                 } catch (error) {
-                    taskLoading = false;
                     submitting = false;
                     alert('Error getting all parameters: ' + error);
                 }
@@ -774,7 +815,6 @@
                     <span x-show="submitting" x-cloak class="sm:hidden truncate">...</span>
                 </button>
             </form>
-            @endif
 
             {{-- Remote GUI --}}
             @php
@@ -817,6 +857,16 @@
                         const port = result.port || '8443';
                         const protocol = result.protocol || 'https';
                         const externalIp = result.external_ip || '{{ $externalIp }}';
+
+                        // Store credentials for display
+                        if (result.username && result.password) {
+                            guiCredentials = {
+                                username: result.username,
+                                password: result.password,
+                                url: externalIp ? (protocol + '://' + externalIp + ':' + port + '/') : null
+                            };
+                        }
+
                         if (externalIp) {
                             const url = protocol + '://' + externalIp + ':' + port + '/';
                             // Use noopener,noreferrer to avoid Invalid REFERER errors on Nokia devices
@@ -890,6 +940,36 @@
                     </button>
                 </div>
             @endif
+
+            {{-- GUI Credentials Display (shows after clicking GUI button) --}}
+            <template x-if="guiCredentials">
+                <div class="col-span-full mt-2 p-3 rounded-md bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700">
+                    <div class="text-xs font-medium text-blue-800 dark:text-blue-300 mb-2">GUI Login Credentials:</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-blue-600 dark:text-blue-400">Username:</span>
+                            <code class="px-2 py-0.5 bg-white dark:bg-gray-800 rounded text-xs font-mono" x-text="guiCredentials.username"></code>
+                            <button @click="navigator.clipboard.writeText(guiCredentials.username); $el.textContent = 'Copied!'; setTimeout(() => $el.textContent = 'Copy', 1500)"
+                                    class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 underline">Copy</button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-blue-600 dark:text-blue-400">Password:</span>
+                            <code class="px-2 py-0.5 bg-white dark:bg-gray-800 rounded text-xs font-mono" x-text="guiCredentials.password"></code>
+                            <button @click="navigator.clipboard.writeText(guiCredentials.password); $el.textContent = 'Copied!'; setTimeout(() => $el.textContent = 'Copy', 1500)"
+                                    class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 underline">Copy</button>
+                        </div>
+                    </div>
+                    <template x-if="guiCredentials.url">
+                        <div class="mt-2 flex items-center gap-2">
+                            <span class="text-xs text-blue-600 dark:text-blue-400">URL:</span>
+                            <a :href="guiCredentials.url" target="_blank" class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 underline font-mono" x-text="guiCredentials.url"></a>
+                            <button @click="navigator.clipboard.writeText(guiCredentials.url); $el.textContent = 'Copied!'; setTimeout(() => $el.textContent = 'Copy', 1500)"
+                                    class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 underline">Copy</button>
+                        </div>
+                    </template>
+                    <button @click="guiCredentials = null" class="mt-2 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">Dismiss</button>
+                </div>
+            </template>
         </div>
     </div>
 

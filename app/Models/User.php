@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -160,5 +161,31 @@ class User extends Authenticatable
             'two_factor_enabled_at' => null,
             'two_factor_grace_started_at' => now(),
         ]);
+    }
+
+    /**
+     * Get the trusted devices for this user.
+     */
+    public function trustedDevices(): HasMany
+    {
+        return $this->hasMany(TrustedDevice::class);
+    }
+
+    /**
+     * Get active (non-revoked, non-expired) trusted devices.
+     */
+    public function activeTrustedDevices(): HasMany
+    {
+        return $this->trustedDevices()
+            ->where('revoked', false)
+            ->where('expires_at', '>', now());
+    }
+
+    /**
+     * Get tasks initiated by this user.
+     */
+    public function initiatedTasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'initiated_by_user_id');
     }
 }

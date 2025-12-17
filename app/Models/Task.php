@@ -9,11 +9,13 @@ class Task extends Model
 {
     protected $fillable = [
         'device_id',
+        'initiated_by_user_id',
         'task_type',
         'description',
         'parameters',
         'progress_info',
         'status',
+        'resend_count',
         'sent_at',
         'result',
         'error',
@@ -29,11 +31,144 @@ class Task extends Model
     ];
 
     /**
+     * Boot method to auto-generate description when creating tasks
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Task $task) {
+            if (empty($task->description)) {
+                $task->description = $task->generateDefaultDescription();
+            }
+        });
+    }
+
+    /**
+     * Generate a default description based on task_type and parameters
+     */
+    public function generateDefaultDescription(): string
+    {
+        $params = $this->parameters ?? [];
+
+        switch ($this->task_type) {
+            case 'get_params':
+                // Check if it's a partial path query
+                if (isset($params['path'])) {
+                    $path = $params['path'];
+                    // Shorten long paths
+                    if (strlen($path) > 50) {
+                        $path = '...' . substr($path, -47);
+                    }
+                    return "Get parameters: {$path}";
+                }
+                // Check if it's named parameters
+                if (isset($params['names']) && is_array($params['names'])) {
+                    $count = count($params['names']);
+                    return "Get {$count} parameter" . ($count !== 1 ? 's' : '');
+                }
+                return 'Get parameters';
+
+            case 'set_params':
+            case 'set_parameter_values':
+                $paramCount = 0;
+                foreach ($params as $key => $value) {
+                    if (!str_starts_with($key, '_')) {
+                        $paramCount++;
+                    }
+                }
+                return "Set {$paramCount} parameter" . ($paramCount !== 1 ? 's' : '');
+
+            case 'verify_set_params':
+                return 'Verify parameter changes';
+
+            case 'wifi_scan':
+                return 'WiFi interference scan';
+
+            case 'reboot':
+                return 'Reboot device';
+
+            case 'factory_reset':
+                return 'Factory reset';
+
+            case 'get_param_names':
+                if (isset($params['path'])) {
+                    return "Discover parameters: {$params['path']}";
+                }
+                return 'Discover parameter names';
+
+            case 'download':
+                if (isset($params['url'])) {
+                    $filename = basename(parse_url($params['url'], PHP_URL_PATH));
+                    if (strlen($filename) > 40) {
+                        $filename = substr($filename, 0, 37) . '...';
+                    }
+                    return "Download: {$filename}";
+                }
+                return 'Firmware download';
+
+            case 'upload':
+                return 'Upload configuration';
+
+            case 'discover_troubleshooting':
+                return 'Refresh: Discover device parameters';
+
+            case 'download_diagnostics':
+                return 'Speed test: Download';
+
+            case 'upload_diagnostics':
+                return 'Speed test: Upload';
+
+            case 'ping_diagnostics':
+                return 'Ping test';
+
+            case 'traceroute_diagnostics':
+                return 'Traceroute test';
+
+            case 'add_object':
+                if (isset($params['object_name'])) {
+                    $obj = str_replace(['InternetGatewayDevice.', 'Device.'], '', $params['object_name']);
+                    return "Add: {$obj}";
+                }
+                return 'Add object';
+
+            case 'delete_object':
+                if (isset($params['object_name'])) {
+                    $obj = str_replace(['InternetGatewayDevice.', 'Device.'], '', $params['object_name']);
+                    return "Delete: {$obj}";
+                }
+                return 'Delete object';
+
+            default:
+                return ucfirst(str_replace('_', ' ', $this->task_type));
+        }
+    }
+
+    /**
      * Get the device that owns this task
      */
     public function device(): BelongsTo
     {
         return $this->belongsTo(Device::class, 'device_id');
+    }
+
+    /**
+     * Get the user who initiated this task
+     */
+    public function initiator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'initiated_by_user_id');
+    }
+
+    /**
+     * Get the initiator display name
+     * Returns user name if user-initiated, "ACS" if system-initiated
+     */
+    public function getInitiatorDisplayName(): string
+    {
+        if ($this->initiated_by_user_id === null) {
+            return 'ACS';
+        }
+
+        return $this->initiator?->name ?? 'Unknown User';
     }
 
     /**

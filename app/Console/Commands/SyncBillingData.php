@@ -213,24 +213,44 @@ class SyncBillingData extends Command
 
     /**
      * Clean up old files, keeping only the latest of each type.
+     * Also cleans up XML summary files that NISC creates.
      */
     protected function cleanupOldFiles(array $latestFiles): void
     {
-        $files = File::glob($this->syncDirectory . '/*.csv');
+        // Get both CSV and XML files
+        $csvFiles = File::glob($this->syncDirectory . '/*.csv');
+        $xmlFiles = File::glob($this->syncDirectory . '/*.xml');
+        $allFiles = array_merge($csvFiles, $xmlFiles);
+
         $latestPaths = array_map(fn($f) => $f['path'], $latestFiles);
         $deletedCount = 0;
+        $failedCount = 0;
 
-        foreach ($files as $file) {
+        foreach ($allFiles as $file) {
             if (!in_array($file, $latestPaths)) {
-                File::delete($file);
-                $deletedCount++;
-                $this->line("  Deleted old file: " . basename($file));
+                try {
+                    if (File::delete($file)) {
+                        $deletedCount++;
+                        $this->line("  Deleted old file: " . basename($file));
+                    } else {
+                        $failedCount++;
+                        $this->warn("  Could not delete: " . basename($file) . " (permission denied?)");
+                    }
+                } catch (\Exception $e) {
+                    $failedCount++;
+                    $this->warn("  Could not delete: " . basename($file) . " - " . $e->getMessage());
+                }
             }
         }
 
         if ($deletedCount > 0) {
             $this->info("Cleaned up {$deletedCount} old file(s).");
             Log::info('billing:sync cleaned up old files', ['count' => $deletedCount]);
+        }
+
+        if ($failedCount > 0) {
+            $this->warn("Failed to delete {$failedCount} file(s). Check directory permissions.");
+            Log::warning('billing:sync failed to delete files', ['count' => $failedCount]);
         }
     }
 

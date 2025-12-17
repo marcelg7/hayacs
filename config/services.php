@@ -37,6 +37,11 @@ return [
         'enabled' => env('SLACK_FEEDBACK_ENABLED', false),
         'webhook_url' => env('SLACK_FEEDBACK_WEBHOOK_URL'),
         'signing_secret' => env('SLACK_FEEDBACK_SIGNING_SECRET'),
+        // Daily activity report Slack integration
+        'daily_report' => [
+            'enabled' => env('SLACK_DAILY_REPORT_ENABLED', false),
+            'webhook_url' => env('SLACK_DAILY_REPORT_WEBHOOK_URL'),
+        ],
     ],
 
 ];

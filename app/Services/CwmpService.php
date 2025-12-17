@@ -122,8 +122,15 @@ class CwmpService
                 $dataModel = $this->currentDevice->getDataModel();
                 return $dataModel === 'TR-181' ? self::CWMP_1_2 : self::CWMP;
             }
-            // Nokia devices also use CWMP 1.2
+            // Nokia TR-098 devices (OUI 80AB4D) use CWMP 1.0 (verified from USS traces)
+            // Nokia TR-181 devices (OUI 0C7C28) use CWMP 1.2
             if ($this->currentDevice->isNokia()) {
+                $oui = strtoupper($this->currentDevice->oui ?? '');
+                // TR-098 Nokia (80AB4D) uses CWMP 1.0
+                if (str_starts_with($oui, '80AB4D')) {
+                    return self::CWMP;
+                }
+                // TR-181 Nokia (0C7C28) uses CWMP 1.2
                 return self::CWMP_1_2;
             }
         }

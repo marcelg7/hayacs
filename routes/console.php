@@ -61,3 +61,23 @@ Schedule::command('billing:sync')
 Schedule::command('devices:mark-offline --threshold=20')
     ->everyFiveMinutes()
     ->withoutOverlapping();
+
+// Cleanup duplicate parameters at 2:30 AM when traffic is lowest
+// Uses batched deletes with delays to avoid lock contention
+Schedule::command('parameters:cleanup-duplicates --batch-size=500 --delay=100')
+    ->dailyAt('02:30')
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/duplicate-cleanup.log'));
+
+// Daily activity report to Slack at 4:20 PM
+// Reports on today's ACS activity for monitoring and troubleshooting
+Schedule::command('report:daily-activity --date=' . now()->format('Y-m-d'))
+    ->dailyAt('16:20')
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/daily-report.log'));
+
+// Pre-warm daily activity report cache every 5 minutes
+// Ensures the web report loads instantly for anyone viewing it
+Schedule::command('cache:warm-daily-activity')
+    ->everyFiveMinutes()
+    ->withoutOverlapping();

@@ -8,6 +8,19 @@ use Illuminate\Support\Facades\Log;
 
 class ConnectionRequestService
 {
+    protected ?XmppService $xmppService = null;
+
+    /**
+     * Get XMPP service instance (lazy loaded)
+     */
+    protected function getXmppService(): XmppService
+    {
+        if ($this->xmppService === null) {
+            $this->xmppService = app(XmppService::class);
+        }
+        return $this->xmppService;
+    }
+
     /**
      * Send a connection request to a device
      *
@@ -16,24 +29,57 @@ class ConnectionRequestService
      */
     public function sendConnectionRequest(Device $device): array
     {
-        if (!$device->connection_request_url) {
+        // For mesh APs with port forwarding configured, use the forwarded URL
+        $url = $device->getEffectiveConnectionRequestUrl();
+
+        // If getEffectiveConnectionRequestUrl returns null, check for UDP/STUN
+        if ($url === null) {
+            if ($device->udp_connection_request_address) {
+                return $this->sendUdpConnectionRequest($device);
+            }
+
+            // Fall back to direct URL
+            $url = $device->connection_request_url;
+        }
+
+        if (!$url) {
             Log::warning('Cannot send connection request - no URL configured', [
                 'device_id' => $device->id,
+                'is_mesh' => $device->isMeshDevice(),
             ]);
 
             return [
                 'success' => false,
-                'message' => 'Device does not have a connection request URL configured',
+                'message' => $device->isMeshDevice()
+                    ? 'Mesh AP does not have a port forward configured. Run: php artisan mesh:setup-port-forwards --scan'
+                    : 'Device does not have a connection request URL configured',
             ];
         }
 
-        $url = $device->connection_request_url;
         $username = $device->connection_request_username ?? '';
         $password = $device->connection_request_password ?? '';
+
+        // Check if URL is a private IP and we're not using a forwarded address
+        if ($this->isPrivateIpUrl($url) && empty($device->mesh_forwarded_url)) {
+            Log::warning('Connection request URL is a private IP - device may be unreachable', [
+                'device_id' => $device->id,
+                'url' => $url,
+                'is_mesh' => $device->isMeshDevice(),
+            ]);
+
+            // For mesh devices, suggest setting up port forward
+            if ($device->isMeshDevice()) {
+                return [
+                    'success' => false,
+                    'message' => 'Mesh AP is behind NAT. Setup port forwarding with: php artisan mesh:setup-port-forwards --device=' . $device->id,
+                ];
+            }
+        }
 
         Log::info('Sending connection request to device', [
             'device_id' => $device->id,
             'url' => $url,
+            'is_forwarded' => !empty($device->mesh_forwarded_url),
             'has_username' => !empty($username),
         ]);
 
@@ -196,14 +242,27 @@ class ConnectionRequestService
     }
 
     /**
-     * Send connection request (tries UDP first, falls back to HTTP)
+     * Send connection request (tries XMPP first, then UDP, then HTTP)
      *
      * @param Device $device
      * @return array ['success' => bool, 'message' => string]
      */
     public function sendConnectionRequestWithFallback(Device $device): array
     {
-        // Try UDP first if available
+        // Try XMPP first if device supports it and our server is configured
+        if ($device->isXmppEnabled() && $this->getXmppService()->isEnabled()) {
+            $result = $this->sendXmppConnectionRequest($device);
+            if ($result['success']) {
+                return $result;
+            }
+
+            Log::info('XMPP connection request failed, trying other methods', [
+                'device_id' => $device->id,
+                'error' => $result['message'],
+            ]);
+        }
+
+        // Try UDP if available
         if ($device->udp_connection_request_address && $device->stun_enabled) {
             $result = $this->sendUdpConnectionRequest($device);
             if ($result['success']) {
@@ -217,6 +276,38 @@ class ConnectionRequestService
 
         // Fallback to HTTP
         return $this->sendConnectionRequest($device);
+    }
+
+    /**
+     * Send XMPP connection request
+     *
+     * @param Device $device
+     * @return array ['success' => bool, 'message' => string]
+     */
+    public function sendXmppConnectionRequest(Device $device): array
+    {
+        if (!$device->isXmppEnabled()) {
+            return [
+                'success' => false,
+                'message' => 'Device does not have XMPP enabled',
+            ];
+        }
+
+        $xmppService = $this->getXmppService();
+
+        if (!$xmppService->isEnabled()) {
+            return [
+                'success' => false,
+                'message' => 'XMPP server is not configured',
+            ];
+        }
+
+        Log::info('Sending XMPP connection request', [
+            'device_id' => $device->id,
+            'jid' => $device->xmpp_jid,
+        ]);
+
+        return $xmppService->sendConnectionRequest($device);
     }
 
     /**
@@ -259,6 +350,29 @@ class ConnectionRequestService
             'device_id' => $device->id,
             'timeout' => $timeoutSeconds,
         ]);
+
+        return false;
+    }
+
+    /**
+     * Check if URL contains a private IP address
+     */
+    private function isPrivateIpUrl(string $url): bool
+    {
+        if (preg_match('/https?:\/\/([0-9.]+)/', $url, $matches)) {
+            $ip = $matches[1];
+            $long = ip2long($ip);
+            if ($long === false) {
+                return false;
+            }
+
+            // 10.0.0.0/8
+            if (($long & 0xFF000000) === 0x0A000000) return true;
+            // 172.16.0.0/12
+            if (($long & 0xFFF00000) === 0xAC100000) return true;
+            // 192.168.0.0/16
+            if (($long & 0xFFFF0000) === 0xC0A80000) return true;
+        }
 
         return false;
     }

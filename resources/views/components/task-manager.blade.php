@@ -1,7 +1,7 @@
 <!-- Task Manager Component -->
 <div x-data="taskManager('{{ $deviceId }}')"
      x-init="init()"
-     @task-started.window="startPolling()"
+     @task-started.window="justStartedTask = true; startPolling(); fetchTasks();"
      class="fixed top-16 sm:top-20 right-2 sm:right-4 left-2 sm:left-auto z-40">
 
     <!-- Mini Task Indicator (always visible when tasks exist) -->
@@ -179,6 +179,9 @@ function taskManager(deviceId) {
         polling: false,
         pollInterval: null,
         completedTasks: new Set(), // Track which tasks we've auto-dismissed
+        stopPollingTimeout: null, // Grace period before stopping polling
+        lastActiveTime: null, // Track when we last had active tasks
+        justStartedTask: false, // Track if a task was just started (before first poll returns)
 
         init() {
             this.fetchTasks();
@@ -237,9 +240,30 @@ function taskManager(deviceId) {
 
                 this.tasks = data;
 
-                // Stop polling if no active or queued tasks
-                if (!this.hasActiveTasks()) {
-                    this.stopPolling();
+                // Clear justStartedTask once we have real data
+                if (this.justStartedTask && (data.active || data.queued?.length > 0 || data.recent_completed?.length > 0)) {
+                    this.justStartedTask = false;
+                }
+
+                // Track when we last had active tasks - use grace period before stopping
+                if (this.hasActiveTasks()) {
+                    this.lastActiveTime = Date.now();
+                    // Cancel any pending stop
+                    if (this.stopPollingTimeout) {
+                        clearTimeout(this.stopPollingTimeout);
+                        this.stopPollingTimeout = null;
+                    }
+                } else {
+                    // No active tasks - wait 10 seconds before stopping polling
+                    // This handles the gap between initial task completion and follow-up task creation
+                    if (!this.stopPollingTimeout) {
+                        this.stopPollingTimeout = setTimeout(() => {
+                            if (!this.hasActiveTasks()) {
+                                this.stopPolling();
+                            }
+                            this.stopPollingTimeout = null;
+                        }, 10000); // 10 second grace period
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching tasks:', error);
@@ -250,6 +274,12 @@ function taskManager(deviceId) {
             if (this.polling) return;
 
             this.polling = true;
+            this.lastActiveTime = Date.now();
+            // Cancel any pending stop
+            if (this.stopPollingTimeout) {
+                clearTimeout(this.stopPollingTimeout);
+                this.stopPollingTimeout = null;
+            }
             // Fetch immediately so new tasks show right away
             this.fetchTasks();
             this.pollInterval = setInterval(() => {
@@ -265,10 +295,14 @@ function taskManager(deviceId) {
                 clearInterval(this.pollInterval);
                 this.pollInterval = null;
             }
+            if (this.stopPollingTimeout) {
+                clearTimeout(this.stopPollingTimeout);
+                this.stopPollingTimeout = null;
+            }
         },
 
         hasActiveTasks() {
-            return this.tasks.active || (this.tasks.queued && this.tasks.queued.length > 0);
+            return this.justStartedTask || this.tasks.active || (this.tasks.queued && this.tasks.queued.length > 0);
         },
 
         checkAndDispatchTaskEvents(task) {
@@ -338,6 +372,16 @@ function taskManager(deviceId) {
             if (isWiFiRefreshTask || isWiFiConfigTask) {
                 console.log('WiFi task completed - dispatching wifi-refresh-completed event for task:', task.id, task.description, task.task_type);
                 window.dispatchEvent(new CustomEvent('wifi-refresh-completed', {
+                    detail: { taskId: task.id, description: task.description }
+                }));
+            }
+
+            // Check for Get Everything task completion
+            const isGetEverythingTask = task.description && task.description.includes('Get Everything');
+
+            if (isGetEverythingTask) {
+                console.log('Dispatching get-everything-completed event for task:', task.id, task.description);
+                window.dispatchEvent(new CustomEvent('get-everything-completed', {
                     detail: { taskId: task.id, description: task.description }
                 }));
             }
